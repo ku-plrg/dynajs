@@ -10,10 +10,10 @@ npm run build
 ## Usage
 
 ```
-Usage: dynajs <command> [options]
+Usage: ./dynajs <command> [options]
 
 Commands:
-  dynajs instrument  Instrument a JS file
+  ./dynajs instrument  Instrument a JS file
 
 Options:
   --help     Show help                                                 [boolean]
@@ -21,9 +21,9 @@ Options:
   --detail   Show detailed process                                     [boolean]
 
 Examples:
-  dynajs instrument input.js  Instrument a JS file
+  ./dynajs instrument input.js  Instrument a JS file
 
-You need a command to run `dynajs.`
+You need a command to run `dynajs`.
 ```
 
 ## For Developers
