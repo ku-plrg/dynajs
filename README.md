@@ -38,5 +38,6 @@ npm run start:watch -- instrument --detail <js file>
 
 > [!WARNING]
 >
-> The watch mode does not update `dist/` directory.  You need to run
-> `npm run build` to update `dist/` directory.
+> The watch mode does not update `dist/` directory. You need to run `npm run
+> build` to update `dist/` directory before using `dynajs` command after
+> modifying the source code.
