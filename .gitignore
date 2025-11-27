@@ -1,0 +1,44 @@
+# Generated files by DynaJS
+*_dynajs_.js
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+.nyc_output/
+
+# Production & Build
+build/
+dist/
+lib/
+*.min.js
+*.map
+
+# Misc
+.DS_Store
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.npm/
+
+# TypeScript
+*.tsbuildinfo
+
+# Editor/IDE specific settings
+.vscode/
+.idea/
+*.swp
+*.tgz
