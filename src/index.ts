@@ -47,7 +47,7 @@ try {
       type: 'boolean',
       description: 'Show detailed process',
     })
-    .demandCommand(1, `You need a command to run \`${SCRIPT_NAME}.\``)
+    .demandCommand(1, `You need a command to run \`${SCRIPT_NAME}\`.`)
     .parse();
 } catch (e) {
   if (typeof e === 'string') {
