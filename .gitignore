@@ -1,5 +1,5 @@
 # Generated files by DynaJS
-*_dynajs_.js
+*__dynajs__.js
 
 # Dependencies
 node_modules/
@@ -42,3 +42,7 @@ lerna-debug.log*
 .idea/
 *.swp
 *.tgz
+
+# Generated files by Jalangi2
+*_jalangi_.js
+*_jalangi_.json
