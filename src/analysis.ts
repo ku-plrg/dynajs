@@ -31,15 +31,9 @@ function E(id: number, value: any): any {
 
 // hook for the end of an expression
 const BINARY_OPS: { [op: string]: (a: any, b: any) => any } = {
-  "+": (a: any, b: any) => a + b,
-  "-": (a: any, b: any) => a - b,
-  "*": (a: any, b: any) => a * b,
-  "/": (a: any, b: any) => a / b,
-  "%": (a: any, b: any) => a % b,
-  "**": (a: any, b: any) => a ** b,
   "==": (a: any, b: any) => a == b,
-  "===": (a: any, b: any) => a === b,
   "!=": (a: any, b: any) => a != b,
+  "===": (a: any, b: any) => a === b,
   "!==": (a: any, b: any) => a !== b,
   "<": (a: any, b: any) => a < b,
   "<=": (a: any, b: any) => a <= b,
@@ -48,12 +42,19 @@ const BINARY_OPS: { [op: string]: (a: any, b: any) => any } = {
   "<<": (a: any, b: any) => a << b,
   ">>": (a: any, b: any) => a >> b,
   ">>>": (a: any, b: any) => a >>> b,
-  "&": (a: any, b: any) => a & b,
+  "+": (a: any, b: any) => a + b,
+  "-": (a: any, b: any) => a - b,
+  "*": (a: any, b: any) => a * b,
+  "/": (a: any, b: any) => a / b,
+  "%": (a: any, b: any) => a % b,
   "|": (a: any, b: any) => a | b,
   "^": (a: any, b: any) => a ^ b,
+  "&": (a: any, b: any) => a & b,
   "in": (a: any, b: any) => a in b,
   "instanceof": (a: any, b: any) => a instanceof b,
+  "**": (a: any, b: any) => a ** b,
 }
+
 function B(id: number, op: string, left: any, right: any): any {
   D$.analysis.binaryPre?.(id, op, left, right);
   const f = BINARY_OPS[op];
