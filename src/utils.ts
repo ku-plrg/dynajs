@@ -1,6 +1,8 @@
 import { white, yellow, red } from 'chalk';
 import inspect from 'object-inspect';
-
+import fs from 'fs';
+import path from 'path';
+import dedent from 'dedent-js';
 import * as acorn from 'acorn';
 import {
   Program,
@@ -9,9 +11,7 @@ import {
   TemplateElement,
 } from 'acorn';
 
-import fs from 'fs';
-
-import dedent from 'dedent-js';
+import { SCRIPT_NAME } from './constants';
 
 enum LogLevel {
   LOG,
@@ -19,32 +19,55 @@ enum LogLevel {
   ERROR,
 }
 
-export const scriptName = 'js-mutest';
-
-// Read the file
-export function readFile(path: string): string {
-  if (!fs.existsSync(path)) err(`File not found: \`${path}\`.`);
-  return fs.readFileSync(path, 'utf-8').toString().trim();
+// read the file
+export function readFile(filename: string): string {
+  if (!fs.existsSync(filename)) err(`File not found: \`${filename}\`.`);
+  return fs.readFileSync(filename, 'utf-8').toString();
 }
 
-// Write the file
-export function writeFile(path: string, content: string): void {
-  fs.writeFileSync(path, content);
+// walk through a directory recursively
+export function walkDir(dir: string, callback: (filename: string) => void): void {
+  fs.readdirSync(dir, { withFileTypes: true }).forEach(entry => {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      walkDir(fullPath, callback);   // ⬅ 재귀 호출
+    } else {
+      callback(fullPath);            // ⬅ 파일 발견 시 callback 호출
+    }
+  });
 }
 
-// Get extension from a path
-export function getExtension(path: string): string {
-  const parts = path.split('.');
+// write the file
+export function writeFile(filename: string, content: string): void {
+  fs.writeFileSync(filename, content);
+}
+
+// get extension from a filename
+export function getExtension(filename: string): string {
+  const parts = filename.split('.');
   if (parts.length <= 1) return '';
   return parts[parts.length - 1];
 }
 
-export function getNameWithoutExtension(path: string): string {
-  const ext = getExtension(path);
-  if (ext === '') return path;
-  return path.substring(0, path.length - ext.length - 1);
+export function getNameaWithExtension(filename: string): [string, string] {
+  const ext = getExtension(filename);
+  if (ext === '') return [filename, ''];
+  return [filename.substring(0, filename.length - ext.length - 1), ext];
 }
 
+// get name without extension from a filename
+export function getNameWithoutExtension(filename: string): string {
+  const ext = getExtension(filename);
+  if (ext === '') return filename;
+  return filename.substring(0, filename.length - ext.length - 1);
+}
+
+export function getInstrumentedName(filename: string): string {
+  const name = getNameWithoutExtension(filename);
+  return `${name}__${SCRIPT_NAME}__.js`;
+}
+
+// get command arguments
 export function getArgs(cmd: string, argv: any, expected: number): string[] {
   if (argv._.length - 1 != expected) {
     err(`Exactly ${expected} arguments are required for \`${cmd}\`.`);
@@ -52,12 +75,12 @@ export function getArgs(cmd: string, argv: any, expected: number): string[] {
   return argv._.slice(1);
 }
 
-// Read the JSON file
-export function readJSON(path: string): any {
-  return JSON.parse(readFile(path));
+// read the JSON file
+export function readJSON(filename: string): any {
+  return JSON.parse(readFile(filename));
 }
 
-// Get the string representation of a value
+// get the string representation of a value
 export function getString(value: any): string {
   if (typeof value === 'string') return value;
   if (value === null) return 'null';
@@ -66,7 +89,7 @@ export function getString(value: any): string {
   return inspect(value, { depth: 3 });
 }
 
-// Get the JSON representation of a value
+// get the JSON representation of a value
 export function stringify(value: any): string {
   return JSON.stringify(value, (key, value) => {
     if (typeof value === 'bigint') {
@@ -76,9 +99,10 @@ export function stringify(value: any): string {
   }, 2)
 }
 
+// a horizontal bar
 export const BAR = '-'.repeat(80);
 
-// Log a message
+// log a message
 export function log(
   value: any,
   color: (msg: string) => string = white,
@@ -102,34 +126,34 @@ export function log(
   print(msg);
 }
 
-// Header message
+// header message
 export function header(msg: string): void {
   log(BAR);
   log(msg);
   log(BAR);
 }
 
-// Warning message
+// warning message
 export function warn(value: any) {
   log(value, yellow, LogLevel.WARN, 'WARN');
 }
 
-// Error message
+// error message
 export function err(value: any) {
   log(value, red, LogLevel.ERROR, 'ERROR');
 }
 
-// To-do message
+// to-do message
 export function todo(msg: string = '') {
   log(msg, red, LogLevel.ERROR, 'TODO');
 }
 
-// Parse the string into an AST
+// parse the string into an AST
 export function parse(code: string): Program {
-  return acorn.parse(code, {ecmaVersion: 2023});
+  return acorn.parse(code, {locations: true, ecmaVersion: 2025});
 }
 
-// Input validity check
+// input validity check
 export function inputValidCheck(inputs: any): void {
   if (!Array.isArray(inputs)) {
     err('Input set must be an array.');
@@ -142,7 +166,7 @@ export function inputValidCheck(inputs: any): void {
   }
 }
 
-// Cursor in the code
+// cursor in the code
 export class Cursor {
   index: number;
   line: number;
@@ -156,7 +180,7 @@ export class Cursor {
   toString = (): string => `${this.line}:${this.col}`;
 }
 
-// Range of code
+// range of code
 export class Range {
   start: Cursor;
   end: Cursor;
@@ -172,4 +196,25 @@ export class Range {
   }
 
   toString = (): string => `${this.start.toString()}-${this.end.toString()}`;
+}
+
+// string builder
+export class StringBuilder {
+  indent: string;
+  result: string;
+  depth: number;
+  constructor(indnet: string = "  ") {
+    this.indent = indnet;
+    this.result = "";
+    this.depth = 0;
+  }
+  put = (str: string): void => {
+    this.result += this.indent.repeat(this.depth) + str + "\n";
+  }
+  indentIn = (): void => {
+    this.depth += 1;
+  }
+  indentOut = (): void => {
+    if (this.depth > 0) this.depth -= 1;
+  }
 }

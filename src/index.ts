@@ -1,33 +1,51 @@
 import yargs from 'yargs/yargs';
-
+import Module from 'module';
+import path from 'path';
 import {
   getArgs,
-  getNameWithoutExtension,
   log,
   readFile,
-  writeFile,
+  stringify,
 } from './utils';
+import { instrumentFile } from './instrument';
+import { SCRIPT_NAME } from './constants';
+import './analysis';
 
-import { instrument } from './instrument';
-
-export const SCRIPT_NAME = 'dynajs';
-
-// instrument a JS file with hooks
+// `instrument` command
 export const instrumentCommand = (argv: any): void => {
   const [ targetPath ] = getArgs('instrument', argv, 1);
   const { detail } = argv;
+  instrumentFile(targetPath, { detail });
+}
 
-  // Read the target JS file and parse it
-  const code = readFile(targetPath);
-  if (detail) log(`The instrumentation target file is \`${targetPath}\`.`);
+// `analyze` command
+export function analyzeCommand(argv: any): void {
+  const [ targetPath ] = getArgs('analyze', argv, 1);
+  analyze(targetPath, argv);
+}
 
-  const instrumentedCode = instrument(code, { detail });
-  if (detail) log('Instrumentation completed.');
+// analyze a JS file
+export function analyze(targetPath: string, options: any = {}): string {
+  const { detail, analysis } = options;
 
-  const name = getNameWithoutExtension(targetPath);
-  const outputPath = `${name}__${SCRIPT_NAME}__.js`;
-  writeFile(outputPath, instrumentedCode);
-  if (detail) log(`Instrumented file written to \`${outputPath}\`.`);
+  require(path.resolve(analysis));
+
+  // override the .js extension handler
+  const ModuleAny = Module as any;
+  ModuleAny._extensions['.js'] = function (module: any, filename: string) {
+    const instrumentedCode = instrumentFile(filename, { detail });
+    module._compile(instrumentedCode, filename);
+  };
+
+  // setup exit handler to end the analysis
+  process.on('exit', () => D$.analysis?.endExecution?.());
+
+  // load and run the target script
+  const script = path.resolve(targetPath);
+  const code = readFile(script);
+  Module.Module.runMain(script);
+
+  return D$.analysis.result;
 }
 
 // main function to parse command line arguments
@@ -43,6 +61,19 @@ try {
       instrumentCommand
     )
     .example('$0 instrument input.js', 'Instrument a JS file')
+    .command(
+      'analyze',
+      'Analyze a JS fil',
+      (yargs) => yargs
+        .option('analysis', {
+          alias: 'a',
+          describe: 'Target analysis module',
+          type: 'string',
+        })
+      ,
+      analyzeCommand
+    )
+    .example('$0 analyze input.js', 'Analyze a JS file')
     .option('detail', {
       type: 'boolean',
       description: 'Show detailed process',

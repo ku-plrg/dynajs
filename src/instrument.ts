@@ -1,14 +1,38 @@
-import { DYNAJS_VAR } from './constants';
+import {
+  DYNAJS_VAR,
+  NO_INSTRUMENT,
+} from './constants';
 import { AnyNode, Node } from 'acorn';
 import { generate } from 'astring';
 import {
+  getInstrumentedName,
   header,
   log,
   parse,
+  readFile,
   stringify,
   todo,
   warn,
+  writeFile,
 } from './utils';
+
+// instrument a JS file
+export function instrumentFile(filename: string, options: Options = {}): string {
+  const code = readFile(filename);
+  const { detail } = options;
+  options.originalPath = filename;
+  if (detail) log(`The instrumentation target file is \`${filename}\`.`);
+
+  const outputPath = getInstrumentedName(filename);
+  options.instrumentedPath = outputPath;
+  if (detail) log('Instrumentation completed.');
+
+  const instrumentedCode = instrument(code, options);
+  writeFile(outputPath, instrumentedCode);
+  if (detail) log(`Instrumented file written to \`${outputPath}\`.`);
+
+  return instrumentedCode;
+}
 
 // return the instrumented code
 export function instrument(code: string, options: Options = {}): string {
@@ -16,9 +40,20 @@ export function instrument(code: string, options: Options = {}): string {
   const ast = parse(code);
   const state = new State(options);
   if (options.detail) log(stringify(ast));
-  state.walk(ast);
-  if (options.detail) log(state.output.trim());
-  return state.output;
+
+  let output = code
+
+  if (code.indexOf(NO_INSTRUMENT) == -1) {
+    state.walk(ast);
+    output = `// INSTRUMENTED BY DYNAJS
+${state.output}`;
+  }
+  output = `${NO_INSTRUMENT}
+${DYNAJS_VAR}.ids = ${JSON.stringify(idToLoc)};
+${output}`;
+
+  if (options.detail) log(output.trim());
+  return output;
 }
 
 // -----------------------------------------------------------------------------
@@ -30,6 +65,8 @@ export class State {
   indent: string;
   indentLevel: number;
   lineEnd: string;
+  instrumentedPath: string;
+  originalPath: string;
   detail: boolean;
 
   constructor(options: Options = {}) {
@@ -42,13 +79,36 @@ export class State {
     this.indent = options.indent ?? '  ';
     this.indentLevel = 0;
     this.lineEnd = options.lineEnd ?? '\n';
+    this.instrumentedPath = options.instrumentedPath ?? '';
+    this.originalPath = options.originalPath ?? '';
     this.detail = options.detail ?? false;
+  }
+
+  // wrap
+  wrap(body: () => void): void {
+    this.indentLevel++;
+    body();
+    this.indentLevel--;
+  }
+
+  // write with newline
+  writeln(str: string): void {
+    this.write(this.indent.repeat(this.indentLevel));
+    this.write(str);
+    this.write(this.lineEnd);
   }
 
   // walk the AST nodes in an array recursively
   walk(node: Node): void {
     // @ts-ignore
     visitors[node.type](node, this);
+  }
+
+  // walk the AST nodes in an array recursively with newline
+  walkln(node: Node): void {
+    this.write(this.indent.repeat(this.indentLevel));
+    this.walk(node);
+    this.write(this.lineEnd);
   }
 
   // walk the AST nodes in an array recursively
@@ -65,15 +125,28 @@ export class State {
     }
   }
 
-  logLiteral(lit: Node, litType: number): void {
-    const code = generate(lit)
-    this.write(`${LOG_LITERAL}(${newId()}, ${code}, ${litType})`);
+  logLiteral(literal: Node, literalType: number): void {
+    const code = generate(literal)
+    this.write(`${LOG_LITERAL}(${newId(literal)}, ${code}, ${literalType})`);
   }
 
   logExpression(expr: Node): void {
-    this.write(`${LOG_EXPRESSION}(${newId()}, `);
+    this.write(`${LOG_EXPRESSION}(${newId(expr)}, `);
     this.walk(expr);
     this.write(')');
+  }
+
+  logException(program: Node): void {
+    this.writeln(`${LOG_EXCEPTION}(${newId(program)}, ${EXCEPTION_VAR});`);
+  }
+
+  logScriptEntry(program: Node): void {
+    const { instrumentedPath: i, originalPath: o } = this;
+    this.writeln(`${LOG_SCRIPT_ENTRY}(${newId(program)}, "${i}", "${o}");`);
+  }
+
+  logScriptExit(program: Node): void {
+    this.writeln(`${LOG_SCRIPT_EXIT}(${newId(program)});`);
   }
 }
 
@@ -82,14 +155,22 @@ interface Options {
   write?: (str: string) => void
   indent?: string
   lineEnd?: string
+  instrumentedPath?: string
+  originalPath?: string
   detail?: boolean
 }
 
 // -----------------------------------------------------------------------------
 // logging function names
 // -----------------------------------------------------------------------------
-const LOG_LITERAL = DYNAJS_VAR + ".T";
-const LOG_EXPRESSION = DYNAJS_VAR + ".X";
+const LOG_LITERAL = DYNAJS_VAR + '.L';
+const LOG_EXPRESSION = DYNAJS_VAR + '.E';
+const LOG_EXCEPTION = DYNAJS_VAR + '.X';
+const LOG_SCRIPT_ENTRY = DYNAJS_VAR + '.Se';
+const LOG_SCRIPT_EXIT = DYNAJS_VAR + '.Sx';
+
+// exception variable name
+const EXCEPTION_VAR = DYNAJS_VAR + 'e';
 
 // -----------------------------------------------------------------------------
 // literal types
@@ -102,30 +183,38 @@ const LITERAL_TYPE_REGEXP = 4;
 const LITERAL_TYPE_BIGINT = 5;
 
 const LITERAL_TYPES: { [key: string]: number } = {
-  "string": LITERAL_TYPE_STRING,
-  "boolean": LITERAL_TYPE_BOOLEAN,
-  "null": LITERAL_TYPE_NULL,
-  "number": LITERAL_TYPE_NUMBER,
-  "regexp": LITERAL_TYPE_REGEXP,
-  "bigint": LITERAL_TYPE_BIGINT,
+  'string': LITERAL_TYPE_STRING,
+  'boolean': LITERAL_TYPE_BOOLEAN,
+  'null': LITERAL_TYPE_NULL,
+  'number': LITERAL_TYPE_NUMBER,
+  'bigint': LITERAL_TYPE_BIGINT,
 }
 
 // -----------------------------------------------------------------------------
 // unique id generator
 // -----------------------------------------------------------------------------
+let idToLoc: { [id: number]: [number, number, number, number] } = {};
+let numId = 0;
 const ID_INC_STEP = 1;
-let id = 0;
-function newId(): number {
-  var tmpid = id;
-  id = id + ID_INC_STEP;
-  return tmpid;
+function newId(node: Node): number {
+  var id = numId;
+  numId += ID_INC_STEP;
+  if (node.loc) {
+    idToLoc[id] = [
+      node.loc.start.line,
+      node.loc.start.column + 1,
+      node.loc.end.line,
+      node.loc.end.column + 1,
+    ];
+  }
+  return id;
 }
 
 // -----------------------------------------------------------------------------
 // visitors
 // -----------------------------------------------------------------------------
 type Visitors = {
-  [type in AnyNode["type"]]?:
+  [type in AnyNode['type']]?:
     (node: Extract<AnyNode, { type: type }>, state: State) => void
 }
 
@@ -137,81 +226,93 @@ const visitors: Visitors = {
   Literal: (node, state) => {
     const { value } = node;
     const type = typeof value;
-    const litType = type === "object" ?
-        (value === null ? LITERAL_TYPE_NULL : LITERAL_TYPE_REGEXP) :
-        LITERAL_TYPES[type];
+    const litType = type === 'object'
+      ? value === null
+        ? LITERAL_TYPE_NULL
+        : LITERAL_TYPE_REGEXP
+      : LITERAL_TYPES[type];
     state.logLiteral(node, litType);
   },
   Program: (node, state) => {
-    const { indentLevel, lineEnd } = state;
-    const indent = state.indent.repeat(indentLevel);
     const { body } = node;
-    for (const statement of body) {
-      state.write(indent);
-      state.walk(statement);
-      state.write(lineEnd);
-    }
+    state.writeln('try {');
+    state.wrap(() => {
+      state.logScriptEntry(node);
+      for (const statement of body) {
+        state.walkln(statement);
+      }
+    });
+    state.writeln(`} catch (${EXCEPTION_VAR}) {`);
+    state.wrap(() => {
+      state.logException(node);
+    });
+    state.writeln(`} finally {`);
+    state.wrap(() => {
+      state.logScriptExit(node);
+    });
+    state.writeln(`}`);
   },
   ExpressionStatement: (node, state) => {
     const { expression } = node;
     state.logExpression(expression);
+    state.write(";");
   },
   BlockStatement: (node, state) => {
-    todo("BlockStatement");
+    todo('BlockStatement');
   },
   EmptyStatement: (node, state) => {
-    todo("EmptyStatement");
+    todo('EmptyStatement');
   },
   DebuggerStatement: (node, state) => {
-    todo("DebuggerStatement");
+    todo('DebuggerStatement');
   },
   WithStatement: (node, state) => {
-    todo("WithStatement");
+    todo('WithStatement');
   },
   ReturnStatement: (node, state) => {
-    todo("ReturnStatement");
+    todo('ReturnStatement');
   },
   LabeledStatement: (node, state) => {
-    todo("LabeledStatement");
+    todo('LabeledStatement');
   },
   BreakStatement: (node, state) => {
-    todo("BreakStatement");
+    todo('BreakStatement');
   },
   ContinueStatement: (node, state) => {
-    todo("ContinueStatement");
+    todo('ContinueStatement');
   },
   IfStatement: (node, state) => {
-    todo("IfStatement");
+    todo('IfStatement');
   },
   SwitchStatement: (node, state) => {
-    todo("SwitchStatement");
+    todo('SwitchStatement');
   },
   SwitchCase: (node, state) => {
-    todo("SwitchCase");
+    todo('SwitchCase');
   },
   ThrowStatement: (node, state) => {
-    todo("ThrowStatement");
+    todo('ThrowStatement');
   },
   TryStatement: (node, state) => {
-    todo("TryStatement");
+    todo('TryStatement');
   },
   CatchClause: (node, state) => {
-    todo("CatchClause");
+    todo('CatchClause');
   },
   WhileStatement: (node, state) => {
-    todo("WhileStatement");
+    todo('WhileStatement');
   },
   DoWhileStatement: (node, state) => {
-    todo("DoWhileStatement");
+    todo('DoWhileStatement');
   },
   ForStatement: (node, state) => {
-    todo("ForStatement");
+    todo('ForStatement');
   },
   ForInStatement: (node, state) => {
-    todo("ForInStatement");
+    todo('ForInStatement');
   },
   FunctionDeclaration: (node, state) => {
-    todo("FunctionDeclaration");
+    todo('FunctionDeclaration');
   },
   VariableDeclaration: (node, state) => {
     const { kind, declarations } = node;
@@ -228,147 +329,147 @@ const visitors: Visitors = {
     }
   },
   ThisExpression: (node, state) => {
-    todo("ThisExpression");
+    todo('ThisExpression');
   },
   ArrayExpression: (node, state) => {
-    todo("ArrayExpression");
+    todo('ArrayExpression');
   },
   ObjectExpression: (node, state) => {
-    todo("ObjectExpression");
+    todo('ObjectExpression');
   },
   Property: (node, state) => {
-    todo("Property");
+    todo('Property');
   },
   FunctionExpression: (node, state) => {
-    todo("FunctionExpression");
+    todo('FunctionExpression');
   },
   UnaryExpression: (node, state) => {
-    todo("UnaryExpression");
+    todo('UnaryExpression');
   },
   UpdateExpression: (node, state) => {
-    todo("UpdateExpression");
+    todo('UpdateExpression');
   },
   BinaryExpression: (node, state) => {
-    todo("BinaryExpression");
+    todo('BinaryExpression');
   },
   AssignmentExpression: (node, state) => {
-    todo("AssignmentExpression");
+    todo('AssignmentExpression');
   },
   LogicalExpression: (node, state) => {
-    todo("LogicalExpression");
+    todo('LogicalExpression');
   },
   MemberExpression: (node, state) => {
-    todo("MemberExpression");
+    todo('MemberExpression');
   },
   ConditionalExpression: (node, state) => {
-    todo("ConditionalExpression");
+    todo('ConditionalExpression');
   },
   CallExpression: (node, state) => {
-    todo("CallExpression");
+    todo('CallExpression');
   },
   NewExpression: (node, state) => {
-    todo("NewExpression");
+    todo('NewExpression');
   },
   SequenceExpression: (node, state) => {
-    todo("SequenceExpression");
+    todo('SequenceExpression');
   },
   ForOfStatement: (node, state) => {
-    todo("ForOfStatement");
+    todo('ForOfStatement');
   },
   Super: (node, state) => {
-    todo("Super");
+    todo('Super');
   },
   SpreadElement: (node, state) => {
-    todo("SpreadElement");
+    todo('SpreadElement');
   },
   ArrowFunctionExpression: (node, state) => {
-    todo("ArrowFunctionExpression");
+    todo('ArrowFunctionExpression');
   },
   YieldExpression: (node, state) => {
-    todo("YieldExpression");
+    todo('YieldExpression');
   },
   TemplateLiteral: (node, state) => {
-    todo("TemplateLiteral");
+    todo('TemplateLiteral');
   },
   TaggedTemplateExpression: (node, state) => {
-    todo("TaggedTemplateExpression");
+    todo('TaggedTemplateExpression');
   },
   TemplateElement: (node, state) => {
-    todo("TemplateElement");
+    todo('TemplateElement');
   },
   ObjectPattern: (node, state) => {
-    todo("ObjectPattern");
+    todo('ObjectPattern');
   },
   ArrayPattern: (node, state) => {
-    todo("ArrayPattern");
+    todo('ArrayPattern');
   },
   RestElement: (node, state) => {
-    todo("RestElement");
+    todo('RestElement');
   },
   AssignmentPattern: (node, state) => {
-    todo("AssignmentPattern");
+    todo('AssignmentPattern');
   },
   ClassBody: (node, state) => {
-    todo("ClassBody");
+    todo('ClassBody');
   },
   MethodDefinition: (node, state) => {
-    todo("MethodDefinition");
+    todo('MethodDefinition');
   },
   ClassDeclaration: (node, state) => {
-    todo("ClassDeclaration");
+    todo('ClassDeclaration');
   },
   ClassExpression: (node, state) => {
-    todo("ClassExpression");
+    todo('ClassExpression');
   },
   MetaProperty: (node, state) => {
-    todo("MetaProperty");
+    todo('MetaProperty');
   },
   ImportDeclaration: (node, state) => {
-    todo("ImportDeclaration");
+    todo('ImportDeclaration');
   },
   ImportSpecifier: (node, state) => {
-    todo("ImportSpecifier");
+    todo('ImportSpecifier');
   },
   ImportDefaultSpecifier: (node, state) => {
-    todo("ImportDefaultSpecifier");
+    todo('ImportDefaultSpecifier');
   },
   ImportNamespaceSpecifier: (node, state) => {
-    todo("ImportNamespaceSpecifier");
+    todo('ImportNamespaceSpecifier');
   },
   ImportAttribute: (node, state) => {
-    todo("ImportAttribute");
+    todo('ImportAttribute');
   },
   ExportNamedDeclaration: (node, state) => {
-    todo("ExportNamedDeclaration");
+    todo('ExportNamedDeclaration');
   },
   ExportSpecifier: (node, state) => {
-    todo("ExportSpecifier");
+    todo('ExportSpecifier');
   },
   ExportDefaultDeclaration: (node, state) => {
-    todo("ExportDefaultDeclaration");
+    todo('ExportDefaultDeclaration');
   },
   ExportAllDeclaration: (node, state) => {
-    todo("ExportAllDeclaration");
+    todo('ExportAllDeclaration');
   },
   AwaitExpression: (node, state) => {
-    todo("AwaitExpression");
+    todo('AwaitExpression');
   },
   ChainExpression: (node, state) => {
-    todo("ChainExpression");
+    todo('ChainExpression');
   },
   ImportExpression: (node, state) => {
-    todo("ImportExpression");
+    todo('ImportExpression');
   },
   ParenthesizedExpression: (node, state) => {
-    todo("ParenthesizedExpression");
+    todo('ParenthesizedExpression');
   },
   PropertyDefinition: (node, state) => {
-    todo("PropertyDefinition");
+    todo('PropertyDefinition');
   },
   PrivateIdentifier: (node, state) => {
-    todo("PrivateIdentifier");
+    todo('PrivateIdentifier');
   },
   StaticBlock: (node, state) => {
-    todo("StaticBlock");
+    todo('StaticBlock');
   },
 }

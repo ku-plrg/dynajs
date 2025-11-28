@@ -41,3 +41,23 @@ npm run start:watch -- instrument --detail <js file>
 > The watch mode does not update `dist/` directory. You need to run `npm run
 > build` to update `dist/` directory before using `dynajs` command after
 > modifying the source code.
+
+### Testing
+
+You can run the test suite with the following command:
+
+```shell
+./run-tests.sh
+```
+
+If you want to turn on watching mode for tests, you can use:
+```shell
+./run-tests.sh --watch
+```
+or
+```shell
+./run-tests.sh -w
+```
+
+It is based on [`pytest`](https://docs.pytest.org/), so you can also use any
+`pytest` options.
