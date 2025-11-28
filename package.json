@@ -11,7 +11,7 @@
     "build": "npm run clean && tsc -b",
     "build:watch": "tsc -b -w",
     "start": "ts-node src",
-    "start:watch": "nodemon src -e ts --watch samples -e js --exec 'ts-node'",
+    "start:watch": "nodemon src --watch src --watch samples -e ts,js --exec 'ts-node'",
     "test": "",
     "test:watch": ""
   },
