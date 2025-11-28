@@ -12,6 +12,8 @@ type Analysis = {
   endExpression?: (id: number, value: any) => void;
   binaryPre?: (id: number, op: string, left: any, right: any) => void;
   binaryPost?: (id: number, op: string, left: any, right: any, result: any) => void;
+  unaryPre?: (id: number, op: string, operand: any) => void;
+  unaryPost?: (id: number, op: string, operand: any, result: any) => void;
   literal?: (id: number, value: any, type: number) => void;
   scriptEnter?: (id: number, instrumentedPath: string, originalPath: string) => void;
   scriptExit?: (id: number) => void;
@@ -30,6 +32,16 @@ function E(id: number, value: any): any {
 }
 
 // hook for the end of an expression
+function B(id: number, op: string, left: any, right: any): any {
+  D$.analysis.binaryPre?.(id, op, left, right);
+  const f = BINARY_OPS[op];
+  if (!f) {
+    err(`unknown binary operator ${op}`);
+  }
+  const result = f(left, right)
+  D$.analysis.binaryPost?.(id, op, left, right, result);
+  return result;
+}
 const BINARY_OPS: { [op: string]: (a: any, b: any) => any } = {
   "==": (a: any, b: any) => a == b,
   "!=": (a: any, b: any) => a != b,
@@ -55,15 +67,24 @@ const BINARY_OPS: { [op: string]: (a: any, b: any) => any } = {
   "**": (a: any, b: any) => a ** b,
 }
 
-function B(id: number, op: string, left: any, right: any): any {
-  D$.analysis.binaryPre?.(id, op, left, right);
-  const f = BINARY_OPS[op];
+// hook for unary operations (except for `delete`)
+function U(id: number, op: string, operand: any): any {
+  D$.analysis.unaryPre?.(id, op, operand);
+  const f = UNARY_OPS[op];
   if (!f) {
-    err(`unknown binary operator ${op}`);
+    err(`unknown unary operator ${op}`);
   }
-  const result = f(left, right)
-  D$.analysis.binaryPost?.(id, op, left, right, result);
+  const result = f(operand)
+  D$.analysis.unaryPost?.(id, op, operand, result);
   return result;
+}
+const UNARY_OPS: { [op: string]: (a: any) => any } = {
+  "-": (a: any) => -a,
+  "+": (a: any) => +a,
+  "!": (a: any) => !a,
+  "~": (a: any) => ~a,
+  "typeof": (a: any) => typeof a,
+  "void": (a: any) => void a,
 }
 
 // hook for literals
@@ -104,7 +125,7 @@ function idToLoc(id: number) {
 // -----------------------------------------------------------------------------
 // assign to the global D$ variable
 // -----------------------------------------------------------------------------
-const BASE = { analysis: {}, ids: {}, idToLoc, utils, E, B, L, X, Se, Sx };
+const BASE = { analysis: {}, ids: {}, idToLoc, utils, E, B, U, L, X, Se, Sx };
 type DynaJSType = typeof BASE & {
   analysis: Analysis;
   idToLoc: (id: number) => string;

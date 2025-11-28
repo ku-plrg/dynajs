@@ -145,6 +145,13 @@ export class State {
     this.write(')');
   }
 
+  logUnaryOp(expr: Node): void {
+    const { argument, operator } = expr as any;
+    this.write(`${LOG_UNARY_OP}(${newId(expr)}, "${operator}", `);
+    this.walk(argument);
+    this.write(')');
+  }
+
   logException(program: Node): void {
     this.writeln(`${LOG_EXCEPTION}(${newId(program)}, ${EXCEPTION_VAR});`);
   }
@@ -175,6 +182,7 @@ interface Options {
 const LOG_LITERAL = DYNAJS_VAR + '.L';
 const LOG_EXPRESSION = DYNAJS_VAR + '.E';
 const LOG_BINARY_OP = DYNAJS_VAR + '.B';
+const LOG_UNARY_OP = DYNAJS_VAR + '.U';
 const LOG_EXCEPTION = DYNAJS_VAR + '.X';
 const LOG_SCRIPT_ENTRY = DYNAJS_VAR + '.Se';
 const LOG_SCRIPT_EXIT = DYNAJS_VAR + '.Sx';
@@ -354,7 +362,10 @@ const visitors: Visitors = {
     todo('FunctionExpression');
   },
   UnaryExpression: (node, state) => {
-    todo('UnaryExpression');
+    if (node.operator === 'delete') {
+      todo('UnaryExpression: delete');
+    }
+    state.logUnaryOp(node);
   },
   UpdateExpression: (node, state) => {
     todo('UpdateExpression');

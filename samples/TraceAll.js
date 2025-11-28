@@ -46,7 +46,18 @@
       var r = getValue(right);
       var res = getValue(result);
       var loc = getLoc(id);
-      builder.put('B[post](' + op + ', ' + l + ', ' + r + ', ' + res + ')' + loc);
+      builder.put('B(' + op + ', ' + l + ', ' + r + ', ' + res + ')' + loc);
+    },
+    unaryPre: function (id, op, left) {
+      var l = getValue(left);
+      var loc = getLoc(id);
+      builder.put('U[pre](' + op + ', ' + l + ')' + loc);
+    },
+    unaryPost: function (id, op, left, result) {
+      var l = getValue(left);
+      var res = getValue(result);
+      var loc = getLoc(id);
+      builder.put('U(' + op + ', ' + l + ', ' + res + ')' + loc);
     },
     literal: function (id, val) {
       var v = getValue(val);
