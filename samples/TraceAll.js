@@ -26,26 +26,46 @@
   }
 
   function getLoc(id) {
-    return D$.idToLoc(id);
+    return ' @ ' + D$.idToLoc(id);
   }
 
   D$.analysis = {
-    literal: function (id, val) {
-      builder.put('L(' + getValue(val) + ') @ ' + getLoc(id));
-    },
     endExpression: function (id, value) {
-      builder.put('E(' + getValue(value) + ') @ ' + getLoc(id));
+      var v = getValue(value);
+      var loc = getLoc(id);
+      builder.put('E(' + v + ')' + loc);
+    },
+    binaryPre: function (id, op, left, right) {
+      var l = getValue(left);
+      var r = getValue(right);
+      var loc = getLoc(id);
+      builder.put('B[pre](' + op + ', ' + l + ', ' + r + ')' + loc);
+    },
+    binaryPost: function (id, op, left, right, result) {
+      var l = getValue(left);
+      var r = getValue(right);
+      var res = getValue(result);
+      var loc = getLoc(id);
+      builder.put('B[post](' + op + ', ' + l + ', ' + r + ', ' + res + ')' + loc);
+    },
+    literal: function (id, val) {
+      var v = getValue(val);
+      var loc = getLoc(id);
+      builder.put('L(' + v + ')' + loc);
     },
     scriptEnter: function (id, instrumentedPath, originalPath) {
-      builder.put('Se() @ ' + getLoc(id));
+      var loc = getLoc(id);
+      builder.put('Se()' + loc);
       indentIn();
     },
     scriptExit: function (id, exc) {
       indentOut();
+      var loc = getLoc(id);
       if (exc) {
-        builder.put('Sx(' + getValue(exc) + ') @ ' + getLoc(id));
+        var e = getValue(exc);
+        builder.put('Sx(' + e + ')' + loc);
       } else {
-        builder.put('Sx() @ ' + getLoc(id));
+        builder.put('Sx()' + loc);
       }
     },
     endExecution: function () {

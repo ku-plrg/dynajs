@@ -125,14 +125,23 @@ export class State {
     }
   }
 
+  logExpression(expr: Node): void {
+    this.write(`${LOG_EXPRESSION}(${newId(expr)}, `);
+    this.walk(expr);
+    this.write(')');
+  }
+
   logLiteral(literal: Node, literalType: number): void {
     const code = generate(literal)
     this.write(`${LOG_LITERAL}(${newId(literal)}, ${code}, ${literalType})`);
   }
 
-  logExpression(expr: Node): void {
-    this.write(`${LOG_EXPRESSION}(${newId(expr)}, `);
-    this.walk(expr);
+  logBinaryOp(expr: Node): void {
+    const { left, right, operator } = expr as any;
+    this.write(`${LOG_BINARY_OP}(${newId(expr)}, "${operator}", `);
+    this.walk(left);
+    this.write(', ');
+    this.walk(right);
     this.write(')');
   }
 
@@ -165,6 +174,7 @@ interface Options {
 // -----------------------------------------------------------------------------
 const LOG_LITERAL = DYNAJS_VAR + '.L';
 const LOG_EXPRESSION = DYNAJS_VAR + '.E';
+const LOG_BINARY_OP = DYNAJS_VAR + '.B';
 const LOG_EXCEPTION = DYNAJS_VAR + '.X';
 const LOG_SCRIPT_ENTRY = DYNAJS_VAR + '.Se';
 const LOG_SCRIPT_EXIT = DYNAJS_VAR + '.Sx';
@@ -350,7 +360,7 @@ const visitors: Visitors = {
     todo('UpdateExpression');
   },
   BinaryExpression: (node, state) => {
-    todo('BinaryExpression');
+    state.logBinaryOp(node);
   },
   AssignmentExpression: (node, state) => {
     todo('AssignmentExpression');
