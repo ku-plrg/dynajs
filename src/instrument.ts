@@ -1,5 +1,6 @@
 import {
   DYNAJS_VAR,
+  EXCEPTION_VAR,
   NO_INSTRUMENT,
 } from './constants';
 import { AnyNode, Node } from 'acorn';
@@ -124,46 +125,6 @@ export class State {
       this.walk(nodes[i]);
     }
   }
-
-  logExpression(expr: Node): void {
-    this.write(`${LOG_EXPRESSION}(${newId(expr)}, `);
-    this.walk(expr);
-    this.write(')');
-  }
-
-  logLiteral(literal: Node, literalType: number): void {
-    const code = generate(literal)
-    this.write(`${LOG_LITERAL}(${newId(literal)}, ${code}, ${literalType})`);
-  }
-
-  logBinaryOp(expr: Node): void {
-    const { left, right, operator } = expr as any;
-    this.write(`${LOG_BINARY_OP}(${newId(expr)}, "${operator}", `);
-    this.walk(left);
-    this.write(', ');
-    this.walk(right);
-    this.write(')');
-  }
-
-  logUnaryOp(expr: Node): void {
-    const { argument, operator } = expr as any;
-    this.write(`${LOG_UNARY_OP}(${newId(expr)}, "${operator}", `);
-    this.walk(argument);
-    this.write(')');
-  }
-
-  logException(program: Node): void {
-    this.writeln(`${LOG_EXCEPTION}(${newId(program)}, ${EXCEPTION_VAR});`);
-  }
-
-  logScriptEntry(program: Node): void {
-    const { instrumentedPath: i, originalPath: o } = this;
-    this.writeln(`${LOG_SCRIPT_ENTRY}(${newId(program)}, "${i}", "${o}");`);
-  }
-
-  logScriptExit(program: Node): void {
-    this.writeln(`${LOG_SCRIPT_EXIT}(${newId(program)});`);
-  }
 }
 
 // state options
@@ -177,8 +138,9 @@ interface Options {
 }
 
 // -----------------------------------------------------------------------------
-// logging function names
+// logging functions
 // -----------------------------------------------------------------------------
+// logging function names
 const LOG_LITERAL = DYNAJS_VAR + '.L';
 const LOG_EXPRESSION = DYNAJS_VAR + '.E';
 const LOG_BINARY_OP = DYNAJS_VAR + '.B';
@@ -187,8 +149,52 @@ const LOG_EXCEPTION = DYNAJS_VAR + '.X';
 const LOG_SCRIPT_ENTRY = DYNAJS_VAR + '.Se';
 const LOG_SCRIPT_EXIT = DYNAJS_VAR + '.Sx';
 
-// exception variable name
-const EXCEPTION_VAR = DYNAJS_VAR + 'e';
+// logging end of an expression
+function logExpression(state: State, expr: Node): void {
+  state.write(`${LOG_EXPRESSION}(${newId(expr)}, `);
+  state.walk(expr);
+  state.write(')');
+}
+
+// logging a literal
+function logLiteral(state: State, literal: Node, literalType: number): void {
+  const code = generate(literal)
+  state.write(`${LOG_LITERAL}(${newId(literal)}, ${code}, ${literalType})`);
+}
+
+// logging a binary operation
+function logBinaryOp(state: State, expr: Node): void {
+  const { left, right, operator } = expr as any;
+  state.write(`${LOG_BINARY_OP}(${newId(expr)}, "${operator}", `);
+  state.walk(left);
+  state.write(', ');
+  state.walk(right);
+  state.write(')');
+}
+
+// logging a unary operation (except for `delete`)
+function logUnaryOp(state: State, expr: Node): void {
+  const { argument, operator } = expr as any;
+  state.write(`${LOG_UNARY_OP}(${newId(expr)}, "${operator}", `);
+  state.walk(argument);
+  state.write(')');
+}
+
+// logging an exception
+function logException(state: State, program: Node): void {
+  state.writeln(`${LOG_EXCEPTION}(${newId(program)}, ${EXCEPTION_VAR});`);
+}
+
+// logging script entry
+function logScriptEntry(state: State, program: Node): void {
+  const { instrumentedPath: i, originalPath: o } = state;
+  state.writeln(`${LOG_SCRIPT_ENTRY}(${newId(program)}, "${i}", "${o}");`);
+}
+
+// logging script exit
+function logScriptExit(state: State, program: Node): void {
+  state.writeln(`${LOG_SCRIPT_EXIT}(${newId(program)});`);
+}
 
 // -----------------------------------------------------------------------------
 // literal types
@@ -249,30 +255,30 @@ const visitors: Visitors = {
         ? LITERAL_TYPE_NULL
         : LITERAL_TYPE_REGEXP
       : LITERAL_TYPES[type];
-    state.logLiteral(node, litType);
+    logLiteral(state, node, litType);
   },
   Program: (node, state) => {
     const { body } = node;
     state.writeln('try {');
     state.wrap(() => {
-      state.logScriptEntry(node);
+      logScriptEntry(state, node);
       for (const statement of body) {
         state.walkln(statement);
       }
     });
     state.writeln(`} catch (${EXCEPTION_VAR}) {`);
     state.wrap(() => {
-      state.logException(node);
+      logException(state, node);
     });
     state.writeln(`} finally {`);
     state.wrap(() => {
-      state.logScriptExit(node);
+      logScriptExit(state, node);
     });
     state.writeln(`}`);
   },
   ExpressionStatement: (node, state) => {
     const { expression } = node;
-    state.logExpression(expression);
+    logExpression(state, expression);
     state.write(";");
   },
   BlockStatement: (node, state) => {
@@ -365,13 +371,13 @@ const visitors: Visitors = {
     if (node.operator === 'delete') {
       todo('UnaryExpression: delete');
     }
-    state.logUnaryOp(node);
+    logUnaryOp(state, node);
   },
   UpdateExpression: (node, state) => {
     todo('UpdateExpression');
   },
   BinaryExpression: (node, state) => {
-    state.logBinaryOp(node);
+    logBinaryOp(state, node);
   },
   AssignmentExpression: (node, state) => {
     todo('AssignmentExpression');
