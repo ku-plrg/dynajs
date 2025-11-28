@@ -16,7 +16,7 @@ fi
 # watch mode
 if [ "$1" = "--watch" ] || [ "$1" = "-W" ]; then
     shift
-    ptw -- "$@"
+    ptw --ext ts,py -- "$@"
     exit
 fi
 # normal mode
