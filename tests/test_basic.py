@@ -39,7 +39,13 @@ CASES = list(discover_cases())
     CASES,
     ids=[js_file.name for js_file, _ in CASES],
 )
-def test_basic(js_file, out_file, run_dynajs):
+def test_basic(js_file, out_file, run_dynajs, request):
     result = run_dynajs([str(js_file)])
+    actual = result.stdout.strip()
     expected = out_file.read_text().strip()
-    assert result.stdout.strip() == expected
+    if actual != expected:
+        if request.config.getoption("--update"):
+            out_file.write_text(actual + "\n")
+            pytest.skip(f"Updated expected output for {out_file.name}")
+        else:
+            assert actual == expected

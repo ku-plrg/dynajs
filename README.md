@@ -50,14 +50,30 @@ You can run the test suite with the following command:
 ./run-tests.sh
 ```
 
+#### Watching Mode
+
 If you want to turn on watching mode for tests, you can use:
 ```shell
 ./run-tests.sh --watch
 ```
 or
 ```shell
-./run-tests.sh -w
+./run-tests.sh -W
+```
+
+#### Output Update Mode
+
+If you want to update expected outputs for tests, you can use:
+```shell
+./run-tests.sh --update
+```
+or
+```shell
+./run-tests.sh -U
 ```
 
 It is based on [`pytest`](https://docs.pytest.org/), so you can also use any
-`pytest` options.
+`pytest` options. If you want to see more options, you can run:
+```shell
+./run-tests.sh --help
+```

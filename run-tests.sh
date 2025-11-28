@@ -14,7 +14,7 @@ then
 fi
 
 # watch mode
-if [ "$1" = "--watch" ] || [ "$1" = "-w" ]; then
+if [ "$1" = "--watch" ] || [ "$1" = "-W" ]; then
     shift
     ptw -- "$@"
     exit
