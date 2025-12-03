@@ -48,16 +48,21 @@
       var loc = getLoc(id);
       builder.put('B(' + op + ', ' + l + ', ' + r + ', ' + res + ')' + loc);
     },
-    unaryPre: function (id, op, left) {
-      var l = getValue(left);
+    unaryPre: function (id, op, operand) {
+      var l = getValue(operand);
       var loc = getLoc(id);
       builder.put('U[pre](' + op + ', ' + l + ')' + loc);
     },
-    unaryPost: function (id, op, left, result) {
-      var l = getValue(left);
+    unaryPost: function (id, op, operand, result) {
+      var l = getValue(operand);
       var res = getValue(result);
       var loc = getLoc(id);
       builder.put('U(' + op + ', ' + l + ', ' + res + ')' + loc);
+    },
+    conditional: function (id, op, value) {
+      var v = getValue(value);
+      var loc = getLoc(id);
+      builder.put('C(' + op + ', ' + v + ')' + loc);
     },
     literal: function (id, val) {
       var v = getValue(val);

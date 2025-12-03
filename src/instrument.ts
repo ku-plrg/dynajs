@@ -145,6 +145,7 @@ const LOG_LITERAL = DYNAJS_VAR + '.L';
 const LOG_EXPRESSION = DYNAJS_VAR + '.E';
 const LOG_BINARY_OP = DYNAJS_VAR + '.B';
 const LOG_UNARY_OP = DYNAJS_VAR + '.U';
+const LOG_CONDITION = DYNAJS_VAR + '.C';
 const LOG_EXCEPTION = DYNAJS_VAR + '.X';
 const LOG_SCRIPT_ENTRY = DYNAJS_VAR + '.Se';
 const LOG_SCRIPT_EXIT = DYNAJS_VAR + '.Sx';
@@ -178,6 +179,15 @@ function logUnaryOp(state: State, expr: Node): void {
   state.write(`${LOG_UNARY_OP}(${newId(expr)}, "${operator}", `);
   state.walk(argument);
   state.write(')');
+}
+
+// logging a logical operation
+function logLogicalOp(state: State, expr: Node): void {
+  const { left, right, operator } = expr as any;
+  state.write(`${LOG_CONDITION}(${newId(expr)}, "${operator}", `);
+  state.walk(left);
+  state.write(`) ${operator} `);
+  state.walk(right);
 }
 
 // logging an exception
@@ -383,7 +393,7 @@ const visitors: Visitors = {
     todo('AssignmentExpression');
   },
   LogicalExpression: (node, state) => {
-    todo('LogicalExpression');
+    logLogicalOp(state, node);
   },
   MemberExpression: (node, state) => {
     todo('MemberExpression');
