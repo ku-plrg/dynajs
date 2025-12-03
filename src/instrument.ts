@@ -3,7 +3,17 @@ import {
   EXCEPTION_VAR,
   NO_INSTRUMENT,
 } from './constants';
-import { AnyNode, Node } from 'acorn';
+import {
+  AnyNode,
+  Node,
+  Expression,
+  BinaryExpression,
+  UnaryExpression,
+  LogicalExpression,
+  Pattern,
+  Identifier,
+} from 'acorn';
+import { recursive, RecursiveVisitors } from 'acorn-walk'
 import { generate } from 'astring';
 import {
   getInstrumentedName,
@@ -15,6 +25,7 @@ import {
   todo,
   warn,
   writeFile,
+  VarKind,
 } from './utils';
 
 // instrument a JS file
@@ -66,6 +77,8 @@ export class State {
   indent: string;
   indentLevel: number;
   lineEnd: string;
+  scope?: Scope;
+  isLHS: boolean;
   instrumentedPath: string;
   originalPath: string;
   detail: boolean;
@@ -80,9 +93,26 @@ export class State {
     this.indent = options.indent ?? '  ';
     this.indentLevel = 0;
     this.lineEnd = options.lineEnd ?? '\n';
+    this.isLHS = false;
     this.instrumentedPath = options.instrumentedPath ?? '';
     this.originalPath = options.originalPath ?? '';
     this.detail = options.detail ?? false;
+  }
+
+  // execute body with isLHS = truej 
+  withLHS<T>(body: () => T): T {
+    const prev = this.isLHS;
+    this.isLHS = true;
+    const result = body();
+    this.isLHS = prev;
+    return result;
+  }
+
+  // update scope
+  updateScope(body: (scope: Scope) => void): void {
+    const scope = new Scope(this.scope);
+    body(scope);
+    this.scope = scope;
   }
 
   // wrap
@@ -94,9 +124,9 @@ export class State {
 
   // write with newline
   writeln(str: string): void {
+    this.write(this.lineEnd);
     this.write(this.indent.repeat(this.indentLevel));
     this.write(str);
-    this.write(this.lineEnd);
   }
 
   // walk the AST nodes in an array recursively
@@ -107,9 +137,9 @@ export class State {
 
   // walk the AST nodes in an array recursively with newline
   walkln(node: Node): void {
+    this.write(this.lineEnd);
     this.write(this.indent.repeat(this.indentLevel));
     this.walk(node);
-    this.write(this.lineEnd);
   }
 
   // walk the AST nodes in an array recursively
@@ -138,34 +168,96 @@ interface Options {
 }
 
 // -----------------------------------------------------------------------------
+// scope
+// -----------------------------------------------------------------------------
+class Scope {
+  vars: { [name: string]: VarKind };
+  parent?: Scope;
+
+  constructor(parent?: Scope) {
+    this.vars = {};
+    this.parent = parent;
+  }
+
+  walk(node: Node, forVar: boolean): void {
+    const visitors = forVar ? Scope.varVisitors : Scope.lexicalVisitors;
+    recursive(node, this, visitors);
+  }
+
+  walkArray(nodes: Node[], forVar: boolean): void {
+    for (const node of nodes) {
+      this.walk(node, forVar);
+    }
+  }
+
+  static varVisitors: RecursiveVisitors<Scope> = {
+    VariableDeclaration: (node, scope, c) => {
+      const { kind, declarations } = node;
+      if (kind === 'var') {
+        for (const decl of declarations) {
+          const xs = collectIdentifiers(decl.id);
+          for (const x of xs) {
+            scope.vars[x] = VarKind.Var;
+          }
+        }
+      }
+    },
+    FunctionDeclaration: (node, scope, c) => {},
+    FunctionExpression: (node, scope, c) => {},
+    ClassDeclaration: (node, scope, c) => {},
+    ClassExpression: (node, scope, c) => {},
+  }
+
+  static lexicalVisitors: RecursiveVisitors<Scope> = {
+    VariableDeclaration: (node, scope, c) => {
+      const { kind, declarations } = node;
+      if (kind === 'let' || kind === 'const') {
+        for (const decl of declarations) {
+          const xs = collectIdentifiers(decl.id);
+          for (const x of xs) {
+            scope.vars[x] = kind === 'let' ? VarKind.Let : VarKind.Const;
+          }
+        }
+      }
+    },
+    BlockStatement: (node, scope, c) => {},
+    ForStatement: (node, scope, c) => {},
+    ForInStatement: (node, scope, c) => {},
+    ForOfStatement: (node, scope, c) => {},
+    SwitchStatement: (node, scope, c) => {},
+    FunctionDeclaration: (node, scope, c) => {},
+    FunctionExpression: (node, scope, c) => {},
+    ClassDeclaration: (node, scope, c) => {},
+    ClassExpression: (node, scope, c) => {},
+  }
+}
+
+// -----------------------------------------------------------------------------
 // logging functions
 // -----------------------------------------------------------------------------
 // logging function names
-const LOG_LITERAL = DYNAJS_VAR + '.L';
 const LOG_EXPRESSION = DYNAJS_VAR + '.E';
 const LOG_BINARY_OP = DYNAJS_VAR + '.B';
 const LOG_UNARY_OP = DYNAJS_VAR + '.U';
 const LOG_CONDITION = DYNAJS_VAR + '.C';
+const LOG_DECLARE = DYNAJS_VAR + '.D';
+const LOG_READ = DYNAJS_VAR + '.R';
+const LOG_WRITE = DYNAJS_VAR + '.W';
+const LOG_LITERAL = DYNAJS_VAR + '.L';
 const LOG_EXCEPTION = DYNAJS_VAR + '.X';
 const LOG_SCRIPT_ENTRY = DYNAJS_VAR + '.Se';
 const LOG_SCRIPT_EXIT = DYNAJS_VAR + '.Sx';
 
 // logging end of an expression
-function logExpression(state: State, expr: Node): void {
+function logExpression(state: State, expr: Expression): void {
   state.write(`${LOG_EXPRESSION}(${newId(expr)}, `);
   state.walk(expr);
   state.write(')');
 }
 
-// logging a literal
-function logLiteral(state: State, literal: Node, literalType: number): void {
-  const code = generate(literal)
-  state.write(`${LOG_LITERAL}(${newId(literal)}, ${code}, ${literalType})`);
-}
-
 // logging a binary operation
-function logBinaryOp(state: State, expr: Node): void {
-  const { left, right, operator } = expr as any;
+function logBinaryOp(state: State, expr: BinaryExpression): void {
+  const { left, right, operator } = expr;
   state.write(`${LOG_BINARY_OP}(${newId(expr)}, "${operator}", `);
   state.walk(left);
   state.write(', ');
@@ -174,20 +266,50 @@ function logBinaryOp(state: State, expr: Node): void {
 }
 
 // logging a unary operation (except for `delete`)
-function logUnaryOp(state: State, expr: Node): void {
-  const { argument, operator } = expr as any;
+function logUnaryOp(state: State, expr: UnaryExpression): void {
+  const { argument, operator } = expr;
   state.write(`${LOG_UNARY_OP}(${newId(expr)}, "${operator}", `);
   state.walk(argument);
   state.write(')');
 }
 
 // logging a logical operation
-function logLogicalOp(state: State, expr: Node): void {
-  const { left, right, operator } = expr as any;
+function logLogicalOp(state: State, expr: LogicalExpression): void {
+  const { left, right, operator } = expr;
   state.write(`${LOG_CONDITION}(${newId(expr)}, "${operator}", `);
   state.walk(left);
   state.write(`) ${operator} `);
   state.walk(right);
+}
+
+// logging a variable declaration
+function logDeclare(state: State, node: Node): void {
+  const vars = state.scope?.vars;
+  if (!vars) return;
+  for (const name in vars) {
+    const kind = vars[name];
+    state.writeln(`${LOG_DECLARE}(${newId(node)}, "${name}", ${kind});`);
+  }
+}
+
+// logging a variable read
+function logRead(state: State, id: Identifier): void {
+  var { name } = id;
+  state.write(`${LOG_READ}(${newId(id)}, "${name}", ${name})`);
+}
+
+// logging a variable write
+function logWrite(state: State, id: Pattern, value: Expression): void {
+  state.write(`${LOG_WRITE}(${newId(id)}, `);
+  state.write(`[${collectIdentifiers(id).map(x => `"${x}"`).join(', ')}], `);
+  logExpression(state, value);
+  state.write(')');
+}
+
+// logging a literal
+function logLiteral(state: State, literal: Node, literalType: number): void {
+  const code = generate(literal)
+  state.write(`${LOG_LITERAL}(${newId(literal)}, ${code}, ${literalType})`);
 }
 
 // logging an exception
@@ -254,8 +376,11 @@ type Visitors = {
 
 const visitors: Visitors = {
   Identifier: (node, state) => {
-    const { name } = node;
-    state.write(name);
+    if (state.isLHS) {
+      state.write(node.name);
+    } else {
+      logRead(state, node);
+    }
   },
   Literal: (node, state) => {
     const { value } = node;
@@ -269,11 +394,16 @@ const visitors: Visitors = {
   },
   Program: (node, state) => {
     const { body } = node;
+    state.updateScope(scope => {
+      scope.walkArray(body, true);
+      scope.walkArray(body, false);
+    });
     state.writeln('try {');
     state.wrap(() => {
       logScriptEntry(state, node);
+      logDeclare(state, node);
       for (const statement of body) {
-        state.walkln(statement);
+        state.walk(statement);
       }
     });
     state.writeln(`} catch (${EXCEPTION_VAR}) {`);
@@ -288,11 +418,21 @@ const visitors: Visitors = {
   },
   ExpressionStatement: (node, state) => {
     const { expression } = node;
+    state.writeln('');
     logExpression(state, expression);
-    state.write(";");
+    state.write(';');
   },
   BlockStatement: (node, state) => {
-    todo('BlockStatement');
+    const { body } = node;
+    state.updateScope(scope => scope.walkArray(body, false));
+    state.writeln('{');
+    state.wrap(() => {
+      logDeclare(state, node);
+      for (const statement of body) {
+        state.walk(statement);
+      }
+    });
+    state.writeln('}');
   },
   EmptyStatement: (node, state) => {
     todo('EmptyStatement');
@@ -350,16 +490,16 @@ const visitors: Visitors = {
   },
   VariableDeclaration: (node, state) => {
     const { kind, declarations } = node;
-    state.write(kind + ' ');
+    state.writeln(kind + ' ');
     state.walkArray(declarations);
     state.write(';');
   },
   VariableDeclarator: (node, state) => {
     const { id, init } = node;
-    state.walk(id);
+    state.withLHS(() => state.walk(id));
     if (init != null) {
       state.write(' = ');
-      state.walk(init);
+      logWrite(state, id, init);
     }
   },
   ThisExpression: (node, state) => {
@@ -408,7 +548,9 @@ const visitors: Visitors = {
     todo('NewExpression');
   },
   SequenceExpression: (node, state) => {
-    todo('SequenceExpression');
+    state.write('(');
+    state.walkArray(node.expressions, ', ');
+    state.write(')');
   },
   ForOfStatement: (node, state) => {
     todo('ForOfStatement');
@@ -498,7 +640,9 @@ const visitors: Visitors = {
     todo('ImportExpression');
   },
   ParenthesizedExpression: (node, state) => {
-    todo('ParenthesizedExpression');
+    state.write('(');
+    state.walk(node.expression);
+    state.write(')');
   },
   PropertyDefinition: (node, state) => {
     todo('PropertyDefinition');
@@ -509,4 +653,56 @@ const visitors: Visitors = {
   StaticBlock: (node, state) => {
     todo('StaticBlock');
   },
+}
+
+// -----------------------------------------------------------------------------
+// helpers
+// -----------------------------------------------------------------------------
+// collect all identifiers in a pattern
+function collectIdentifiers(pattern: Pattern): string[] {
+  const ids: string[] = [];
+  function collect(node: Pattern): void {
+    switch (node.type) {
+      case 'Identifier':
+        ids.push(node.name);
+        break;
+      case 'ObjectPattern':
+        for (const prop of node.properties) {
+          switch (prop.type) {
+            case 'Property':
+              collect(prop.value);
+              break;
+            case 'RestElement':
+              collect(prop.argument);
+              break;
+          }
+        }
+        break;
+      case 'ArrayPattern':
+        for (const elem of node.elements) {
+          if (elem != null) {
+            switch (elem.type) {
+              case 'Identifier':
+                ids.push(elem.name);
+                break;
+              case 'RestElement':
+                collect(elem.argument);
+                break;
+              default:
+                collect(elem);
+                break;
+            }
+          }
+        }
+        break;
+      case 'RestElement':
+        collect(node.argument);
+        break;
+      case 'AssignmentPattern':
+        collect(node.left);
+        break;
+    }
+  }
+  collect(pattern);
+  return ids;
 }

@@ -64,6 +64,20 @@
       var loc = getLoc(id);
       builder.put('C(' + op + ', ' + v + ')' + loc);
     },
+    declare: function (id, name, kind) {
+      var loc = getLoc(id);
+      builder.put('D(' + name + ', ' + kind + ')' + loc);
+    },
+    read: function (id, name, val) {
+      var v = getValue(val);
+      var loc = getLoc(id);
+      builder.put('R(' + name + ', ' + v + ')' + loc);
+    },
+    write: function (id, names, val) {
+      var v = getValue(val);
+      var loc = getLoc(id);
+      builder.put('W([' + names.join(', ') + '], ' + v + ')' + loc);
+    },
     literal: function (id, val) {
       var v = getValue(val);
       var loc = getLoc(id);

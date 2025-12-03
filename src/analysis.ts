@@ -2,6 +2,8 @@ import {
   log,
   err,
   stringify,
+  VarKind,
+  varKindToString,
 } from './utils';
 import * as utils from './utils';
 
@@ -15,6 +17,9 @@ type Analysis = {
   unaryPre?: (id: number, op: string, operand: any) => void;
   unaryPost?: (id: number, op: string, operand: any, result: any) => void;
   conditional?: (id: number, op: string, value: any) => void;
+  declare?: (id: number, name: string, kind: string) => void;
+  read?: (id: number, name: string, value: any) => void;
+  write?: (id: number, names: string[], value: any) => void;
   literal?: (id: number, value: any, type: number) => void;
   scriptEnter?: (id: number, instrumentedPath: string, originalPath: string) => void;
   scriptExit?: (id: number) => void;
@@ -94,6 +99,23 @@ function C(id: number, op: string, value: any): any {
   return value;
 }
 
+// hook for variable declarations
+function D(id: number, name: string, kind: VarKind): void {
+  D$.analysis.declare?.(id, name, varKindToString(kind));
+}
+
+// hook for variable reads
+function R(id: number, name: string, value: any): any {
+  D$.analysis.read?.(id, name, value);
+  return value;
+}
+
+// hook for variable writes
+function W(id: number, names: string[], value: any): any {
+  D$.analysis.write?.(id, names, value);
+  return value;
+}
+
 // hook for literals
 function L(id: number, value: any, type: number): any {
   D$.analysis.literal?.(id, value, type);
@@ -132,7 +154,13 @@ function idToLoc(id: number) {
 // -----------------------------------------------------------------------------
 // assign to the global D$ variable
 // -----------------------------------------------------------------------------
-const BASE = { analysis: {}, ids: {}, idToLoc, utils, E, B, U, C, L, X, Se, Sx };
+const BASE = {
+  analysis: {},
+  ids: {},
+  idToLoc,
+  utils,
+  E, B, U, C, D, R, W, L, X, Se, Sx
+};
 type DynaJSType = typeof BASE & {
   analysis: Analysis;
   idToLoc: (id: number) => string;

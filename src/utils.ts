@@ -218,3 +218,24 @@ export class StringBuilder {
     if (this.depth > 0) this.depth -= 1;
   }
 }
+
+// variable kind
+export enum VarKind {
+  Var = 0,
+  Let = 1,
+  Const = 2,
+}
+
+// variable kind to string
+export function varKindToString(kind: VarKind): string {
+  switch (kind) {
+    case VarKind.Var:
+      return 'var';
+    case VarKind.Let:
+      return 'let';
+    case VarKind.Const:
+      return 'const';
+    default:
+      return 'unknown';
+  }
+}
