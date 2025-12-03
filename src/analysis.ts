@@ -14,15 +14,16 @@ type Analysis = {
   endExpression?: (id: number, value: any) => void;
   binaryPre?: (id: number, op: string, left: any, right: any) => void;
   binaryPost?: (id: number, op: string, left: any, right: any, result: any) => void;
-  unaryPre?: (id: number, op: string, operand: any) => void;
-  unaryPost?: (id: number, op: string, operand: any, result: any) => void;
+  unaryPre?: (id: number, op: string, prefix: boolean, operand: any) => void;
+  unaryPost?: (id: number, op: string, prefix: boolean, operand: any, result: any) => void;
   condition?: (id: number, op: string, value: any) => void;
   declare?: (id: number, name: string, kind: string) => void;
   read?: (id: number, name: string, value: any) => void;
   write?: (id: number, names: string[], value: any) => void;
   literal?: (id: number, value: any, type: number) => void;
+  _throw?: (id: number, val: any) => never;
   scriptEnter?: (id: number, instrumentedPath: string, originalPath: string) => void;
-  scriptExit?: (id: number) => void;
+  scriptExit?: (id: number, exc?: { exception: any }) => void;
   endExecution?: () => void;
   uncaughtException?: any;
   result?: any;
@@ -75,13 +76,13 @@ const BINARY_OPS: { [op: string]: (a: any, b: any) => any } = {
 
 // hook for unary operations (except for `delete`)
 function U(id: number, op: string, operand: any): any {
-  D$.analysis.unaryPre?.(id, op, operand);
+  D$.analysis.unaryPre?.(id, op, true, operand);
   const f = UNARY_OPS[op];
   if (!f) {
     err(`unknown unary operator ${op}`);
   }
   const result = f(operand)
-  D$.analysis.unaryPost?.(id, op, operand, result);
+  D$.analysis.unaryPost?.(id, op, true, operand, result);
   return result;
 }
 const UNARY_OPS: { [op: string]: (a: any) => any } = {
@@ -91,6 +92,22 @@ const UNARY_OPS: { [op: string]: (a: any) => any } = {
   "~": (a: any) => ~a,
   "typeof": (a: any) => typeof a,
   "void": (a: any) => void a,
+}
+
+// hook for update operations
+function Up(id: number, binaryId: number, op: string, prefix: boolean, argument: any, write: (x: any) => any): any {
+  D$.analysis.unaryPre?.(id, op, prefix, argument);
+  const oldValue = -(-argument);
+  const binaryOp = op === '++' ? '+' : '-';
+  const right = typeof oldValue == 'bigint' ? 1n : 1;
+  D$.analysis.binaryPre?.(binaryId, binaryOp, oldValue, right);
+  // @ts-ignore
+  let newValue = op === '++' ? oldValue + right : oldValue - right;
+  D$.analysis.binaryPost?.(binaryId, binaryOp, oldValue, right, newValue);
+  write(newValue);
+  const result = prefix ? newValue : oldValue;
+  D$.analysis.unaryPost?.(id, op, prefix, argument, result);
+  return result;
 }
 
 // hook for condition expressions
@@ -122,6 +139,12 @@ function L(id: number, value: any, type: number): any {
   return value;
 }
 
+// hook for throw statements
+function T(id: number, value: any): any {
+  D$.analysis._throw?.(id, value);
+  return value;
+}
+
 // hook for uncaught exceptions
 function X(id: number, exception: any): void {
   D$.analysis.uncaughtException = { exception };
@@ -135,7 +158,7 @@ function Se(id: number, instrumentedPath: string, originalPath: string): void {
 // hook for script exit
 function Sx(id: number): void {
   const exc = D$.analysis.uncaughtException;
-  D$.analysis.scriptExit?.(id);
+  D$.analysis.scriptExit?.(id, exc);
   if (exc) {
     const tmp = exc.exception;
     D$.analysis.uncaughtException = undefined;
@@ -159,7 +182,7 @@ const BASE = {
   ids: {},
   idToLoc,
   utils,
-  E, B, U, C, D, R, W, L, X, Se, Sx
+  E, B, U, Up, C, D, R, W, L, T, X, Se, Sx
 };
 type DynaJSType = typeof BASE & {
   analysis: Analysis;

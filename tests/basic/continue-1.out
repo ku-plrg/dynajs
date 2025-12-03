@@ -1,7 +1,7 @@
 Se() @ 1:1-9:1
   D(x, var) @ 1:1-9:1
   L(true) @ 1:9-13
-  W([x], true) @ 1:5-6
+  W([x], true) @ 1:9-13
   E(true) @ 1:9-13
   L(true) @ 2:8-12
   C(while, true) @ 2:8-12
@@ -10,7 +10,7 @@ Se() @ 1:1-9:1
   C(if, true) @ 3:7-8
   E(true) @ 3:7-8
   L(false) @ 4:9-14
-  W([x], false) @ 4:5-6
+  W([x], false) @ 4:9-14
   E(false) @ 4:5-14
   L(true) @ 2:8-12
   C(while, true) @ 2:8-12

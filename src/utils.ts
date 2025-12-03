@@ -208,8 +208,10 @@ export class StringBuilder {
     this.result = "";
     this.depth = 0;
   }
-  put = (str: string): void => {
-    this.result += this.indent.repeat(this.depth) + str + "\n";
+  put = (str: string): string => {
+    const line = this.indent.repeat(this.depth) + str
+    this.result += line + '\n';
+    return line;
   }
   indentIn = (): void => {
     this.depth += 1;

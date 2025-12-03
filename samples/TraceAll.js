@@ -1,7 +1,7 @@
 (function (D$) {
 
   var builder = new D$.utils.StringBuilder();
-  var put = builder.put;
+  function put(str) { console.log(builder.put(str)); }
   var indentIn = builder.indentIn;
   var indentOut = builder.indentOut;
 
@@ -33,74 +33,80 @@
     endExpression: function (id, value) {
       var v = getValue(value);
       var loc = getLoc(id);
-      builder.put('E(' + v + ')' + loc);
+      put('E(' + v + ')' + loc);
     },
     binaryPre: function (id, op, left, right) {
       var l = getValue(left);
       var r = getValue(right);
       var loc = getLoc(id);
-      builder.put('B[pre](' + op + ', ' + l + ', ' + r + ')' + loc);
+      put('B[pre](' + op + ', ' + l + ', ' + r + ')' + loc);
     },
     binaryPost: function (id, op, left, right, result) {
       var l = getValue(left);
       var r = getValue(right);
       var res = getValue(result);
       var loc = getLoc(id);
-      builder.put('B(' + op + ', ' + l + ', ' + r + ', ' + res + ')' + loc);
+      put('B(' + op + ', ' + l + ', ' + r + ', ' + res + ')' + loc);
     },
-    unaryPre: function (id, op, operand) {
+    unaryPre: function (id, op, prefix, operand) {
       var l = getValue(operand);
       var loc = getLoc(id);
-      builder.put('U[pre](' + op + ', ' + l + ')' + loc);
+      op = prefix ? op + ' _' : '_ ' + op;
+      put('U[pre](' + op + ', ' + l + ')' + loc);
     },
-    unaryPost: function (id, op, operand, result) {
+    unaryPost: function (id, op, prefix, operand, result) {
       var l = getValue(operand);
       var res = getValue(result);
       var loc = getLoc(id);
-      builder.put('U(' + op + ', ' + l + ', ' + res + ')' + loc);
+      op = prefix ? op + ' _' : '_ ' + op;
+      put('U(' + op + ', ' + l + ', ' + res + ')' + loc);
     },
     condition: function (id, op, value) {
       var v = getValue(value);
       var loc = getLoc(id);
-      builder.put('C(' + op + ', ' + v + ')' + loc);
+      put('C(' + op + ', ' + v + ')' + loc);
     },
     declare: function (id, name, kind) {
       var loc = getLoc(id);
-      builder.put('D(' + name + ', ' + kind + ')' + loc);
+      put('D(' + name + ', ' + kind + ')' + loc);
     },
-    read: function (id, name, val) {
-      var v = getValue(val);
+    read: function (id, name, value) {
+      var v = getValue(value);
       var loc = getLoc(id);
-      builder.put('R(' + name + ', ' + v + ')' + loc);
+      put('R(' + name + ', ' + v + ')' + loc);
     },
-    write: function (id, names, val) {
-      var v = getValue(val);
+    write: function (id, names, value) {
+      var v = getValue(value);
       var loc = getLoc(id);
-      builder.put('W([' + names.join(', ') + '], ' + v + ')' + loc);
+      put('W([' + names.join(', ') + '], ' + v + ')' + loc);
     },
-    literal: function (id, val) {
-      var v = getValue(val);
+    literal: function (id, value) {
+      var v = getValue(value);
       var loc = getLoc(id);
-      builder.put('L(' + v + ')' + loc);
+      put('L(' + v + ')' + loc);
+    },
+    _throw: function (id, value) {
+      var v = getValue(value);
+      var loc = getLoc(id);
+      put('T(' + v + ')' + loc);
     },
     scriptEnter: function (id, instrumentedPath, originalPath) {
       var loc = getLoc(id);
-      builder.put('Se()' + loc);
+      put('Se()' + loc);
       indentIn();
     },
     scriptExit: function (id, exc) {
       indentOut();
       var loc = getLoc(id);
       if (exc) {
-        var e = getValue(exc);
-        builder.put('Sx(' + e + ')' + loc);
+        var e = getValue(exc.exception);
+        put('Sx(' + e + ')' + loc);
       } else {
-        builder.put('Sx()' + loc);
+        put('Sx()' + loc);
       }
     },
     endExecution: function () {
       var result = builder.result;
-      console.log(result);
       D$.analysis.result = result;
     },
   }

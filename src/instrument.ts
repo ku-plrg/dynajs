@@ -1,6 +1,7 @@
 import {
   DYNAJS_VAR,
   EXCEPTION_VAR,
+  TEMP_PARAM_VAR,
   NO_INSTRUMENT,
 } from './constants';
 import {
@@ -9,6 +10,7 @@ import {
   Expression,
   BinaryExpression,
   UnaryExpression,
+  UpdateExpression,
   LogicalExpression,
   Pattern,
   Identifier,
@@ -239,11 +241,13 @@ class Scope {
 const LOG_EXPRESSION = DYNAJS_VAR + '.E';
 const LOG_BINARY_OP = DYNAJS_VAR + '.B';
 const LOG_UNARY_OP = DYNAJS_VAR + '.U';
+const LOG_UPDATE_OP = DYNAJS_VAR + '.Up';
 const LOG_CONDITION = DYNAJS_VAR + '.C';
 const LOG_DECLARE = DYNAJS_VAR + '.D';
 const LOG_READ = DYNAJS_VAR + '.R';
 const LOG_WRITE = DYNAJS_VAR + '.W';
 const LOG_LITERAL = DYNAJS_VAR + '.L';
+const LOG_THROW = DYNAJS_VAR + '.T';
 const LOG_EXCEPTION = DYNAJS_VAR + '.X';
 const LOG_SCRIPT_ENTRY = DYNAJS_VAR + '.Se';
 const LOG_SCRIPT_EXIT = DYNAJS_VAR + '.Sx';
@@ -274,6 +278,18 @@ function logUnaryOp(state: State, expr: UnaryExpression): void {
   state.write(')');
 }
 
+// logging an update operation
+function logUpdateOp(state: State, expr: UpdateExpression): void {
+  const { argument, operator, prefix } = expr;
+  state.write(`${LOG_UPDATE_OP}(${newId(expr)}, ${newId(expr)}, "${operator}", ${prefix}, `);
+  state.walk(argument);
+  state.write(`, ${TEMP_PARAM_VAR} => `);
+  state.withLHS(() => state.walk(argument));
+  state.write(` = `);
+  logWrite(state, argument, argument, () => state.write(TEMP_PARAM_VAR));
+  state.write(')');
+}
+
 // logging a condition expression
 function logCondition(state: State, test: Expression, kind: string): void {
   state.write(`${LOG_CONDITION}(${newId(test)}, "${kind}", `);
@@ -292,16 +308,18 @@ function logDeclare(state: State, node: Node): void {
 }
 
 // logging a variable read
-function logRead(state: State, id: Identifier): void {
-  var { name } = id;
-  state.write(`${LOG_READ}(${newId(id)}, "${name}", ${name})`);
+function logRead(state: State, node: Node, name: string): void {
+  state.write(`${LOG_READ}(${newId(node)}, "${name}", ${name})`);
 }
 
 // logging a variable write
-function logWrite(state: State, id: Pattern, value: Expression): void {
-  state.write(`${LOG_WRITE}(${newId(id)}, `);
-  state.write(`[${collectIdentifiers(id).map(x => `"${x}"`).join(', ')}], `);
-  state.walk(value);
+function logWrite(state: State, lhs: Node, value: Expression, body?: () => void): void {
+  state.write(`${LOG_WRITE}(${newId(value)}, `);
+  // @ts-ignore
+  const xs = collectIdentifiers(lhs);
+  state.write(`[${xs.map(x => `"${x}"`).join(', ')}], `);
+  if (body) body();
+  else state.walk(value);
   state.write(')');
 }
 
@@ -309,6 +327,13 @@ function logWrite(state: State, id: Pattern, value: Expression): void {
 function logLiteral(state: State, literal: Node, literalType: number): void {
   const code = generate(literal)
   state.write(`${LOG_LITERAL}(${newId(literal)}, ${code}, ${literalType})`);
+}
+
+// logging a throw statement
+function logThrow(state: State, arg: Expression): void {
+  state.write(`${LOG_THROW}(${newId(arg)}, `);
+  logExpression(state, arg);
+  state.write(')');
 }
 
 // logging an exception
@@ -378,7 +403,7 @@ const visitors: Visitors = {
     if (state.isLHS) {
       state.write(node.name);
     } else {
-      logRead(state, node);
+      logRead(state, node, node.name);
     }
   },
   Literal: (node, state) => {
@@ -483,7 +508,9 @@ const visitors: Visitors = {
     todo('SwitchCase');
   },
   ThrowStatement: (node, state) => {
-    todo('ThrowStatement');
+    state.write('throw ');
+    logThrow(state, node.argument);
+    state.write(';');
   },
   TryStatement: (node, state) => {
     todo('TryStatement');
@@ -530,7 +557,7 @@ const visitors: Visitors = {
     }
   },
   ThisExpression: (node, state) => {
-    todo('ThisExpression');
+    logRead(state, node, 'this');
   },
   ArrayExpression: (node, state) => {
     todo('ArrayExpression');
@@ -551,7 +578,7 @@ const visitors: Visitors = {
     logUnaryOp(state, node);
   },
   UpdateExpression: (node, state) => {
-    todo('UpdateExpression');
+    logUpdateOp(state, node);
   },
   BinaryExpression: (node, state) => {
     logBinaryOp(state, node);
@@ -705,7 +732,7 @@ const visitors: Visitors = {
 // helpers
 // -----------------------------------------------------------------------------
 // collect all identifiers in a pattern
-function collectIdentifiers(pattern: Pattern): string[] {
+function collectIdentifiers(node: Pattern): string[] {
   const ids: string[] = [];
   function collect(node: Pattern): void {
     switch (node.type) {
@@ -747,8 +774,10 @@ function collectIdentifiers(pattern: Pattern): string[] {
       case 'AssignmentPattern':
         collect(node.left);
         break;
+      default:
+        todo(`collectIdentifiers: ${node.type}`);
     }
   }
-  collect(pattern);
+  collect(node);
   return ids;
 }
