@@ -1,0 +1,15 @@
+Se() @ 1:1-5:1
+  D(x, var) @ 1:1-5:1
+  L(true) @ 1:9-13
+  W([x], true) @ 1:5-6
+  E(true) @ 1:9-13
+  R(x, true) @ 2:8-9
+  C(while, true) @ 2:8-9
+  E(true) @ 2:8-9
+  L(false) @ 3:7-12
+  W([x], false) @ 3:3-4
+  E(false) @ 3:3-12
+  R(x, false) @ 2:8-9
+  C(while, false) @ 2:8-9
+  E(false) @ 2:8-9
+Sx() @ 1:1-5:1
