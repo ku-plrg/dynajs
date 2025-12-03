@@ -59,7 +59,7 @@
       var loc = getLoc(id);
       builder.put('U(' + op + ', ' + l + ', ' + res + ')' + loc);
     },
-    conditional: function (id, op, value) {
+    condition: function (id, op, value) {
       var v = getValue(value);
       var loc = getLoc(id);
       builder.put('C(' + op + ', ' + v + ')' + loc);

@@ -249,9 +249,10 @@ const LOG_SCRIPT_ENTRY = DYNAJS_VAR + '.Se';
 const LOG_SCRIPT_EXIT = DYNAJS_VAR + '.Sx';
 
 // logging end of an expression
-function logExpression(state: State, expr: Expression): void {
+function logExpression(state: State, expr: Expression, conditionKind?: string): void {
   state.write(`${LOG_EXPRESSION}(${newId(expr)}, `);
-  state.walk(expr);
+  if (conditionKind) logCondition(state, expr, conditionKind);
+  else state.walk(expr)
   state.write(')');
 }
 
@@ -273,13 +274,11 @@ function logUnaryOp(state: State, expr: UnaryExpression): void {
   state.write(')');
 }
 
-// logging a logical operation
-function logLogicalOp(state: State, expr: LogicalExpression): void {
-  const { left, right, operator } = expr;
-  state.write(`${LOG_CONDITION}(${newId(expr)}, "${operator}", `);
-  state.walk(left);
-  state.write(`) ${operator} `);
-  state.walk(right);
+// logging a condition expression
+function logCondition(state: State, test: Expression, kind: string): void {
+  state.write(`${LOG_CONDITION}(${newId(test)}, "${kind}", `);
+  state.walk(test);
+  state.write(`)`);
 }
 
 // logging a variable declaration
@@ -403,6 +402,7 @@ const visitors: Visitors = {
       logScriptEntry(state, node);
       logDeclare(state, node);
       for (const statement of body) {
+        state.writeln('');
         state.walk(statement);
       }
     });
@@ -418,27 +418,27 @@ const visitors: Visitors = {
   },
   ExpressionStatement: (node, state) => {
     const { expression } = node;
-    state.writeln('');
     logExpression(state, expression);
     state.write(';');
   },
   BlockStatement: (node, state) => {
     const { body } = node;
     state.updateScope(scope => scope.walkArray(body, false));
-    state.writeln('{');
+    state.write('{');
     state.wrap(() => {
       logDeclare(state, node);
       for (const statement of body) {
+        state.writeln('');
         state.walk(statement);
       }
     });
     state.writeln('}');
   },
   EmptyStatement: (node, state) => {
-    todo('EmptyStatement');
+    state.write(';');
   },
   DebuggerStatement: (node, state) => {
-    todo('DebuggerStatement');
+    state.write('debugger;');
   },
   WithStatement: (node, state) => {
     todo('WithStatement');
@@ -456,7 +456,15 @@ const visitors: Visitors = {
     todo('ContinueStatement');
   },
   IfStatement: (node, state) => {
-    todo('IfStatement');
+    const { test, consequent, alternate } = node;
+    state.write('if (');
+    logExpression(state, test, 'if');
+    state.write(') ');
+    state.walk(consequent);
+    if (alternate != null) {
+      state.write(' else ');
+      state.walk(alternate);
+    }
   },
   SwitchStatement: (node, state) => {
     todo('SwitchStatement');
@@ -474,7 +482,7 @@ const visitors: Visitors = {
     todo('CatchClause');
   },
   WhileStatement: (node, state) => {
-    todo('WhileStatement');
+    state.write('while (');
   },
   DoWhileStatement: (node, state) => {
     todo('DoWhileStatement');
@@ -490,7 +498,7 @@ const visitors: Visitors = {
   },
   VariableDeclaration: (node, state) => {
     const { kind, declarations } = node;
-    state.writeln(kind + ' ');
+    state.write(kind + ' ');
     state.walkArray(declarations);
     state.write(';');
   },
@@ -533,7 +541,10 @@ const visitors: Visitors = {
     todo('AssignmentExpression');
   },
   LogicalExpression: (node, state) => {
-    logLogicalOp(state, node);
+    const { left, right, operator } = node;
+    logCondition(state, left, operator);
+    state.write(` ${operator} `);
+    state.walk(right);
   },
   MemberExpression: (node, state) => {
     todo('MemberExpression');

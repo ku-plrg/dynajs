@@ -16,7 +16,7 @@ type Analysis = {
   binaryPost?: (id: number, op: string, left: any, right: any, result: any) => void;
   unaryPre?: (id: number, op: string, operand: any) => void;
   unaryPost?: (id: number, op: string, operand: any, result: any) => void;
-  conditional?: (id: number, op: string, value: any) => void;
+  condition?: (id: number, op: string, value: any) => void;
   declare?: (id: number, name: string, kind: string) => void;
   read?: (id: number, name: string, value: any) => void;
   write?: (id: number, names: string[], value: any) => void;
@@ -93,9 +93,9 @@ const UNARY_OPS: { [op: string]: (a: any) => any } = {
   "void": (a: any) => void a,
 }
 
-// hook for conditionals
+// hook for condition expressions
 function C(id: number, op: string, value: any): any {
-  D$.analysis.conditional?.(id, op, value);
+  D$.analysis.condition?.(id, op, value);
   return value;
 }
 
