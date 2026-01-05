@@ -9,6 +9,8 @@ import {
   BinaryExpression,
   CatchClause,
   Expression,
+  ForInStatement,
+  ForOfStatement,
   Function,
   Identifier,
   LogicalExpression,
@@ -277,8 +279,14 @@ class Scope {
 // logging functions
 // -----------------------------------------------------------------------------
 // logging function names
-const LOG_EXPRESSION = DYNAJS_VAR + '.E';
+const LOG_SCRIPT_ENTER = DYNAJS_VAR + '.Se';
+const LOG_SCRIPT_EXIT = DYNAJS_VAR + '.Sx';
 const LOG_FUNCTION_CALL = DYNAJS_VAR + '.F';
+const LOG_FUNC_ENTER = DYNAJS_VAR + '.Fe';
+const LOG_FUNC_EXIT = DYNAJS_VAR + '.Fx';
+const LOG_RETURN = DYNAJS_VAR + '.Re';
+const LOG_FOR_IN_OF_OBJECT = DYNAJS_VAR + '.O';
+const LOG_EXPRESSION = DYNAJS_VAR + '.E';
 const LOG_BINARY_OP = DYNAJS_VAR + '.B';
 const LOG_UNARY_OP = DYNAJS_VAR + '.U';
 const LOG_UPDATE_OP = DYNAJS_VAR + '.Up';
@@ -289,19 +297,19 @@ const LOG_DECLARE = DYNAJS_VAR + '.D';
 const LOG_READ = DYNAJS_VAR + '.R';
 const LOG_WRITE = DYNAJS_VAR + '.W';
 const LOG_LITERAL = DYNAJS_VAR + '.L';
-const LOG_RETURN = DYNAJS_VAR + '.Re';
 const LOG_THROW = DYNAJS_VAR + '.Th';
 const LOG_EXCEPTION = DYNAJS_VAR + '.X';
-const LOG_FUNC_ENTER = DYNAJS_VAR + '.Fe';
-const LOG_FUNC_EXIT = DYNAJS_VAR + '.Fx';
-const LOG_SCRIPT_ENTER = DYNAJS_VAR + '.Se';
-const LOG_SCRIPT_EXIT = DYNAJS_VAR + '.Sx';
+const LOG_TEMP_VAR = DYNAJS_VAR + '._t';
 
-// logging end of an expression
-function logExpression(state: State, expr: Expression): void {
-  state.write(`${LOG_EXPRESSION}(${newId(expr)}, `);
-  state.walk(expr);
-  state.write(')');
+// logging script enter
+function logScriptEnter(state: State, program: Node): void {
+  const { instrumentedPath: i, originalPath: o } = state;
+  state.writeln(`${LOG_SCRIPT_ENTER}(${newId(program)}, "${i}", "${o}");`);
+}
+
+// logging script exit
+function logScriptExit(state: State, program: Node): void {
+  state.writeln(`${LOG_SCRIPT_EXIT}(${newId(program)});`);
 }
 
 // logging a function call
@@ -315,6 +323,116 @@ function logCall(state: State, callee: Node, isConstructor: boolean): void {
     state.walk(callee);
     state.write(`, ${isConstructor})`);
   }
+}
+
+// logging function declaration
+function logFuncDeclare(state: State, node: Node, isExpr: boolean): void {
+  const { id, generator, async } = node as Function;
+  state.write(async ? 'async ' : '');
+  state.write(generator ? 'function* ' : 'function ');
+  if (id != null) state.write(id.name);
+  logFunc(state, node, isExpr);
+}
+
+// logging function tail
+function logFunc(state: State, node: Node, isExpr: boolean): void {
+  state.createScope(scope => scope.walkFunction(node, isExpr));
+  const func = node as Function;
+  const { params, body } = func;
+  state.write('(');
+  state.withLHS(() => state.walkArray(params));
+  state.write(') {');
+  state.wrap(() => {
+    state.writeln('try {');
+    state.wrap(() => {
+      logFuncEnter(state, node);
+      logDeclare(state, node);
+      if (body.type === 'BlockStatement') {
+        for (const statement of body.body) {
+          state.writeln('');
+          state.walk(statement);
+        }
+      } else {
+        todo('Function with expression body');
+      }
+    });
+    state.writeln(`} catch (${EXCEPTION_VAR}) {`);
+    state.wrap(() => {
+      logException(state, node);
+    });
+    state.writeln(`} finally {`);
+    state.wrap(() => {
+      logFuncExit(state, node);
+    });
+    state.writeln(`}`);
+  });
+  state.writeln('}');
+}
+
+// logging function enter
+function logFuncEnter(state: State, func: Node): void {
+  state.writeln(`${LOG_FUNC_ENTER}(${newId(func)}, arguments.callee, this, arguments);`);
+}
+
+// logging function exit
+function logFuncExit(state: State, func: Node): void {
+  state.writeln(`${LOG_FUNC_EXIT}(${newId(func)});`);
+}
+
+// logging a return statement
+function logReturn(state: State, node: ReturnStatement): void {
+  const arg = node.argument;
+  state.write(`${LOG_RETURN}(${newId(arg ?? node)}, `);
+  if (arg != null) {
+    logExpression(state, arg);
+  } else {
+    state.write('undefined');
+  }
+  state.write(')');
+}
+
+// logging a for-in/of statement
+function logForInOfStatement(state: State, node: Node, isForIn: boolean, isAwait: boolean): void {
+  const { left, right, body } = node as (ForInStatement | ForOfStatement);
+  const awaitStr = isAwait ? 'await ' : '';
+  const prep = isForIn ? 'in' : 'of';
+  state.write(`for ${awaitStr}(${LOG_TEMP_VAR} ${prep} `);
+  logForInOfObject(state, right, true);
+  state.write(') {');
+  state.wrap(() => {
+    state.createScope(scope => scope.walk(left), true);
+    logDeclare(state, left);
+    state.writeln('');
+    let id: Pattern;
+    if (left.type === 'VariableDeclaration') {
+      const { declarations, kind } = left;
+      state.write(`${kind} `);
+      id = declarations[0].id;
+    } else {
+      id = left;
+    }
+    state.withLHS(() => state.walk(id));
+    state.write(' = ');
+    logWrite(state, id, right, () => state.write(LOG_TEMP_VAR));
+    state.write(';');
+    state.writeln('');
+    state.walk(body);
+  });
+  state.writeln('}');
+}
+
+// logging the RHS object of a for-in/of statement
+function logForInOfObject(state: State, expr: Expression, isForIn: boolean): void {
+  state.write(`${LOG_FOR_IN_OF_OBJECT}(${newId(expr)}, `);
+  state.walk(expr);
+  state.write(`, ${isForIn})`);
+}
+
+// logging end of an expression
+function logExpression(state: State, expr: Expression): void {
+  state.write(`${LOG_EXPRESSION}(${newId(expr)}, `);
+  state.walk(expr);
+  state.write(')');
 }
 
 // logging a binary operation
@@ -408,18 +526,6 @@ function logLiteral(state: State, literal: Node, body?: () => void): void {
   state.write(`)`);
 }
 
-// logging a return statement
-function logReturn(state: State, node: ReturnStatement): void {
-  const arg = node.argument;
-  state.write(`${LOG_RETURN}(${newId(arg ?? node)}, `);
-  if (arg != null) {
-    logExpression(state, arg);
-  } else {
-    state.write('undefined');
-  }
-  state.write(')');
-}
-
 // logging a throw statement
 function logThrow(state: State, arg: Expression): void {
   state.write(`${LOG_THROW}(${newId(arg)}, `);
@@ -430,71 +536,6 @@ function logThrow(state: State, arg: Expression): void {
 // logging an exception
 function logException(state: State, program: Node): void {
   state.writeln(`${LOG_EXCEPTION}(${newId(program)}, ${EXCEPTION_VAR});`);
-}
-
-// logging function declaration
-function logFuncDeclare(state: State, node: Node, isExpr: boolean): void {
-  const { id, generator, async } = node as Function;
-  state.write(async ? 'async ' : '');
-  state.write(generator ? 'function* ' : 'function ');
-  if (id != null) state.write(id.name);
-  logFunc(state, node, isExpr);
-}
-
-// logging function tail
-function logFunc(state: State, node: Node, isExpr: boolean): void {
-  state.createScope(scope => scope.walkFunction(node, isExpr));
-  const func = node as Function;
-  const { params, body } = func;
-  state.write('(');
-  state.withLHS(() => state.walkArray(params));
-  state.write(') {');
-  state.wrap(() => {
-    state.writeln('try {');
-    state.wrap(() => {
-      logFuncEnter(state, node);
-      logDeclare(state, node);
-      if (body.type === 'BlockStatement') {
-        for (const statement of body.body) {
-          state.writeln('');
-          state.walk(statement);
-        }
-      } else {
-        todo('Function with expression body');
-      }
-    });
-    state.writeln(`} catch (${EXCEPTION_VAR}) {`);
-    state.wrap(() => {
-      logException(state, node);
-    });
-    state.writeln(`} finally {`);
-    state.wrap(() => {
-      logFuncExit(state, node);
-    });
-    state.writeln(`}`);
-  });
-  state.writeln('}');
-}
-
-// logging function enter
-function logFuncEnter(state: State, func: Node): void {
-  state.writeln(`${LOG_FUNC_ENTER}(${newId(func)}, arguments.callee, this, arguments);`);
-}
-
-// logging function exit
-function logFuncExit(state: State, func: Node): void {
-  state.writeln(`${LOG_FUNC_EXIT}(${newId(func)});`);
-}
-
-// logging script enter
-function logScriptEnter(state: State, program: Node): void {
-  const { instrumentedPath: i, originalPath: o } = state;
-  state.writeln(`${LOG_SCRIPT_ENTER}(${newId(program)}, "${i}", "${o}");`);
-}
-
-// logging script exit
-function logScriptExit(state: State, program: Node): void {
-  state.writeln(`${LOG_SCRIPT_EXIT}(${newId(program)});`);
 }
 
 // -----------------------------------------------------------------------------
@@ -749,7 +790,7 @@ const visitors: Visitors = {
     }
   },
   ForInStatement: (node, state) => {
-    todo('ForInStatement');
+    logForInOfStatement(state, node, true, false);
   },
   FunctionDeclaration: (node, state) => {
     logFuncDeclare(state, node, false);
@@ -888,7 +929,8 @@ const visitors: Visitors = {
     state.write(')');
   },
   ForOfStatement: (node, state) => {
-    todo('ForOfStatement');
+    if (node.await) todo('ForOfStatement: await');
+    logForInOfStatement(state, node, false, node.await);
   },
   Super: (node, state) => {
     todo('Super');

@@ -20,6 +20,7 @@ type Analysis = {
   functionEnter?: (id: number, f: any, base: any, args: IArguments) => void;
   functionExit?: (id: number, returnValue: any, exception?: { exception: any }) => void;
   _return?: (id: number, value: any) => void;
+  forInOfObject?: (id: number, value: any, isForIn: boolean) => void;
   endExpression?: (id: number, value: any) => void;
   binaryPre?: (id: number, op: string, left: any, right: any) => void;
   binaryPost?: (id: number, op: string, left: any, right: any, result: any) => void;
@@ -117,6 +118,12 @@ function Fx(id: number, result: any): void {
 function Re(id: number, value: any): any {
   D$.analysis._return?.(id, value);
   returnStack[returnStack.length - 1] = value;
+  return value;
+}
+
+// hook for RHS object of for-in/of loops
+function O(id: number, value: any, isForIn: boolean): any {
+  D$.analysis.forInOfObject?.(id, value, isForIn);
   return value;
 }
 
@@ -266,7 +273,7 @@ const BASE = {
   ids: {},
   idToLoc,
   utils,
-  Se, Sx, F, Fe, Fx, Re, E, B, U, Up, C, Swl, Swr, D, R, W, L, Th, X
+  Se, Sx, F, Fe, Fx, Re, O, E, B, U, Up, C, Swl, Swr, D, R, W, L, Th, X
 };
 type DynaJSType = typeof BASE & {
   analysis: Analysis;

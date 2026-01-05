@@ -96,6 +96,11 @@
       var loc = getLoc(id);
       put('Re(' + v + ')' + loc);
     },
+    forInOfObject: function (id, obj, isForIn) {
+      var o = getValue(obj);
+      var loc = getLoc(id);
+      put('O(' + (isForIn ? 'forIn' : 'forOf') + ', ' + o + ')' + loc);
+    },
     endExpression: function (id, value) {
       var v = getValue(value);
       var loc = getLoc(id);
