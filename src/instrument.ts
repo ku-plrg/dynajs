@@ -306,10 +306,10 @@ function logExpression(state: State, expr: Expression): void {
 
 // logging a function call
 function logCall(state: State, callee: Node, isConstructor: boolean): void {
-  if (callee.type === "MemberExpression") {
-    todo("Method call");
-  } else if (callee.type === "Super") {
-    todo("Super call");
+  if (callee.type === 'MemberExpression') {
+    todo('Method call');
+  } else if (callee.type === 'Super') {
+    todo('Super call');
   } else {
     state.write(`${LOG_FUNCTION_CALL}(${newId(callee)}, `);
     state.walk(callee);
@@ -705,7 +705,48 @@ const visitors: Visitors = {
     state.write(');');
   },
   ForStatement: (node, state) => {
-    todo('ForStatement');
+    const { init, test, update, body } = node;
+    // handle lexical declarations in for-loop initializer
+    if (init != null &&
+        init.type === 'VariableDeclaration' &&
+        (init.kind === 'let' || init.kind === 'const')) {
+      state.createScope(scope => scope.walk(init), true);
+      state.write('{');
+      state.wrap(() => {
+        logDeclare(state, init);
+        state.writeln('');
+        head();
+        state.write('{');
+        state.wrap(() => {
+          state.writeln('');
+          state.walk(body);
+          logDeclare(state, init);
+        });
+        state.writeln('}');
+      });
+      state.writeln('}');
+    } else {
+      // normal for-loop
+      head();
+      state.walk(body);
+    }
+    // general head function
+    function head() {
+      state.write('for (');
+      if (init != null) {
+        if (init.type === 'VariableDeclaration') {
+          state.walk(init);
+        } else {
+          logExpression(state, init);
+          state.write(';');
+        }
+      }
+      state.write(' ');
+      if (test != null) logCondition(state, test, 'for', true);
+      state.write('; ');
+      if (update != null) logExpression(state, update);
+      state.write(') ');
+    }
   },
   ForInStatement: (node, state) => {
     todo('ForInStatement');
