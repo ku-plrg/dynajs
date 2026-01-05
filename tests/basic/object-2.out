@@ -1,0 +1,36 @@
+Se() @ 1:1-5:1
+  D(x, <var>, undefined) @ 1:1-5:1
+  D(obj, <var>, undefined) @ 1:1-5:1
+  L(2) @ 1:9-10
+  E(2) @ 1:9-10
+  W([x], 2) @ 1:9-10
+  L(<object>) @ 2:11-61
+  E(<object>) @ 2:11-61
+  W([obj], <object>) @ 2:11-61
+  R(obj, <object>) @ 3:1-4
+  L(3) @ 3:9-10
+  P[pre](<object>, "p", 3) @ 3:1-6
+  Fe(<function>, <object>, [3]) @ 2:41-59
+    D(arguments, <arguments>, <object>) @ 2:41-59
+    D(y, <param>, 3) @ 2:41-59
+    R(x, 2) @ 2:51-52
+    R(y, 3) @ 2:55-56
+    B[pre](+, 2, 3) @ 2:51-56
+    B(+, 2, 3, 5) @ 2:51-56
+    W([x], 5) @ 2:51-56
+    E(5) @ 2:47-56
+  Fx(undefined) @ 2:41-59
+  P(<object>, "p", 3) @ 3:1-6
+  E(3) @ 3:1-10
+  R(obj, <object>) @ 4:1-4
+  L("p") @ 4:5-8
+  G[pre](<object>, "p") @ 4:1-9
+  Fe(<function>, <object>, []) @ 2:18-34
+    D(arguments, <arguments>, <object>) @ 2:18-34
+    R(x, 5) @ 2:30-31
+    E(5) @ 2:30-31
+    Re(5) @ 2:30-31
+  Fx(5) @ 2:18-34
+  G(<object>, "p", 5) @ 4:1-9
+  E(5) @ 4:1-9
+Sx() @ 1:1-5:1

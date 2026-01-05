@@ -913,8 +913,7 @@ const visitors: Visitors = {
       state.write(': ');
       state.walk(value);
     } else { // kind is 'get' or 'set'
-      todo(`Property: ${kind}`);
-      // TODO logFunc(state, value, false);
+      logFunc(state, value, false);
     }
   },
   FunctionExpression: (node, state) => {
