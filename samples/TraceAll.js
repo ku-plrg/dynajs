@@ -10,6 +10,8 @@
     var type = typeof v;
     if (v instanceof RegExp) {
       return v.toString();
+    } else if (Array.isArray(v)) {
+      return "<array>";
     } else if ((type === "object" || type === "function") && v !== null) {
       return "<" + type + ">"; // TODO: improve object printing with addresses
     } else {

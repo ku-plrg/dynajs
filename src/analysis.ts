@@ -29,7 +29,7 @@ type Analysis = {
   declare?: (id: number, name: string, kind: string, init: boolean, value: any) => void;
   read?: (id: number, name: string, value: any) => void;
   write?: (id: number, names: string[], value: any) => void;
-  literal?: (id: number, value: any, type: number) => void;
+  literal?: (id: number, value: any) => void;
   _throw?: (id: number, val: any) => never;
   result?: any;
 }
@@ -234,8 +234,8 @@ function W(id: number, names: string[], value: any): any {
 }
 
 // hook for literals
-function L(id: number, value: any, type: number): any {
-  D$.analysis.literal?.(id, value, type);
+function L(id: number, value: any): any {
+  D$.analysis.literal?.(id, value);
   return value;
 }
 

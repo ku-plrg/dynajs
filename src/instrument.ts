@@ -398,9 +398,11 @@ function logWrite(state: State, lhs: Node, value: Expression, body?: () => void)
 }
 
 // logging a literal
-function logLiteral(state: State, literal: Node, literalType: number): void {
-  const code = generate(literal)
-  state.write(`${LOG_LITERAL}(${newId(literal)}, ${code}, ${literalType})`);
+function logLiteral(state: State, literal: Node, body?: () => void): void {
+  state.write(`${LOG_LITERAL}(${newId(literal)}, `);
+  if (body) body();
+  else state.write(generate(literal));
+  state.write(`)`);
 }
 
 // logging a return statement
@@ -428,6 +430,41 @@ function logException(state: State, program: Node): void {
 }
 
 // logging function enter
+function logFunc(state: State, node: Node): void {
+  state.createScope(scope => scope.walkFunction(node));
+  const func = node as Function;
+  const { params, body } = func;
+  state.write('(');
+  state.withLHS(() => state.walkArray(params));
+  state.write(') {');
+  state.wrap(() => {
+    state.writeln('try {');
+    state.wrap(() => {
+      logFuncEnter(state, node);
+      logDeclare(state, node);
+      if (body.type === 'BlockStatement') {
+        for (const statement of body.body) {
+          state.writeln('');
+          state.walk(statement);
+        }
+      } else {
+        todo('Function with expression body');
+      }
+    });
+    state.writeln(`} catch (${EXCEPTION_VAR}) {`);
+    state.wrap(() => {
+      logException(state, node);
+    });
+    state.writeln(`} finally {`);
+    state.wrap(() => {
+      logFuncExit(state, node);
+    });
+    state.writeln(`}`);
+  });
+  state.writeln('}');
+}
+
+// logging function enter
 function logFuncEnter(state: State, func: Node): void {
   state.writeln(`${LOG_FUNC_ENTER}(${newId(func)}, arguments.callee, this, arguments);`);
 }
@@ -446,24 +483,6 @@ function logScriptEnter(state: State, program: Node): void {
 // logging script exit
 function logScriptExit(state: State, program: Node): void {
   state.writeln(`${LOG_SCRIPT_EXIT}(${newId(program)});`);
-}
-
-// -----------------------------------------------------------------------------
-// literal types
-// -----------------------------------------------------------------------------
-const LITERAL_TYPE_STRING = 0;
-const LITERAL_TYPE_BOOLEAN = 1;
-const LITERAL_TYPE_NULL = 2;
-const LITERAL_TYPE_NUMBER = 3;
-const LITERAL_TYPE_REGEXP = 4;
-const LITERAL_TYPE_BIGINT = 5;
-
-const LITERAL_TYPES: { [key: string]: number } = {
-  'string': LITERAL_TYPE_STRING,
-  'boolean': LITERAL_TYPE_BOOLEAN,
-  'null': LITERAL_TYPE_NULL,
-  'number': LITERAL_TYPE_NUMBER,
-  'bigint': LITERAL_TYPE_BIGINT,
 }
 
 // -----------------------------------------------------------------------------
@@ -505,12 +524,7 @@ const visitors: Visitors = {
   Literal: (node, state) => {
     const { value } = node;
     const type = typeof value;
-    const litType = type === 'object'
-      ? value === null
-        ? LITERAL_TYPE_NULL
-        : LITERAL_TYPE_REGEXP
-      : LITERAL_TYPES[type];
-    logLiteral(state, node, litType);
+    logLiteral(state, node);
   },
   Program: (node, state) => {
     const { body } = node;
@@ -686,34 +700,10 @@ const visitors: Visitors = {
   },
   FunctionDeclaration: (node, state) => {
     const { id, params, body, generator, async } = node;
-    state.createScope(scope => scope.walkFunction(node));
     state.write(async ? 'async ' : '');
     state.write(generator ? 'function* ' : 'function ');
     if (id != null) state.write(id.name);
-    state.write('(');
-    state.withLHS(() => state.walkArray(params));
-    state.write(') {');
-    state.wrap(() => {
-      state.writeln('try {');
-      state.wrap(() => {
-        logFuncEnter(state, node);
-        logDeclare(state, node);
-        for (const statement of body.body) {
-          state.writeln('');
-          state.walk(statement);
-        }
-      });
-      state.writeln(`} catch (${EXCEPTION_VAR}) {`);
-      state.wrap(() => {
-        logException(state, node);
-      });
-      state.writeln(`} finally {`);
-      state.wrap(() => {
-        logFuncExit(state, node);
-      });
-      state.writeln(`}`);
-    });
-    state.writeln('}');
+    logFunc(state, node);
   },
   VariableDeclaration: (node, state) => {
     const { kind, declarations } = node;
@@ -733,13 +723,57 @@ const visitors: Visitors = {
     logRead(state, node, 'this');
   },
   ArrayExpression: (node, state) => {
-    todo('ArrayExpression');
+    logLiteral(state, node, () => {
+      const { elements } = node;
+      state.write('[');
+      for (const elem of elements) {
+        if (elem != null) {
+          state.walk(elem);
+        }
+        state.write(', ');
+      }
+      state.write(']');
+    });
   },
   ObjectExpression: (node, state) => {
-    todo('ObjectExpression');
+    logLiteral(state, node, () => {
+      const { properties } = node;
+      state.write('{');
+      state.wrap(() => {
+        for (const prop of properties) {
+          state.writeln('');
+          state.walk(prop);
+          state.write(', ');
+        }
+      });
+      state.writeln('}');
+    });
   },
   Property: (node, state) => {
-    todo('Property');
+    const { key, value, kind, method, shorthand, computed } = node;
+    if (kind !== 'init') state.write(`${kind} `);
+    if (computed) {
+      state.write('[');
+      state.walk(key);
+      state.write(']');
+    } else {
+      if (key.type === 'Identifier') {
+        state.write(key.name);
+      } else {
+        state.walk(key);
+      }
+    }
+    if (shorthand) {
+      todo('Property: shorthand');
+    } else if (method) {
+      todo('Property: method');
+    } else if (kind === 'init') {
+      state.write(': ');
+      state.walk(value);
+    } else { // kind is 'get' or 'set'
+      todo(`Property: ${kind}`);
+      // TODO logFunc(state, value);
+    }
   },
   FunctionExpression: (node, state) => {
     todo('FunctionExpression');
