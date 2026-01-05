@@ -201,6 +201,7 @@ class Scope {
 
   walkFunction(node: Node) {
     const func = node as Function;
+    this.vars['arguments'] = VarKind.Arguments;
     for (const param of func.params) {
       const xs = collectIdentifiers(param);
       for (const x of xs) {
@@ -290,6 +291,8 @@ function logExpression(state: State, expr: Expression): void {
 function logCall(state: State, callee: Node, isConstructor: boolean): void {
   if (callee.type === "MemberExpression") {
     todo("Method call");
+  } else if (callee.type === "Super") {
+    todo("Super call");
   } else {
     state.write(`${LOG_FUNCTION_CALL}(${newId(callee)}, `);
     state.walk(callee);
@@ -399,7 +402,6 @@ function logException(state: State, program: Node): void {
 // logging function enter
 function logFuncEnter(state: State, func: Node): void {
   state.writeln(`${LOG_FUNC_ENTER}(${newId(func)}, arguments.callee, this, arguments);`);
-  state.writeln(`${LOG_DECLARE}(${newId(func)}, "arguments", ${VarKind.Arguments});`);
 }
 
 // logging function exit

@@ -1,0 +1,29 @@
+Se() @ 1:1-8:1
+  D(f, <function>, <function>) @ 1:1-8:1
+  R(f, <function>) @ 7:1-2
+  L(1) @ 7:3-4
+  F[pre](<function>, undefined, [1], false, false) @ 7:1-2
+  Fe(<function>, <object>, [1]) @ 1:1-6:2
+    D(arguments, <arguments>, <object>) @ 1:1-6:2
+    D(x, <param>, 1) @ 1:1-6:2
+    D(g, <function>, <function>) @ 1:1-6:2
+    R(g, <function>) @ 5:10-11
+    L(2) @ 5:12-13
+    F[pre](<function>, undefined, [2], false, false) @ 5:10-11
+    Fe(<function>, <object>, [2]) @ 2:3-4:4
+      D(arguments, <arguments>, <object>) @ 2:3-4:4
+      D(y, <param>, 2) @ 2:3-4:4
+      R(x, 1) @ 3:12-13
+      R(y, 2) @ 3:16-17
+      B[pre](+, 1, 2) @ 3:12-17
+      B(+, 1, 2, 3) @ 3:12-17
+      E(3) @ 3:12-17
+      Re(3) @ 3:12-17
+    Fx(3) @ 2:3-4:4
+    F(<function>, undefined, [2], 3, false, false) @ 5:10-11
+    E(3) @ 5:10-14
+    Re(3) @ 5:10-14
+  Fx(3) @ 1:1-6:2
+  F(<function>, undefined, [1], 3, false, false) @ 7:1-2
+  E(3) @ 7:1-5
+Sx() @ 1:1-8:1
