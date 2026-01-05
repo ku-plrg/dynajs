@@ -200,8 +200,11 @@ class Scope {
     }
   }
 
-  walkFunction(node: Node) {
+  walkFunction(node: Node, isExpr: boolean) {
     const func = node as Function;
+    if (isExpr && func.id != null) {
+      this.vars[func.id.name] = VarKind.Func;
+    }
     this.vars['arguments'] = VarKind.Arguments;
     for (const param of func.params) {
       const xs = collectIdentifiers(param);
@@ -429,9 +432,18 @@ function logException(state: State, program: Node): void {
   state.writeln(`${LOG_EXCEPTION}(${newId(program)}, ${EXCEPTION_VAR});`);
 }
 
-// logging function enter
-function logFunc(state: State, node: Node): void {
-  state.createScope(scope => scope.walkFunction(node));
+// logging function declaration
+function logFuncDeclare(state: State, node: Node, isExpr: boolean): void {
+  const { id, generator, async } = node as Function;
+  state.write(async ? 'async ' : '');
+  state.write(generator ? 'function* ' : 'function ');
+  if (id != null) state.write(id.name);
+  logFunc(state, node, isExpr);
+}
+
+// logging function tail
+function logFunc(state: State, node: Node, isExpr: boolean): void {
+  state.createScope(scope => scope.walkFunction(node, isExpr));
   const func = node as Function;
   const { params, body } = func;
   state.write('(');
@@ -699,11 +711,7 @@ const visitors: Visitors = {
     todo('ForInStatement');
   },
   FunctionDeclaration: (node, state) => {
-    const { id, params, body, generator, async } = node;
-    state.write(async ? 'async ' : '');
-    state.write(generator ? 'function* ' : 'function ');
-    if (id != null) state.write(id.name);
-    logFunc(state, node);
+    logFuncDeclare(state, node, false);
   },
   VariableDeclaration: (node, state) => {
     const { kind, declarations } = node;
@@ -772,11 +780,13 @@ const visitors: Visitors = {
       state.walk(value);
     } else { // kind is 'get' or 'set'
       todo(`Property: ${kind}`);
-      // TODO logFunc(state, value);
+      // TODO logFunc(state, value, false);
     }
   },
   FunctionExpression: (node, state) => {
-    todo('FunctionExpression');
+    logLiteral(state, node, () => {
+      logFuncDeclare(state, node, true);
+    });
   },
   UnaryExpression: (node, state) => {
     if (node.operator === 'delete') {
