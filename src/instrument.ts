@@ -268,6 +268,8 @@ const LOG_BINARY_OP = DYNAJS_VAR + '.B';
 const LOG_UNARY_OP = DYNAJS_VAR + '.U';
 const LOG_UPDATE_OP = DYNAJS_VAR + '.Up';
 const LOG_CONDITION = DYNAJS_VAR + '.C';
+const LOG_SWITCH_LEFT = DYNAJS_VAR + '.Swl';
+const LOG_SWITCH_RIGHT = DYNAJS_VAR + '.Swr';
 const LOG_DECLARE = DYNAJS_VAR + '.D';
 const LOG_READ = DYNAJS_VAR + '.R';
 const LOG_WRITE = DYNAJS_VAR + '.W';
@@ -336,6 +338,20 @@ function logCondition(state: State, test: Expression, kind: string, end: boolean
   if (end) logExpression(state, test);
   else state.walk(test);
   state.write(`)`);
+}
+
+// logging the left side of a switch statement
+function logSwitchLeft(state: State, discriminant: Expression): void {
+  state.write(`${LOG_SWITCH_LEFT}(${newId(discriminant)}, `);
+  logExpression(state, discriminant);
+  state.write(')');
+}
+
+// logging the right side of a switch case
+function logSwitchRight(state: State, test: Expression): void {
+  state.write(`${LOG_SWITCH_RIGHT}(${newId(test)}, `);
+  logExpression(state, test);
+  state.write(')');
 }
 
 // logging a variable declaration
@@ -570,10 +586,33 @@ const visitors: Visitors = {
     }
   },
   SwitchStatement: (node, state) => {
-    todo('SwitchStatement');
+    const { discriminant, cases } = node;
+    state.write('switch (');
+    logSwitchLeft(state, discriminant);
+    state.write(') {');
+    state.wrap(() => {
+      for (const switchCase of cases) {
+        state.writeln('');
+        state.walk(switchCase);
+      }
+    });
+    state.writeln('}');
   },
   SwitchCase: (node, state) => {
-    todo('SwitchCase');
+    const { test, consequent } = node;
+    if (test != null) {
+      state.write('case ');
+      logSwitchRight(state, test);
+      state.write(':');
+    } else {
+      state.write('default:');
+    }
+    state.wrap(() => {
+      for (const statement of consequent) {
+        state.writeln('');
+        state.walk(statement);
+      }
+    });
   },
   ThrowStatement: (node, state) => {
     const { argument } = node;

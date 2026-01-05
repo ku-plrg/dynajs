@@ -40,6 +40,12 @@ let returnStack: any[] = [];
 // store uncaught exception
 let uncaughtException: { exception: any } | undefined = undefined;
 
+// store left side of a switch statement
+let switchLeft: any = undefined;
+let switchStack: any[] = [];
+function pushSwitchLeft() { switchStack.push(switchLeft); }
+function popSwitchLeft() { switchLeft = switchStack.pop(); }
+
 // -----------------------------------------------------------------------------
 // hooks for dynamic analysis
 // -----------------------------------------------------------------------------
@@ -90,6 +96,7 @@ function invokeFun(
 // hook for function enter
 function Fe(id: number, f: any, base: any, args: IArguments): void {
   returnStack.push(undefined);
+  pushSwitchLeft();
   D$.analysis.functionEnter?.(id, f, base, args);
 }
 
@@ -97,6 +104,7 @@ function Fe(id: number, f: any, base: any, args: IArguments): void {
 function Fx(id: number, result: any): void {
   const exc = uncaughtException;
   const ret = returnStack.pop();
+  popSwitchLeft();
   D$.analysis.functionExit?.(id, ret, exc);
   if (exc) {
     const { exception } = exc;
@@ -196,6 +204,17 @@ function C(id: number, op: string, value: any): any {
   return value;
 }
 
+// hook for left side of a switch statement
+function Swl(id: number, value: any): any {
+  return (switchLeft = value);
+}
+
+// hook for right side of a switch case
+function Swr(id: number, caseValue: any): any {
+  const result = B(id, '===', switchLeft, caseValue);
+  return C(id, 'switch', result);
+}
+
 // hook for variable declarations
 function D(id: number, name: string, kind: VarKind, value?: any): void {
   const init = arguments.length >= 4;
@@ -247,7 +266,7 @@ const BASE = {
   ids: {},
   idToLoc,
   utils,
-  Se, Sx, F, Fe, Fx, Re, E, B, U, Up, C, D, R, W, L, Th, X
+  Se, Sx, F, Fe, Fx, Re, E, B, U, Up, C, Swl, Swr, D, R, W, L, Th, X
 };
 type DynaJSType = typeof BASE & {
   analysis: Analysis;
