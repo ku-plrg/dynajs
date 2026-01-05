@@ -1,5 +1,5 @@
 Se() @ 1:1-4:1
   L(true) @ 1:8-12
-  C(while, true) @ 1:8-12
   E(true) @ 1:8-12
+  C(while, true) @ 1:8-12
 Sx() @ 1:1-4:1

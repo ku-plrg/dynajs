@@ -226,18 +226,25 @@ export enum VarKind {
   Var = 0,
   Let = 1,
   Const = 2,
+  Func = 3,
+  Param = 4,
+  Arguments = 5,
 }
 
-// variable kind to string
-export function varKindToString(kind: VarKind): string {
-  switch (kind) {
-    case VarKind.Var:
-      return 'var';
-    case VarKind.Let:
-      return 'let';
-    case VarKind.Const:
-      return 'const';
-    default:
-      return 'unknown';
-  }
+export const strToKind: { [key: string]: VarKind } = {
+  'var': VarKind.Var,
+  'let': VarKind.Let,
+  'const': VarKind.Const,
+  'function': VarKind.Func,
+  'param': VarKind.Param,
+  'arguments': VarKind.Arguments,
+}
+
+export const kindToStr: { [key in VarKind]: string } = {
+  [VarKind.Var]: 'var',
+  [VarKind.Let]: 'let',
+  [VarKind.Const]: 'const',
+  [VarKind.Func]: 'function',
+  [VarKind.Param]: 'param',
+  [VarKind.Arguments]: 'arguments',
 }

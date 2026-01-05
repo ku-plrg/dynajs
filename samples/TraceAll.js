@@ -11,7 +11,7 @@
     if (v instanceof RegExp) {
       return v.toString();
     } else if ((type === "object" || type === "function") && v !== null) {
-      return type; // TODO: improve object printing with addresses
+      return "<" + type + ">"; // TODO: improve object printing with addresses
     } else {
       if (type === "string" && v.length > MAX_STRING_LENGTH) {
         v = v.substring(0, MAX_STRING_LENGTH) + "...";
@@ -30,6 +30,70 @@
   }
 
   D$.analysis = {
+    endExecution: function () {
+      var result = builder.result;
+      D$.analysis.result = result;
+    },
+    scriptEnter: function (id, instrumentedPath, originalPath) {
+      var loc = getLoc(id);
+      put('Se()' + loc);
+      indentIn();
+    },
+    scriptExit: function (id, exc) {
+      indentOut();
+      var loc = getLoc(id);
+      if (exc) {
+        var e = getValue(exc.exception);
+        put('Sx(' + e + ')' + loc);
+      } else {
+        put('Sx()' + loc);
+      }
+    },
+    invokeFunPre: function (id, f, base, args, isConstructor, isMethod) {
+      var str = 'F[pre](' + getValue(f) + ', ' + getValue(base) + ', [';
+      for (var i = 0; i < args.length; i++) {
+        if (i > 0) str += ', ';
+        str += getValue(args[i]);
+      }
+      str += '], ' + isConstructor + ', ' + isMethod + ')';
+      put(str + getLoc(id));
+    },
+    invokeFun: function (id, f, base, args, result, isConstructor, isMethod) {
+      var str = 'F(' + getValue(f) + ', ' + getValue(base) + ', [';
+      for (var i = 0; i < args.length; i++) {
+        if (i > 0) str += ', ';
+        str += getValue(args[i]);
+      }
+      str += '], ' + getValue(result)
+      str += ', ' + isConstructor + ', ' + isMethod + ')';
+      put(str + getLoc(id));
+    },
+    functionEnter: function (id, f, base, args) {
+      var str = 'Fe(' + getValue(f) + ', ' + getValue(base) + ', [';
+      for (var i = 0; i < args.length; i++) {
+        if (i > 0) str += ', ';
+        str += getValue(args[i]);
+      }
+      str += '])';
+      put(str + getLoc(id));
+      indentIn();
+    },
+    functionExit: function (id, returnVal, exc) {
+      indentOut();
+      var loc = getLoc(id);
+      if (exc) {
+        var e = getValue(exc.exception);
+        put('Fx(' + e + ')' + loc);
+      } else {
+        var r = getValue(returnVal);
+        put('Fx(' + r + ')' + loc);
+      }
+    },
+    _return: function (id, value) {
+      var v = getValue(value);
+      var loc = getLoc(id);
+      put('Re(' + v + ')' + loc);
+    },
     endExpression: function (id, value) {
       var v = getValue(value);
       var loc = getLoc(id);
@@ -66,9 +130,10 @@
       var loc = getLoc(id);
       put('C(' + op + ', ' + v + ')' + loc);
     },
-    declare: function (id, name, kind) {
+    declare: function (id, name, kind, init, value) {
       var loc = getLoc(id);
-      put('D(' + name + ', ' + kind + ')' + loc);
+      var initStr = init ? ', ' + getValue(value) : '';
+      put('D(' + name + ', <' + kind + '>' + initStr + ')' + loc);
     },
     read: function (id, name, value) {
       var v = getValue(value);
@@ -89,25 +154,6 @@
       var v = getValue(value);
       var loc = getLoc(id);
       put('T(' + v + ')' + loc);
-    },
-    scriptEnter: function (id, instrumentedPath, originalPath) {
-      var loc = getLoc(id);
-      put('Se()' + loc);
-      indentIn();
-    },
-    scriptExit: function (id, exc) {
-      indentOut();
-      var loc = getLoc(id);
-      if (exc) {
-        var e = getValue(exc.exception);
-        put('Sx(' + e + ')' + loc);
-      } else {
-        put('Sx()' + loc);
-      }
-    },
-    endExecution: function () {
-      var result = builder.result;
-      D$.analysis.result = result;
     },
   }
 })(D$);

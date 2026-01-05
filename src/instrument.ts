@@ -6,14 +6,16 @@ import {
 } from './constants';
 import {
   AnyNode,
-  Node,
-  Expression,
   BinaryExpression,
+  Expression,
+  Function,
+  Identifier,
+  LogicalExpression,
+  Node,
+  Pattern,
+  ReturnStatement,
   UnaryExpression,
   UpdateExpression,
-  LogicalExpression,
-  Pattern,
-  Identifier,
 } from 'acorn';
 import { recursive, RecursiveVisitors } from 'acorn-walk'
 import { generate } from 'astring';
@@ -28,6 +30,8 @@ import {
   warn,
   writeFile,
   VarKind,
+  kindToStr,
+  strToKind,
 } from './utils';
 
 // instrument a JS file
@@ -79,7 +83,7 @@ export class State {
   indent: string;
   indentLevel: number;
   lineEnd: string;
-  scope?: Scope;
+  scope: Scope | null;
   isLHS: boolean;
   instrumentedPath: string;
   originalPath: string;
@@ -95,6 +99,7 @@ export class State {
     this.indent = options.indent ?? '  ';
     this.indentLevel = 0;
     this.lineEnd = options.lineEnd ?? '\n';
+    this.scope = null;
     this.isLHS = false;
     this.instrumentedPath = options.instrumentedPath ?? '';
     this.originalPath = options.originalPath ?? '';
@@ -110,9 +115,9 @@ export class State {
     return result;
   }
 
-  // update scope
-  updateScope(body: (scope: Scope) => void): void {
-    const scope = new Scope(this.scope);
+  // create a new scope
+  createScope(body: (scope: Scope) => void, forLexical: boolean = false): void {
+    const scope = new Scope(this.scope, forLexical);
     body(scope);
     this.scope = scope;
   }
@@ -174,25 +179,38 @@ interface Options {
 // -----------------------------------------------------------------------------
 class Scope {
   vars: { [name: string]: VarKind };
-  parent?: Scope;
+  parent: Scope | null;
+  private forLexical: boolean;
 
-  constructor(parent?: Scope) {
+  constructor(parent: Scope | null, forLexical: boolean) {
     this.vars = {};
     this.parent = parent;
+    this.forLexical = forLexical;
   }
 
-  walk(node: Node, forVar: boolean): void {
-    const visitors = forVar ? Scope.varVisitors : Scope.lexicalVisitors;
-    recursive(node, this, visitors);
+  walk(node: Node): void {
+    if (!this.forLexical) recursive(node, this, Scope.visitors);
+    recursive(node, this, Scope.lexicalVisitors);
   }
 
-  walkArray(nodes: Node[], forVar: boolean): void {
+  walkArray(nodes: Node[]) {
     for (const node of nodes) {
-      this.walk(node, forVar);
+      this.walk(node);
     }
   }
 
-  static varVisitors: RecursiveVisitors<Scope> = {
+  walkFunction(node: Node) {
+    const func = node as Function;
+    for (const param of func.params) {
+      const xs = collectIdentifiers(param);
+      for (const x of xs) {
+        this.vars[x] = VarKind.Param;
+      }
+    }
+    this.walk(func.body);
+  }
+
+  static visitors: RecursiveVisitors<Scope> = {
     VariableDeclaration: (node, scope, c) => {
       const { kind, declarations } = node;
       if (kind === 'var') {
@@ -204,7 +222,12 @@ class Scope {
         }
       }
     },
-    FunctionDeclaration: (node, scope, c) => {},
+    FunctionDeclaration: (node, scope, c) => {
+      const { id } = node;
+      if (id != null) {
+        scope.vars[id.name] = VarKind.Func;
+      }
+    },
     FunctionExpression: (node, scope, c) => {},
     ClassDeclaration: (node, scope, c) => {},
     ClassExpression: (node, scope, c) => {},
@@ -239,6 +262,7 @@ class Scope {
 // -----------------------------------------------------------------------------
 // logging function names
 const LOG_EXPRESSION = DYNAJS_VAR + '.E';
+const LOG_FUNCTION_CALL = DYNAJS_VAR + '.F';
 const LOG_BINARY_OP = DYNAJS_VAR + '.B';
 const LOG_UNARY_OP = DYNAJS_VAR + '.U';
 const LOG_UPDATE_OP = DYNAJS_VAR + '.Up';
@@ -247,17 +271,30 @@ const LOG_DECLARE = DYNAJS_VAR + '.D';
 const LOG_READ = DYNAJS_VAR + '.R';
 const LOG_WRITE = DYNAJS_VAR + '.W';
 const LOG_LITERAL = DYNAJS_VAR + '.L';
-const LOG_THROW = DYNAJS_VAR + '.T';
+const LOG_RETURN = DYNAJS_VAR + '.Re';
+const LOG_THROW = DYNAJS_VAR + '.Th';
 const LOG_EXCEPTION = DYNAJS_VAR + '.X';
-const LOG_SCRIPT_ENTRY = DYNAJS_VAR + '.Se';
+const LOG_FUNC_ENTER = DYNAJS_VAR + '.Fe';
+const LOG_FUNC_EXIT = DYNAJS_VAR + '.Fx';
+const LOG_SCRIPT_ENTER = DYNAJS_VAR + '.Se';
 const LOG_SCRIPT_EXIT = DYNAJS_VAR + '.Sx';
 
 // logging end of an expression
-function logExpression(state: State, expr: Expression, body?: () => void): void {
+function logExpression(state: State, expr: Expression): void {
   state.write(`${LOG_EXPRESSION}(${newId(expr)}, `);
-  if (body) body();
-  else state.walk(expr)
+  state.walk(expr);
   state.write(')');
+}
+
+// logging a function call
+function logCall(state: State, callee: Node, isConstructor: boolean): void {
+  if (callee.type === "MemberExpression") {
+    todo("Method call");
+  } else {
+    state.write(`${LOG_FUNCTION_CALL}(${newId(callee)}, `);
+    state.walk(callee);
+    state.write(`, ${isConstructor})`);
+  }
 }
 
 // logging a binary operation
@@ -291,9 +328,10 @@ function logUpdateOp(state: State, expr: UpdateExpression): void {
 }
 
 // logging a condition expression
-function logCondition(state: State, test: Expression, kind: string): void {
+function logCondition(state: State, test: Expression, kind: string, end: boolean = false): void {
   state.write(`${LOG_CONDITION}(${newId(test)}, "${kind}", `);
-  state.walk(test);
+  if (end) logExpression(state, test);
+  else state.walk(test);
   state.write(`)`);
 }
 
@@ -303,7 +341,12 @@ function logDeclare(state: State, node: Node): void {
   if (!vars) return;
   for (const name in vars) {
     const kind = vars[name];
-    state.writeln(`${LOG_DECLARE}(${newId(node)}, "${name}", ${kind});`);
+    const isTDZ = kind === VarKind.Const || kind === VarKind.Let;
+    if (isTDZ) {
+      state.writeln(`${LOG_DECLARE}(${newId(node)}, "${name}", ${kind});`);
+    } else {
+      state.writeln(`${LOG_DECLARE}(${newId(node)}, "${name}", ${kind}, ${name});`);
+    }
   }
 }
 
@@ -329,6 +372,18 @@ function logLiteral(state: State, literal: Node, literalType: number): void {
   state.write(`${LOG_LITERAL}(${newId(literal)}, ${code}, ${literalType})`);
 }
 
+// logging a return statement
+function logReturn(state: State, node: ReturnStatement): void {
+  const arg = node.argument;
+  state.write(`${LOG_RETURN}(${newId(arg ?? node)}, `);
+  if (arg != null) {
+    logExpression(state, arg);
+  } else {
+    state.write('undefined');
+  }
+  state.write(')');
+}
+
 // logging a throw statement
 function logThrow(state: State, arg: Expression): void {
   state.write(`${LOG_THROW}(${newId(arg)}, `);
@@ -341,10 +396,21 @@ function logException(state: State, program: Node): void {
   state.writeln(`${LOG_EXCEPTION}(${newId(program)}, ${EXCEPTION_VAR});`);
 }
 
-// logging script entry
-function logScriptEntry(state: State, program: Node): void {
+// logging function enter
+function logFuncEnter(state: State, func: Node): void {
+  state.writeln(`${LOG_FUNC_ENTER}(${newId(func)}, arguments.callee, this, arguments);`);
+  state.writeln(`${LOG_DECLARE}(${newId(func)}, "arguments", ${VarKind.Arguments});`);
+}
+
+// logging function exit
+function logFuncExit(state: State, func: Node): void {
+  state.writeln(`${LOG_FUNC_EXIT}(${newId(func)});`);
+}
+
+// logging script enter
+function logScriptEnter(state: State, program: Node): void {
   const { instrumentedPath: i, originalPath: o } = state;
-  state.writeln(`${LOG_SCRIPT_ENTRY}(${newId(program)}, "${i}", "${o}");`);
+  state.writeln(`${LOG_SCRIPT_ENTER}(${newId(program)}, "${i}", "${o}");`);
 }
 
 // logging script exit
@@ -418,13 +484,10 @@ const visitors: Visitors = {
   },
   Program: (node, state) => {
     const { body } = node;
-    state.updateScope(scope => {
-      scope.walkArray(body, true);
-      scope.walkArray(body, false);
-    });
+    state.createScope(scope => scope.walkArray(body));
     state.writeln('try {');
     state.wrap(() => {
-      logScriptEntry(state, node);
+      logScriptEnter(state, node);
       logDeclare(state, node);
       for (const statement of body) {
         state.writeln('');
@@ -448,7 +511,7 @@ const visitors: Visitors = {
   },
   BlockStatement: (node, state) => {
     const { body } = node;
-    state.updateScope(scope => scope.walkArray(body, false));
+    state.createScope(scope => scope.walkArray(body), true);
     state.write('{');
     state.wrap(() => {
       logDeclare(state, node);
@@ -469,7 +532,10 @@ const visitors: Visitors = {
     todo('WithStatement');
   },
   ReturnStatement: (node, state) => {
-    todo('ReturnStatement');
+    state.write('return');
+    if (node.argument != null) state.write(' ');
+    logReturn(state, node);
+    state.write(';');
   },
   LabeledStatement: (node, state) => {
     const { label, body } = node;
@@ -493,7 +559,7 @@ const visitors: Visitors = {
   IfStatement: (node, state) => {
     const { test, consequent, alternate } = node;
     state.write('if (');
-    logExpression(state, test, () => logCondition(state, test, 'if'));
+    logCondition(state, test, 'if', true);
     state.write(') ');
     state.walk(consequent);
     if (alternate != null) {
@@ -508,8 +574,9 @@ const visitors: Visitors = {
     todo('SwitchCase');
   },
   ThrowStatement: (node, state) => {
+    const { argument } = node;
     state.write('throw ');
-    logThrow(state, node.argument);
+    logThrow(state, argument);
     state.write(';');
   },
   TryStatement: (node, state) => {
@@ -521,7 +588,7 @@ const visitors: Visitors = {
   WhileStatement: (node, state) => {
     const { test, body } = node;
     state.write('while (');
-    logExpression(state, test, () => logCondition(state, test, 'while'));
+    logCondition(state, test, 'while', true);
     state.write(') ');
     state.walk(body);
   },
@@ -530,7 +597,7 @@ const visitors: Visitors = {
     state.write('do ');
     state.walk(body);
     state.write(' while (');
-    logExpression(state, test, () => logCondition(state, test, 'do-while'));
+    logCondition(state, test, 'do-while', true);
     state.write(');');
   },
   ForStatement: (node, state) => {
@@ -540,7 +607,35 @@ const visitors: Visitors = {
     todo('ForInStatement');
   },
   FunctionDeclaration: (node, state) => {
-    todo('FunctionDeclaration');
+    const { id, params, body, generator, async } = node;
+    state.createScope(scope => scope.walkFunction(node));
+    state.write(async ? 'async ' : '');
+    state.write(generator ? 'function* ' : 'function ');
+    if (id != null) state.write(id.name);
+    state.write('(');
+    state.withLHS(() => state.walkArray(params));
+    state.write(') {');
+    state.wrap(() => {
+      state.writeln('try {');
+      state.wrap(() => {
+        logFuncEnter(state, node);
+        logDeclare(state, node);
+        for (const statement of body.body) {
+          state.writeln('');
+          state.walk(statement);
+        }
+      });
+      state.writeln(`} catch (${EXCEPTION_VAR}) {`);
+      state.wrap(() => {
+        logException(state, node);
+      });
+      state.writeln(`} finally {`);
+      state.wrap(() => {
+        logFuncExit(state, node);
+      });
+      state.writeln(`}`);
+    });
+    state.writeln('}');
   },
   VariableDeclaration: (node, state) => {
     const { kind, declarations } = node;
@@ -553,7 +648,7 @@ const visitors: Visitors = {
     state.withLHS(() => state.walk(id));
     if (init != null) {
       state.write(' = ');
-      logExpression(state, init, () => logWrite(state, id, init));
+      logWrite(state, id, init, () => logExpression(state, init));
     }
   },
   ThisExpression: (node, state) => {
@@ -608,14 +703,18 @@ const visitors: Visitors = {
   },
   ConditionalExpression: (node, state) => {
     const { test, consequent, alternate } = node;
-    logExpression(state, test, () => logCondition(state, test, '?'));
+    logCondition(state, test, '?');
     state.write(' ? ');
     state.walk(consequent);
     state.write(' : ');
     state.walk(alternate);
   },
   CallExpression: (node, state) => {
-    todo('CallExpression');
+    const { callee, arguments: args } = node;
+    logCall(state, callee, false);
+    state.write('(');
+    state.walkArray(args);
+    state.write(')');
   },
   NewExpression: (node, state) => {
     todo('NewExpression');
