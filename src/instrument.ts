@@ -7,6 +7,7 @@ import {
 import {
   AnyNode,
   BinaryExpression,
+  CatchClause,
   Expression,
   Function,
   Identifier,
@@ -106,7 +107,7 @@ export class State {
     this.detail = options.detail ?? false;
   }
 
-  // execute body with isLHS = truej 
+  // execute body with isLHS = true
   withLHS<T>(body: () => T): T {
     const prev = this.isLHS;
     this.isLHS = true;
@@ -209,6 +210,17 @@ class Scope {
       }
     }
     this.walk(func.body);
+  }
+
+  walkCatch(node: Node) {
+    const catchClause = node as CatchClause;
+    const { param, body } = catchClause;
+    if (param != null) {
+      const xs = collectIdentifiers(param);
+      for (const x of xs) {
+        this.vars[x] = VarKind.CatchParam;
+      }
+    }
   }
 
   static visitors: RecursiveVisitors<Scope> = {
@@ -621,10 +633,35 @@ const visitors: Visitors = {
     state.write(';');
   },
   TryStatement: (node, state) => {
-    todo('TryStatement');
+    const { block, handler, finalizer } = node;
+    state.write('try ');
+    state.walk(block);
+    if (handler != null) {
+      state.write(' ');
+      state.walk(handler);
+    }
+    if (finalizer != null) {
+      state.write(' finally ');
+      state.walk(finalizer);
+    }
   },
   CatchClause: (node, state) => {
-    todo('CatchClause');
+    const { param, body } = node;
+    state.createScope(scope => scope.walkCatch(node));
+    state.write('catch ');
+    if (param != null) {
+      state.write('(');
+      state.withLHS(() => state.walk(param));
+      state.write(') {');
+      state.wrap(() => {
+        logDeclare(state, node);
+        state.writeln('');
+        state.walk(body);
+      });
+      state.writeln('}');
+    } else {
+      state.walk(body);
+    }
   },
   WhileStatement: (node, state) => {
     const { test, body } = node;
