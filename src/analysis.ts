@@ -22,6 +22,10 @@ type Analysis = {
   _return?: (id: number, value: any) => void;
   forInOfObject?: (id: number, value: any, isForIn: boolean) => void;
   endExpression?: (id: number, value: any) => void;
+  getFieldPre?: (id: number, base: any, prop: any) => void;
+  getField?: (id: number, base: any, prop: any, result: any) => void;
+  putFieldPre?: (id: number, base: any, prop: any, value: any) => void;
+  putField?: (id: number, base: any, prop: any, value: any) => void;
   binaryPre?: (id: number, op: string, left: any, right: any) => void;
   binaryPost?: (id: number, op: string, left: any, right: any, result: any) => void;
   unaryPre?: (id: number, op: string, prefix: boolean, operand: any) => void;
@@ -130,6 +134,22 @@ function O(id: number, value: any, isForIn: boolean): any {
 // hook for the end of an expression
 function E(id: number, value: any): any {
   D$.analysis.endExpression?.(id, value);
+  return value;
+}
+
+// hook for property reads (get-field)
+function G(id: number, base: any, prop: any): any {
+  D$.analysis.getFieldPre?.(id, base, prop);
+  const result = base[prop];
+  D$.analysis.getField?.(id, base, prop, result);
+  return result;
+}
+
+// hook for property writes (set-field)
+function P(id: number, base: any, prop: any, value: any): any {
+  D$.analysis.putFieldPre?.(id, base, prop, value);
+  base[prop] = value;
+  D$.analysis.putField?.(id, base, prop, value);
   return value;
 }
 
@@ -273,7 +293,7 @@ const BASE = {
   ids: {},
   idToLoc,
   utils,
-  Se, Sx, F, Fe, Fx, Re, O, E, B, U, Up, C, Swl, Swr, D, R, W, L, Th, X
+  Se, Sx, F, Fe, Fx, Re, O, E, G, P, B, U, Up, C, Swl, Swr, D, R, W, L, Th, X
 };
 type DynaJSType = typeof BASE & {
   analysis: Analysis;

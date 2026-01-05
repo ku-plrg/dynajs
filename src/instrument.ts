@@ -14,6 +14,7 @@ import {
   Function,
   Identifier,
   LogicalExpression,
+  MemberExpression,
   Node,
   Pattern,
   ReturnStatement,
@@ -287,6 +288,8 @@ const LOG_FUNC_EXIT = DYNAJS_VAR + '.Fx';
 const LOG_RETURN = DYNAJS_VAR + '.Re';
 const LOG_FOR_IN_OF_OBJECT = DYNAJS_VAR + '.O';
 const LOG_EXPRESSION = DYNAJS_VAR + '.E';
+const LOG_GET_FIELD = DYNAJS_VAR + '.G';
+const LOG_PUT_FIELD = DYNAJS_VAR + '.P';
 const LOG_BINARY_OP = DYNAJS_VAR + '.B';
 const LOG_UNARY_OP = DYNAJS_VAR + '.U';
 const LOG_UPDATE_OP = DYNAJS_VAR + '.Up';
@@ -411,8 +414,6 @@ function logForInOfStatement(state: State, node: Node, isForIn: boolean, isAwait
     } else {
       id = left;
     }
-    state.withLHS(() => state.walk(id));
-    state.write(' = ');
     logWrite(state, id, right, () => state.write(LOG_TEMP_VAR));
     state.write(';');
     state.writeln('');
@@ -432,6 +433,55 @@ function logForInOfObject(state: State, expr: Expression, isForIn: boolean): voi
 function logExpression(state: State, expr: Expression): void {
   state.write(`${LOG_EXPRESSION}(${newId(expr)}, `);
   state.walk(expr);
+  state.write(')');
+}
+
+// logging a property read (get-field) operation
+function logGetField(state: State, expr: Expression): void {
+  const { object, property, computed, optional } = expr as MemberExpression;
+  state.write(`${LOG_GET_FIELD}(${newId(expr)}, `);
+  if (object.type === 'Super') {
+    todo('MemberExpression: super');
+  } else {
+    state.walk(object);
+  }
+  if (optional) {
+    todo('MemberExpression: optional');
+  }
+  state.write(', ');
+  if (property.type === 'PrivateIdentifier') {
+    todo('MemberExpression: private identifier');
+  } else if (computed) {
+    state.walk(property);
+  } else if (property.type === 'Identifier') {
+    state.write(`"${property.name}"`);
+  } else {
+    warn('MemberExpression: unexpected property type');
+  }
+  state.write(')');
+}
+
+// logging a property write (put-field) operation
+function logPutField(state: State, lhs: Node, rhs: Node, body: () => void): void {
+  const { object, property, computed, optional } = lhs as MemberExpression;
+  state.write(`${LOG_PUT_FIELD}(${newId(lhs)}, `);
+  if (object.type === 'Super') {
+    todo('MemberExpression: super');
+  } else {
+    state.walk(object);
+  }
+  state.write(', ');
+  if (property.type === 'PrivateIdentifier') {
+    todo('MemberExpression: private identifier');
+  } else if (computed) {
+    state.walk(property);
+  } else if (property.type === 'Identifier') {
+    state.write(`"${property.name}"`);
+  } else {
+    warn('MemberExpression: unexpected property type');
+  }
+  state.write(', ');
+  body();
   state.write(')');
 }
 
@@ -459,8 +509,6 @@ function logUpdateOp(state: State, expr: UpdateExpression): void {
   state.write(`${LOG_UPDATE_OP}(${newId(expr)}, ${newId(expr)}, "${operator}", ${prefix}, `);
   state.walk(argument);
   state.write(`, ${TEMP_PARAM_VAR} => `);
-  state.withLHS(() => state.walk(argument));
-  state.write(` = `);
   logWrite(state, argument, argument, () => state.write(TEMP_PARAM_VAR));
   state.write(')');
 }
@@ -508,14 +556,18 @@ function logRead(state: State, node: Node, name: string): void {
 }
 
 // logging a variable write
-function logWrite(state: State, lhs: Node, value: Expression, body?: () => void): void {
-  state.write(`${LOG_WRITE}(${newId(value)}, `);
-  // @ts-ignore
-  const xs = collectIdentifiers(lhs);
-  state.write(`[${xs.map(x => `"${x}"`).join(', ')}], `);
-  if (body) body();
-  else state.walk(value);
-  state.write(')');
+function logWrite(state: State, lhs: Node, rhs: Node, body: () => void): void {
+  if (lhs.type === 'MemberExpression') {
+    logPutField(state, lhs, rhs, body);
+  } else {
+    // variable write
+    const x = lhs as Identifier;
+    state.write(`${x.name} = ${LOG_WRITE}(${newId(rhs)}, `);
+    const xs = collectIdentifiers(lhs as Pattern);
+    state.write(`[${xs.map(x => `"${x}"`).join(', ')}], `);
+    body();
+    state.write(')');
+  }
 }
 
 // logging a literal
@@ -803,9 +855,9 @@ const visitors: Visitors = {
   },
   VariableDeclarator: (node, state) => {
     const { id, init } = node;
-    state.withLHS(() => state.walk(id));
-    if (init != null) {
-      state.write(' = ');
+    if (init == null) {
+      state.withLHS(() => state.walk(id));
+    } else {
       logWrite(state, id, init, () => logExpression(state, init));
     }
   },
@@ -886,9 +938,7 @@ const visitors: Visitors = {
     const { left, right, operator } = node;
     switch (operator) {
       case '=': {
-        state.withLHS(() => state.walk(left));
-        state.write(' = ');
-        logWrite(state, left, right);
+        logWrite(state, left, right, () => state.walk(right));
         break;
       }
       default: {
@@ -903,7 +953,7 @@ const visitors: Visitors = {
     state.walk(right);
   },
   MemberExpression: (node, state) => {
-    todo('MemberExpression');
+    logGetField(state, node);
   },
   ConditionalExpression: (node, state) => {
     const { test, consequent, alternate } = node;

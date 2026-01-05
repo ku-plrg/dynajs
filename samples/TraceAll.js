@@ -106,6 +106,33 @@
       var loc = getLoc(id);
       put('E(' + v + ')' + loc);
     },
+    getFieldPre: function (id, base, prop) {
+      var b = getValue(base);
+      var p = getValue(prop);
+      var loc = getLoc(id);
+      put('G[pre](' + b + ', ' + p + ')' + loc);
+    },
+    getField: function (id, base, prop, value) {
+      var b = getValue(base);
+      var p = getValue(prop);
+      var v = getValue(value);
+      var loc = getLoc(id);
+      put('G(' + b + ', ' + p + ', ' + v + ')' + loc);
+    },
+    putFieldPre: function (id, base, prop, value) {
+      var b = getValue(base);
+      var p = getValue(prop);
+      var v = getValue(value);
+      var loc = getLoc(id);
+      put('P[pre](' + b + ', ' + p + ', ' + v + ')' + loc);
+    },
+    putField: function (id, base, prop, value) {
+      var b = getValue(base);
+      var p = getValue(prop);
+      var v = getValue(value);
+      var loc = getLoc(id);
+      put('P(' + b + ', ' + p + ', ' + v + ')' + loc);
+    },
     binaryPre: function (id, op, left, right) {
       var l = getValue(left);
       var r = getValue(right);
