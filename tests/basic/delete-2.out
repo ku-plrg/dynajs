@@ -1,0 +1,14 @@
+Se() @ 1:1-6:1
+  R(Math, <object>) @ 2:10-14
+  L("P") @ 2:15-18
+  L("I") @ 2:21-24
+  B[pre](+, "P", "I") @ 2:15-24
+  B(+, "P", "I", "PI") @ 2:15-24
+  De[pre](<object>, "PI") @ 2:10-25
+  D(e, <catch>, <object>) @ 3:3-5:2
+  R(e, <object>) @ 4:3-4
+  R(TypeError, <function>) @ 4:16-25
+  B[pre](instanceof, <object>, <function>) @ 4:3-25
+  B(instanceof, <object>, <function>, true) @ 4:3-25
+  E(true) @ 4:3-25
+Sx() @ 1:1-6:1

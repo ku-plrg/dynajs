@@ -2,6 +2,7 @@ import {
   VarKind,
   err,
   kindToStr,
+  locToStr,
   log,
   stringify,
   todo,
@@ -26,10 +27,12 @@ type Analysis = {
   getField?: (id: number, base: any, prop: any, result: any) => void;
   putFieldPre?: (id: number, base: any, prop: any, value: any) => void;
   putField?: (id: number, base: any, prop: any, value: any) => void;
-  binaryPre?: (id: number, op: string, left: any, right: any) => void;
-  binaryPost?: (id: number, op: string, left: any, right: any, result: any) => void;
+  _deletePre?: (id: number, base: any, prop: any) => void;
+  _delete?: (id: number, base: any, prop: any, result: boolean) => void;
   unaryPre?: (id: number, op: string, prefix: boolean, operand: any) => void;
   unaryPost?: (id: number, op: string, prefix: boolean, operand: any, result: any) => void;
+  binaryPre?: (id: number, op: string, left: any, right: any) => void;
+  binaryPost?: (id: number, op: string, left: any, right: any, result: any) => void;
   condition?: (id: number, op: string, value: any) => void;
   declare?: (id: number, name: string, kind: string, init: boolean, value: any) => void;
   read?: (id: number, name: string, value: any) => void;
@@ -153,6 +156,34 @@ function P(id: number, base: any, prop: any, value: any): any {
   return value;
 }
 
+// hook for delete operations
+function De(id: number, base: any, prop: any): boolean {
+  D$.analysis._deletePre?.(id, base, prop);
+  const result = delete base[prop];
+  D$.analysis._delete?.(id, base, prop, result);
+  return result;
+}
+
+// hook for unary operations (except for `delete`)
+function U(id: number, op: string, operand: any): any {
+  D$.analysis.unaryPre?.(id, op, true, operand);
+  const f = UNARY_OPS[op];
+  if (!f) {
+    err(`unknown unary operator ${op}`);
+  }
+  const result = f(operand)
+  D$.analysis.unaryPost?.(id, op, true, operand, result);
+  return result;
+}
+const UNARY_OPS: { [op: string]: (a: any) => any } = {
+  "-": (a: any) => -a,
+  "+": (a: any) => +a,
+  "!": (a: any) => !a,
+  "~": (a: any) => ~a,
+  "typeof": (a: any) => typeof a,
+  "void": (a: any) => void a,
+}
+
 // hook for the end of an expression
 function B(id: number, op: string, left: any, right: any): any {
   D$.analysis.binaryPre?.(id, op, left, right);
@@ -187,26 +218,6 @@ const BINARY_OPS: { [op: string]: (a: any, b: any) => any } = {
   "in": (a: any, b: any) => a in b,
   "instanceof": (a: any, b: any) => a instanceof b,
   "**": (a: any, b: any) => a ** b,
-}
-
-// hook for unary operations (except for `delete`)
-function U(id: number, op: string, operand: any): any {
-  D$.analysis.unaryPre?.(id, op, true, operand);
-  const f = UNARY_OPS[op];
-  if (!f) {
-    err(`unknown unary operator ${op}`);
-  }
-  const result = f(operand)
-  D$.analysis.unaryPost?.(id, op, true, operand, result);
-  return result;
-}
-const UNARY_OPS: { [op: string]: (a: any) => any } = {
-  "-": (a: any) => -a,
-  "+": (a: any) => +a,
-  "!": (a: any) => !a,
-  "~": (a: any) => ~a,
-  "typeof": (a: any) => typeof a,
-  "void": (a: any) => void a,
 }
 
 // hook for update operations
@@ -279,10 +290,7 @@ function X(id: number, exception: any): void {
 
 // get the location string from an id
 function idToLoc(id: number) {
-  const [ startRow, startCol, endRow, endCol ] = D$.ids[id];
-  return startRow == endRow
-    ? `${startRow}:${startCol}-${endCol}`
-    : `${startRow}:${startCol}-${endRow}:${endCol}`;
+  return locToStr(D$.ids[id]);
 };
 
 // -----------------------------------------------------------------------------
@@ -293,7 +301,7 @@ const BASE = {
   ids: {},
   idToLoc,
   utils,
-  Se, Sx, F, Fe, Fx, Re, O, E, G, P, B, U, Up, C, Swl, Swr, D, R, W, L, Th, X
+  Se, Sx, F, Fe, Fx, Re, O, E, G, P, De, U, B, Up, C, Swl, Swr, D, R, W, L, Th, X
 };
 type DynaJSType = typeof BASE & {
   analysis: Analysis;

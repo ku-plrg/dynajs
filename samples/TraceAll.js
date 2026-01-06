@@ -133,18 +133,18 @@
       var loc = getLoc(id);
       put('P(' + b + ', ' + p + ', ' + v + ')' + loc);
     },
-    binaryPre: function (id, op, left, right) {
-      var l = getValue(left);
-      var r = getValue(right);
+    _deletePre: function (id, base, prop) {
+      var b = getValue(base);
+      var p = getValue(prop);
       var loc = getLoc(id);
-      put('B[pre](' + op + ', ' + l + ', ' + r + ')' + loc);
+      put('De[pre](' + b + ', ' + p + ')' + loc);
     },
-    binaryPost: function (id, op, left, right, result) {
-      var l = getValue(left);
-      var r = getValue(right);
-      var res = getValue(result);
+    _delete: function (id, base, prop, result) {
+      var b = getValue(base);
+      var p = getValue(prop);
+      var r = getValue(result);
       var loc = getLoc(id);
-      put('B(' + op + ', ' + l + ', ' + r + ', ' + res + ')' + loc);
+      put('De(' + b + ', ' + p + ', ' + r + ')' + loc);
     },
     unaryPre: function (id, op, prefix, operand) {
       var l = getValue(operand);
@@ -158,6 +158,19 @@
       var loc = getLoc(id);
       op = prefix ? op + ' _' : '_ ' + op;
       put('U(' + op + ', ' + l + ', ' + res + ')' + loc);
+    },
+    binaryPre: function (id, op, left, right) {
+      var l = getValue(left);
+      var r = getValue(right);
+      var loc = getLoc(id);
+      put('B[pre](' + op + ', ' + l + ', ' + r + ')' + loc);
+    },
+    binaryPost: function (id, op, left, right, result) {
+      var l = getValue(left);
+      var r = getValue(right);
+      var res = getValue(result);
+      var loc = getLoc(id);
+      put('B(' + op + ', ' + l + ', ' + r + ', ' + res + ')' + loc);
     },
     condition: function (id, op, value) {
       var v = getValue(value);

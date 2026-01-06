@@ -24,18 +24,20 @@ import {
 import { recursive, RecursiveVisitors } from 'acorn-walk'
 import { generate } from 'astring';
 import {
+  VarKind,
   getInstrumentedName,
+  getLocFromNode,
   header,
+  kindToStr,
+  locToStr,
   log,
   parse,
   readFile,
+  strToKind,
   stringify,
   todo,
   warn,
   writeFile,
-  VarKind,
-  kindToStr,
-  strToKind,
 } from './utils';
 
 // instrument a JS file
@@ -290,8 +292,9 @@ const LOG_FOR_IN_OF_OBJECT = DYNAJS_VAR + '.O';
 const LOG_EXPRESSION = DYNAJS_VAR + '.E';
 const LOG_GET_FIELD = DYNAJS_VAR + '.G';
 const LOG_PUT_FIELD = DYNAJS_VAR + '.P';
-const LOG_BINARY_OP = DYNAJS_VAR + '.B';
+const LOG_DELETE_OP = DYNAJS_VAR + '.De';
 const LOG_UNARY_OP = DYNAJS_VAR + '.U';
+const LOG_BINARY_OP = DYNAJS_VAR + '.B';
 const LOG_UPDATE_OP = DYNAJS_VAR + '.Up';
 const LOG_CONDITION = DYNAJS_VAR + '.C';
 const LOG_SWITCH_LEFT = DYNAJS_VAR + '.Swl';
@@ -456,7 +459,7 @@ function logGetField(state: State, expr: Expression): void {
   } else if (property.type === 'Identifier') {
     state.write(`"${property.name}"`);
   } else {
-    warn('MemberExpression: unexpected property type');
+    warn(`MemberExpression: unexpected property type${getLocStr(expr)}`);
   }
   state.write(')');
 }
@@ -478,11 +481,44 @@ function logPutField(state: State, lhs: Node, rhs: Node, body: () => void): void
   } else if (property.type === 'Identifier') {
     state.write(`"${property.name}"`);
   } else {
-    warn('MemberExpression: unexpected property type');
+    warn(`MemberExpression: unexpected property type${getLocStr(lhs)}`);
   }
   state.write(', ');
   body();
   state.write(')');
+}
+
+// logging a delete operation
+function logDelete(state: State, expr: Node): void {
+  if (expr.type === 'MemberExpression') {
+    const { object, property, computed } = expr as MemberExpression;
+    state.write(`${LOG_DELETE_OP}(${newId(expr)}, `);
+    state.walk(object);
+    state.write(', ');
+    if (computed) {
+      state.walk(property);
+    } else if (property.type === 'Identifier') {
+      state.write(`"${property.name}"`);
+    } else {
+      warn(`Delete operator on unexpected property type${getLocStr(expr)}`);
+    }
+    state.write(')');
+  } else {
+    warn(`Delete operator on unexpected type${getLocStr(expr)}`);
+    state.write(`delete ${generate(expr)}`);
+  }
+}
+
+// logging a unary operation (except for `delete`)
+function logUnaryOp(state: State, expr: UnaryExpression): void {
+  const { argument, operator } = expr;
+  if (operator === 'delete') {
+    logDelete(state, argument);
+  } else {
+    state.write(`${LOG_UNARY_OP}(${newId(expr)}, "${operator}", `);
+    state.walk(argument);
+    state.write(')');
+  }
 }
 
 // logging a binary operation
@@ -492,14 +528,6 @@ function logBinaryOp(state: State, expr: BinaryExpression): void {
   state.walk(left);
   state.write(', ');
   state.walk(right);
-  state.write(')');
-}
-
-// logging a unary operation (except for `delete`)
-function logUnaryOp(state: State, expr: UnaryExpression): void {
-  const { argument, operator } = expr;
-  state.write(`${LOG_UNARY_OP}(${newId(expr)}, "${operator}", `);
-  state.walk(argument);
   state.write(')');
 }
 
@@ -600,12 +628,7 @@ function newId(node: Node): number {
   var id = numId;
   numId += ID_INC_STEP;
   if (node.loc) {
-    idToLoc[id] = [
-      node.loc.start.line,
-      node.loc.start.column + 1,
-      node.loc.end.line,
-      node.loc.end.column + 1,
-    ];
+    idToLoc[id] = getLocFromNode(node);
   }
   return id;
 }
@@ -922,9 +945,6 @@ const visitors: Visitors = {
     });
   },
   UnaryExpression: (node, state) => {
-    if (node.operator === 'delete') {
-      todo('UnaryExpression: delete');
-    }
     logUnaryOp(state, node);
   },
   UpdateExpression: (node, state) => {
@@ -1133,4 +1153,10 @@ function collectIdentifiers(node: Pattern): string[] {
   }
   collect(node);
   return ids;
+}
+
+function getLocStr(node: Node): string {
+  if (!node.loc) return '';
+  const loc = getLocFromNode(node);
+  return ` @ ${locToStr(loc)}`;
 }

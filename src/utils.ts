@@ -251,3 +251,20 @@ export const kindToStr: { [key in VarKind]: string } = {
   [VarKind.Arguments]: 'arguments',
   [VarKind.CatchParam]: 'catch',
 }
+
+export const locToStr = (loc: [number, number, number, number]): string => {
+  const [startRow, startCol, endRow, endCol] = loc;
+  return startRow == endRow
+    ? `${startRow}:${startCol}-${endCol}`
+    : `${startRow}:${startCol}-${endRow}:${endCol}`;
+}
+
+export const getLocFromNode = (node: Node): [number, number, number, number] => {
+  if (!node.loc) return [-1, -1, -1, -1];
+  return [
+    node.loc.start.line,
+    node.loc.start.column + 1,
+    node.loc.end.line,
+    node.loc.end.column + 1,
+  ];
+}

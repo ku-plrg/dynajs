@@ -1,0 +1,20 @@
+Se() @ 1:1-5:1
+  D(obj, <var>, undefined) @ 1:1-5:1
+  L(1) @ 1:16-17
+  L(2) @ 1:22-23
+  L(<object>) @ 1:11-25
+  E(<object>) @ 1:11-25
+  W([obj], <object>) @ 1:11-25
+  R(obj, <object>) @ 2:8-11
+  De[pre](<object>, "p") @ 2:8-13
+  De(<object>, "p", true) @ 2:8-13
+  E(true) @ 2:1-13
+  R(obj, <object>) @ 3:1-4
+  G[pre](<object>, "p") @ 3:1-6
+  G(<object>, "p", undefined) @ 3:1-6
+  E(undefined) @ 3:1-6
+  R(obj, <object>) @ 4:1-4
+  G[pre](<object>, "q") @ 4:1-6
+  G(<object>, "q", 2) @ 4:1-6
+  E(2) @ 4:1-6
+Sx() @ 1:1-5:1
