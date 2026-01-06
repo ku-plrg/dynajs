@@ -990,7 +990,11 @@ const visitors: Visitors = {
     state.write(')');
   },
   NewExpression: (node, state) => {
-    todo('NewExpression');
+    const { callee, arguments: args } = node;
+    logCall(state, callee, true);
+    state.write('(');
+    state.walkArray(args);
+    state.write(')');
   },
   SequenceExpression: (node, state) => {
     state.write('(');

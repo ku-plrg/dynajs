@@ -93,12 +93,35 @@ function invokeFun(
   let result: any;
   D$.analysis.invokeFunPre?.(id, f, base, args, isConstructor, isMethod);
   if (isConstructor) {
-    todo('constructor calls not supported yet');
+    result = construct(f, args);
   } else {
     result = Function.prototype.apply.call(f, base, args);
   }
   D$.analysis.invokeFun?.(id, f, base, args, result, isConstructor, isMethod);
   return result;
+}
+
+// helper function to construct an object
+function construct(f: any, args: IArguments): any {
+  if (typeof Reflect !== 'undefined' && Reflect.construct) {
+    return Reflect.construct(f, args);
+  } else {
+    // for older environments without Reflect.construct
+    switch (args.length) {
+      case 0: return new f();
+      case 1: return new f(args[0]);
+      case 2: return new f(args[0], args[1]);
+      case 3: return new f(args[0], args[1], args[2]);
+      case 4: return new f(args[0], args[1], args[2], args[3]);
+    }
+    // for more than 4 arguments
+    const argArray = Array.prototype.slice.call(args);
+    const TempConstructor: any = function(this: any) {
+      return f.apply(this, argArray);
+    }
+    TempConstructor.prototype = f.prototype;
+    return new TempConstructor();
+  }
 }
 
 // hook for function enter
