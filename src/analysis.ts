@@ -81,6 +81,12 @@ function F(id: number, f: any, isConstructor: boolean): any {
   }
 }
 
+// hook for method calls
+function M(id: number, base: any, prop: any, isConstructor: boolean): any {
+  const f = G(id, base, prop);
+  return () => invokeFun(id, base, f, arguments, isConstructor, true);
+}
+
 // helper function to invoke a function
 function invokeFun(
   id: number,
@@ -324,7 +330,8 @@ const BASE = {
   ids: {},
   idToLoc,
   utils,
-  Se, Sx, F, Fe, Fx, Re, O, E, G, P, De, U, B, Up, C, Swl, Swr, D, R, W, L, Th, X
+  Se, Sx, F, M, Fe, Fx, Re, O, E, G, P, De,
+  U, B, Up, C, Swl, Swr, D, R, W, L, Th, X
 };
 type DynaJSType = typeof BASE & {
   analysis: Analysis;

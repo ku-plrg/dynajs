@@ -285,6 +285,7 @@ class Scope {
 const LOG_SCRIPT_ENTER = DYNAJS_VAR + '.Se';
 const LOG_SCRIPT_EXIT = DYNAJS_VAR + '.Sx';
 const LOG_FUNCTION_CALL = DYNAJS_VAR + '.F';
+const LOG_METHOD_CALL = DYNAJS_VAR + '.M';
 const LOG_FUNC_ENTER = DYNAJS_VAR + '.Fe';
 const LOG_FUNC_EXIT = DYNAJS_VAR + '.Fx';
 const LOG_RETURN = DYNAJS_VAR + '.Re';
@@ -321,7 +322,27 @@ function logScriptExit(state: State, program: Node): void {
 // logging a function call
 function logCall(state: State, callee: Node, isConstructor: boolean): void {
   if (callee.type === 'MemberExpression') {
-    todo('Method call');
+    const { object, property, computed, optional } = callee as MemberExpression;
+    state.write(`${LOG_METHOD_CALL}(${newId(callee)}, `);
+    if (object.type === 'Super') {
+      todo('MemberExpression: super');
+    } else {
+      state.walk(object);
+    }
+    if (optional) {
+      todo('MemberExpression: optional');
+    }
+    state.write(', ');
+    if (property.type === 'PrivateIdentifier') {
+      todo('MemberExpression: private identifier');
+    } else if (computed) {
+      state.walk(property);
+    } else if (property.type === 'Identifier') {
+      state.write(`"${property.name}"`);
+    } else {
+      warn(`MemberExpression: unexpected property type${getLocStr(callee)}`);
+    }
+    state.write(`, ${isConstructor})`);
   } else if (callee.type === 'Super') {
     todo('Super call');
   } else {
