@@ -14,7 +14,7 @@ Se() @ 1:1-4:1
     D(arguments, <arguments>, <object>) @ 1:16-43
     R(this, <object>) @ 1:36-40
     E(<object>) @ 1:36-40
-    Re(<object>) @ 1:36-40
+    Re(<object>) @ 1:29-41
   Fx(<object>) @ 1:16-43
   F(<function>, <object>, [17, <object>, "f", false], <object>, false, true) @ 2:9-14
   E(<object>) @ 2:9-16

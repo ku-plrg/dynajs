@@ -364,11 +364,10 @@ function logFuncDeclare(state: State, node: Node, isExpr: boolean): void {
 // logging function tail
 function logFunc(state: State, node: Node, isExpr: boolean): void {
   state.createScope(scope => scope.walkFunction(node, isExpr));
-  const func = node as Function;
-  const { params, body } = func;
+  const { params, body, type } = node as Function;
   state.write('(');
   state.withLHS(() => state.walkArray(params));
-  state.write(') {');
+  state.write(type === 'ArrowFunctionExpression' ? ') => {' : ') {');
   state.wrap(() => {
     state.writeln('try {');
     state.wrap(() => {
@@ -380,7 +379,8 @@ function logFunc(state: State, node: Node, isExpr: boolean): void {
           state.walk(statement);
         }
       } else {
-        todo('Function with expression body');
+        state.writeln('');
+        logReturn(state, body, () => logExpression(state, body));
       }
     });
     state.writeln(`} catch (${EXCEPTION_VAR}) {`);
@@ -407,15 +407,10 @@ function logFuncExit(state: State, func: Node): void {
 }
 
 // logging a return statement
-function logReturn(state: State, node: ReturnStatement): void {
-  const arg = node.argument;
-  state.write(`${LOG_RETURN}(${newId(arg ?? node)}, `);
-  if (arg != null) {
-    logExpression(state, arg);
-  } else {
-    state.write('undefined');
-  }
-  state.write(')');
+function logReturn(state: State, expr: Node, body: () => void): void {
+  state.write(`return ${LOG_RETURN}(${newId(expr)}, `);
+  body();
+  state.write(');');
 }
 
 // logging a for-in/of statement
@@ -725,10 +720,11 @@ const visitors: Visitors = {
     todo('WithStatement');
   },
   ReturnStatement: (node, state) => {
-    state.write('return');
-    if (node.argument != null) state.write(' ');
-    logReturn(state, node);
-    state.write(';');
+    const arg = node.argument;
+    logReturn(state, node, () => {
+      if (arg) logExpression(state, arg);
+      else state.write('undefined');
+    });
   },
   LabeledStatement: (node, state) => {
     const { label, body } = node;
@@ -1033,7 +1029,9 @@ const visitors: Visitors = {
     todo('SpreadElement');
   },
   ArrowFunctionExpression: (node, state) => {
-    todo('ArrowFunctionExpression');
+    logLiteral(state, node, () => {
+      logFuncDeclare(state, node, true);
+    });
   },
   YieldExpression: (node, state) => {
     todo('YieldExpression');
