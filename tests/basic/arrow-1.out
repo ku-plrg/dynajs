@@ -1,0 +1,18 @@
+Se() @ 1:1-2:1
+  L(<function>) @ 1:2-17
+  L("a") @ 1:19-22
+  L("b") @ 1:24-27
+  F[pre](<function>, undefined, ["a", "b"], false, false) @ 1:2-17
+  Fe(<function>, <object>, ["a", "b"]) @ 1:2-17
+    D(x, <param>, "a") @ 1:2-17
+    D(y, <param>, "b") @ 1:2-17
+    R(x, "a") @ 1:12-13
+    R(y, "b") @ 1:16-17
+    B[pre](+, "a", "b") @ 1:12-17
+    B(+, "a", "b", "ab") @ 1:12-17
+    E("ab") @ 1:12-17
+    Re("ab") @ 1:12-17
+  Fx("ab") @ 1:2-17
+  F(<function>, undefined, ["a", "b"], "ab", false, false) @ 1:2-17
+  E("ab") @ 1:1-28
+Sx() @ 1:1-2:1

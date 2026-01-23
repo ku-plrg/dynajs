@@ -210,7 +210,9 @@ class Scope {
     if (isExpr && func.id != null) {
       this.vars[func.id.name] = VarKind.Func;
     }
-    this.vars['arguments'] = VarKind.Arguments;
+    if (func.type !== 'ArrowFunctionExpression') {
+      this.vars['arguments'] = VarKind.Arguments;
+    }
     for (const param of func.params) {
       const xs = collectIdentifiers(param);
       for (const x of xs) {
@@ -364,14 +366,15 @@ function logFuncDeclare(state: State, node: Node, isExpr: boolean): void {
 // logging function tail
 function logFunc(state: State, node: Node, isExpr: boolean): void {
   state.createScope(scope => scope.walkFunction(node, isExpr));
-  const { params, body, type } = node as Function;
+  const { params, body, type, id } = node as Function;
   state.write('(');
   state.withLHS(() => state.walkArray(params));
-  state.write(type === 'ArrowFunctionExpression' ? ') => {' : ') {');
+  // TODO use arrow function instead of function
+  state.write(type === 'ArrowFunctionExpression' ? ') {' : ') {');
   state.wrap(() => {
     state.writeln('try {');
     state.wrap(() => {
-      logFuncEnter(state, node);
+      logFuncEnter(state, node as Function);
       logDeclare(state, node);
       if (body.type === 'BlockStatement') {
         for (const statement of body.body) {
@@ -397,8 +400,11 @@ function logFunc(state: State, node: Node, isExpr: boolean): void {
 }
 
 // logging function enter
-function logFuncEnter(state: State, func: Node): void {
-  state.writeln(`${LOG_FUNC_ENTER}(${newId(func)}, arguments.callee, this, arguments);`);
+function logFuncEnter(state: State, func: Function): void {
+  const { id } = func;
+  // TODO: do not use `arguments.callee` for strict mode support
+  const name = id ? id.name : 'arguments.callee'
+  state.writeln(`${LOG_FUNC_ENTER}(${newId(func)}, ${name}, this, arguments);`);
 }
 
 // logging function exit
