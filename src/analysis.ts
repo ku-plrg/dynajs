@@ -84,7 +84,9 @@ function F(id: number, f: any, isConstructor: boolean): any {
 // hook for method calls
 function M(id: number, base: any, prop: any, isConstructor: boolean): any {
   const f = G(id, base, prop);
-  return () => invokeFun(id, base, f, arguments, isConstructor, true);
+  return function() {
+    return invokeFun(id, base, f, arguments, isConstructor, true);
+  }
 }
 
 // helper function to invoke a function
