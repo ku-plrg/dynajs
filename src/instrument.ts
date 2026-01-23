@@ -1043,13 +1043,27 @@ const visitors: Visitors = {
     todo('YieldExpression');
   },
   TemplateLiteral: (node, state) => {
-    todo('TemplateLiteral');
+    // TODO it is not distinguished with string literal for the user
+    logLiteral(state, node, () => {
+      const { quasis, expressions } = node;
+      state.write('`');
+      const length = expressions.length;
+
+      for (let i = 0; i < length; i++) {
+        state.walk(quasis[i]);
+        state.write('${');
+        state.walk(expressions[i]);
+        state.write('}');
+      }
+      state.walk(quasis[quasis.length - 1]);
+      state.write('`');
+    });
   },
   TaggedTemplateExpression: (node, state) => {
     todo('TaggedTemplateExpression');
   },
   TemplateElement: (node, state) => {
-    todo('TemplateElement');
+    state.write(node.value.raw);
   },
   ObjectPattern: (node, state) => {
     todo('ObjectPattern');
