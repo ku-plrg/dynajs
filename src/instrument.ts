@@ -8,6 +8,7 @@ import {
   AnyNode,
   BinaryExpression,
   CatchClause,
+  Class,
   Expression,
   ForInStatement,
   ForOfStatement,
@@ -252,7 +253,12 @@ class Scope {
       }
     },
     FunctionExpression: (node, scope, c) => {},
-    ClassDeclaration: (node, scope, c) => {},
+    ClassDeclaration: (node, scope, c) => {
+      const { id } = node;
+      if (id != null) {
+        scope.vars[id.name] = VarKind.Class;
+      }
+    },
     ClassExpression: (node, scope, c) => {},
   }
 
@@ -354,6 +360,17 @@ function logCall(state: State, callee: Node, isConstructor: boolean): void {
   }
 }
 
+// logging class
+function logClassDeclare(state: State, node: Node, isExpr: boolean): void {
+  const { id, superClass, body } = node as Class;
+  state.write('class ');
+  if (id) state.write(id.name + ' ');
+  if (superClass) todo('Class with super class');
+  state.write('{');
+  state.wrap(() => state.walk(body));
+  state.writeln('}');
+}
+
 // logging function declaration
 function logFuncDeclare(state: State, node: Node, isExpr: boolean): void {
   const { id, generator, async } = node as Function;
@@ -369,8 +386,7 @@ function logFunc(state: State, node: Node, isExpr: boolean): void {
   const { params, body, type, id } = node as Function;
   state.write('(');
   state.withLHS(() => state.walkArray(params));
-  // TODO use arrow function instead of function
-  state.write(type === 'ArrowFunctionExpression' ? ') {' : ') {');
+  state.write(') {');
   state.wrap(() => {
     state.writeln('try {');
     state.wrap(() => {
@@ -402,8 +418,8 @@ function logFunc(state: State, node: Node, isExpr: boolean): void {
 // logging function enter
 function logFuncEnter(state: State, func: Function): void {
   const { id } = func;
-  // TODO: do not use `arguments.callee` for strict mode support
-  const name = id ? id.name : 'arguments.callee'
+  // TODO: temporalily use `null` but we need to discuss how to handle this
+  const name = id ? id.name : 'null'
   state.writeln(`${LOG_FUNC_ENTER}(${newId(func)}, ${name}, this, arguments);`);
 }
 
@@ -591,7 +607,7 @@ function logDeclare(state: State, node: Node): void {
   if (!vars) return;
   for (const name in vars) {
     const kind = vars[name];
-    const isTDZ = kind === VarKind.Const || kind === VarKind.Let;
+    const isTDZ = kind === VarKind.Const || kind === VarKind.Let || kind === VarKind.Class;
     if (isTDZ) {
       state.writeln(`${LOG_DECLARE}(${newId(node)}, "${name}", ${kind});`);
     } else {
@@ -959,7 +975,7 @@ const visitors: Visitors = {
       state.write(': ');
       state.walk(value);
     } else { // kind is 'get' or 'set'
-      logFunc(state, value, false);
+      logFunc(state, value, true);
     }
   },
   FunctionExpression: (node, state) => {
@@ -1036,6 +1052,7 @@ const visitors: Visitors = {
   },
   ArrowFunctionExpression: (node, state) => {
     logLiteral(state, node, () => {
+      // TODO use arrow function instead of function
       logFuncDeclare(state, node, true);
     });
   },
@@ -1078,13 +1095,31 @@ const visitors: Visitors = {
     todo('AssignmentPattern');
   },
   ClassBody: (node, state) => {
-    todo('ClassBody');
+    for (const elem of node.body) {
+      state.writeln('');
+      state.walk(elem);
+    }
   },
   MethodDefinition: (node, state) => {
-    todo('MethodDefinition');
+    const { key, value, kind, computed, static: _static } = node;
+    if (computed) todo('computed method');
+    if (_static) todo('static method');
+    switch (kind) {
+      case 'constructor': todo('constructor method');
+      case 'get': todo('get method');
+      case 'set': todo('set method');
+      case 'method':
+        if (key.type === 'PrivateIdentifier') todo('private method');
+        if (key.type === 'Identifier') {
+          state.write(key.name);
+        } else {
+          warn(`MethodDefinition: unexpected key: ${getLocStr(key)}`);
+        }
+        logFunc(state, value, true);
+    }
   },
   ClassDeclaration: (node, state) => {
-    todo('ClassDeclaration');
+    logClassDeclare(state, node, false);
   },
   ClassExpression: (node, state) => {
     todo('ClassExpression');

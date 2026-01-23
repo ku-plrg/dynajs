@@ -230,6 +230,7 @@ export enum VarKind {
   Param = 4,
   Arguments = 5,
   CatchParam = 6,
+  Class = 7,
 }
 
 export const strToKind: { [key: string]: VarKind } = {
@@ -240,6 +241,7 @@ export const strToKind: { [key: string]: VarKind } = {
   'param': VarKind.Param,
   'arguments': VarKind.Arguments,
   'catch': VarKind.CatchParam,
+  'class': VarKind.Class,
 }
 
 export const kindToStr: { [key in VarKind]: string } = {
@@ -250,6 +252,7 @@ export const kindToStr: { [key in VarKind]: string } = {
   [VarKind.Param]: 'param',
   [VarKind.Arguments]: 'arguments',
   [VarKind.CatchParam]: 'catch',
+  [VarKind.Class]: 'class',
 }
 
 export const locToStr = (loc: [number, number, number, number]): string => {
