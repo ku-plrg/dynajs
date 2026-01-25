@@ -341,12 +341,12 @@ function logCall(state: State, callee: Node, isConstructor: boolean): void {
       todo('MemberExpression: optional');
     }
     state.write(', ');
-    if (property.type === 'PrivateIdentifier') {
-      todo('MemberExpression: private identifier');
-    } else if (computed) {
+    if (computed) {
       state.walk(property);
     } else if (property.type === 'Identifier') {
       state.write(`"${property.name}"`);
+    } else if (property.type === 'PrivateIdentifier') {
+      todo('MemberExpression: private identifier');
     } else {
       warn(`MemberExpression: unexpected property type${getLocStr(callee)}`);
     }
@@ -1102,21 +1102,21 @@ const visitors: Visitors = {
   },
   MethodDefinition: (node, state) => {
     const { key, value, kind, computed, static: _static } = node;
-    if (computed) todo('computed method');
-    if (_static) todo('static method');
-    switch (kind) {
-      case 'constructor': todo('constructor method');
-      case 'get': todo('get method');
-      case 'set': todo('set method');
-      case 'method':
-        if (key.type === 'PrivateIdentifier') todo('private method');
-        if (key.type === 'Identifier') {
-          state.write(key.name);
-        } else {
-          warn(`MethodDefinition: unexpected key: ${getLocStr(key)}`);
-        }
-        logFunc(state, value, true);
+    if (kind === 'constructor') {
+        state.write('constructor');
+    } else {
+      if (_static) state.write('static ');
+      if (kind === 'get') state.write('get ');
+      if (kind === 'set') state.write('set ');
+      if (computed) {
+        state.write('[');
+        state.walk(key);
+        state.write(']');
+      } else {
+        state.withLHS(() => state.walk(key));
+      }
     }
+    logFunc(state, value, true);
   },
   ClassDeclaration: (node, state) => {
     logClassDeclare(state, node, false);
@@ -1172,7 +1172,7 @@ const visitors: Visitors = {
     todo('PropertyDefinition');
   },
   PrivateIdentifier: (node, state) => {
-    todo('PrivateIdentifier');
+    state.write('#' + node.name);
   },
   StaticBlock: (node, state) => {
     todo('StaticBlock');

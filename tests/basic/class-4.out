@@ -1,0 +1,20 @@
+Se() @ 1:1-5:1
+  D(A, <class>) @ 1:1-5:1
+  R(A, <function>) @ 4:1-2
+  G[pre](<function>, "f") @ 4:1-4
+  G(<function>, "f", <function>) @ 4:1-4
+  L(42) @ 4:5-7
+  F[pre](<function>, <function>, [42], false, true) @ 4:1-4
+  Fe(null, <function>, [42]) @ 2:11-32
+    D(arguments, <arguments>, <object>) @ 2:11-32
+    D(x, <param>, 42) @ 2:11-32
+    R(x, 42) @ 2:24-25
+    L(1) @ 2:28-29
+    B[pre](+, 42, 1) @ 2:24-29
+    B(+, 42, 1, 43) @ 2:24-29
+    E(43) @ 2:24-29
+    Re(43) @ 2:17-30
+  Fx(43) @ 2:11-32
+  F(<function>, <function>, [42], 43, false, true) @ 4:1-4
+  E(43) @ 4:1-8
+Sx() @ 1:1-5:1
