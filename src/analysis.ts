@@ -14,31 +14,146 @@ import * as utils from './utils';
 // -----------------------------------------------------------------------------
 type Analysis = {
   endExecution?: () => void;
-  scriptEnter?: (id: number, instrumentedPath: string, originalPath: string) => void;
-  scriptExit?: (id: number, exc?: { exception: any }) => void;
-  invokeFunPre?: (id: number, f: any, base: any, args: IArguments, isConstructor: boolean, isMethod: boolean) => void;
-  invokeFun?: (id: number, f: any, base: any, args: IArguments, result: any, isConstructor: boolean, isMethod: boolean) => { result: any } | void;
-  functionEnter?: (id: number, f: any, base: any, args: IArguments) => void;
-  functionExit?: (id: number, returnValue: any, exception?: { exception: any }) => void;
-  _return?: (id: number, value: any) => void;
-  forInOfObject?: (id: number, value: any, isForIn: boolean) => void;
-  endExpression?: (id: number, value: any) => void;
-  getFieldPre?: (id: number, base: any, prop: any) => void;
-  getField?: (id: number, base: any, prop: any, result: any) => void;
-  putFieldPre?: (id: number, base: any, prop: any, value: any) => void;
-  putField?: (id: number, base: any, prop: any, value: any) => void;
-  _deletePre?: (id: number, base: any, prop: any) => void;
-  _delete?: (id: number, base: any, prop: any, result: boolean) => void;
-  unaryPre?: (id: number, op: string, prefix: boolean, operand: any) => void;
-  unary?: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
-  binaryPre?: (id: number, op: string, left: any, right: any) => void;
-  binary?: (id: number, op: string, left: any, right: any, result: any) => { result: any } | void;
-  condition?: (id: number, op: string, value: any) => void;
-  declare?: (id: number, name: string, kind: string, init: boolean, value: any) => void;
-  read?: (id: number, name: string, value: any) => void;
-  write?: (id: number, names: string[], value: any) => void;
-  literal?: (id: number, value: any) => void;
-  _throw?: (id: number, val: any) => never;
+  scriptEnter?: (
+    id: number,
+    instrumentedPath: string,
+    originalPath: string
+  ) => void;
+  scriptExit?: (
+    id: number,
+    exc?: { exception: any }
+  ) => void;
+  invokeFunPre?: (
+    id: number,
+    f: any,
+    base: any,
+    args: any,
+    isConstructor: boolean,
+    isMethod: boolean
+  ) => { f: any, base: any, args: any, skip: boolean } | void;
+  invokeFun?: (
+    id: number,
+    f: any,
+    base: any,
+    args: any,
+    result: any,
+    isConstructor: boolean,
+    isMethod: boolean
+  ) => { result: any } | void;
+  functionEnter?: (
+    id: number,
+    f: any,
+    base: any,
+    args: any
+  ) => void;
+  functionExit?: (
+    id: number,
+    returnValue: any,
+    exception?: { exception: any }
+  ) => void;
+  _return?: (
+    id: number,
+    value: any
+  ) => { result: any } | void;
+  forInOfObject?: (
+    id: number,
+    value: any,
+    isForIn: boolean
+  ) => { result: any } | void;
+  endExpression?: (
+    id: number,
+    value: any
+  ) => void;
+  getFieldPre?: (
+    id: number,
+    base: any,
+    prop: any
+  ) => { base: any, prop: any, skip: boolean } | void;
+  getField?: (
+    id: number,
+    base: any,
+    prop: any,
+    result: any
+  ) => { result: any } | void;
+  putFieldPre?: (
+    id: number,
+    base: any,
+    prop: any,
+    value: any
+  ) => { base: any, prop: any, value: any, skip: boolean } | void;
+  putField?: (
+    id: number,
+    base: any,
+    prop: any,
+    value: any
+  ) => { result: any } | void;
+  _deletePre?: (
+    id: number,
+    base: any,
+    prop: any
+  ) => { base: any, prop: any, skip: boolean } | void;
+  _delete?: (
+    id: number,
+    base: any,
+    prop: any,
+    value: boolean
+  ) => { result: boolean } | void;
+  unaryPre?: (
+    id: number,
+    op: string,
+    prefix: boolean,
+    operand: any
+  ) => { op: string, operand: any, skip: boolean } | void;
+  unary?: (
+    id: number,
+    op: string,
+    prefix: boolean,
+    operand: any,
+    result: any
+  ) => { result: any } | void;
+  binaryPre?: (
+    id: number,
+    op: string,
+    left: any,
+    right: any
+  ) => { op: string, left: any, right: any, skip: boolean } | void;
+  binary?: (
+    id: number,
+    op: string,
+    left: any,
+    right: any,
+    result: any
+  ) => { result: any } | void;
+  condition?: (
+    id: number,
+    op: string,
+    value: any
+  ) => { result: any } | void;
+  declare?: (
+    id: number,
+    name: string,
+    kind: string,
+    init: boolean,
+    value: any
+  ) => void;
+  read?: (
+    id: number,
+    name: string,
+    value: any
+  ) => { result: any } | void;
+  write?: (
+    id: number,
+    names: string[],
+    value: any
+  ) => { result: any } | void;
+  literal?: (
+    id: number,
+    value: any
+  ) => { result: any } | void;
+  _throw?: (
+    id: number,
+    val: any
+  ) => { result: any } | void;
   result?: any;
 }
 
@@ -94,24 +209,33 @@ function invokeFun(
   id: number,
   base: any,
   f: any,
-  args: IArguments,
+  args: any,
   isConstructor: boolean,
   isMethod: boolean,
 ) {
   let result: any;
-  D$.analysis.invokeFunPre?.(id, f, base, args, isConstructor, isMethod);
-  if (isConstructor) {
-    result = construct(f, args);
-  } else {
-    result = Function.prototype.apply.call(f, base, args);
+  let skip = false;
+  const pre = D$.analysis.invokeFunPre?.(id, f, base, args, isConstructor, isMethod);
+  if (pre) {
+    f = pre.f;
+    base = pre.base;
+    args = pre.args;
+    skip = pre.skip;
   }
-  const aret = D$.analysis.invokeFun?.(id, f, base, args, result, isConstructor, isMethod);
-  if (aret) return aret.result;
+  if (!skip) {
+    if (isConstructor) {
+      result = construct(f, args);
+    } else {
+      result = Function.prototype.apply.call(f, base, args);
+    }
+  }
+  const post = D$.analysis.invokeFun?.(id, f, base, args, result, isConstructor, isMethod);
+  if (post) result = post.result;
   return result;
 }
 
 // helper function to construct an object
-function construct(f: any, args: IArguments): any {
+function construct(f: any, args: any): any {
   if (typeof Reflect !== 'undefined' && Reflect.construct) {
     return Reflect.construct(f, args);
   } else {
@@ -134,7 +258,7 @@ function construct(f: any, args: IArguments): any {
 }
 
 // hook for function enter
-function Fe(id: number, f: any, base: any, args: IArguments): void {
+function Fe(id: number, f: any, base: any, args: any): void {
   returnStack.push(undefined);
   pushSwitchLeft();
   D$.analysis.functionEnter?.(id, f, base, args);
@@ -155,14 +279,18 @@ function Fx(id: number, result: any): void {
 
 // hook for return statements
 function Re(id: number, value: any): any {
-  D$.analysis._return?.(id, value);
+  const post = D$.analysis._return?.(id, value);
+  if (post) {
+    value = post.result;
+  }
   returnStack[returnStack.length - 1] = value;
   return value;
 }
 
 // hook for RHS object of for-in/of loops
 function O(id: number, value: any, isForIn: boolean): any {
-  D$.analysis.forInOfObject?.(id, value, isForIn);
+  const post = D$.analysis.forInOfObject?.(id, value, isForIn);
+  if (post) value = post.result;
   return value;
 }
 
@@ -174,39 +302,86 @@ function E(id: number, value: any): any {
 
 // hook for property reads (get-field)
 function G(id: number, base: any, prop: any): any {
-  D$.analysis.getFieldPre?.(id, base, prop);
-  const result = base[prop];
-  D$.analysis.getField?.(id, base, prop, result);
-  return result;
+  let skip = false;
+  let value;
+  const pre = D$.analysis.getFieldPre?.(id, base, prop);
+  if (pre) {
+    base = pre.base;
+    prop = pre.prop;
+    skip = pre.skip;
+  }
+  if (!skip) {
+    value = base[prop];
+  }
+  const post = D$.analysis.getField?.(id, base, prop, value);
+  if (post) {
+    value = post.result;
+  }
+  return value;
 }
 
 // hook for property writes (set-field)
 function P(id: number, base: any, prop: any, value: any): any {
-  D$.analysis.putFieldPre?.(id, base, prop, value);
-  base[prop] = value;
-  D$.analysis.putField?.(id, base, prop, value);
+  let skip = false;
+  const pre = D$.analysis.putFieldPre?.(id, base, prop, value);
+  if (pre) {
+    base = pre.base;
+    prop = pre.prop;
+    value = pre.value;
+    skip = pre.skip;
+  }
+  if (!skip) {
+    base[prop] = value;
+  }
+  const post = D$.analysis.putField?.(id, base, prop, value);
+  if (post) {
+    value = post.result;
+  }
   return value;
 }
 
 // hook for delete operations
 function De(id: number, base: any, prop: any): boolean {
-  D$.analysis._deletePre?.(id, base, prop);
-  const result = delete base[prop];
-  D$.analysis._delete?.(id, base, prop, result);
-  return result;
+  let value = true;
+  let skip = false;
+  const pre = D$.analysis._deletePre?.(id, base, prop);
+  if (pre) {
+    base = pre.base;
+    prop = pre.prop;
+    skip = pre.skip;
+  }
+  if (!skip) {
+    value = delete base[prop];
+  }
+  const post = D$.analysis._delete?.(id, base, prop, value);
+  if (post) {
+    value = post.result;
+  }
+  return value;
 }
 
 // hook for unary operations (except for `delete`)
 function U(id: number, op: string, operand: any): any {
-  D$.analysis.unaryPre?.(id, op, true, operand);
+  let value;
+  let skip = false;
+  const pre = D$.analysis.unaryPre?.(id, op, true, operand);
+  if (pre) {
+    op = pre.op;
+    operand = pre.operand;
+    skip = pre.skip
+  }
   const f = UNARY_OPS[op];
   if (!f) {
     err(`unknown unary operator ${op}`);
   }
-  const result = f(operand)
-  const aret = D$.analysis.unary?.(id, op, true, operand, result);
-  if (aret) return aret.result;
-  return result;
+  if (!skip) {
+    value = f(operand)
+  }
+  const post = D$.analysis.unary?.(id, op, true, operand, value);
+  if (post) {
+    value = post.result;
+  }
+  return value;
 }
 const UNARY_OPS: { [op: string]: (a: any) => any } = {
   "-": (a: any) => -a,
@@ -219,15 +394,25 @@ const UNARY_OPS: { [op: string]: (a: any) => any } = {
 
 // hook for the end of an expression
 function B(id: number, op: string, left: any, right: any): any {
-  D$.analysis.binaryPre?.(id, op, left, right);
+  let value;
+  let skip = false;
+  const pre = D$.analysis.binaryPre?.(id, op, left, right);
+  if (pre) {
+    op = pre.op;
+    left = pre.left;
+    right = pre.right;
+    skip = pre.skip;
+  }
   const f = BINARY_OPS[op];
   if (!f) {
     err(`unknown binary operator ${op}`);
   }
-  const result = f(left, right)
-  const aret = D$.analysis.binary?.(id, op, left, right, result);
-  if (aret) return aret.result;
-  return result;
+  if (!skip) {
+    value = f(left, right)
+  }
+  const post = D$.analysis.binary?.(id, op, left, right, value);
+  if (post) value = post.result;
+  return value;
 }
 const BINARY_OPS: { [op: string]: (a: any, b: any) => any } = {
   "==": (a: any, b: any) => a == b,
@@ -272,7 +457,10 @@ function Up(id: number, binaryId: number, op: string, prefix: boolean, argument:
 
 // hook for condition expressions
 function C(id: number, op: string, value: any): any {
-  D$.analysis.condition?.(id, op, value);
+  const post = D$.analysis.condition?.(id, op, value);
+  if (post) {
+    value = post.result;
+  }
   return value;
 }
 
@@ -295,25 +483,37 @@ function D(id: number, name: string, kind: VarKind, value?: any): void {
 
 // hook for variable reads
 function R(id: number, name: string, value: any): any {
-  D$.analysis.read?.(id, name, value);
+  const post = D$.analysis.read?.(id, name, value);
+  if (post) {
+    value = post.result;
+  }
   return value;
 }
 
 // hook for variable writes
 function W(id: number, names: string[], value: any): any {
-  D$.analysis.write?.(id, names, value);
+  const post = D$.analysis.write?.(id, names, value);
+  if (post) {
+    value = post.result;
+  }
   return value;
 }
 
 // hook for literals
 function L(id: number, value: any): any {
-  D$.analysis.literal?.(id, value);
+  let post = D$.analysis.literal?.(id, value);
+  if (post) {
+    value = post.result;
+  }
   return value;
 }
 
 // hook for throw statements
 function Th(id: number, value: any): any {
-  D$.analysis._throw?.(id, value);
+  const post = D$.analysis._throw?.(id, value);
+  if (post) {
+    value = post.result;
+  }
   return value;
 }
 
