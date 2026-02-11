@@ -17,7 +17,7 @@ type Analysis = {
   scriptEnter?: (id: number, instrumentedPath: string, originalPath: string) => void;
   scriptExit?: (id: number, exc?: { exception: any }) => void;
   invokeFunPre?: (id: number, f: any, base: any, args: IArguments, isConstructor: boolean, isMethod: boolean) => void;
-  invokeFun?: (id: number, f: any, base: any, args: IArguments, result: any, isConstructor: boolean, isMethod: boolean) => void;
+  invokeFun?: (id: number, f: any, base: any, args: IArguments, result: any, isConstructor: boolean, isMethod: boolean) => { result: any } | void;
   functionEnter?: (id: number, f: any, base: any, args: IArguments) => void;
   functionExit?: (id: number, returnValue: any, exception?: { exception: any }) => void;
   _return?: (id: number, value: any) => void;
@@ -30,9 +30,9 @@ type Analysis = {
   _deletePre?: (id: number, base: any, prop: any) => void;
   _delete?: (id: number, base: any, prop: any, result: boolean) => void;
   unaryPre?: (id: number, op: string, prefix: boolean, operand: any) => void;
-  unaryPost?: (id: number, op: string, prefix: boolean, operand: any, result: any) => void;
+  unary?: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
   binaryPre?: (id: number, op: string, left: any, right: any) => void;
-  binaryPost?: (id: number, op: string, left: any, right: any, result: any) => void;
+  binary?: (id: number, op: string, left: any, right: any, result: any) => { result: any } | void;
   condition?: (id: number, op: string, value: any) => void;
   declare?: (id: number, name: string, kind: string, init: boolean, value: any) => void;
   read?: (id: number, name: string, value: any) => void;
@@ -105,7 +105,8 @@ function invokeFun(
   } else {
     result = Function.prototype.apply.call(f, base, args);
   }
-  D$.analysis.invokeFun?.(id, f, base, args, result, isConstructor, isMethod);
+  const aret = D$.analysis.invokeFun?.(id, f, base, args, result, isConstructor, isMethod);
+  if (aret) return aret.result;
   return result;
 }
 
@@ -203,7 +204,8 @@ function U(id: number, op: string, operand: any): any {
     err(`unknown unary operator ${op}`);
   }
   const result = f(operand)
-  D$.analysis.unaryPost?.(id, op, true, operand, result);
+  const aret = D$.analysis.unary?.(id, op, true, operand, result);
+  if (aret) return aret.result;
   return result;
 }
 const UNARY_OPS: { [op: string]: (a: any) => any } = {
@@ -223,7 +225,8 @@ function B(id: number, op: string, left: any, right: any): any {
     err(`unknown binary operator ${op}`);
   }
   const result = f(left, right)
-  D$.analysis.binaryPost?.(id, op, left, right, result);
+  const aret = D$.analysis.binary?.(id, op, left, right, result);
+  if (aret) return aret.result;
   return result;
 }
 const BINARY_OPS: { [op: string]: (a: any, b: any) => any } = {
@@ -260,10 +263,10 @@ function Up(id: number, binaryId: number, op: string, prefix: boolean, argument:
   D$.analysis.binaryPre?.(binaryId, binaryOp, oldValue, right);
   // @ts-ignore
   let newValue = op === '++' ? oldValue + right : oldValue - right;
-  D$.analysis.binaryPost?.(binaryId, binaryOp, oldValue, right, newValue);
+  D$.analysis.binary?.(binaryId, binaryOp, oldValue, right, newValue);
   write(newValue);
   const result = prefix ? newValue : oldValue;
-  D$.analysis.unaryPost?.(id, op, prefix, argument, result);
+  D$.analysis.unary?.(id, op, prefix, argument, result);
   return result;
 }
 

@@ -152,7 +152,7 @@
       op = prefix ? op + ' _' : '_ ' + op;
       put('U[pre](' + op + ', ' + l + ')' + loc);
     },
-    unaryPost: function (id, op, prefix, operand, result) {
+    unary: function (id, op, prefix, operand, result) {
       var l = getValue(operand);
       var res = getValue(result);
       var loc = getLoc(id);
@@ -165,7 +165,7 @@
       var loc = getLoc(id);
       put('B[pre](' + op + ', ' + l + ', ' + r + ')' + loc);
     },
-    binaryPost: function (id, op, left, right, result) {
+    binary: function (id, op, left, right, result) {
       var l = getValue(left);
       var r = getValue(right);
       var res = getValue(result);
