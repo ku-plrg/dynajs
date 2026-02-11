@@ -554,6 +554,11 @@ function logUnaryOp(state: State, expr: UnaryExpression): void {
     logDelete(state, argument);
   } else {
     state.write(`${LOG_UNARY_OP}(${newId(expr)}, "${operator}", `);
+    // special handling for `typeof x` where x is an identifier to avoid ReferenceError
+    if (operator === 'typeof' && argument.type === 'Identifier') {
+      var x = (argument as Identifier).name;
+      state.write(`typeof ${x} === "undefined" ? undefined : `);
+    }
     state.walk(argument);
     state.write(')');
   }
@@ -964,7 +969,7 @@ const visitors: Visitors = {
       if (key.type === 'Identifier') {
         state.write(key.name);
       } else {
-        state.walk(key);
+        state.write(generate(key));
       }
     }
     if (shorthand) {
@@ -1000,15 +1005,19 @@ const visitors: Visitors = {
         break;
       }
       default: {
-        todo('AssignmentExpression with operator ' + operator);
+        // TODO: apply injection to the left-hand side
+        state.write(generate(left));
+        state.write(` ${operator} `);
+        state.walk(right);
       }
     }
   },
   LogicalExpression: (node, state) => {
     const { left, right, operator } = node;
     logCondition(state, left, operator);
-    state.write(` ${operator} `);
+    state.write(` ${operator} (`);
     state.walk(right);
+    state.write(')');
   },
   MemberExpression: (node, state) => {
     logGetField(state, node);
