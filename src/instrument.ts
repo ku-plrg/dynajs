@@ -961,6 +961,11 @@ const visitors: Visitors = {
   Property: (node, state) => {
     const { key, value, kind, method, shorthand, computed } = node;
     if (kind !== 'init') state.write(`${kind} `);
+    if (method) {
+      const func = value as Function;
+      if (func.async) state.write('async ');
+      if (func.generator) state.write('*');
+    }
     if (computed) {
       state.write('[');
       state.walk(key);
@@ -976,7 +981,7 @@ const visitors: Visitors = {
       state.write(': ');
       state.walk(value);
     } else if (method) {
-      todo('Property: method');
+      logFunc(state, value, true);
     } else if (kind === 'init') {
       state.write(': ');
       state.walk(value);
