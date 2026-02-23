@@ -1154,7 +1154,8 @@ const visitors: Visitors = {
     todo('ClassExpression');
   },
   MetaProperty: (node, state) => {
-    todo('MetaProperty');
+    const name = `${node.meta.name}.${node.property.name}`;
+    logRead(state, node, name);
   },
   ImportDeclaration: (node, state) => {
     todo('ImportDeclaration');
