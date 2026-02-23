@@ -1058,7 +1058,8 @@ const visitors: Visitors = {
     todo('Super');
   },
   SpreadElement: (node, state) => {
-    todo('SpreadElement');
+    state.write('...');
+    state.walk(node.argument);
   },
   ArrowFunctionExpression: (node, state) => {
     logLiteral(state, node, () => {
