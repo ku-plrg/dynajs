@@ -1,0 +1,48 @@
+Se() @ 1:1-10:11
+  D(gen, <function>, <function>) @ 1:1-10:11
+  D(g, <var>, undefined) @ 1:1-10:11
+  R(gen, <function>) @ 7:9-12
+  F[pre](<function>, undefined, [], false, false) @ 7:9-12
+  F(<function>, undefined, [], <object>, false, false) @ 7:9-12
+  E(<object>) @ 7:9-14
+  W([g], <object>) @ 7:9-14
+  R(g, <object>) @ 8:1-2
+  G[pre](<object>, "next") @ 8:1-7
+  G(<object>, "next", <function>) @ 8:1-7
+  L(4) @ 8:8-9
+  F[pre](<function>, <object>, [4], false, true) @ 8:1-7
+  Fe(<function>, <object>, []) @ 1:1-5:2
+    D(arguments, <arguments>, <object>) @ 1:1-5:2
+    L(1) @ 2:17-18
+    E(1) @ 2:17-18
+  Y(yield, 1) @ 2:11-18
+  F(<function>, <object>, [4], <object>, false, true) @ 8:1-7
+  E(<object>) @ 8:1-10
+  R(g, <object>) @ 9:1-2
+  G[pre](<object>, "next") @ 9:1-7
+  G(<object>, "next", <function>) @ 9:1-7
+  L(5) @ 9:8-9
+  F[pre](<function>, <object>, [5], false, true) @ 9:1-7
+  Yr(5) @ 2:11-18
+    E(5) @ 2:11-18
+    W([x], 5) @ 2:11-18
+    R(x, 5) @ 3:17-18
+    E(5) @ 3:17-18
+  Y(yield, 5) @ 3:11-18
+  F(<function>, <object>, [5], <object>, false, true) @ 9:1-7
+  E(<object>) @ 9:1-10
+  R(g, <object>) @ 10:1-2
+  G[pre](<object>, "next") @ 10:1-7
+  G(<object>, "next", <function>) @ 10:1-7
+  L(6) @ 10:8-9
+  F[pre](<function>, <object>, [6], false, true) @ 10:1-7
+  Yr(6) @ 3:11-18
+    E(6) @ 3:11-18
+    W([y], 6) @ 3:11-18
+    R(y, 6) @ 4:10-11
+    E(6) @ 4:10-11
+    Re(6) @ 4:3-12
+  Fx(6) @ 1:1-5:2
+  F(<function>, <object>, [6], <object>, false, true) @ 10:1-7
+  E(<object>) @ 10:1-10
+Sx() @ 1:1-10:11

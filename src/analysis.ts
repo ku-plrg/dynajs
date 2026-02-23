@@ -154,6 +154,15 @@ type Analysis = {
     id: number,
     val: any
   ) => { result: any } | void;
+  _yield?: (
+    id: number,
+    value: any,
+    isDelegate: boolean
+  ) => { result: any } | void;
+  _resume?: (
+    id: number,
+    value: any
+  ) => { result: any } | void;
   result?: any;
 }
 
@@ -517,6 +526,20 @@ function Th(id: number, value: any): any {
   return value;
 }
 
+// hook for yield expressions (value being sent out)
+function Y(id: number, value: any, isDelegate: boolean): any {
+  const post = D$.analysis._yield?.(id, value, isDelegate);
+  if (post) value = post.result;
+  return value;
+}
+
+// hook for yield resume (value received back from .next())
+function Yr(id: number, received: any): any {
+  const post = D$.analysis._resume?.(id, received);
+  if (post) received = post.result;
+  return received;
+}
+
 // hook for uncaught exceptions
 function X(id: number, exception: any): void {
   uncaughtException = { exception };
@@ -536,7 +559,7 @@ const BASE = {
   idToLoc,
   utils,
   Se, Sx, F, M, Fe, Fx, Re, O, E, G, P, De,
-  U, B, Up, C, Swl, Swr, D, R, W, L, Th, X
+  U, B, Up, C, Swl, Swr, D, R, W, L, Th, X, Y, Yr
 };
 type DynaJSType = typeof BASE & {
   analysis: Analysis;

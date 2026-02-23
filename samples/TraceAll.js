@@ -202,5 +202,18 @@
       var loc = getLoc(id);
       put('T(' + v + ')' + loc);
     },
+    _yield: function (id, value, isDelegate) {
+      indentOut();
+      var v = getValue(value);
+      var loc = getLoc(id);
+      var prefix = isDelegate ? 'yield*' : 'yield';
+      put('Y(' + prefix + ', ' + v + ')' + loc);
+    },
+    _resume: function (id, value) {
+      var v = getValue(value);
+      var loc = getLoc(id);
+      put('Yr(' + v + ')' + loc);
+      indentIn();
+    },
   }
 })(D$);

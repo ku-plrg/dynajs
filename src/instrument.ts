@@ -315,6 +315,8 @@ const LOG_LITERAL = DYNAJS_VAR + '.L';
 const LOG_THROW = DYNAJS_VAR + '.Th';
 const LOG_EXCEPTION = DYNAJS_VAR + '.X';
 const LOG_TEMP_VAR = DYNAJS_VAR + '._t';
+const LOG_YIELD = DYNAJS_VAR + '.Y';
+const LOG_YIELD_RESULT = DYNAJS_VAR + '.Yr';
 
 // logging script enter
 function logScriptEnter(state: State, program: Node): void {
@@ -654,6 +656,17 @@ function logThrow(state: State, arg: Expression): void {
   state.write(`${LOG_THROW}(${newId(arg)}, `);
   logExpression(state, arg);
   state.write(')');
+}
+
+// logging a yield expression
+function logYield(state: State, node: Node, argument: Node | null | undefined, delegate: boolean): void {
+  state.write(`${LOG_YIELD_RESULT}(${newId(node)}, yield${delegate ? '*' : ''} ${LOG_YIELD}(${newId(node)}, `);
+  if (argument) {
+    logExpression(state, argument as Expression);
+  } else {
+    state.write('undefined');
+  }
+  state.writeln(`, ${delegate}))`);
 }
 
 // logging an exception
@@ -1073,7 +1086,7 @@ const visitors: Visitors = {
     });
   },
   YieldExpression: (node, state) => {
-    todo('YieldExpression');
+    logYield(state, node, node.argument, node.delegate);
   },
   TemplateLiteral: (node, state) => {
     // TODO it is not distinguished with string literal for the user
