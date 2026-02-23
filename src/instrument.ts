@@ -973,7 +973,8 @@ const visitors: Visitors = {
       }
     }
     if (shorthand) {
-      todo('Property: shorthand');
+      state.write(': ');
+      state.walk(value);
     } else if (method) {
       todo('Property: method');
     } else if (kind === 'init') {

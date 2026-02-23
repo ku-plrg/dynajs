@@ -1,0 +1,24 @@
+Se() @ 1:1-5:5
+  D(p, <var>, undefined) @ 1:1-5:5
+  D(q, <var>, undefined) @ 1:1-5:5
+  D(x, <var>, undefined) @ 1:1-5:5
+  L(42) @ 1:9-11
+  E(42) @ 1:9-11
+  W([p], 42) @ 1:9-11
+  L("hello") @ 2:9-16
+  E("hello") @ 2:9-16
+  W([q], "hello") @ 2:9-16
+  R(p, 42) @ 3:11-12
+  R(q, "hello") @ 3:14-15
+  L(<object>) @ 3:9-17
+  E(<object>) @ 3:9-17
+  W([x], <object>) @ 3:9-17
+  R(x, <object>) @ 4:1-2
+  G[pre](<object>, "p") @ 4:1-4
+  G(<object>, "p", 42) @ 4:1-4
+  E(42) @ 4:1-4
+  R(x, <object>) @ 5:1-2
+  G[pre](<object>, "q") @ 5:1-4
+  G(<object>, "q", "hello") @ 5:1-4
+  E("hello") @ 5:1-4
+Sx() @ 1:1-5:5
