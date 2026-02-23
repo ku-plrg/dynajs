@@ -1118,7 +1118,8 @@ const visitors: Visitors = {
     todo('ArrayPattern');
   },
   RestElement: (node, state) => {
-    todo('RestElement');
+    state.write('...');
+    state.walk(node.argument);
   },
   AssignmentPattern: (node, state) => {
     todo('AssignmentPattern');
