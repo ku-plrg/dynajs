@@ -1145,10 +1145,23 @@ const visitors: Visitors = {
     state.write(node.value.raw);
   },
   ObjectPattern: (node, state) => {
-    todo('ObjectPattern');
+    const { properties } = node as { properties: Node[] };
+    state.write('{');
+    for (let i = 0; i < properties.length; i++) {
+      if (i > 0) state.write(', ');
+      state.walk(properties[i]);
+    }
+    state.write('}');
   },
   ArrayPattern: (node, state) => {
-    todo('ArrayPattern');
+    const { elements } = node as { elements: Node[] };
+    state.write('[');
+    for (let i = 0; i < elements.length; i++) {
+      if (i > 0) state.write(', ');
+      const elem = elements[i];
+      if (elem != null) state.walk(elem);
+    }
+    state.write(']');
   },
   RestElement: (node, state) => {
     state.write('...');
