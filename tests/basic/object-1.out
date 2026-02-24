@@ -1,6 +1,6 @@
 Se() @ 1:1-3:1
-  D(x, <var>, undefined) @ 1:1-3:1
-  D(obj, <var>, undefined) @ 1:1-3:1
+  D(x, <var>, undefined, false) @ 1:1-3:1
+  D(obj, <var>, undefined, false) @ 1:1-3:1
   L("q") @ 1:9-12
   E("q") @ 1:9-12
   W([x], "q") @ 1:9-12

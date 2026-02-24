@@ -177,10 +177,10 @@
       var loc = getLoc(id);
       put('C(' + op + ', ' + v + ')' + loc);
     },
-    declare: function (id, name, kind, init, value) {
+    declare: function (id, name, kind, init, value, isSpread) {
       var loc = getLoc(id);
       var initStr = init ? ', ' + getValue(value) : '';
-      put('D(' + name + ', <' + kind + '>' + initStr + ')' + loc);
+      put('D(' + name + ', <' + kind + '>' + initStr + ', ' + isSpread + ')' + loc);
     },
     read: function (id, name, value) {
       var v = getValue(value);

@@ -1,6 +1,6 @@
 Se() @ 1:1-9:1
-  D(A, <class>) @ 1:1-9:1
-  D(a, <const>) @ 1:1-9:1
+  D(A, <class>, false) @ 1:1-9:1
+  D(a, <const>, false) @ 1:1-9:1
   L("h") @ 5:4-7
   L("i") @ 5:10-13
   B[pre](+, "h", "i") @ 5:4-13
@@ -9,8 +9,8 @@ Se() @ 1:1-9:1
   L(42) @ 7:17-19
   F[pre](<function>, undefined, [42], true, false) @ 7:15-16
   Fe(null, <object>, [42]) @ 2:14-4:4
-    D(arguments, <arguments>, <object>) @ 2:14-4:4
-    D(x, <param>, 42) @ 2:14-4:4
+    D(arguments, <arguments>, <object>, false) @ 2:14-4:4
+    D(x, <param>, 42, false) @ 2:14-4:4
     R(this, <object>) @ 3:5-9
     R(x, 42) @ 3:14-15
     P[pre](<object>, "x", 42) @ 3:5-11
@@ -25,7 +25,7 @@ Se() @ 1:1-9:1
   G(<object>, "hi", <function>) @ 8:1-5
   F[pre](<function>, <object>, [], false, true) @ 8:1-5
   Fe(null, <object>, []) @ 5:14-35
-    D(arguments, <arguments>, <object>) @ 5:14-35
+    D(arguments, <arguments>, <object>, false) @ 5:14-35
     R(this, <object>) @ 5:26-30
     G[pre](<object>, "x") @ 5:26-32
     G(<object>, "x", 42) @ 5:26-32

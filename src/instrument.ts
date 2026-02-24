@@ -186,11 +186,13 @@ interface Options {
 // -----------------------------------------------------------------------------
 class Scope {
   vars: { [name: string]: VarKind };
+  spreadVars: Set<string>;
   parent: Scope | null;
   private forLexical: boolean;
 
   constructor(parent: Scope | null, forLexical: boolean) {
     this.vars = {};
+    this.spreadVars = new Set();
     this.parent = parent;
     this.forLexical = forLexical;
   }
@@ -219,6 +221,10 @@ class Scope {
       for (const x of xs) {
         this.vars[x] = VarKind.Param;
       }
+      const spreadXs = collectRestIdentifiers(param);
+      for (const x of spreadXs) {
+        this.spreadVars.add(x);
+      }
     }
     this.walk(func.body);
   }
@@ -231,6 +237,10 @@ class Scope {
       for (const x of xs) {
         this.vars[x] = VarKind.CatchParam;
       }
+      const spreadXs = collectRestIdentifiers(param);
+      for (const x of spreadXs) {
+        this.spreadVars.add(x);
+      }
     }
   }
 
@@ -242,6 +252,10 @@ class Scope {
           const xs = collectIdentifiers(decl.id);
           for (const x of xs) {
             scope.vars[x] = VarKind.Var;
+          }
+          const spreadXs = collectRestIdentifiers(decl.id);
+          for (const x of spreadXs) {
+            scope.spreadVars.add(x);
           }
         }
       }
@@ -270,6 +284,10 @@ class Scope {
           const xs = collectIdentifiers(decl.id);
           for (const x of xs) {
             scope.vars[x] = kind === 'let' ? VarKind.Let : VarKind.Const;
+          }
+          const spreadXs = collectRestIdentifiers(decl.id);
+          for (const x of spreadXs) {
+            scope.spreadVars.add(x);
           }
         }
       }
@@ -612,13 +630,15 @@ function logSwitchRight(state: State, test: Expression): void {
 function logDeclare(state: State, node: Node): void {
   const vars = state.scope?.vars;
   if (!vars) return;
+  const spreadVars = state.scope?.spreadVars;
   for (const name in vars) {
     const kind = vars[name];
     const isTDZ = kind === VarKind.Const || kind === VarKind.Let || kind === VarKind.Class;
+    const isSpread = spreadVars?.has(name) ?? false;
     if (isTDZ) {
-      state.writeln(`${LOG_DECLARE}(${newId(node)}, "${name}", ${kind});`);
+      state.writeln(`${LOG_DECLARE}(${newId(node)}, "${name}", ${kind}, ${isSpread});`);
     } else {
-      state.writeln(`${LOG_DECLARE}(${newId(node)}, "${name}", ${kind}, ${name});`);
+      state.writeln(`${LOG_DECLARE}(${newId(node)}, "${name}", ${kind}, ${isSpread}, ${name});`);
     }
   }
 }
@@ -1258,6 +1278,37 @@ function collectIdentifiers(node: Pattern): string[] {
         break;
       default:
         todo(`collectIdentifiers: ${node.type}`);
+    }
+  }
+  collect(node);
+  return ids;
+}
+
+// collect identifiers that are declared via rest/spread patterns
+function collectRestIdentifiers(node: Pattern): string[] {
+  const ids: string[] = [];
+  function collect(node: Pattern): void {
+    switch (node.type) {
+      case 'RestElement':
+        ids.push(...collectIdentifiers(node.argument as Pattern));
+        break;
+      case 'ObjectPattern':
+        for (const prop of node.properties) {
+          if (prop.type === 'RestElement') {
+            ids.push(...collectIdentifiers(prop.argument));
+          } else {
+            collect(prop.value as Pattern);
+          }
+        }
+        break;
+      case 'ArrayPattern':
+        for (const elem of node.elements) {
+          if (elem != null) collect(elem);
+        }
+        break;
+      case 'AssignmentPattern':
+        collect(node.left);
+        break;
     }
   }
   collect(node);

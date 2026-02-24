@@ -1,12 +1,12 @@
 Se() @ 1:1-6:1
-  D(f, <function>, <function>) @ 1:1-6:1
+  D(f, <function>, <function>, false) @ 1:1-6:1
   R(f, <function>) @ 5:1-2
   L(2) @ 5:3-4
   F[pre](<function>, undefined, [2], false, false) @ 5:1-2
   Fe(<function>, <object>, [2]) @ 1:1-4:2
-    D(arguments, <arguments>, <object>) @ 1:1-4:2
-    D(x, <param>, 2) @ 1:1-4:2
-    D(y, <var>, undefined) @ 1:1-4:2
+    D(arguments, <arguments>, <object>, false) @ 1:1-4:2
+    D(x, <param>, 2, false) @ 1:1-4:2
+    D(y, <var>, undefined, false) @ 1:1-4:2
     R(x, 2) @ 2:11-12
     E(2) @ 2:11-12
     W([y], 2) @ 2:11-12

@@ -134,7 +134,8 @@ type Analysis = {
     name: string,
     kind: string,
     init: boolean,
-    value: any
+    value: any,
+    isSpread: boolean
   ) => void;
   read?: (
     id: number,
@@ -485,9 +486,9 @@ function Swr(id: number, caseValue: any): any {
 }
 
 // hook for variable declarations
-function D(id: number, name: string, kind: VarKind, value?: any): void {
-  const init = arguments.length >= 4;
-  D$.analysis.declare?.(id, name, kindToStr[kind], init, value);
+function D(id: number, name: string, kind: VarKind, isSpread: boolean, value?: any): void {
+  const init = arguments.length >= 5;
+  D$.analysis.declare?.(id, name, kindToStr[kind], init, value, isSpread);
 }
 
 // hook for variable reads

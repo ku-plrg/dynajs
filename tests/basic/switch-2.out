@@ -1,11 +1,11 @@
 Se() @ 1:1-10:1
-  D(f, <function>, <function>) @ 1:1-10:1
+  D(f, <function>, <function>, false) @ 1:1-10:1
   L(1) @ 6:9-10
   E(1) @ 6:9-10
   R(f, <function>) @ 7:8-9
   F[pre](<function>, undefined, [], false, false) @ 7:8-9
   Fe(<function>, <object>, []) @ 1:1-5:2
-    D(arguments, <arguments>, <object>) @ 1:1-5:2
+    D(arguments, <arguments>, <object>, false) @ 1:1-5:2
     L(2) @ 2:11-12
     E(2) @ 2:11-12
     L(3) @ 3:21-22

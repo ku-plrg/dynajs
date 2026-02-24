@@ -1,7 +1,7 @@
 Se() @ 1:1-10:1
-  D(o1, <let>) @ 1:1-10:1
-  D(o2, <let>) @ 1:1-10:1
-  D(o3, <let>) @ 1:1-10:1
+  D(o1, <let>, false) @ 1:1-10:1
+  D(o2, <let>, false) @ 1:1-10:1
+  D(o3, <let>, false) @ 1:1-10:1
   L(<object>) @ 1:10-32
   E(<object>) @ 1:10-32
   W([o1], <object>) @ 1:10-32
@@ -10,7 +10,7 @@ Se() @ 1:1-10:1
   G(<object>, "f", <function>) @ 2:1-5
   F[pre](<function>, <object>, [], false, true) @ 2:1-5
   Fe(null, <object>, []) @ 1:13-30
-    D(arguments, <arguments>, <object>) @ 1:13-30
+    D(arguments, <arguments>, <object>, false) @ 1:13-30
     L(42) @ 1:25-27
     E(42) @ 1:25-27
     Re(42) @ 1:18-28
@@ -25,7 +25,7 @@ Se() @ 1:1-10:1
   G(<object>, "f", <function>) @ 5:1-5
   F[pre](<function>, <object>, [], false, true) @ 5:1-5
   Fe(null, <object>, []) @ 4:19-36
-    D(arguments, <arguments>, <object>) @ 4:19-36
+    D(arguments, <arguments>, <object>, false) @ 4:19-36
     L(42) @ 4:31-33
     E(42) @ 4:31-33
     Re(42) @ 4:24-34
@@ -45,7 +45,7 @@ Se() @ 1:1-10:1
   L(1) @ 8:13-14
   F[pre](<function>, <object>, [1], false, true) @ 8:1-12
   Fe(null, <object>, []) @ 7:14-40
-    D(arguments, <arguments>, <object>) @ 7:14-40
+    D(arguments, <arguments>, <object>, false) @ 7:14-40
     L(42) @ 7:25-27
     E(42) @ 7:25-27
   Y(yield, 42) @ 7:19-27
@@ -61,7 +61,7 @@ Se() @ 1:1-10:1
   L(2) @ 9:13-14
   F[pre](<function>, <object>, [2], false, true) @ 9:1-12
   Fe(null, <object>, []) @ 7:14-40
-    D(arguments, <arguments>, <object>) @ 7:14-40
+    D(arguments, <arguments>, <object>, false) @ 7:14-40
     L(42) @ 7:25-27
     E(42) @ 7:25-27
   Y(yield, 42) @ 7:19-27

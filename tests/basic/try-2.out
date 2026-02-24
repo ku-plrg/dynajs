@@ -1,13 +1,13 @@
 Se() @ 1:1-14:1
-  D(a, <var>, undefined) @ 1:1-14:1
-  D(c, <var>, undefined) @ 1:1-14:1
-  D(e, <var>, undefined) @ 1:1-14:1
-  D(b, <let>) @ 1:5-5:2
+  D(a, <var>, undefined, false) @ 1:1-14:1
+  D(c, <var>, undefined, false) @ 1:1-14:1
+  D(e, <var>, undefined, false) @ 1:1-14:1
+  D(b, <let>, false) @ 1:5-5:2
   L("x") @ 2:9-12
   E("x") @ 2:9-12
   T("x") @ 2:9-12
-  D(e, <catch>, "x") @ 5:3-9:2
-  D(d, <let>) @ 5:12-9:2
+  D(e, <catch>, "x", false) @ 5:3-9:2
+  D(d, <let>, false) @ 5:12-9:2
   L(3) @ 6:11-12
   E(3) @ 6:11-12
   W([c], 3) @ 6:11-12
@@ -16,7 +16,7 @@ Se() @ 1:1-14:1
   W([d], 4) @ 7:11-12
   L("y") @ 8:3-6
   E("y") @ 8:3-6
-  D(f, <let>) @ 9:11-13:2
+  D(f, <let>, false) @ 9:11-13:2
   L(5) @ 10:11-12
   E(5) @ 10:11-12
   W([e], 5) @ 10:11-12

@@ -1,6 +1,6 @@
 Se() @ 1:1-5:5
-  D(a, <var>, undefined) @ 1:1-5:5
-  D(b, <var>, undefined) @ 1:1-5:5
+  D(a, <var>, undefined, false) @ 1:1-5:5
+  D(b, <var>, undefined, false) @ 1:1-5:5
   L(42) @ 1:14-16
   L("hello") @ 1:21-28
   L(<object>) @ 1:9-30
