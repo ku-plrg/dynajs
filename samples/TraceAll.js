@@ -215,5 +215,17 @@
       put('Yr(' + v + ')' + loc);
       indentIn();
     },
+    _await: function (id, value) {
+      indentOut();
+      var v = getValue(value);
+      var loc = getLoc(id);
+      put('Aw(' + v + ')' + loc);
+    },
+    _awaitResult: function (id, value) {
+      var v = getValue(value);
+      var loc = getLoc(id);
+      put('Awr(' + v + ')' + loc);
+      indentIn();
+    },
   }
 })(D$);

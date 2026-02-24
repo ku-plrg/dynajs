@@ -335,6 +335,8 @@ const LOG_EXCEPTION = DYNAJS_VAR + '.X';
 const LOG_TEMP_VAR = DYNAJS_VAR + '._t';
 const LOG_YIELD = DYNAJS_VAR + '.Y';
 const LOG_YIELD_RESULT = DYNAJS_VAR + '.Yr';
+const LOG_AWAIT = DYNAJS_VAR + '.Aw';
+const LOG_AWAIT_RESULT = DYNAJS_VAR + '.Awr';
 
 // logging script enter
 function logScriptEnter(state: State, program: Node): void {
@@ -687,6 +689,17 @@ function logYield(state: State, node: Node, argument: Node | null | undefined, d
     state.write('undefined');
   }
   state.writeln(`, ${delegate}))`);
+}
+
+// logging an await expression
+function logAwait(state: State, node: Node, argument: Node | null | undefined): void {
+  state.write(`${LOG_AWAIT_RESULT}(${newId(node)}, await ${LOG_AWAIT}(${newId(node)}, `);
+  if (argument) {
+    logExpression(state, argument as Expression);
+  } else {
+    state.write('undefined');
+  }
+  state.write(`))`);
 }
 
 // logging an exception
@@ -1206,7 +1219,7 @@ const visitors: Visitors = {
     todo('ExportAllDeclaration');
   },
   AwaitExpression: (node, state) => {
-    todo('AwaitExpression');
+    logAwait(state, node, node.argument);
   },
   ChainExpression: (node, state) => {
     todo('ChainExpression');

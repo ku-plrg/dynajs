@@ -164,6 +164,14 @@ type Analysis = {
     id: number,
     value: any
   ) => { result: any } | void;
+  _await?: (
+    id: number,
+    value: any
+  ) => { result: any } | void;
+  _awaitResult?: (
+    id: number,
+    value: any
+  ) => { result: any } | void;
   result?: any;
 }
 
@@ -541,6 +549,20 @@ function Yr(id: number, received: any): any {
   return received;
 }
 
+// hook for await expressions (value being awaited)
+function Aw(id: number, value: any): any {
+  const post = D$.analysis._await?.(id, value);
+  if (post) value = post.result;
+  return value;
+}
+
+// hook for await resume (resolved value)
+function Awr(id: number, value: any): any {
+  const post = D$.analysis._awaitResult?.(id, value);
+  if (post) value = post.result;
+  return value;
+}
+
 // hook for uncaught exceptions
 function X(id: number, exception: any): void {
   uncaughtException = { exception };
@@ -560,7 +582,7 @@ const BASE = {
   idToLoc,
   utils,
   Se, Sx, F, M, Fe, Fx, Re, O, E, G, P, De,
-  U, B, Up, C, Swl, Swr, D, R, W, L, Th, X, Y, Yr
+  U, B, Up, C, Swl, Swr, D, R, W, L, Th, X, Y, Yr, Aw, Awr
 };
 type DynaJSType = typeof BASE & {
   analysis: Analysis;
