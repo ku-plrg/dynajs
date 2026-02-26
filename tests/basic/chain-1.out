@@ -1,0 +1,12 @@
+Se() @ 1:1-2:24
+  D(obj, <var>, undefined, false) @ 1:1-2:24
+  L(null) @ 1:11-15
+  E(null) @ 1:11-15
+  W([obj], null) @ 1:11-15
+  R(obj, null) @ 2:1-4
+  C(?., null) @ 2:1-9
+  L(1) @ 2:17-18
+  L(2) @ 2:19-20
+  L(3) @ 2:21-22
+  E(undefined) @ 2:1-23
+Sx() @ 1:1-2:24

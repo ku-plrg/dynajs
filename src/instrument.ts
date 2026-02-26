@@ -337,6 +337,7 @@ const LOG_YIELD = DYNAJS_VAR + '.Y';
 const LOG_YIELD_RESULT = DYNAJS_VAR + '.Yr';
 const LOG_AWAIT = DYNAJS_VAR + '.Aw';
 const LOG_AWAIT_RESULT = DYNAJS_VAR + '.Awr';
+const LOG_CHAIN = DYNAJS_VAR + '.Ch';
 
 // logging script enter
 function logScriptEnter(state: State, program: Node): void {
@@ -350,7 +351,7 @@ function logScriptExit(state: State, program: Node): void {
 }
 
 // logging a function call
-function logCall(state: State, callee: Node, isConstructor: boolean): void {
+function logCall(state: State, callee: Node, isConstructor: boolean, callOptional: boolean = false): void {
   if (callee.type === 'MemberExpression') {
     const { object, property, computed, optional } = callee as MemberExpression;
     state.write(`${LOG_METHOD_CALL}(${newId(callee)}, `);
@@ -358,9 +359,6 @@ function logCall(state: State, callee: Node, isConstructor: boolean): void {
       todo('MemberExpression: super');
     } else {
       state.walk(object);
-    }
-    if (optional) {
-      todo('MemberExpression: optional');
     }
     state.write(', ');
     if (computed) {
@@ -372,13 +370,13 @@ function logCall(state: State, callee: Node, isConstructor: boolean): void {
     } else {
       warn(`MemberExpression: unexpected property type${getLocStr(callee)}`);
     }
-    state.write(`, ${isConstructor})`);
+    state.write(`, ${isConstructor}, ${optional}, ${callOptional})`);
   } else if (callee.type === 'Super') {
     todo('Super call');
   } else {
     state.write(`${LOG_FUNCTION_CALL}(${newId(callee)}, `);
     state.walk(callee);
-    state.write(`, ${isConstructor})`);
+    state.write(`, ${isConstructor}, ${callOptional})`);
   }
 }
 
@@ -508,9 +506,6 @@ function logGetField(state: State, expr: Expression): void {
   } else {
     state.walk(object);
   }
-  if (optional) {
-    todo('MemberExpression: optional');
-  }
   state.write(', ');
   if (property.type === 'PrivateIdentifier') {
     todo('MemberExpression: private identifier');
@@ -521,6 +516,7 @@ function logGetField(state: State, expr: Expression): void {
   } else {
     warn(`MemberExpression: unexpected property type${getLocStr(expr)}`);
   }
+  if (optional) state.write(', true');
   state.write(')');
 }
 
@@ -550,8 +546,13 @@ function logPutField(state: State, lhs: Node, rhs: Node, body: () => void): void
 
 // logging a delete operation
 function logDelete(state: State, expr: Node): void {
-  if (expr.type === 'MemberExpression') {
-    const { object, property, computed } = expr as MemberExpression;
+  if (expr.type === 'ChainExpression') {
+    // delete a?.b — wrap with Ch to convert chainSkip → undefined
+    state.write(`${LOG_CHAIN}(`);
+    logDelete(state, (expr as any).expression);
+    state.write(')');
+  } else if (expr.type === 'MemberExpression') {
+    const { object, property, computed, optional } = expr as MemberExpression;
     state.write(`${LOG_DELETE_OP}(${newId(expr)}, `);
     state.walk(object);
     state.write(', ');
@@ -562,6 +563,7 @@ function logDelete(state: State, expr: Node): void {
     } else {
       warn(`Delete operator on unexpected property type${getLocStr(expr)}`);
     }
+    if (optional) state.write(', true');
     state.write(')');
   } else {
     warn(`Delete operator on unexpected type${getLocStr(expr)}`);
@@ -1098,8 +1100,8 @@ const visitors: Visitors = {
     state.walk(alternate);
   },
   CallExpression: (node, state) => {
-    const { callee, arguments: args } = node;
-    logCall(state, callee, false);
+    const { callee, arguments: args, optional } = node;
+    logCall(state, callee, false, optional);
     state.write('(');
     state.walkArray(args);
     state.write(')');
@@ -1255,7 +1257,9 @@ const visitors: Visitors = {
     logAwait(state, node, node.argument);
   },
   ChainExpression: (node, state) => {
-    todo('ChainExpression');
+    state.write(`${LOG_CHAIN}(`);
+    state.walk(node.expression);
+    state.write(')');
   },
   ImportExpression: (node, state) => {
     todo('ImportExpression');

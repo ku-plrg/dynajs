@@ -175,6 +175,9 @@ type Analysis = {
   result?: any;
 }
 
+// sentinel symbol for optional chain short-circuit propagation
+const chainSkip = Symbol('D$.chainSkip');
+
 // stack to store return values
 let returnStack: any[] = [];
 
@@ -208,15 +211,30 @@ function Sx(id: number): void {
 }
 
 // hook for function calls
-function F(id: number, f: any, isConstructor: boolean): any {
+function F(id: number, f: any, isConstructor: boolean, callOptional: boolean): any {
+  if (f === chainSkip) return () => chainSkip;
+  if (callOptional) {
+    f = C(id, '?.', f);
+    if (f === null || f === undefined || f === chainSkip) return () => chainSkip;
+  }
   return function(this: any) {
     return invokeFun(id, this, f, arguments, isConstructor, false);
   }
 }
 
 // hook for method calls
-function M(id: number, base: any, prop: any, isConstructor: boolean): any {
-  const f = G(id, base, prop);
+function M(id: number, base: any, prop: any, isConstructor: boolean, memberOptional: boolean, callOptional: boolean): any {
+  if (base === chainSkip) return () => chainSkip;
+  if (memberOptional) {
+    base = C(id, '?.', base);
+    if (base === null || base === undefined) return () => chainSkip;
+  }
+  let f = G(id, base, prop);
+  if (f === chainSkip) return () => chainSkip;
+  if (callOptional) {
+    f = C(id, '?.', f);
+    if (f === null || f === undefined || f === chainSkip) return () => chainSkip;
+  }
   return function() {
     return invokeFun(id, base, f, arguments, isConstructor, true);
   }
@@ -319,7 +337,12 @@ function E(id: number, value: any): any {
 }
 
 // hook for property reads (get-field)
-function G(id: number, base: any, prop: any): any {
+function G(id: number, base: any, prop: any, optional: boolean = false): any {
+  if (base === chainSkip) return chainSkip;
+  if (optional) {
+    base = C(id, '?.', base);
+    if (base === null || base === undefined) return chainSkip;
+  }
   let skip = false;
   let value;
   const pre = D$.analysis.getFieldPre?.(id, base, prop);
@@ -359,7 +382,12 @@ function P(id: number, base: any, prop: any, value: any): any {
 }
 
 // hook for delete operations
-function De(id: number, base: any, prop: any): boolean {
+function De(id: number, base: any, prop: any, optional: boolean = false): any {
+  if (base === chainSkip) return chainSkip;
+  if (optional) {
+    base = C(id, '?.', base);
+    if (base === null || base === undefined) return chainSkip;
+  }
   let value = true;
   let skip = false;
   const pre = D$.analysis._deletePre?.(id, base, prop);
@@ -563,6 +591,11 @@ function Awr(id: number, value: any): any {
   return value;
 }
 
+// hook for chain expression boundary — converts chainSkip sentinel back to undefined
+function Ch(value: any): any {
+  return value === chainSkip ? undefined : value;
+}
+
 // hook for uncaught exceptions
 function X(id: number, exception: any): void {
   uncaughtException = { exception };
@@ -581,6 +614,8 @@ const BASE = {
   ids: {},
   idToLoc,
   utils,
+  chainSkip,
+  Ch,
   Se, Sx, F, M, Fe, Fx, Re, O, E, G, P, De,
   U, B, Up, C, Swl, Swr, D, R, W, L, Th, X, Y, Yr, Aw, Awr
 };
