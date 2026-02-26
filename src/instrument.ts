@@ -1168,7 +1168,12 @@ const visitors: Visitors = {
     state.walk(node.argument);
   },
   AssignmentPattern: (node, state) => {
-    todo('AssignmentPattern');
+    state.walk(node.left);
+    state.write(' = ');
+    const prev = state.isLHS;
+    state.isLHS = false;
+    logExpression(state, node.right as Expression);
+    state.isLHS = prev;
   },
   ClassBody: (node, state) => {
     for (const elem of node.body) {
