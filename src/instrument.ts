@@ -654,6 +654,14 @@ function logRead(state: State, node: Node, name: string): void {
 function logWrite(state: State, lhs: Node, rhs: Node, body: () => void): void {
   if (lhs.type === 'MemberExpression') {
     logPutField(state, lhs, rhs, body);
+  } else if (lhs.type === 'ObjectPattern' || lhs.type === 'ArrayPattern') {
+    // destructuring write
+    state.withLHS(() => state.walk(lhs));
+    state.write(` = ${LOG_WRITE}(${newId(rhs)}, `);
+    const xs = collectIdentifiers(lhs as Pattern);
+    state.write(`[${xs.map(x => `"${x}"`).join(', ')}], `);
+    body();
+    state.write(')');
   } else {
     // variable write
     const x = lhs as Identifier;
