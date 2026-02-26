@@ -1220,7 +1220,9 @@ const visitors: Visitors = {
     logClassDeclare(state, node, false);
   },
   ClassExpression: (node, state) => {
-    todo('ClassExpression');
+    logLiteral(state, node, () => {
+      logClassDeclare(state, node, true);
+    });
   },
   MetaProperty: (node, state) => {
     const name = `${node.meta.name}.${node.property.name}`;
