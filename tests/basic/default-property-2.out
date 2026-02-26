@@ -1,0 +1,14 @@
+Se() @ 1:1-2:25
+  D(obj, <var>, undefined, false) @ 1:1-2:25
+  L(42) @ 1:20-22
+  L(<object>) @ 1:11-24
+  E(<object>) @ 1:11-24
+  W([obj], <object>) @ 1:11-24
+  L(<object>) @ 2:21-23
+  W([a], <object>) @ 2:21-23
+  R(obj, <object>) @ 2:8-11
+  G[pre](<object>, "prop") @ 2:8-16
+  G(<object>, "prop", 42) @ 2:8-16
+  E(42) @ 2:8-16
+  E(<object>) @ 2:2-23
+Sx() @ 1:1-2:25

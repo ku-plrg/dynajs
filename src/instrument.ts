@@ -1037,8 +1037,15 @@ const visitors: Visitors = {
     } else if (method) {
       logFunc(state, value, true);
     } else if (kind === 'init') {
-      state.write(': ');
-      state.walk(value);
+      switch (value.type) {
+        case 'AssignmentPattern': 
+          state.write('= ');
+          state.walk(value);
+          break;
+        default:
+          state.write(': ');
+          state.walk(value);
+      }
     } else { // kind is 'get' or 'set'
       logFunc(state, value, true);
     }
@@ -1315,8 +1322,11 @@ function collectIdentifiers(node: Pattern): string[] {
       case 'AssignmentPattern':
         collect(node.left);
         break;
+      case 'MemberExpression':
+        // assignment target, not a new variable binding
+        break;
       default:
-        todo(`collectIdentifiers: ${node.type}`);
+        todo(`collectIdentifiers: ${(node as Node).type}`);
     }
   }
   collect(node);
