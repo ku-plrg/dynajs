@@ -1,0 +1,15 @@
+Se() @ 1:1-2:1
+  L(<function>) @ 1:2-28
+  L(1) @ 1:30-31
+  L(2) @ 1:33-34
+  F[pre](<function>, undefined, [1, 2], false, false) @ 1:2-28
+  Fe(null, <object>, [1, 2]) @ 1:2-28
+    D(arguments, <arguments>, <object>, false) @ 1:2-28
+    D(x, <param>, 1, false) @ 1:2-28
+    R(x, 1) @ 1:24-25
+    E(1) @ 1:24-25
+    Re(1) @ 1:17-26
+  Fx(1) @ 1:2-28
+  F(<function>, undefined, [1, 2], 1, false, false) @ 1:2-28
+  E(1) @ 1:1-35
+Sx() @ 1:1-2:1
