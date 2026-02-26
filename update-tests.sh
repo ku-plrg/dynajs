@@ -17,7 +17,6 @@ for js_file in tests/basic/**/*.js tests/basic/*.js; do
     case "$js_file" in *__dynajs__*) continue ;; esac
 
     out_file="${js_file%.js}.out"
-    [ -f "$out_file" ] || continue
 
     # apply optional filter
     if [ -n "$PATTERN" ]; then
