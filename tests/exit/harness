@@ -1,0 +1,5 @@
+globalThis.assert = function assert(bool = true, msg = '') {
+  if (!bool) {
+    throw Error(`Assertion Failed: ${msg}`)
+  }
+};
