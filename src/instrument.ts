@@ -385,7 +385,11 @@ function logClassDeclare(state: State, node: Node, isExpr: boolean): void {
   const { id, superClass, body } = node as Class;
   state.write('class ');
   if (id) state.write(id.name + ' ');
-  if (superClass) todo('Class with super class');
+  if (superClass) {
+    state.write('extends ');
+    state.walk(superClass);
+    state.write(' ');
+  }
   state.write('{');
   state.wrap(() => state.walk(body));
   state.writeln('}');
