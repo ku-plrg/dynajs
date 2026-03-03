@@ -1123,7 +1123,7 @@ const visitors: Visitors = {
     state.write(')');
   },
   ForOfStatement: (node, state) => {
-    if (node.await) todo('ForOfStatement: await');
+    // TODO: await should be hooked in some way
     logForInOfStatement(state, node, false, node.await);
   },
   Super: (node, state) => {
