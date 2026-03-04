@@ -1,0 +1,48 @@
+Se() @ 1:1-7:1
+  D(obj, <var>, undefined, false) @ 1:1-7:1
+  L(<function>) @ 2:8-4:4
+  L(<object>) @ 1:11-5:2
+  E(<object>) @ 1:11-5:2
+  W([obj], <object>) @ 1:11-5:2
+  R(obj, <object>) @ 6:1-4
+  G[pre](<object>, "tag") @ 6:1-8
+  G(<object>, "tag", <function>) @ 6:1-8
+  L("world") @ 6:17-24
+  L(42) @ 6:32-34
+  F[pre](<function>, <object>, [<array>, "world", 42], false, true) @ 6:1-8
+  TT[pre](<function>, <object>, <array>, ["world", 42], true) @ 6:1-8
+  Fe(<function>, <object>, [<array>, "world", 42]) @ 2:8-4:4
+    D(tag, <function>, <function>, false) @ 2:8-4:4
+    D(arguments, <arguments>, <object>, false) @ 2:8-4:4
+    D(strings, <param>, <array>, false) @ 2:8-4:4
+    D(a, <param>, "world", false) @ 2:8-4:4
+    D(b, <param>, 42, false) @ 2:8-4:4
+    R(strings, <array>) @ 3:12-19
+    L(0) @ 3:20-21
+    G[pre](<array>, 0) @ 3:12-22
+    G(<array>, 0, "hello ") @ 3:12-22
+    R(a, "world") @ 3:25-26
+    B[pre](+, "hello ", "world") @ 3:12-26
+    B(+, "hello ", "world", "hello world") @ 3:12-26
+    R(strings, <array>) @ 3:29-36
+    L(1) @ 3:37-38
+    G[pre](<array>, 1) @ 3:29-39
+    G(<array>, 1, " and ") @ 3:29-39
+    B[pre](+, "hello world", " and ") @ 3:12-39
+    B(+, "hello world", " and ", "hello world and ") @ 3:12-39
+    R(b, 42) @ 3:42-43
+    B[pre](+, "hello world and ", 42) @ 3:12-43
+    B(+, "hello world and ", 42, "hello world and 42") @ 3:12-43
+    R(strings, <array>) @ 3:46-53
+    L(2) @ 3:54-55
+    G[pre](<array>, 2) @ 3:46-56
+    G(<array>, 2, "!") @ 3:46-56
+    B[pre](+, "hello world and 42", "!") @ 3:12-56
+    B(+, "hello world and 42", "!", "hello world and 42!") @ 3:12-56
+    E("hello world and 42!") @ 3:12-56
+    Re("hello world and 42!") @ 3:5-57
+  Fx("hello world and 42!") @ 2:8-4:4
+  F(<function>, <object>, [<array>, "world", 42], "hello world and 42!", false, true) @ 6:1-8
+  TT(<function>, <object>, <array>, ["world", 42], "hello world and 42!", true) @ 6:1-8
+  E("hello world and 42!") @ 6:1-37
+Sx() @ 1:1-7:1

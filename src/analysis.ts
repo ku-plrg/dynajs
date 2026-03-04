@@ -40,6 +40,23 @@ type Analysis = {
     isConstructor: boolean,
     isMethod: boolean
   ) => { result: any } | void;
+  taggedTemplatePre?: (
+    id: number,
+    f: any,
+    base: any,
+    strings: any,
+    values: any[],
+    isMethod: boolean
+  ) => { f: any, base: any, strings: any, values: any[], skip: boolean } | void;
+  taggedTemplate?: (
+    id: number,
+    f: any,
+    base: any,
+    strings: any,
+    values: any[],
+    result: any,
+    isMethod: boolean
+  ) => { result: any } | void;
   functionEnter?: (
     id: number,
     f: any,
@@ -247,6 +264,65 @@ function M(id: number, base: any, prop: any, isConstructor: boolean, memberOptio
   return function() {
     return invokeFun(id, base, f, arguments, isConstructor, true);
   }
+}
+
+// hook for tagged template function calls
+function TF(id: number, f: any): any {
+  return function(this: any, strings: any, ...values: any[]) {
+    return invokeTT(id, this, f, strings, values, false);
+  }
+}
+
+// hook for tagged template method calls
+function TM(id: number, base: any, prop: any): any {
+  const f = G(id, base, prop);
+  return function(strings: any, ...values: any[]) {
+    return invokeTT(id, base, f, strings, values, true);
+  }
+}
+
+// helper to invoke a tagged template call with hierarchical hooks (general-first, specific wins)
+function invokeTT(id: number, base: any, f: any, strings: any, values: any[], isMethod: boolean): any {
+  let result: any;
+  let skip = false;
+  let args: any[] = [strings, ...values];
+
+  // General hook fires first
+  const generalPre = D$.analysis.invokeFunPre?.(id, f, base, args, false, isMethod);
+  if (generalPre) {
+    f = generalPre.f;
+    base = generalPre.base;
+    args = generalPre.args;
+    skip = generalPre.skip;
+    strings = args[0];
+    values = args.slice(1);
+  }
+
+  // Specific hook fires second and wins
+  const specificPre = D$.analysis.taggedTemplatePre?.(id, f, base, strings, values, isMethod);
+  if (specificPre) {
+    f = specificPre.f;
+    base = specificPre.base;
+    strings = specificPre.strings;
+    values = specificPre.values;
+    skip = specificPre.skip;
+  }
+
+  if (!skip) {
+    result = Function.prototype.apply.call(f, base, [strings, ...values]);
+  }
+
+  args = [strings, ...values];
+
+  // General post-hook fires first
+  const generalPost = D$.analysis.invokeFun?.(id, f, base, args, result, false, isMethod);
+  if (generalPost) result = generalPost.result;
+
+  // Specific post-hook fires second and wins
+  const specificPost = D$.analysis.taggedTemplate?.(id, f, base, strings, values, result, isMethod);
+  if (specificPost) result = specificPost.result;
+
+  return result;
 }
 
 // helper function to invoke a function
@@ -642,7 +718,7 @@ const BASE = {
   utils,
   chainSkip,
   Ch,
-  Se, Sx, F, M, Fe, Fx, Re, O, E, G, P, De,
+  Se, Sx, F, M, TF, TM, Fe, Fx, Re, O, E, G, P, De,
   U, B, Up, C, Swl, Swr, D, R, W, L, Th, X, Y, Yr, Aw, Awr,
   Fi, SBe, SBx
 };

@@ -70,6 +70,24 @@
       str += ', ' + isConstructor + ', ' + isMethod + ')';
       put(str + getLoc(id));
     },
+    taggedTemplatePre: function (id, f, base, strings, values, isMethod) {
+      var str = 'TT[pre](' + getValue(f) + ', ' + getValue(base) + ', ' + getValue(strings) + ', [';
+      for (var i = 0; i < values.length; i++) {
+        if (i > 0) str += ', ';
+        str += getValue(values[i]);
+      }
+      str += '], ' + isMethod + ')';
+      put(str + getLoc(id));
+    },
+    taggedTemplate: function (id, f, base, strings, values, result, isMethod) {
+      var str = 'TT(' + getValue(f) + ', ' + getValue(base) + ', ' + getValue(strings) + ', [';
+      for (var i = 0; i < values.length; i++) {
+        if (i > 0) str += ', ';
+        str += getValue(values[i]);
+      }
+      str += '], ' + getValue(result) + ', ' + isMethod + ')';
+      put(str + getLoc(id));
+    },
     functionEnter: function (id, f, base, args) {
       var str = 'Fe(' + getValue(f) + ', ' + getValue(base) + ', [';
       for (var i = 0; i < args.length; i++) {

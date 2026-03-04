@@ -312,6 +312,8 @@ const LOG_SCRIPT_ENTER = DYNAJS_VAR + '.Se';
 const LOG_SCRIPT_EXIT = DYNAJS_VAR + '.Sx';
 const LOG_FUNCTION_CALL = DYNAJS_VAR + '.F';
 const LOG_METHOD_CALL = DYNAJS_VAR + '.M';
+const LOG_TAGGED_FUNC = DYNAJS_VAR + '.TF';
+const LOG_TAGGED_METHOD = DYNAJS_VAR + '.TM';
 const LOG_FUNC_ENTER = DYNAJS_VAR + '.Fe';
 const LOG_FUNC_EXIT = DYNAJS_VAR + '.Fx';
 const LOG_RETURN = DYNAJS_VAR + '.Re';
@@ -380,6 +382,36 @@ function logCall(state: State, callee: Node, isConstructor: boolean, callOptiona
     state.write(`${LOG_FUNCTION_CALL}(${newId(callee)}, `);
     state.walk(callee);
     state.write(`, ${isConstructor}, ${callOptional})`);
+  }
+}
+
+// logging a tagged template call (uses TF/TM hooks with general-first hierarchy)
+function logTaggedCall(state: State, tag: Node): void {
+  if (tag.type === 'MemberExpression') {
+    const { object, property, computed } = tag as MemberExpression;
+    state.write(`${LOG_TAGGED_METHOD}(${newId(tag)}, `);
+    if (object.type === 'Super') {
+      todo('TaggedTemplate MemberExpression: super');
+    } else {
+      state.walk(object);
+    }
+    state.write(', ');
+    if (computed) {
+      state.walk(property);
+    } else if (property.type === 'Identifier') {
+      state.write(`"${property.name}"`);
+    } else if (property.type === 'PrivateIdentifier') {
+      todo('TaggedTemplate: private identifier');
+    } else {
+      warn(`TaggedTemplate MemberExpression: unexpected property type${getLocStr(tag)}`);
+    }
+    state.write(')');
+  } else if (tag.type === 'Super') {
+    todo('TaggedTemplate: super');
+  } else {
+    state.write(`${LOG_TAGGED_FUNC}(${newId(tag)}, `);
+    state.walk(tag);
+    state.write(')');
   }
 }
 
@@ -1163,7 +1195,18 @@ const visitors: Visitors = {
     });
   },
   TaggedTemplateExpression: (node, state) => {
-    todo('TaggedTemplateExpression');
+    logTaggedCall(state, node.tag);
+    const { quasis, expressions } = node.quasi;
+    state.write('`');
+    const length = expressions.length;
+    for (let i = 0; i < length; i++) {
+      state.walk(quasis[i]);
+      state.write('${');
+      state.walk(expressions[i]);
+      state.write('}');
+    }
+    state.walk(quasis[quasis.length - 1]);
+    state.write('`');
   },
   TemplateElement: (node, state) => {
     state.write(node.value.raw);
