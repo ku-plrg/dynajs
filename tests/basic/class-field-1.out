@@ -1,0 +1,16 @@
+Se() @ 1:1-7:1
+  D(A, <class>, false) @ 1:1-7:1
+  D(a, <var>, undefined, false) @ 1:1-7:1
+  R(A, <function>) @ 5:13-14
+  F[pre](<function>, undefined, [], true, false) @ 5:13-14
+  L(1) @ 2:7-8
+  Fi(x = 1) @ 2:3-9
+  Fi(y = undefined) @ 3:3-5
+  F(<function>, undefined, [], <object>, true, false) @ 5:13-14
+  E(<object>) @ 5:9-16
+  W([a], <object>) @ 5:9-16
+  R(a, <object>) @ 6:1-2
+  G[pre](<object>, "x") @ 6:1-4
+  G(<object>, "x", 1) @ 6:1-4
+  E(1) @ 6:1-4
+Sx() @ 1:1-7:1

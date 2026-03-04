@@ -1,0 +1,17 @@
+Se() @ 1:1-7:1
+  D(B, <class>, false) @ 1:1-7:1
+  D(b, <var>, undefined, false) @ 1:1-7:1
+  L(0) @ 2:18-19
+  Fi(static count = 0) @ 2:3-20
+  R(B, <function>) @ 5:13-14
+  F[pre](<function>, undefined, [], true, false) @ 5:13-14
+  L(42) @ 3:13-15
+  Fi(#secret = 42) @ 3:3-16
+  F(<function>, undefined, [], <object>, true, false) @ 5:13-14
+  E(<object>) @ 5:9-16
+  W([b], <object>) @ 5:9-16
+  R(B, <function>) @ 6:1-2
+  G[pre](<function>, "count") @ 6:1-8
+  G(<function>, "count", 0) @ 6:1-8
+  E(0) @ 6:1-8
+Sx() @ 1:1-7:1

@@ -172,6 +172,15 @@ type Analysis = {
     id: number,
     value: any
   ) => { result: any } | void;
+  fieldInit?: (
+    id: number,
+    obj: any,
+    key: any,
+    isStatic: boolean,
+    value: any
+  ) => { result: any } | void;
+  staticBlockEnter?: (id: number, cls: any) => void;
+  staticBlockExit?: (id: number) => void;
   result?: any;
 }
 
@@ -601,6 +610,23 @@ function X(id: number, exception: any): void {
   uncaughtException = { exception };
 }
 
+// hook for class field initialization
+function Fi(id: number, obj: any, key: any, isStatic: boolean, value: any): any {
+  const post = D$.analysis.fieldInit?.(id, obj, key, isStatic, value);
+  if (post) value = post.result;
+  return value;
+}
+
+// hook for static block enter
+function SBe(id: number, cls: any): void {
+  D$.analysis.staticBlockEnter?.(id, cls);
+}
+
+// hook for static block exit
+function SBx(id: number): void {
+  D$.analysis.staticBlockExit?.(id);
+}
+
 // get the location string from an id
 function idToLoc(id: number) {
   return locToStr(D$.ids[id]);
@@ -617,7 +643,8 @@ const BASE = {
   chainSkip,
   Ch,
   Se, Sx, F, M, Fe, Fx, Re, O, E, G, P, De,
-  U, B, Up, C, Swl, Swr, D, R, W, L, Th, X, Y, Yr, Aw, Awr
+  U, B, Up, C, Swl, Swr, D, R, W, L, Th, X, Y, Yr, Aw, Awr,
+  Fi, SBe, SBx
 };
 type DynaJSType = typeof BASE & {
   analysis: Analysis;

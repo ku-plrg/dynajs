@@ -338,6 +338,9 @@ const LOG_YIELD_RESULT = DYNAJS_VAR + '.Yr';
 const LOG_AWAIT = DYNAJS_VAR + '.Aw';
 const LOG_AWAIT_RESULT = DYNAJS_VAR + '.Awr';
 const LOG_CHAIN = DYNAJS_VAR + '.Ch';
+const LOG_FIELD_INIT         = `${DYNAJS_VAR}.Fi`;
+const LOG_STATIC_BLOCK_ENTER = `${DYNAJS_VAR}.SBe`;
+const LOG_STATIC_BLOCK_EXIT  = `${DYNAJS_VAR}.SBx`;
 
 // logging script enter
 function logScriptEnter(state: State, program: Node): void {
@@ -1276,13 +1279,62 @@ const visitors: Visitors = {
     state.write(')');
   },
   PropertyDefinition: (node, state) => {
-    todo('PropertyDefinition');
+    const { key, value, computed, static: _static } = node;
+    const id = newId(node);
+    if (_static) state.write('static ');
+    if (computed) {
+      state.write('[');
+      state.walk(key);
+      state.write(']');
+    } else if (key.type === 'PrivateIdentifier') {
+      state.write('#' + (key as any).name);
+    } else {
+      state.withLHS(() => state.walk(key));
+    }
+    state.write(` = ${LOG_FIELD_INIT}(${id}, this, `);
+    if (computed) {
+      state.walk(key);
+    } else if (key.type === 'PrivateIdentifier') {
+      state.write(`"#${(key as any).name}"`);
+    } else {
+      state.write(`"${(key as Identifier).name}"`);
+    }
+    state.write(`, ${_static}, `);
+    if (value) {
+      state.walk(value);
+    } else {
+      state.write('undefined');
+    }
+    state.write(')');
   },
   PrivateIdentifier: (node, state) => {
     state.write('#' + node.name);
   },
   StaticBlock: (node, state) => {
-    todo('StaticBlock');
+    const { body } = node as any;
+    state.createScope(scope => scope.walkArray(body));
+    state.write('static {');
+    state.wrap(() => {
+      state.writeln('try {');
+      state.wrap(() => {
+        state.writeln(`${LOG_STATIC_BLOCK_ENTER}(${newId(node)}, this);`);
+        logDeclare(state, node);
+        for (const statement of body) {
+          state.writeln('');
+          state.walk(statement);
+        }
+      });
+      state.writeln(`} catch (${EXCEPTION_VAR}) {`);
+      state.wrap(() => {
+        logException(state, node);
+      });
+      state.writeln(`} finally {`);
+      state.wrap(() => {
+        state.writeln(`${LOG_STATIC_BLOCK_EXIT}(${newId(node)});`);
+      });
+      state.writeln(`}`);
+    });
+    state.writeln('}');
   },
 }
 

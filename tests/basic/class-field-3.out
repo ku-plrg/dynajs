@@ -1,0 +1,17 @@
+Se() @ 1:1-6:1
+  D(key, <var>, undefined, false) @ 1:1-6:1
+  D(C, <class>, false) @ 1:1-6:1
+  D(c, <var>, undefined, false) @ 1:1-6:1
+  L("dynamic") @ 1:11-20
+  E("dynamic") @ 1:11-20
+  W([key], "dynamic") @ 1:11-20
+  R(key, "dynamic") @ 3:4-7
+  R(C, <function>) @ 5:13-14
+  F[pre](<function>, undefined, [], true, false) @ 5:13-14
+  R(key, "dynamic") @ 3:4-7
+  L(99) @ 3:11-13
+  Fi(dynamic = 99) @ 3:3-14
+  F(<function>, undefined, [], <object>, true, false) @ 5:13-14
+  E(<object>) @ 5:9-16
+  W([c], <object>) @ 5:9-16
+Sx() @ 1:1-6:1
