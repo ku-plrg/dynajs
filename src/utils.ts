@@ -2,16 +2,13 @@ import { white, yellow, red } from 'chalk';
 import inspect from 'object-inspect';
 import fs from 'fs';
 import path from 'path';
-import dedent from 'dedent-js';
 import * as acorn from 'acorn';
 import {
   Program,
   Node,
-  Literal,
-  TemplateElement,
 } from 'acorn';
 
-import { SCRIPT_NAME } from './constants';
+import { EXIT_CODE_TODO, SCRIPT_NAME } from './constants';
 
 enum LogLevel {
   LOG,
@@ -108,7 +105,11 @@ export function log(
   color: (msg: string) => string = white,
   level: LogLevel = LogLevel.LOG,
   header: string = 'INFO',
+  customExitCode: number | undefined = undefined,
 ) {
+  if (customExitCode !== undefined) {
+    process.exitCode = customExitCode;
+  }
   let print;
   switch (level) {
     case LogLevel.LOG:
@@ -145,7 +146,7 @@ export function err(value: any) {
 
 // to-do message
 export function todo(msg: string = '') {
-  log(msg, red, LogLevel.ERROR, 'TODO');
+  log(msg, red, LogLevel.ERROR, 'TODO', EXIT_CODE_TODO);
 }
 
 // parse the string into an AST
