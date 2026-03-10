@@ -211,6 +211,7 @@ export class StringBuilder {
   }
   put = (str: string): string => {
     const line = this.indent.repeat(this.depth) + str
+    // NOTE this might cause error if string is too long (analyzing large code)
     this.result += line + '\n';
     return line;
   }
