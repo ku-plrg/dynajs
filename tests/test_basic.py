@@ -16,7 +16,7 @@ def dynajs_path():
 def run_dynajs(dynajs_path):
     def _run(args, **kwargs):
         return subprocess.run(
-            [dynajs_path, "analyze", "-a", "samples/TraceAll.js"] + args,
+            [dynajs_path, "analyze", "--partial", "-a", "samples/TraceAll.js"] + args,
             capture_output=True,
             text=True,        # stdout/stderr to string
             check=False,      # not raise exception on non-zero exit

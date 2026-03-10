@@ -1,0 +1,38 @@
+import { DYNAJS_VAR } from "./general";
+
+// logging function names
+export const SCRIPT_ENTER = DYNAJS_VAR + '.Se';
+export const SCRIPT_EXIT = DYNAJS_VAR + '.Sx';
+export const FUNCTION_CALL = DYNAJS_VAR + '.F';
+export const METHOD_CALL = DYNAJS_VAR + '.M';
+export const TAGGED_FUNC = DYNAJS_VAR + '.TF';
+export const TAGGED_METHOD = DYNAJS_VAR + '.TM';
+export const FUNC_ENTER = DYNAJS_VAR + '.Fe';
+export const FUNC_EXIT = DYNAJS_VAR + '.Fx';
+export const RETURN = DYNAJS_VAR + '.Re';
+export const FOR_IN_OF_OBJECT = DYNAJS_VAR + '.O';
+export const EXPRESSION = DYNAJS_VAR + '.E';
+export const GET_FIELD = DYNAJS_VAR + '.G';
+export const PUT_FIELD = DYNAJS_VAR + '.P';
+export const DELETE_OP = DYNAJS_VAR + '.De';
+export const UNARY_OP = DYNAJS_VAR + '.U';
+export const BINARY_OP = DYNAJS_VAR + '.B';
+export const UPDATE_OP = DYNAJS_VAR + '.Up';
+export const CONDITION = DYNAJS_VAR + '.C';
+export const SWITCH_LEFT = DYNAJS_VAR + '.Swl';
+export const SWITCH_RIGHT = DYNAJS_VAR + '.Swr';
+export const DECLARE = DYNAJS_VAR + '.D';
+export const READ = DYNAJS_VAR + '.R';
+export const WRITE = DYNAJS_VAR + '.W';
+export const LITERAL = DYNAJS_VAR + '.L';
+export const THROW = DYNAJS_VAR + '.Th';
+export const EXCEPTION = DYNAJS_VAR + '.X';
+export const TEMP_VAR = DYNAJS_VAR + '._t';
+export const YIELD = DYNAJS_VAR + '.Y';
+export const YIELD_RESULT = DYNAJS_VAR + '.Yr';
+export const AWAIT = DYNAJS_VAR + '.Aw';
+export const AWAIT_RESULT = DYNAJS_VAR + '.Awr';
+export const CHAIN = DYNAJS_VAR + '.Ch';
+export const FIELD_INIT         = `${DYNAJS_VAR}.Fi`;
+export const STATIC_BLOCK_ENTER = `${DYNAJS_VAR}.SBe`;
+export const STATIC_BLOCK_EXIT  = `${DYNAJS_VAR}.SBx`;

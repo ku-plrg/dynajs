@@ -8,7 +8,7 @@ import {
   Node,
 } from 'acorn';
 
-import { EXIT_CODE_TODO, SCRIPT_NAME } from './constants';
+import { EXIT_CODE_TODO, SCRIPT_NAME } from './constants/general';
 
 enum LogLevel {
   LOG,

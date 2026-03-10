@@ -3,8 +3,8 @@ import {
   EXCEPTION_VAR,
   TEMP_PARAM_VAR,
   NO_INSTRUMENT,
-} from './constants';
-import {
+} from './constants/general';
+import type {
   AnyNode,
   BinaryExpression,
   CatchClause,
@@ -40,6 +40,8 @@ import {
   warn,
   writeFile,
 } from './utils';
+import { FEATURE_CHECK_ALL_TRUE, type FeatureTagCheck } from './types';
+import * as LOG from './constants/hook';
 
 // instrument a JS file
 export function instrumentFile(filename: string, options: Options = {}): string {
@@ -95,6 +97,7 @@ export class State {
   instrumentedPath: string;
   originalPath: string;
   detail: boolean;
+  isEnabled: FeatureTagCheck;
 
   constructor(options: Options = {}) {
     this.output = '';
@@ -111,6 +114,7 @@ export class State {
     this.instrumentedPath = options.instrumentedPath ?? '';
     this.originalPath = options.originalPath ?? '';
     this.detail = options.detail ?? false;
+    this.isEnabled = Object.freeze(options.isEnabled ?? { ...FEATURE_CHECK_ALL_TRUE });
   }
 
   // execute body with isLHS = true
@@ -179,6 +183,7 @@ interface Options {
   instrumentedPath?: string
   originalPath?: string
   detail?: boolean
+  isEnabled?: FeatureTagCheck
 }
 
 // -----------------------------------------------------------------------------
@@ -307,59 +312,25 @@ class Scope {
 // -----------------------------------------------------------------------------
 // logging functions
 // -----------------------------------------------------------------------------
-// logging function names
-const LOG_SCRIPT_ENTER = DYNAJS_VAR + '.Se';
-const LOG_SCRIPT_EXIT = DYNAJS_VAR + '.Sx';
-const LOG_FUNCTION_CALL = DYNAJS_VAR + '.F';
-const LOG_METHOD_CALL = DYNAJS_VAR + '.M';
-const LOG_TAGGED_FUNC = DYNAJS_VAR + '.TF';
-const LOG_TAGGED_METHOD = DYNAJS_VAR + '.TM';
-const LOG_FUNC_ENTER = DYNAJS_VAR + '.Fe';
-const LOG_FUNC_EXIT = DYNAJS_VAR + '.Fx';
-const LOG_RETURN = DYNAJS_VAR + '.Re';
-const LOG_FOR_IN_OF_OBJECT = DYNAJS_VAR + '.O';
-const LOG_EXPRESSION = DYNAJS_VAR + '.E';
-const LOG_GET_FIELD = DYNAJS_VAR + '.G';
-const LOG_PUT_FIELD = DYNAJS_VAR + '.P';
-const LOG_DELETE_OP = DYNAJS_VAR + '.De';
-const LOG_UNARY_OP = DYNAJS_VAR + '.U';
-const LOG_BINARY_OP = DYNAJS_VAR + '.B';
-const LOG_UPDATE_OP = DYNAJS_VAR + '.Up';
-const LOG_CONDITION = DYNAJS_VAR + '.C';
-const LOG_SWITCH_LEFT = DYNAJS_VAR + '.Swl';
-const LOG_SWITCH_RIGHT = DYNAJS_VAR + '.Swr';
-const LOG_DECLARE = DYNAJS_VAR + '.D';
-const LOG_READ = DYNAJS_VAR + '.R';
-const LOG_WRITE = DYNAJS_VAR + '.W';
-const LOG_LITERAL = DYNAJS_VAR + '.L';
-const LOG_THROW = DYNAJS_VAR + '.Th';
-const LOG_EXCEPTION = DYNAJS_VAR + '.X';
-const LOG_TEMP_VAR = DYNAJS_VAR + '._t';
-const LOG_YIELD = DYNAJS_VAR + '.Y';
-const LOG_YIELD_RESULT = DYNAJS_VAR + '.Yr';
-const LOG_AWAIT = DYNAJS_VAR + '.Aw';
-const LOG_AWAIT_RESULT = DYNAJS_VAR + '.Awr';
-const LOG_CHAIN = DYNAJS_VAR + '.Ch';
-const LOG_FIELD_INIT         = `${DYNAJS_VAR}.Fi`;
-const LOG_STATIC_BLOCK_ENTER = `${DYNAJS_VAR}.SBe`;
-const LOG_STATIC_BLOCK_EXIT  = `${DYNAJS_VAR}.SBx`;
 
 // logging script enter
 function logScriptEnter(state: State, program: Node): void {
+  if (!state.isEnabled.Se) return;
   const { instrumentedPath: i, originalPath: o } = state;
-  state.writeln(`${LOG_SCRIPT_ENTER}(${newId(program)}, "${i}", "${o}");`);
+  state.writeln(`${LOG.SCRIPT_ENTER}(${newId(program)}, "${i}", "${o}");`);
 }
 
 // logging script exit
 function logScriptExit(state: State, program: Node): void {
-  state.writeln(`${LOG_SCRIPT_EXIT}(${newId(program)});`);
+  if (!state.isEnabled.Se) return;
+  state.writeln(`${LOG.SCRIPT_EXIT}(${newId(program)});`);
 }
 
 // logging a function call
-function logCall(state: State, callee: Node, isConstructor: boolean, callOptional: boolean = false): void {
+function logCall(state: State, callee: Node, isConstructor: boolean, callOptional: boolean): void {
   if (callee.type === 'MemberExpression') {
     const { object, property, computed, optional } = callee as MemberExpression;
-    state.write(`${LOG_METHOD_CALL}(${newId(callee)}, `);
+    state.write(`${LOG.METHOD_CALL}(${newId(callee)}, `);
     if (object.type === 'Super') {
       todo('MemberExpression: super');
     } else {
@@ -379,7 +350,7 @@ function logCall(state: State, callee: Node, isConstructor: boolean, callOptiona
   } else if (callee.type === 'Super') {
     todo('Super call');
   } else {
-    state.write(`${LOG_FUNCTION_CALL}(${newId(callee)}, `);
+    state.write(`${LOG.FUNCTION_CALL}(${newId(callee)}, `);
     state.walk(callee);
     state.write(`, ${isConstructor}, ${callOptional})`);
   }
@@ -389,7 +360,7 @@ function logCall(state: State, callee: Node, isConstructor: boolean, callOptiona
 function logTaggedCall(state: State, tag: Node): void {
   if (tag.type === 'MemberExpression') {
     const { object, property, computed } = tag as MemberExpression;
-    state.write(`${LOG_TAGGED_METHOD}(${newId(tag)}, `);
+    state.write(`${LOG.TAGGED_METHOD}(${newId(tag)}, `);
     if (object.type === 'Super') {
       todo('TaggedTemplate MemberExpression: super');
     } else {
@@ -409,7 +380,7 @@ function logTaggedCall(state: State, tag: Node): void {
   } else if (tag.type === 'Super') {
     todo('TaggedTemplate: super');
   } else {
-    state.write(`${LOG_TAGGED_FUNC}(${newId(tag)}, `);
+    state.write(`${LOG.TAGGED_FUNC}(${newId(tag)}, `);
     state.walk(tag);
     state.write(')');
   }
@@ -479,17 +450,17 @@ function logFuncEnter(state: State, func: Function): void {
   const { id } = func;
   // TODO: temporalily use `null` but we need to discuss how to handle this
   const name = id ? id.name : 'null'
-  state.writeln(`${LOG_FUNC_ENTER}(${newId(func)}, ${name}, this, arguments);`);
+  state.writeln(`${LOG.FUNC_ENTER}(${newId(func)}, ${name}, this, arguments);`);
 }
 
 // logging function exit
 function logFuncExit(state: State, func: Node): void {
-  state.writeln(`${LOG_FUNC_EXIT}(${newId(func)});`);
+  state.writeln(`${LOG.FUNC_EXIT}(${newId(func)});`);
 }
 
 // logging a return statement
 function logReturn(state: State, expr: Node, body: () => void): void {
-  state.write(`return ${LOG_RETURN}(${newId(expr)}, `);
+  state.write(`return ${LOG.RETURN}(${newId(expr)}, `);
   body();
   state.write(');');
 }
@@ -499,7 +470,7 @@ function logForInOfStatement(state: State, node: Node, isForIn: boolean, isAwait
   const { left, right, body } = node as (ForInStatement | ForOfStatement);
   const awaitStr = isAwait ? 'await ' : '';
   const prep = isForIn ? 'in' : 'of';
-  state.write(`for ${awaitStr}(${LOG_TEMP_VAR} ${prep} `);
+  state.write(`for ${awaitStr}(${LOG.TEMP_VAR} ${prep} `);
   logForInOfObject(state, right, true);
   state.write(') {');
   state.wrap(() => {
@@ -514,7 +485,7 @@ function logForInOfStatement(state: State, node: Node, isForIn: boolean, isAwait
     } else {
       id = left;
     }
-    logWrite(state, id, right, () => state.write(LOG_TEMP_VAR));
+    logWrite(state, id, right, () => state.write(LOG.TEMP_VAR));
     state.write(';');
     state.writeln('');
     state.walk(body);
@@ -524,14 +495,14 @@ function logForInOfStatement(state: State, node: Node, isForIn: boolean, isAwait
 
 // logging the RHS object of a for-in/of statement
 function logForInOfObject(state: State, expr: Expression, isForIn: boolean): void {
-  state.write(`${LOG_FOR_IN_OF_OBJECT}(${newId(expr)}, `);
+  state.write(`${LOG.FOR_IN_OF_OBJECT}(${newId(expr)}, `);
   state.walk(expr);
   state.write(`, ${isForIn})`);
 }
 
 // logging end of an expression
 function logExpression(state: State, expr: Expression): void {
-  state.write(`${LOG_EXPRESSION}(${newId(expr)}, `);
+  state.write(`${LOG.EXPRESSION}(${newId(expr)}, `);
   state.walk(expr);
   state.write(')');
 }
@@ -539,7 +510,7 @@ function logExpression(state: State, expr: Expression): void {
 // logging a property read (get-field) operation
 function logGetField(state: State, expr: Expression): void {
   const { object, property, computed, optional } = expr as MemberExpression;
-  state.write(`${LOG_GET_FIELD}(${newId(expr)}, `);
+  state.write(`${LOG.GET_FIELD}(${newId(expr)}, `);
   if (object.type === 'Super') {
     todo('MemberExpression: super');
   } else {
@@ -562,7 +533,7 @@ function logGetField(state: State, expr: Expression): void {
 // logging a property write (put-field) operation
 function logPutField(state: State, lhs: Node, rhs: Node, body: () => void): void {
   const { object, property, computed, optional } = lhs as MemberExpression;
-  state.write(`${LOG_PUT_FIELD}(${newId(lhs)}, `);
+  state.write(`${LOG.PUT_FIELD}(${newId(lhs)}, `);
   if (object.type === 'Super') {
     todo('MemberExpression: super');
   } else {
@@ -587,12 +558,12 @@ function logPutField(state: State, lhs: Node, rhs: Node, body: () => void): void
 function logDelete(state: State, expr: Node): void {
   if (expr.type === 'ChainExpression') {
     // delete a?.b — wrap with Ch to convert chainSkip → undefined
-    state.write(`${LOG_CHAIN}(`);
+    state.write(`${LOG.CHAIN}(`);
     logDelete(state, (expr as any).expression);
     state.write(')');
   } else if (expr.type === 'MemberExpression') {
     const { object, property, computed, optional } = expr as MemberExpression;
-    state.write(`${LOG_DELETE_OP}(${newId(expr)}, `);
+    state.write(`${LOG.DELETE_OP}(${newId(expr)}, `);
     state.walk(object);
     state.write(', ');
     if (computed) {
@@ -616,7 +587,7 @@ function logUnaryOp(state: State, expr: UnaryExpression): void {
   if (operator === 'delete') {
     logDelete(state, argument);
   } else {
-    state.write(`${LOG_UNARY_OP}(${newId(expr)}, "${operator}", `);
+    state.write(`${LOG.UNARY_OP}(${newId(expr)}, "${operator}", `);
     // special handling for `typeof x` where x is an identifier to avoid ReferenceError
     if (operator === 'typeof' && argument.type === 'Identifier') {
       var x = (argument as Identifier).name;
@@ -630,7 +601,7 @@ function logUnaryOp(state: State, expr: UnaryExpression): void {
 // logging a binary operation
 function logBinaryOp(state: State, expr: BinaryExpression): void {
   const { left, right, operator } = expr;
-  state.write(`${LOG_BINARY_OP}(${newId(expr)}, "${operator}", `);
+  state.write(`${LOG.BINARY_OP}(${newId(expr)}, "${operator}", `);
   state.walk(left);
   state.write(', ');
   state.walk(right);
@@ -640,7 +611,7 @@ function logBinaryOp(state: State, expr: BinaryExpression): void {
 // logging an update operation
 function logUpdateOp(state: State, expr: UpdateExpression): void {
   const { argument, operator, prefix } = expr;
-  state.write(`${LOG_UPDATE_OP}(${newId(expr)}, ${newId(expr)}, "${operator}", ${prefix}, `);
+  state.write(`${LOG.UPDATE_OP}(${newId(expr)}, ${newId(expr)}, "${operator}", ${prefix}, `);
   state.walk(argument);
   state.write(`, ${TEMP_PARAM_VAR} => `);
   logWrite(state, argument, argument, () => state.write(TEMP_PARAM_VAR));
@@ -649,7 +620,7 @@ function logUpdateOp(state: State, expr: UpdateExpression): void {
 
 // logging a condition expression
 function logCondition(state: State, test: Expression, kind: string, end: boolean = false): void {
-  state.write(`${LOG_CONDITION}(${newId(test)}, "${kind}", `);
+  state.write(`${LOG.CONDITION}(${newId(test)}, "${kind}", `);
   if (end) logExpression(state, test);
   else state.walk(test);
   state.write(`)`);
@@ -657,14 +628,14 @@ function logCondition(state: State, test: Expression, kind: string, end: boolean
 
 // logging the left side of a switch statement
 function logSwitchLeft(state: State, discriminant: Expression): void {
-  state.write(`${LOG_SWITCH_LEFT}(${newId(discriminant)}, `);
+  state.write(`${LOG.SWITCH_LEFT}(${newId(discriminant)}, `);
   logExpression(state, discriminant);
   state.write(')');
 }
 
 // logging the right side of a switch case
 function logSwitchRight(state: State, test: Expression): void {
-  state.write(`${LOG_SWITCH_RIGHT}(${newId(test)}, `);
+  state.write(`${LOG.SWITCH_RIGHT}(${newId(test)}, `);
   logExpression(state, test);
   state.write(')');
 }
@@ -679,16 +650,16 @@ function logDeclare(state: State, node: Node): void {
     const isTDZ = kind === VarKind.Const || kind === VarKind.Let || kind === VarKind.Class;
     const isSpread = spreadVars?.has(name) ?? false;
     if (isTDZ) {
-      state.writeln(`${LOG_DECLARE}(${newId(node)}, "${name}", ${kind}, ${isSpread});`);
+      state.writeln(`${LOG.DECLARE}(${newId(node)}, "${name}", ${kind}, ${isSpread});`);
     } else {
-      state.writeln(`${LOG_DECLARE}(${newId(node)}, "${name}", ${kind}, ${isSpread}, ${name});`);
+      state.writeln(`${LOG.DECLARE}(${newId(node)}, "${name}", ${kind}, ${isSpread}, ${name});`);
     }
   }
 }
 
 // logging a variable read
 function logRead(state: State, node: Node, name: string): void {
-  state.write(`${LOG_READ}(${newId(node)}, "${name}", ${name})`);
+  state.write(`${LOG.READ}(${newId(node)}, "${name}", ${name})`);
 }
 
 // logging a variable write
@@ -698,7 +669,7 @@ function logWrite(state: State, lhs: Node, rhs: Node, body: () => void): void {
   } else if (lhs.type === 'ObjectPattern' || lhs.type === 'ArrayPattern') {
     // destructuring write
     state.withLHS(() => state.walk(lhs));
-    state.write(` = ${LOG_WRITE}(${newId(rhs)}, `);
+    state.write(` = ${LOG.WRITE}(${newId(rhs)}, `);
     const xs = collectIdentifiers(lhs as Pattern);
     state.write(`[${xs.map(x => `"${x}"`).join(', ')}], `);
     body();
@@ -706,7 +677,7 @@ function logWrite(state: State, lhs: Node, rhs: Node, body: () => void): void {
   } else {
     // variable write
     const x = lhs as Identifier;
-    state.write(`${x.name} = ${LOG_WRITE}(${newId(rhs)}, `);
+    state.write(`${x.name} = ${LOG.WRITE}(${newId(rhs)}, `);
     const xs = collectIdentifiers(lhs as Pattern);
     state.write(`[${xs.map(x => `"${x}"`).join(', ')}], `);
     body();
@@ -716,7 +687,7 @@ function logWrite(state: State, lhs: Node, rhs: Node, body: () => void): void {
 
 // logging a literal
 function logLiteral(state: State, literal: Node, body?: () => void): void {
-  state.write(`${LOG_LITERAL}(${newId(literal)}, `);
+  state.write(`${LOG.LITERAL}(${newId(literal)}, `);
   if (body) body();
   else state.write(generate(literal));
   state.write(`)`);
@@ -724,14 +695,14 @@ function logLiteral(state: State, literal: Node, body?: () => void): void {
 
 // logging a throw statement
 function logThrow(state: State, arg: Expression): void {
-  state.write(`${LOG_THROW}(${newId(arg)}, `);
+  state.write(`${LOG.THROW}(${newId(arg)}, `);
   logExpression(state, arg);
   state.write(')');
 }
 
 // logging a yield expression
 function logYield(state: State, node: Node, argument: Node | null | undefined, delegate: boolean): void {
-  state.write(`${LOG_YIELD_RESULT}(${newId(node)}, yield${delegate ? '*' : ''} ${LOG_YIELD}(${newId(node)}, `);
+  state.write(`${LOG.YIELD_RESULT}(${newId(node)}, yield${delegate ? '*' : ''} ${LOG.YIELD}(${newId(node)}, `);
   if (argument) {
     logExpression(state, argument as Expression);
   } else {
@@ -742,7 +713,7 @@ function logYield(state: State, node: Node, argument: Node | null | undefined, d
 
 // logging an await expression
 function logAwait(state: State, node: Node, argument: Node | null | undefined): void {
-  state.write(`${LOG_AWAIT_RESULT}(${newId(node)}, await ${LOG_AWAIT}(${newId(node)}, `);
+  state.write(`${LOG.AWAIT_RESULT}(${newId(node)}, await ${LOG.AWAIT}(${newId(node)}, `);
   if (argument) {
     logExpression(state, argument as Expression);
   } else {
@@ -753,7 +724,7 @@ function logAwait(state: State, node: Node, argument: Node | null | undefined): 
 
 // logging an exception
 function logException(state: State, program: Node): void {
-  state.writeln(`${LOG_EXCEPTION}(${newId(program)}, ${EXCEPTION_VAR});`);
+  state.writeln(`${LOG.EXCEPTION}(${newId(program)}, ${EXCEPTION_VAR});`);
 }
 
 // -----------------------------------------------------------------------------
@@ -1147,7 +1118,7 @@ const visitors: Visitors = {
   },
   NewExpression: (node, state) => {
     const { callee, arguments: args } = node;
-    logCall(state, callee, true);
+    logCall(state, callee, true, false);
     state.write('(');
     state.walkArray(args);
     state.write(')');
@@ -1309,7 +1280,7 @@ const visitors: Visitors = {
     logAwait(state, node, node.argument);
   },
   ChainExpression: (node, state) => {
-    state.write(`${LOG_CHAIN}(`);
+    state.write(`${LOG.CHAIN}(`);
     state.walk(node.expression);
     state.write(')');
   },
@@ -1334,7 +1305,7 @@ const visitors: Visitors = {
     } else {
       state.withLHS(() => state.walk(key));
     }
-    state.write(` = ${LOG_FIELD_INIT}(${id}, this, `);
+    state.write(` = ${LOG.FIELD_INIT}(${id}, this, `);
     if (computed) {
       state.walk(key);
     } else if (key.type === 'PrivateIdentifier') {
@@ -1360,7 +1331,7 @@ const visitors: Visitors = {
     state.wrap(() => {
       state.writeln('try {');
       state.wrap(() => {
-        state.writeln(`${LOG_STATIC_BLOCK_ENTER}(${newId(node)}, this);`);
+        state.writeln(`${LOG.STATIC_BLOCK_ENTER}(${newId(node)}, this);`);
         logDeclare(state, node);
         for (const statement of body) {
           state.writeln('');
@@ -1373,7 +1344,7 @@ const visitors: Visitors = {
       });
       state.writeln(`} finally {`);
       state.wrap(() => {
-        state.writeln(`${LOG_STATIC_BLOCK_EXIT}(${newId(node)});`);
+        state.writeln(`${LOG.STATIC_BLOCK_EXIT}(${newId(node)});`);
       });
       state.writeln(`}`);
     });

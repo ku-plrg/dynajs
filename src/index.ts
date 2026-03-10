@@ -8,32 +8,50 @@ import {
   stringify,
 } from './utils';
 import { instrumentFile } from './instrument';
-import { SCRIPT_NAME } from './constants';
+import { SCRIPT_NAME } from './constants/general';
 import './analysis';
+import { CALLBACK_TO_FEATURES, FEATURE_CHECK_ALL_FALSE, type FeatureTag, type FeatureTagCheck } from './types';
 
 // `instrument` command
-export const instrumentCommand = (argv: any): void => {
+const instrumentCommand = (argv: any): void => {
   const [ targetPath ] = getArgs('instrument', argv, 1);
   const { detail } = argv;
   instrumentFile(targetPath, { detail });
 }
 
 // `analyze` command
-export function analyzeCommand(argv: any): void {
+function analyzeCommand(argv: any): void {
   const [ targetPath ] = getArgs('analyze', argv, 1);
   analyze(targetPath, argv);
 }
 
+function checkAnalysisHooks(fullOpt: boolean): FeatureTagCheck | undefined {
+  if (fullOpt) return undefined;
+
+  const analysis = D$.analysis;
+  if (!analysis) return undefined;
+
+  const tags: FeatureTagCheck = { ...FEATURE_CHECK_ALL_FALSE };
+  for (const [callbackName, hookTags] of Object.entries(CALLBACK_TO_FEATURES)) {
+    if (callbackName in analysis) {
+      for (const tag of hookTags) tags[tag as FeatureTag] = true;
+    }
+  }
+  return tags;
+}
+
 // analyze a JS file
-export function analyze(targetPath: string, options: any = {}): string {
-  const { detail, analysis } = options;
+function analyze(targetPath: string, options: any = {}): string {
+  const { detail, analysis, full } = options;
 
   require(path.resolve(analysis));
+
+  const hooks = checkAnalysisHooks(full);
 
   // override the .js extension handler
   const ModuleAny = Module as any;
   ModuleAny._extensions['.js'] = function (module: any, filename: string) {
-    const instrumentedCode = instrumentFile(filename, { detail });
+    const instrumentedCode = instrumentFile(filename, { detail, isEnabled: hooks });
     module._compile(instrumentedCode, filename);
   };
 
@@ -63,12 +81,24 @@ try {
     .example('$0 instrument input.js', 'Instrument a JS file')
     .command(
       'analyze',
-      'Analyze a JS fil',
+      'Analyze a JS file',
       (yargs) => yargs
         .option('analysis', {
           alias: 'a',
           describe: 'Target analysis module',
           type: 'string',
+        })
+        .option('full', {
+          alias: 'f',
+          type: 'boolean',
+          description: 'Instrument all hooking points (disables adaptive instrumentation)',
+          conflicts: 'partial',
+        })
+        .option('partial', {
+          alias: 'p',
+          type: 'boolean',
+          description: 'Instrument only hooks used by the analysis module (default)',
+          conflicts: 'full',
         })
       ,
       analyzeCommand

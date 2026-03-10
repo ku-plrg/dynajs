@@ -23,7 +23,7 @@ for js_file in tests/basic/**/*.js tests/basic/*.js; do
         case "$js_file" in *"$PATTERN"*) ;; *) continue ;; esac
     fi
 
-    if output=$(./dynajs analyze -a samples/TraceAll.js "$js_file" 2>/dev/null); then
+    if output=$(./dynajs analyze --full -a samples/TraceAll.js "$js_file" 2>/dev/null); then
         printf '%s\n' "$output" > "$out_file"
         echo "  updated: $out_file"
         UPDATED=$((UPDATED + 1))
