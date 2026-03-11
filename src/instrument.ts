@@ -1125,12 +1125,14 @@ const visitors: Visitors = {
       if (init != null) {
         if (init.type === 'VariableDeclaration') {
           state.walk(init);
+          state.write(' ');
         } else {
           logExpression(state, init);
-          state.write(';');
+          state.write('; ');
         }
+      } else {
+        state.write('; ');
       }
-      state.write(' ');
       if (test != null) logCondition(state, test, 'for', true);
       state.write('; ');
       if (update != null) logExpression(state, update);
