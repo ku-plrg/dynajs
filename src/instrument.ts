@@ -328,6 +328,10 @@ function logScriptExit(state: State, program: Node): void {
 
 // logging a function call
 function logCall(state: State, callee: Node, isConstructor: boolean, callOptional: boolean): void {
+  if (!state.isEnabled.F) {
+    state.walk(callee);
+    return;
+  }
   if (callee.type === 'MemberExpression') {
     const { object, property, computed, optional } = callee as MemberExpression;
     state.write(`${LOG.METHOD_CALL}(${newId(callee)}, `);
@@ -358,6 +362,10 @@ function logCall(state: State, callee: Node, isConstructor: boolean, callOptiona
 
 // logging a tagged template call (uses TF/TM hooks with general-first hierarchy)
 function logTaggedCall(state: State, tag: Node): void {
+  if (!state.isEnabled.TF) {
+    state.walk(tag);
+    return;
+  }
   if (tag.type === 'MemberExpression') {
     const { object, property, computed } = tag as MemberExpression;
     state.write(`${LOG.TAGGED_METHOD}(${newId(tag)}, `);
@@ -447,6 +455,7 @@ function logFunc(state: State, node: Node, isExpr: boolean): void {
 
 // logging function enter
 function logFuncEnter(state: State, func: Function): void {
+  if (!state.isEnabled.Fe) return;
   const { id } = func;
   // TODO: temporalily use `null` but we need to discuss how to handle this
   const name = id ? id.name : 'null'
@@ -455,11 +464,18 @@ function logFuncEnter(state: State, func: Function): void {
 
 // logging function exit
 function logFuncExit(state: State, func: Node): void {
+  if (!state.isEnabled.Fe) return;
   state.writeln(`${LOG.FUNC_EXIT}(${newId(func)});`);
 }
 
 // logging a return statement
 function logReturn(state: State, expr: Node, body: () => void): void {
+  if (!state.isEnabled.Re) {
+    state.write('return ');
+    body();
+    state.write(';');
+    return;
+  }
   state.write(`return ${LOG.RETURN}(${newId(expr)}, `);
   body();
   state.write(');');
@@ -495,6 +511,10 @@ function logForInOfStatement(state: State, node: Node, isForIn: boolean, isAwait
 
 // logging the RHS object of a for-in/of statement
 function logForInOfObject(state: State, expr: Expression, isForIn: boolean): void {
+  if (!state.isEnabled.O) {
+    state.walk(expr);
+    return;
+  }
   state.write(`${LOG.FOR_IN_OF_OBJECT}(${newId(expr)}, `);
   state.walk(expr);
   state.write(`, ${isForIn})`);
@@ -502,6 +522,10 @@ function logForInOfObject(state: State, expr: Expression, isForIn: boolean): voi
 
 // logging end of an expression
 function logExpression(state: State, expr: Expression): void {
+  if (!state.isEnabled.E) {
+    state.walk(expr);
+    return;
+  }
   state.write(`${LOG.EXPRESSION}(${newId(expr)}, `);
   state.walk(expr);
   state.write(')');
@@ -510,6 +534,25 @@ function logExpression(state: State, expr: Expression): void {
 // logging a property read (get-field) operation
 function logGetField(state: State, expr: Expression): void {
   const { object, property, computed, optional } = expr as MemberExpression;
+  if (!state.isEnabled.G) {
+    if (object.type === 'Super') {
+      todo('MemberExpression: super');
+    } else {
+      state.walk(object);
+    }
+    if (computed) {
+      state.write(optional ? '?.[' : '[');
+      state.walk(property);
+      state.write(']');
+    } else if (property.type === 'Identifier') {
+      state.write(optional ? `?.${property.name}` : `.${property.name}`);
+    } else if (property.type === 'PrivateIdentifier') {
+      todo('MemberExpression: private identifier');
+    } else {
+      warn(`MemberExpression: unexpected property type${getLocStr(expr)}`);
+    }
+    return;
+  }
   state.write(`${LOG.GET_FIELD}(${newId(expr)}, `);
   if (object.type === 'Super') {
     todo('MemberExpression: super');
@@ -532,7 +575,27 @@ function logGetField(state: State, expr: Expression): void {
 
 // logging a property write (put-field) operation
 function logPutField(state: State, lhs: Node, rhs: Node, body: () => void): void {
-  const { object, property, computed, optional } = lhs as MemberExpression;
+  const { object, property, computed } = lhs as MemberExpression;
+  if (!state.isEnabled.P) {
+    if (object.type === 'Super') {
+      todo('MemberExpression: super');
+    } else {
+      state.walk(object);
+    }
+    if (computed) {
+      state.write('[');
+      state.walk(property);
+      state.write('] = ');
+    } else if (property.type === 'Identifier') {
+      state.write(`.${property.name} = `);
+    } else if (property.type === 'PrivateIdentifier') {
+      todo('MemberExpression: private identifier');
+    } else {
+      warn(`MemberExpression: unexpected property type${getLocStr(lhs)}`);
+    }
+    body();
+    return;
+  }
   state.write(`${LOG.PUT_FIELD}(${newId(lhs)}, `);
   if (object.type === 'Super') {
     todo('MemberExpression: super');
@@ -556,6 +619,10 @@ function logPutField(state: State, lhs: Node, rhs: Node, body: () => void): void
 
 // logging a delete operation
 function logDelete(state: State, expr: Node): void {
+  if (!state.isEnabled.De) {
+    state.write(`delete ${generate(expr)}`);
+    return;
+  }
   if (expr.type === 'ChainExpression') {
     // delete a?.b — wrap with Ch to convert chainSkip → undefined
     state.write(`${LOG.CHAIN}(`);
@@ -586,21 +653,38 @@ function logUnaryOp(state: State, expr: UnaryExpression): void {
   const { argument, operator } = expr;
   if (operator === 'delete') {
     logDelete(state, argument);
-  } else {
-    state.write(`${LOG.UNARY_OP}(${newId(expr)}, "${operator}", `);
-    // special handling for `typeof x` where x is an identifier to avoid ReferenceError
-    if (operator === 'typeof' && argument.type === 'Identifier') {
-      var x = (argument as Identifier).name;
-      state.write(`typeof ${x} === "undefined" ? undefined : `);
-    }
-    state.walk(argument);
-    state.write(')');
+    return;
   }
+  if (!state.isEnabled.U) {
+    if (operator === 'typeof' && argument.type === 'Identifier') {
+      state.write(`typeof ${(argument as Identifier).name}`);
+    } else {
+      state.write(`${operator} `);
+      state.walk(argument);
+    }
+    return;
+  }
+  state.write(`${LOG.UNARY_OP}(${newId(expr)}, "${operator}", `);
+  // special handling for `typeof x` where x is an identifier to avoid ReferenceError
+  if (operator === 'typeof' && argument.type === 'Identifier') {
+    var x = (argument as Identifier).name;
+    state.write(`typeof ${x} === "undefined" ? undefined : `);
+  }
+  state.walk(argument);
+  state.write(')');
 }
 
 // logging a binary operation
 function logBinaryOp(state: State, expr: BinaryExpression): void {
   const { left, right, operator } = expr;
+  if (!state.isEnabled.B) {
+    state.write('(');
+    state.walk(left);
+    state.write(` ${operator} `);
+    state.walk(right);
+    state.write(')');
+    return;
+  }
   state.write(`${LOG.BINARY_OP}(${newId(expr)}, "${operator}", `);
   state.walk(left);
   state.write(', ');
@@ -610,6 +694,10 @@ function logBinaryOp(state: State, expr: BinaryExpression): void {
 
 // logging an update operation
 function logUpdateOp(state: State, expr: UpdateExpression): void {
+  if (!state.isEnabled.U) {
+    state.write(generate(expr));
+    return;
+  }
   const { argument, operator, prefix } = expr;
   state.write(`${LOG.UPDATE_OP}(${newId(expr)}, ${newId(expr)}, "${operator}", ${prefix}, `);
   state.walk(argument);
@@ -620,6 +708,11 @@ function logUpdateOp(state: State, expr: UpdateExpression): void {
 
 // logging a condition expression
 function logCondition(state: State, test: Expression, kind: string, end: boolean = false): void {
+  if (!state.isEnabled.C) {
+    if (end) logExpression(state, test);
+    else state.walk(test);
+    return;
+  }
   state.write(`${LOG.CONDITION}(${newId(test)}, "${kind}", `);
   if (end) logExpression(state, test);
   else state.walk(test);
@@ -628,6 +721,10 @@ function logCondition(state: State, test: Expression, kind: string, end: boolean
 
 // logging the left side of a switch statement
 function logSwitchLeft(state: State, discriminant: Expression): void {
+  if (!state.isEnabled.C) {
+    logExpression(state, discriminant);
+    return;
+  }
   state.write(`${LOG.SWITCH_LEFT}(${newId(discriminant)}, `);
   logExpression(state, discriminant);
   state.write(')');
@@ -635,6 +732,10 @@ function logSwitchLeft(state: State, discriminant: Expression): void {
 
 // logging the right side of a switch case
 function logSwitchRight(state: State, test: Expression): void {
+  if (!state.isEnabled.C) {
+    logExpression(state, test);
+    return;
+  }
   state.write(`${LOG.SWITCH_RIGHT}(${newId(test)}, `);
   logExpression(state, test);
   state.write(')');
@@ -642,6 +743,7 @@ function logSwitchRight(state: State, test: Expression): void {
 
 // logging a variable declaration
 function logDeclare(state: State, node: Node): void {
+  if (!state.isEnabled.D) return;
   const vars = state.scope?.vars;
   if (!vars) return;
   const spreadVars = state.scope?.spreadVars;
@@ -659,6 +761,10 @@ function logDeclare(state: State, node: Node): void {
 
 // logging a variable read
 function logRead(state: State, node: Node, name: string): void {
+  if (!state.isEnabled.R) {
+    state.write(name);
+    return;
+  }
   state.write(`${LOG.READ}(${newId(node)}, "${name}", ${name})`);
 }
 
@@ -667,6 +773,12 @@ function logWrite(state: State, lhs: Node, rhs: Node, body: () => void): void {
   if (lhs.type === 'MemberExpression') {
     logPutField(state, lhs, rhs, body);
   } else if (lhs.type === 'ObjectPattern' || lhs.type === 'ArrayPattern') {
+    if (!state.isEnabled.W) {
+      state.withLHS(() => state.walk(lhs));
+      state.write(' = ');
+      body();
+      return;
+    }
     // destructuring write
     state.withLHS(() => state.walk(lhs));
     state.write(` = ${LOG.WRITE}(${newId(rhs)}, `);
@@ -675,6 +787,12 @@ function logWrite(state: State, lhs: Node, rhs: Node, body: () => void): void {
     body();
     state.write(')');
   } else {
+    if (!state.isEnabled.W) {
+      const x = lhs as Identifier;
+      state.write(`${x.name} = `);
+      body();
+      return;
+    }
     // variable write
     const x = lhs as Identifier;
     state.write(`${x.name} = ${LOG.WRITE}(${newId(rhs)}, `);
@@ -687,6 +805,11 @@ function logWrite(state: State, lhs: Node, rhs: Node, body: () => void): void {
 
 // logging a literal
 function logLiteral(state: State, literal: Node, body?: () => void): void {
+  if (!state.isEnabled.L) {
+    if (body) body();
+    else state.write(generate(literal));
+    return;
+  }
   state.write(`${LOG.LITERAL}(${newId(literal)}, `);
   if (body) body();
   else state.write(generate(literal));
@@ -695,6 +818,10 @@ function logLiteral(state: State, literal: Node, body?: () => void): void {
 
 // logging a throw statement
 function logThrow(state: State, arg: Expression): void {
+  if (!state.isEnabled.Th) {
+    logExpression(state, arg);
+    return;
+  }
   state.write(`${LOG.THROW}(${newId(arg)}, `);
   logExpression(state, arg);
   state.write(')');
@@ -702,6 +829,14 @@ function logThrow(state: State, arg: Expression): void {
 
 // logging a yield expression
 function logYield(state: State, node: Node, argument: Node | null | undefined, delegate: boolean): void {
+  if (!state.isEnabled.Y) {
+    state.write(delegate ? 'yield*' : 'yield');
+    if (argument) {
+      state.write(' ');
+      logExpression(state, argument as Expression);
+    }
+    return;
+  }
   state.write(`${LOG.YIELD_RESULT}(${newId(node)}, yield${delegate ? '*' : ''} ${LOG.YIELD}(${newId(node)}, `);
   if (argument) {
     logExpression(state, argument as Expression);
@@ -713,6 +848,15 @@ function logYield(state: State, node: Node, argument: Node | null | undefined, d
 
 // logging an await expression
 function logAwait(state: State, node: Node, argument: Node | null | undefined): void {
+  if (!state.isEnabled.Aw) {
+    state.write('await ');
+    if (argument) {
+      logExpression(state, argument as Expression);
+    } else {
+      state.write('undefined');
+    }
+    return;
+  }
   state.write(`${LOG.AWAIT_RESULT}(${newId(node)}, await ${LOG.AWAIT}(${newId(node)}, `);
   if (argument) {
     logExpression(state, argument as Expression);
@@ -740,6 +884,25 @@ function newId(node: Node): number {
     idToLoc[id] = getLocFromNode(node);
   }
   return id;
+}
+
+function needsChainBoundary(state: State, node: Node): boolean {
+  switch (node.type) {
+    case 'MemberExpression': {
+      const expr = node as MemberExpression;
+      return (expr.optional && state.isEnabled.G) || needsChainBoundary(state, expr.object);
+    }
+    case 'CallExpression': {
+      const expr = node as any;
+      return state.isEnabled.F || needsChainBoundary(state, expr.callee);
+    }
+    case 'ChainExpression':
+      return needsChainBoundary(state, (node as any).expression);
+    case 'UnaryExpression':
+      return (node as UnaryExpression).operator === 'delete' && state.isEnabled.De;
+    default:
+      return false;
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -1280,6 +1443,10 @@ const visitors: Visitors = {
     logAwait(state, node, node.argument);
   },
   ChainExpression: (node, state) => {
+    if (!needsChainBoundary(state, node.expression)) {
+      state.walk(node.expression);
+      return;
+    }
     state.write(`${LOG.CHAIN}(`);
     state.walk(node.expression);
     state.write(')');
@@ -1294,7 +1461,6 @@ const visitors: Visitors = {
   },
   PropertyDefinition: (node, state) => {
     const { key, value, computed, static: _static } = node;
-    const id = newId(node);
     if (_static) state.write('static ');
     if (computed) {
       state.write('[');
@@ -1305,6 +1471,16 @@ const visitors: Visitors = {
     } else {
       state.withLHS(() => state.walk(key));
     }
+
+    if (!state.isEnabled.Fi) {
+      if (value) {
+        state.write(' = ');
+        state.walk(value);
+      }
+      return;
+    }
+
+    const id = newId(node);
     state.write(` = ${LOG.FIELD_INIT}(${id}, this, `);
     if (computed) {
       state.walk(key);
@@ -1329,6 +1505,14 @@ const visitors: Visitors = {
     state.createScope(scope => scope.walkArray(body));
     state.write('static {');
     state.wrap(() => {
+      if (!state.isEnabled.SBe) {
+        logDeclare(state, node);
+        for (const statement of body) {
+          state.writeln('');
+          state.walk(statement);
+        }
+        return;
+      }
       state.writeln('try {');
       state.wrap(() => {
         state.writeln(`${LOG.STATIC_BLOCK_ENTER}(${newId(node)}, this);`);
