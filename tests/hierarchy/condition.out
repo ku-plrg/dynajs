@@ -1,0 +1,92 @@
+literal(true) @ 1:5-9
+booleanLiteral(true) @ 1:5-9
+condition(if, true) @ 1:5-9
+ifCondition(true) @ 1:5-9
+literal(true) @ 2:1-5
+booleanLiteral(true) @ 2:1-5
+condition(?, true) @ 2:1-5
+ternaryCondition(true) @ 2:1-5
+literal(1) @ 2:8-9
+numberLiteral(1) @ 2:8-9
+literal(true) @ 3:1-5
+booleanLiteral(true) @ 3:1-5
+condition(&&, true) @ 3:1-5
+logicalAnd(true) @ 3:1-5
+literal(false) @ 3:9-14
+booleanLiteral(false) @ 3:9-14
+literal(false) @ 4:1-6
+booleanLiteral(false) @ 4:1-6
+condition(||, false) @ 4:1-6
+logicalOr(false) @ 4:1-6
+literal(true) @ 4:10-14
+booleanLiteral(true) @ 4:10-14
+literal(null) @ 5:1-5
+nullLiteral(null) @ 5:1-5
+condition(??, null) @ 5:1-5
+nullishCoalescing(null) @ 5:1-5
+literal("default") @ 5:9-18
+stringLiteral("default") @ 5:9-18
+literal(<object>) @ 6:9-11
+objectLiteral(<object>) @ 6:9-11
+memoryWrite(<object>) @ 6:9-11
+write([y], <object>) @ 6:9-11
+memoryAccess(<object>) @ 6:13-14
+read(y, <object>) @ 6:13-14
+condition(?., <object>) @ 6:13-17
+optionalChain(<object>) @ 6:13-17
+memoryAccess(undefined) @ 6:13-17
+getField(<object>, "x", undefined) @ 6:13-17
+literal(false) @ 7:8-13
+booleanLiteral(false) @ 7:8-13
+condition(while, false) @ 7:8-13
+whileCondition(false) @ 7:8-13
+literal(0) @ 8:14-15
+numberLiteral(0) @ 8:14-15
+memoryWrite(0) @ 8:14-15
+write([i], 0) @ 8:14-15
+memoryAccess(0) @ 8:17-18
+read(i, 0) @ 8:17-18
+literal(1) @ 8:21-22
+numberLiteral(1) @ 8:21-22
+binaryPre(<, 0, 1) @ 8:17-22
+comparisonBinaryPre(<, 0, 1) @ 8:17-22
+binary(<, 0, 1, true) @ 8:17-22
+comparisonBinary(<, 0, 1, true) @ 8:17-22
+condition(for, true) @ 8:17-22
+forCondition(true) @ 8:17-22
+memoryAccess(0) @ 8:24-25
+read(i, 0) @ 8:24-25
+unaryPre(_ ++, 0) @ 8:24-27
+updateUnaryPre(_ ++, 0) @ 8:24-27
+binaryPre(+, 0, 1) @ 8:24-27
+arithmeticBinaryPre(+, 0, 1) @ 8:24-27
+binary(+, 0, 1, 1) @ 8:24-27
+arithmeticBinary(+, 0, 1, 1) @ 8:24-27
+memoryWrite(1) @ 8:24-25
+write([i], 1) @ 8:24-25
+unary(_ ++, 0, 0) @ 8:24-27
+updateUnary(_ ++, 0, 0) @ 8:24-27
+memoryAccess(1) @ 8:17-18
+read(i, 1) @ 8:17-18
+literal(1) @ 8:21-22
+numberLiteral(1) @ 8:21-22
+binaryPre(<, 1, 1) @ 8:17-22
+comparisonBinaryPre(<, 1, 1) @ 8:17-22
+binary(<, 1, 1, false) @ 8:17-22
+comparisonBinary(<, 1, 1, false) @ 8:17-22
+condition(for, false) @ 8:17-22
+forCondition(false) @ 8:17-22
+literal(1) @ 9:9-10
+numberLiteral(1) @ 9:9-10
+memoryWrite(1) @ 9:9-10
+write([z], 1) @ 9:9-10
+memoryAccess(1) @ 9:19-20
+read(z, 1) @ 9:19-20
+literal(1) @ 9:29-30
+numberLiteral(1) @ 9:29-30
+binaryPre(===, 1, 1) @ 9:29-30
+comparisonBinaryPre(===, 1, 1) @ 9:29-30
+binary(===, 1, 1, true) @ 9:29-30
+comparisonBinary(===, 1, 1, true) @ 9:29-30
+condition(switch, true) @ 9:29-30
+switchCondition(true) @ 9:29-30

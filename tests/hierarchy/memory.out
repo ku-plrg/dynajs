@@ -1,0 +1,26 @@
+literal(1) @ 1:9-10
+numberLiteral(1) @ 1:9-10
+memoryWrite(1) @ 1:9-10
+write([a], 1) @ 1:9-10
+memoryAccess(1) @ 2:1-2
+read(a, 1) @ 2:1-2
+literal(2) @ 3:5-6
+numberLiteral(2) @ 3:5-6
+memoryWrite(2) @ 3:5-6
+write([a], 2) @ 3:5-6
+literal(3) @ 4:14-15
+numberLiteral(3) @ 4:14-15
+literal(<object>) @ 4:9-17
+objectLiteral(<object>) @ 4:9-17
+memoryWrite(<object>) @ 4:9-17
+write([o], <object>) @ 4:9-17
+memoryAccess(<object>) @ 5:1-2
+read(o, <object>) @ 5:1-2
+memoryAccess(3) @ 5:1-4
+getField(<object>, "p", 3) @ 5:1-4
+memoryAccess(<object>) @ 6:1-2
+read(o, <object>) @ 6:1-2
+literal(4) @ 6:7-8
+numberLiteral(4) @ 6:7-8
+memoryWrite(4) @ 6:1-4
+putField(<object>, "q", 4) @ 6:1-4

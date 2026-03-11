@@ -128,6 +128,18 @@ type Analysis = {
     operand: any,
     result: any
   ) => { result: any } | void;
+  arithmeticUnaryPre?: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean } | void;
+  arithmeticUnary?: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
+  logicalUnaryPre?: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean } | void;
+  logicalUnary?: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
+  bitwiseUnaryPre?: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean } | void;
+  bitwiseUnary?: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
+  typeofUnaryPre?: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean } | void;
+  typeofUnary?: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
+  voidUnaryPre?: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean } | void;
+  voidUnary?: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
+  updateUnaryPre?: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean } | void;
+  updateUnary?: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
   binaryPre?: (
     id: number,
     op: string,
@@ -141,11 +153,59 @@ type Analysis = {
     right: any,
     result: any
   ) => { result: any } | void;
+  arithmeticBinaryPre?: (
+    id: number,
+    op: string,
+    left: any,
+    right: any
+  ) => { op: string, left: any, right: any, skip: boolean } | void;
+  arithmeticBinary?: (
+    id: number,
+    op: string,
+    left: any,
+    right: any,
+    result: any
+  ) => { result: any } | void;
+  comparisonBinaryPre?: (
+    id: number,
+    op: string,
+    left: any,
+    right: any
+  ) => { op: string, left: any, right: any, skip: boolean } | void;
+  comparisonBinary?: (
+    id: number,
+    op: string,
+    left: any,
+    right: any,
+    result: any
+  ) => { result: any } | void;
+  bitwiseBinaryPre?: (
+    id: number,
+    op: string,
+    left: any,
+    right: any
+  ) => { op: string, left: any, right: any, skip: boolean } | void;
+  bitwiseBinary?: (
+    id: number,
+    op: string,
+    left: any,
+    right: any,
+    result: any
+  ) => { result: any } | void;
   condition?: (
     id: number,
     op: string,
     value: any
   ) => { result: any } | void;
+  ifCondition?: (id: number, value: any) => { result: any } | void;
+  whileCondition?: (id: number, value: any) => { result: any } | void;
+  forCondition?: (id: number, value: any) => { result: any } | void;
+  ternaryCondition?: (id: number, value: any) => { result: any } | void;
+  logicalAnd?: (id: number, value: any) => { result: any } | void;
+  logicalOr?: (id: number, value: any) => { result: any } | void;
+  nullishCoalescing?: (id: number, value: any) => { result: any } | void;
+  optionalChain?: (id: number, value: any) => { result: any } | void;
+  switchCondition?: (id: number, value: any) => { result: any } | void;
   declare?: (
     id: number,
     name: string,
@@ -154,11 +214,13 @@ type Analysis = {
     value: any,
     isSpread: boolean
   ) => void;
+  memoryAccess?: (id: number, value: any) => { result: any } | void;
   read?: (
     id: number,
     name: string,
     value: any
   ) => { result: any } | void;
+  memoryWrite?: (id: number, value: any) => { result: any } | void;
   write?: (
     id: number,
     names: string[],
@@ -168,6 +230,15 @@ type Analysis = {
     id: number,
     value: any
   ) => { result: any } | void;
+  numberLiteral?: (id: number, value: any) => { result: any } | void;
+  bigintLiteral?: (id: number, value: any) => { result: any } | void;
+  stringLiteral?: (id: number, value: any) => { result: any } | void;
+  booleanLiteral?: (id: number, value: any) => { result: any } | void;
+  nullLiteral?: (id: number, value: any) => { result: any } | void;
+  regexpLiteral?: (id: number, value: any) => { result: any } | void;
+  arrayLiteral?: (id: number, value: any) => { result: any } | void;
+  objectLiteral?: (id: number, value: any) => { result: any } | void;
+  functionLiteral?: (id: number, value: any) => { result: any } | void;
   _throw?: (
     id: number,
     val: any
@@ -439,6 +510,10 @@ function G(id: number, base: any, prop: any, optional: boolean = false): any {
   if (!skip) {
     value = base[prop];
   }
+  // general memoryAccess fires first
+  const generalPost = D$.analysis.memoryAccess?.(id, value);
+  if (generalPost) value = generalPost.result;
+  // specific getField fires second and wins
   const post = D$.analysis.getField?.(id, base, prop, value);
   if (post) {
     value = post.result;
@@ -459,6 +534,10 @@ function P(id: number, base: any, prop: any, value: any): any {
   if (!skip) {
     base[prop] = value;
   }
+  // general memoryWrite fires first
+  const generalPost = D$.analysis.memoryWrite?.(id, value);
+  if (generalPost) value = generalPost.result;
+  // specific putField fires second and wins
   const post = D$.analysis.putField?.(id, base, prop, value);
   if (post) {
     value = post.result;
@@ -495,11 +574,19 @@ function De(id: number, base: any, prop: any, optional: boolean = false): any {
 function U(id: number, op: string, operand: any): any {
   let value;
   let skip = false;
+  // general pre fires first
   const pre = D$.analysis.unaryPre?.(id, op, true, operand);
   if (pre) {
     op = pre.op;
     operand = pre.operand;
-    skip = pre.skip
+    skip = pre.skip;
+  }
+  // specific pre fires second and wins
+  const specificPre = fireSpecificUnaryPre(id, op, true, operand);
+  if (specificPre) {
+    op = specificPre.op;
+    operand = specificPre.operand;
+    skip = specificPre.skip;
   }
   const f = UNARY_OPS[op];
   if (!f) {
@@ -508,9 +595,15 @@ function U(id: number, op: string, operand: any): any {
   if (!skip) {
     value = f(operand)
   }
+  // general post fires first
   const post = D$.analysis.unary?.(id, op, true, operand, value);
   if (post) {
     value = post.result;
+  }
+  // specific post fires second and wins
+  const specificPost = fireSpecificUnary(id, op, true, operand, value);
+  if (specificPost) {
+    value = specificPost.result;
   }
   return value;
 }
@@ -523,16 +616,66 @@ const UNARY_OPS: { [op: string]: (a: any) => any } = {
   "void": (a: any) => void a,
 }
 
+// helpers to fire specific binary pre/post callbacks based on op
+function fireSpecificBinaryPre(id: number, op: string, left: any, right: any): { op: string, left: any, right: any, skip: boolean } | undefined {
+  let cb: keyof Analysis | undefined;
+  if (ARITHMETIC_BINARY_OPS.has(op)) cb = 'arithmeticBinaryPre';
+  else if (COMPARISON_BINARY_OPS.has(op)) cb = 'comparisonBinaryPre';
+  else if (BITWISE_BINARY_OPS.has(op)) cb = 'bitwiseBinaryPre';
+  if (!cb) return undefined;
+  return (D$.analysis[cb] as any)?.(id, op, left, right);
+}
+function fireSpecificBinary(id: number, op: string, left: any, right: any, value: any): { result: any } | undefined {
+  let cb: keyof Analysis | undefined;
+  if (ARITHMETIC_BINARY_OPS.has(op)) cb = 'arithmeticBinary';
+  else if (COMPARISON_BINARY_OPS.has(op)) cb = 'comparisonBinary';
+  else if (BITWISE_BINARY_OPS.has(op)) cb = 'bitwiseBinary';
+  if (!cb) return undefined;
+  return (D$.analysis[cb] as any)?.(id, op, left, right, value);
+}
+// helpers to fire specific unary pre/post callbacks based on op
+function fireSpecificUnaryPre(id: number, op: string, prefix: boolean, operand: any): { op: string, operand: any, skip: boolean } | undefined {
+  let cb: keyof Analysis | undefined;
+  if (ARITHMETIC_UNARY_OPS.has(op)) cb = 'arithmeticUnaryPre';
+  else if (op === '!') cb = 'logicalUnaryPre';
+  else if (op === '~') cb = 'bitwiseUnaryPre';
+  else if (op === 'typeof') cb = 'typeofUnaryPre';
+  else if (op === 'void') cb = 'voidUnaryPre';
+  else if (UPDATE_UNARY_OPS.has(op)) cb = 'updateUnaryPre';
+  if (!cb) return undefined;
+  return (D$.analysis[cb] as any)?.(id, op, prefix, operand);
+}
+function fireSpecificUnary(id: number, op: string, prefix: boolean, operand: any, value: any): { result: any } | undefined {
+  let cb: keyof Analysis | undefined;
+  if (ARITHMETIC_UNARY_OPS.has(op)) cb = 'arithmeticUnary';
+  else if (op === '!') cb = 'logicalUnary';
+  else if (op === '~') cb = 'bitwiseUnary';
+  else if (op === 'typeof') cb = 'typeofUnary';
+  else if (op === 'void') cb = 'voidUnary';
+  else if (UPDATE_UNARY_OPS.has(op)) cb = 'updateUnary';
+  if (!cb) return undefined;
+  return (D$.analysis[cb] as any)?.(id, op, prefix, operand, value);
+}
+
 // hook for the end of an expression
 function B(id: number, op: string, left: any, right: any): any {
   let value;
   let skip = false;
+  // general pre fires first
   const pre = D$.analysis.binaryPre?.(id, op, left, right);
   if (pre) {
     op = pre.op;
     left = pre.left;
     right = pre.right;
     skip = pre.skip;
+  }
+  // specific pre fires second and wins
+  const specificPre = fireSpecificBinaryPre(id, op, left, right);
+  if (specificPre) {
+    op = specificPre.op;
+    left = specificPre.left;
+    right = specificPre.right;
+    skip = specificPre.skip;
   }
   const f = BINARY_OPS[op];
   if (!f) {
@@ -541,8 +684,12 @@ function B(id: number, op: string, left: any, right: any): any {
   if (!skip) {
     value = f(left, right)
   }
+  // general post fires first
   const post = D$.analysis.binary?.(id, op, left, right, value);
   if (post) value = post.result;
+  // specific post fires second and wins
+  const specificPost = fireSpecificBinary(id, op, left, right, value);
+  if (specificPost) value = specificPost.result;
   return value;
 }
 const BINARY_OPS: { [op: string]: (a: any, b: any) => any } = {
@@ -569,28 +716,50 @@ const BINARY_OPS: { [op: string]: (a: any, b: any) => any } = {
   "instanceof": (a: any, b: any) => a instanceof b,
   "**": (a: any, b: any) => a ** b,
 }
+const ARITHMETIC_BINARY_OPS = new Set(['+', '-', '*', '/', '%', '**']);
+const COMPARISON_BINARY_OPS = new Set(['==', '!=', '===', '!==', '<', '<=', '>', '>=', 'in', 'instanceof']);
+const BITWISE_BINARY_OPS    = new Set(['&', '|', '^', '<<', '>>', '>>>']);
+const ARITHMETIC_UNARY_OPS  = new Set(['+', '-']);
+const UPDATE_UNARY_OPS      = new Set(['++', '--']);
+const CONDITION_CB: Record<string, keyof Analysis> = {
+  'if': 'ifCondition', 'while': 'whileCondition', 'do-while': 'whileCondition',
+  'for': 'forCondition', '?': 'ternaryCondition',
+  '&&': 'logicalAnd', '||': 'logicalOr', '??': 'nullishCoalescing',
+  '?.': 'optionalChain', 'switch': 'switchCondition',
+};
 
 // hook for update operations
 function Up(id: number, binaryId: number, op: string, prefix: boolean, argument: any, write: (x: any) => any): any {
   D$.analysis.unaryPre?.(id, op, prefix, argument);
+  fireSpecificUnaryPre(id, op, prefix, argument);
   const oldValue = -(-argument);
   const binaryOp = op === '++' ? '+' : '-';
   const right = typeof oldValue == 'bigint' ? 1n : 1;
   D$.analysis.binaryPre?.(binaryId, binaryOp, oldValue, right);
+  fireSpecificBinaryPre(binaryId, binaryOp, oldValue, right);
   // @ts-ignore
   let newValue = op === '++' ? oldValue + right : oldValue - right;
   D$.analysis.binary?.(binaryId, binaryOp, oldValue, right, newValue);
+  fireSpecificBinary(binaryId, binaryOp, oldValue, right, newValue);
   write(newValue);
   const result = prefix ? newValue : oldValue;
   D$.analysis.unary?.(id, op, prefix, argument, result);
+  fireSpecificUnary(id, op, prefix, argument, result);
   return result;
 }
 
 // hook for condition expressions
 function C(id: number, op: string, value: any): any {
+  // general condition fires first
   const post = D$.analysis.condition?.(id, op, value);
   if (post) {
     value = post.result;
+  }
+  // specific condition callback fires second and wins
+  const specificKey = CONDITION_CB[op];
+  if (specificKey) {
+    const specificPost = (D$.analysis[specificKey] as any)?.(id, value);
+    if (specificPost) value = specificPost.result;
   }
   return value;
 }
@@ -614,6 +783,10 @@ function D(id: number, name: string, kind: VarKind, isSpread: boolean, value?: a
 
 // hook for variable reads
 function R(id: number, name: string, value: any): any {
+  // general memoryAccess fires first
+  const generalPost = D$.analysis.memoryAccess?.(id, value);
+  if (generalPost) value = generalPost.result;
+  // specific read fires second and wins
   const post = D$.analysis.read?.(id, name, value);
   if (post) {
     value = post.result;
@@ -623,6 +796,10 @@ function R(id: number, name: string, value: any): any {
 
 // hook for variable writes
 function W(id: number, names: string[], value: any): any {
+  // general memoryWrite fires first
+  const generalPost = D$.analysis.memoryWrite?.(id, value);
+  if (generalPost) value = generalPost.result;
+  // specific write fires second and wins
   const post = D$.analysis.write?.(id, names, value);
   if (post) {
     value = post.result;
@@ -632,9 +809,25 @@ function W(id: number, names: string[], value: any): any {
 
 // hook for literals
 function L(id: number, value: any): any {
+  // general fires first
   let post = D$.analysis.literal?.(id, value);
   if (post) {
     value = post.result;
+  }
+  // type-detect specific callback, fires second and wins
+  let specificCb: keyof Analysis | undefined;
+  if (typeof value === 'bigint') specificCb = 'bigintLiteral';
+  else if (typeof value === 'boolean') specificCb = 'booleanLiteral';
+  else if (value === null) specificCb = 'nullLiteral';
+  else if (value instanceof RegExp) specificCb = 'regexpLiteral';
+  else if (Array.isArray(value)) specificCb = 'arrayLiteral';
+  else if (typeof value === 'function') specificCb = 'functionLiteral';
+  else if (typeof value === 'string') specificCb = 'stringLiteral';
+  else if (typeof value === 'number') specificCb = 'numberLiteral';
+  else if (typeof value === 'object') specificCb = 'objectLiteral';
+  if (specificCb) {
+    const specificPost = (D$.analysis[specificCb] as any)?.(id, value);
+    if (specificPost) value = specificPost.result;
   }
   return value;
 }

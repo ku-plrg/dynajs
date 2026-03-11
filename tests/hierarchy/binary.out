@@ -1,0 +1,24 @@
+literal(1) @ 1:1-2
+numberLiteral(1) @ 1:1-2
+literal(2) @ 1:5-6
+numberLiteral(2) @ 1:5-6
+binaryPre(+, 1, 2) @ 1:1-6
+arithmeticBinaryPre(+, 1, 2) @ 1:1-6
+binary(+, 1, 2, 3) @ 1:1-6
+arithmeticBinary(+, 1, 2, 3) @ 1:1-6
+literal(3) @ 2:1-2
+numberLiteral(3) @ 2:1-2
+literal(3) @ 2:6-7
+numberLiteral(3) @ 2:6-7
+binaryPre(==, 3, 3) @ 2:1-7
+comparisonBinaryPre(==, 3, 3) @ 2:1-7
+binary(==, 3, 3, true) @ 2:1-7
+comparisonBinary(==, 3, 3, true) @ 2:1-7
+literal(5) @ 3:1-2
+numberLiteral(5) @ 3:1-2
+literal(3) @ 3:5-6
+numberLiteral(3) @ 3:5-6
+binaryPre(&, 5, 3) @ 3:1-6
+bitwiseBinaryPre(&, 5, 3) @ 3:1-6
+binary(&, 5, 3, 1) @ 3:1-6
+bitwiseBinary(&, 5, 3, 1) @ 3:1-6
