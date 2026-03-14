@@ -329,6 +329,7 @@ function logScriptExit(state: State, program: Node): void {
 // logging a function call
 function logCall(state: State, callee: Node, isConstructor: boolean, callOptional: boolean): void {
   if (!state.isEnabled.F) {
+    if (isConstructor) state.write('new ');
     state.walk(callee);
     return;
   }
