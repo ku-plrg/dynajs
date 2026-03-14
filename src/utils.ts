@@ -203,16 +203,18 @@ export class Range {
 export class StringBuilder {
   indent: string;
   result: string;
+  useResult: boolean;
   depth: number;
-  constructor(indnet: string = "  ") {
-    this.indent = indnet;
+  constructor(useResult: boolean = true, indent: string = "  ") {
+    this.indent = indent;
     this.result = "";
+    this.useResult = useResult;
     this.depth = 0;
   }
   put = (str: string): string => {
     const line = this.indent.repeat(this.depth) + str
     // NOTE this might cause error if string is too long (analyzing large code)
-    this.result += line + '\n';
+    if (this.useResult) { this.result += line + '\n'; }
     return line;
   }
   indentIn = (): void => {
