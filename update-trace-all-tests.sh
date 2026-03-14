@@ -1,6 +1,6 @@
 #!/bin/sh
-# Regenerate .out files for all tests in tests/basic/
-# Usage: ./update-tests.sh [pattern]
+# Regenerate .out files for all tests in tests/regression-trace/trace-all/
+# Usage: ./update-trace-all-tests.sh [pattern]
 #   pattern: optional glob/substring to filter test names (e.g. "arrow" or "function-1")
 
 set -e
@@ -10,12 +10,12 @@ npm run build
 PATTERN="${1:-}"
 UPDATED=0
 FAILED=0
+TMP_FILE="$(mktemp)"
+trap 'rm -f "$TMP_FILE"' EXIT
 
-for js_file in tests/basic/**/*.js tests/basic/*.js; do
-    [ -f "$js_file" ] || continue
-    # skip instrumented files
-    case "$js_file" in *__dynajs__*) continue ;; esac
+find tests/regression-trace/trace-all -name '*.js' ! -name '*__dynajs__.js' | sort > "$TMP_FILE"
 
+while IFS= read -r js_file; do
     out_file="${js_file%.js}.out"
 
     # apply optional filter
@@ -23,7 +23,7 @@ for js_file in tests/basic/**/*.js tests/basic/*.js; do
         case "$js_file" in *"$PATTERN"*) ;; *) continue ;; esac
     fi
 
-    if output=$(./dynajs analyze --full -a samples/TraceAll.js "$js_file" 2>/dev/null); then
+    if output=$(node --require ./tests/harness.js ./dynajs analyze --partial -a samples/TraceAll.js "$js_file" 2>/dev/null); then
         printf '%s\n' "$output" > "$out_file"
         echo "  updated: $out_file"
         UPDATED=$((UPDATED + 1))
@@ -31,7 +31,7 @@ for js_file in tests/basic/**/*.js tests/basic/*.js; do
         echo "  FAILED:  $js_file" >&2
         FAILED=$((FAILED + 1))
     fi
-done
+done < "$TMP_FILE"
 
 echo ""
 echo "Done. Updated: $UPDATED, Failed: $FAILED"
