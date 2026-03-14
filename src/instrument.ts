@@ -678,7 +678,8 @@ function logUnaryOp(state: State, expr: UnaryExpression): void {
 // logging a binary operation
 function logBinaryOp(state: State, expr: BinaryExpression): void {
   const { left, right, operator } = expr;
-  if (!state.isEnabled.B) {
+  const enabled = state.isEnabled.B;
+  if (!enabled) {
     state.write('(');
     state.walk(left);
     state.write(` ${operator} `);
@@ -1249,6 +1250,8 @@ const visitors: Visitors = {
   },
   AssignmentExpression: (node, state) => {
     const { left, right, operator } = node;
+    const enabled = true // set to true for now; additional parenthesis is needed
+    if (enabled) state.write('(');
     switch (operator) {
       case '=': {
         logWrite(state, left, right, () => state.walk(right));
@@ -1261,6 +1264,7 @@ const visitors: Visitors = {
         state.walk(right);
       }
     }
+    if (enabled) state.write(')');
   },
   LogicalExpression: (node, state) => {
     const { left, right, operator } = node;
