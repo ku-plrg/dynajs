@@ -1,7 +1,6 @@
 (function (D$) {
 
-  // TODO: temporal fix, revert later
-  var builder = new D$.utils.StringBuilder(false);
+  var builder = new D$.utils.StringBuilder(true);
   function put(str) { console.log(builder.put(str)); }
   var indentIn = builder.indentIn;
   var indentOut = builder.indentOut;
