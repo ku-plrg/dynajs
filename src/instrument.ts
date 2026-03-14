@@ -951,7 +951,14 @@ const visitors: Visitors = {
   },
   ExpressionStatement: (node, state) => {
     const { expression } = node;
+    // handle IIFE statements case of block function
+    const isDisabled = true // use true for now, cause additional parentheses doesn't cause much issue
+    const isIIFEBlockSyntax = expression.type === 'CallExpression' &&
+      (expression.callee.type === 'FunctionExpression' || expression.callee.type === 'ClassExpression');
+    const keepParens = isDisabled && isIIFEBlockSyntax;
+    if (keepParens) state.write('(');
     logExpression(state, expression);
+    if (keepParens) state.write(')');
     state.write(';');
   },
   BlockStatement: (node, state) => {
@@ -1277,7 +1284,12 @@ const visitors: Visitors = {
   },
   CallExpression: (node, state) => {
     const { callee, arguments: args, optional } = node;
+    // handle IIFE of arrow
+    const isDisabled = !state.isEnabled.F;
+    const keepParens = isDisabled && (callee.type === 'ArrowFunctionExpression');
+    if (keepParens) state.write('(');
     logCall(state, callee, false, optional);
+    if (keepParens) state.write(')');
     state.write('(');
     state.walkArray(args);
     state.write(')');
