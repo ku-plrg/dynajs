@@ -16,7 +16,7 @@ def dynajs_path():
 
 @pytest.fixture(scope="session")
 def harness_path():
-    path = pathlib.Path("./tests/exit/harness")
+    path = pathlib.Path("./tests/harness.js")
     if not path.exists():
         pytest.skip(f"{path} not found")
     resolved = path.resolve()

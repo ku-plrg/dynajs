@@ -3,3 +3,7 @@ globalThis.assert = function assert(bool = true, msg = '') {
     throw Error(`Assertion Failed: ${msg}`)
   }
 };
+
+globalThis.print = function print(...args) {
+  console.log(...args);
+};
