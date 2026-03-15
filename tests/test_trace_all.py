@@ -6,7 +6,7 @@ import pytest
 
 TEST_DIR = pathlib.Path("tests/regression-trace/trace-all")
 ANALYSIS = "samples/TraceAll.js"
-EXPECTED_EXIT_CODES_PATH = pathlib.Path("tests/expected_exit_codes.json")
+EXPECTED_EXIT_CODES_PATH = pathlib.Path("tests/expected_exit_codes")
 EXPECTED_EXIT_CODES = {
     pathlib.Path(path): code
     for path, code in json.loads(EXPECTED_EXIT_CODES_PATH.read_text()).items()
