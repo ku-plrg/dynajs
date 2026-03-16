@@ -1460,6 +1460,8 @@ const visitors: Visitors = {
         state.write('constructor');
     } else {
       if (_static) state.write('static ');
+      if (value.async) state.write('async ');
+      if (value.generator) state.write('*');
       if (kind === 'get') state.write('get ');
       if (kind === 'set') state.write('set ');
       if (computed) {
@@ -1552,6 +1554,7 @@ const visitors: Visitors = {
         state.write(' = ');
         state.walk(value);
       }
+      state.write(';');
       return;
     }
 
@@ -1570,7 +1573,7 @@ const visitors: Visitors = {
     } else {
       state.write('undefined');
     }
-    state.write(')');
+    state.write(');');
   },
   PrivateIdentifier: (node, state) => {
     state.write('#' + node.name);
