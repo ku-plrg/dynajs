@@ -98,6 +98,8 @@ export class State {
   originalPath: string;
   detail: boolean;
   isEnabled: FeatureTagCheck;
+  inDerivedClass: boolean;
+  isDerivedConstructor: boolean;
 
   constructor(options: Options = {}) {
     this.output = '';
@@ -115,6 +117,8 @@ export class State {
     this.originalPath = options.originalPath ?? '';
     this.detail = options.detail ?? false;
     this.isEnabled = Object.freeze(options.isEnabled ?? { ...FEATURE_CHECK_ALL_TRUE });
+    this.inDerivedClass = false;
+    this.isDerivedConstructor = false;
   }
 
   // execute body with isLHS = true
@@ -335,12 +339,23 @@ function logCall(state: State, callee: Node, isConstructor: boolean, callOptiona
   }
   if (callee.type === 'MemberExpression') {
     const { object, property, computed, optional } = callee as MemberExpression;
-    state.write(`${LOG.METHOD_CALL}(${newId(callee)}, `);
     if (object.type === 'Super') {
-      todo('MemberExpression: super');
-    } else {
-      state.walk(object);
+      // TODO: super hooking
+      if (isConstructor) state.write('new ');
+      state.write('super');
+      if (computed) {
+        state.write(optional ? '?.[' : '[');
+        state.walk(property);
+        state.write(']');
+      } else if (property.type === 'Identifier') {
+        state.write(optional ? `?.${property.name}` : `.${property.name}`);
+      } else if (property.type === 'PrivateIdentifier') {
+        state.write(`#${(property as any).name}`);
+      }
+      return;
     }
+    state.write(`${LOG.METHOD_CALL}(${newId(callee)}, `);
+    state.walk(object);
     state.write(', ');
     if (computed) {
       state.walk(property);
@@ -353,7 +368,8 @@ function logCall(state: State, callee: Node, isConstructor: boolean, callOptiona
     }
     state.write(`, ${isConstructor}, ${optional}, ${callOptional})`);
   } else if (callee.type === 'Super') {
-    todo('Super call');
+    // TODO: super hooking
+    state.write('super');
   } else {
     state.write(`${LOG.FUNCTION_CALL}(${newId(callee)}, `);
     state.walk(callee);
@@ -369,12 +385,22 @@ function logTaggedCall(state: State, tag: Node): void {
   }
   if (tag.type === 'MemberExpression') {
     const { object, property, computed } = tag as MemberExpression;
-    state.write(`${LOG.TAGGED_METHOD}(${newId(tag)}, `);
     if (object.type === 'Super') {
-      todo('TaggedTemplate MemberExpression: super');
-    } else {
-      state.walk(object);
+      // TODO: super hooking
+      state.write('super');
+      if (computed) {
+        state.write('[');
+        state.walk(property);
+        state.write(']');
+      } else if (property.type === 'Identifier') {
+        state.write(`.${property.name}`);
+      } else if (property.type === 'PrivateIdentifier') {
+        state.write(`#${(property as any).name}`);
+      }
+      return;
     }
+    state.write(`${LOG.TAGGED_METHOD}(${newId(tag)}, `);
+    state.walk(object);
     state.write(', ');
     if (computed) {
       state.walk(property);
@@ -387,7 +413,8 @@ function logTaggedCall(state: State, tag: Node): void {
     }
     state.write(')');
   } else if (tag.type === 'Super') {
-    todo('TaggedTemplate: super');
+    // TODO: super hooking
+    state.write('super');
   } else {
     state.write(`${LOG.TAGGED_FUNC}(${newId(tag)}, `);
     state.walk(tag);
@@ -406,7 +433,10 @@ function logClassDeclare(state: State, node: Node, isExpr: boolean): void {
     state.write(' ');
   }
   state.write('{');
+  const prevInDerivedClass = state.inDerivedClass;
+  state.inDerivedClass = !!superClass;
   state.wrap(() => state.walk(body));
+  state.inDerivedClass = prevInDerivedClass;
   state.writeln('}');
 }
 
@@ -459,8 +489,10 @@ function logFuncEnter(state: State, func: Function): void {
   if (!state.isEnabled.Fe) return;
   const { id } = func;
   // TODO: temporalily use `null` but we need to discuss how to handle this
-  const name = id ? id.name : 'null'
-  state.writeln(`${LOG.FUNC_ENTER}(${newId(func)}, ${name}, this, arguments);`);
+  const name = id ? id.name : 'null';
+  // TODO: for derived class constructors, `this` is not initialized at the beginning, so use `undefined` instead
+  const thisArg = state.isDerivedConstructor ? 'undefined' : 'this';
+  state.writeln(`${LOG.FUNC_ENTER}(${newId(func)}, ${name}, ${thisArg}, arguments);`);
 }
 
 // logging function exit
@@ -537,7 +569,8 @@ function logGetField(state: State, expr: Expression): void {
   const { object, property, computed, optional } = expr as MemberExpression;
   if (!state.isEnabled.G) {
     if (object.type === 'Super') {
-      todo('MemberExpression: super');
+      // TODO: super hooking
+      state.write('super');
     } else {
       state.walk(object);
     }
@@ -554,12 +587,24 @@ function logGetField(state: State, expr: Expression): void {
     }
     return;
   }
-  state.write(`${LOG.GET_FIELD}(${newId(expr)}, `);
   if (object.type === 'Super') {
-    todo('MemberExpression: super');
-  } else {
-    state.walk(object);
+    // TODO: super hooking
+    state.write('super');
+    if (property.type === 'PrivateIdentifier') {
+      todo('MemberExpression: private identifier');
+    } else if (computed) {
+      state.write(optional ? '?.[' : '[');
+      state.walk(property);
+      state.write(']');
+    } else if (property.type === 'Identifier') {
+      state.write(optional ? `?.${property.name}` : `.${property.name}`);
+    } else {
+      warn(`MemberExpression: unexpected property type${getLocStr(expr)}`);
+    }
+    return;
   }
+  state.write(`${LOG.GET_FIELD}(${newId(expr)}, `);
+  state.walk(object);
   state.write(', ');
   if (property.type === 'PrivateIdentifier') {
     todo('MemberExpression: private identifier');
@@ -579,7 +624,8 @@ function logPutField(state: State, lhs: Node, rhs: Node, body: () => void): void
   const { object, property, computed } = lhs as MemberExpression;
   if (!state.isEnabled.P) {
     if (object.type === 'Super') {
-      todo('MemberExpression: super');
+      // TODO: super hooking
+      state.write('super');
     } else {
       state.walk(object);
     }
@@ -597,12 +643,25 @@ function logPutField(state: State, lhs: Node, rhs: Node, body: () => void): void
     body();
     return;
   }
-  state.write(`${LOG.PUT_FIELD}(${newId(lhs)}, `);
   if (object.type === 'Super') {
-    todo('MemberExpression: super');
-  } else {
-    state.walk(object);
+    // TODO: super hooking
+    state.write('super');
+    if (computed) {
+      state.write('[');
+      state.walk(property);
+      state.write('] = ');
+    } else if (property.type === 'Identifier') {
+      state.write(`.${property.name} = `);
+    } else if (property.type === 'PrivateIdentifier') {
+      todo('MemberExpression: private identifier');
+    } else {
+      warn(`MemberExpression: unexpected property type${getLocStr(lhs)}`);
+    }
+    body();
+    return;
   }
+  state.write(`${LOG.PUT_FIELD}(${newId(lhs)}, `);
+  state.walk(object);
   state.write(', ');
   if (property.type === 'PrivateIdentifier') {
     todo('MemberExpression: private identifier');
@@ -1308,7 +1367,8 @@ const visitors: Visitors = {
     logForInOfStatement(state, node, false, node.await);
   },
   Super: (node, state) => {
-    todo('Super');
+    // TODO: super hooking
+    state.write('super');
   },
   SpreadElement: (node, state) => {
     state.write('...');
@@ -1410,7 +1470,10 @@ const visitors: Visitors = {
         state.withLHS(() => state.walk(key));
       }
     }
+    const isDerivedConstructor = kind === 'constructor' && state.inDerivedClass;
+    if (isDerivedConstructor) state.isDerivedConstructor = true;
     logFunc(state, value, true);
+    if (isDerivedConstructor) state.isDerivedConstructor = false;
   },
   ClassDeclaration: (node, state) => {
     logClassDeclare(state, node, false);

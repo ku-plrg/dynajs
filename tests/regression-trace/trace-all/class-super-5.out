@@ -1,0 +1,47 @@
+Se() @ 1:1-13:1
+  D(A, <class>, false) @ 1:1-13:1
+  D(B, <class>, false) @ 1:1-13:1
+  D(C, <class>, false) @ 1:1-13:1
+  D(c, <const>, false) @ 1:1-13:1
+  R(A, <function>) @ 5:17-18
+  R(B, <function>) @ 8:17-18
+  R(C, <function>) @ 11:15-16
+  F[pre](<function>, undefined, [], true, false) @ 11:15-16
+  F(<function>, undefined, [], <object>, true, false) @ 11:15-16
+  E(<object>) @ 11:11-18
+  W([c], <object>) @ 11:11-18
+  R(console, <object>) @ 12:1-8
+  G[pre](<object>, "log") @ 12:1-12
+  G(<object>, "log", <function>) @ 12:1-12
+  R(c, <object>) @ 12:13-14
+  G[pre](<object>, "speak") @ 12:13-20
+  G(<object>, "speak", <function>) @ 12:13-20
+  F[pre](<function>, <object>, [], false, true) @ 12:13-20
+  Fe(null, <object>, []) @ 9:8-42
+    D(arguments, <arguments>, <object>, false) @ 9:8-42
+    Fe(null, <object>, []) @ 6:8-42
+      D(arguments, <arguments>, <object>, false) @ 6:8-42
+      Fe(null, <object>, []) @ 3:8-26
+        D(arguments, <arguments>, <object>, false) @ 3:8-26
+        L("A") @ 3:20-23
+        E("A") @ 3:20-23
+        Re("A") @ 3:13-24
+      Fx("A") @ 3:8-26
+      L("B") @ 6:36-39
+      B[pre](+, "A", "B") @ 6:20-39
+      B(+, "A", "B", "AB") @ 6:20-39
+      E("AB") @ 6:20-39
+      Re("AB") @ 6:13-40
+    Fx("AB") @ 6:8-42
+    L("C") @ 9:36-39
+    B[pre](+, "AB", "C") @ 9:20-39
+    B(+, "AB", "C", "ABC") @ 9:20-39
+    E("ABC") @ 9:20-39
+    Re("ABC") @ 9:13-40
+  Fx("ABC") @ 9:8-42
+  F(<function>, <object>, [], "ABC", false, true) @ 12:13-20
+  F[pre](<function>, <object>, ["ABC"], false, true) @ 12:1-12
+ABC
+  F(<function>, <object>, ["ABC"], undefined, false, true) @ 12:1-12
+  E(undefined) @ 12:1-23
+Sx() @ 1:1-13:1

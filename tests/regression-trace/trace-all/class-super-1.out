@@ -1,0 +1,58 @@
+Se() @ 1:1-20:1
+  D(Animal, <class>, false) @ 1:1-20:1
+  D(Dog, <class>, false) @ 1:1-20:1
+  D(d, <const>, false) @ 1:1-20:1
+  R(Animal, <function>) @ 10:19-25
+  R(Dog, <function>) @ 18:15-18
+  L("Rex") @ 18:19-24
+  F[pre](<function>, undefined, ["Rex"], true, false) @ 18:15-18
+  Fe(null, undefined, ["Rex"]) @ 11:14-13:4
+    D(arguments, <arguments>, <object>, false) @ 11:14-13:4
+    D(name, <param>, "Rex", false) @ 11:14-13:4
+    R(name, "Rex") @ 12:11-15
+    Fe(null, <object>, ["Rex"]) @ 3:14-5:4
+      D(arguments, <arguments>, <object>, false) @ 3:14-5:4
+      D(name, <param>, "Rex", false) @ 3:14-5:4
+      R(this, <object>) @ 4:5-9
+      R(name, "Rex") @ 4:17-21
+      P[pre](<object>, "name", "Rex") @ 4:5-14
+      P(<object>, "name", "Rex") @ 4:5-14
+      E("Rex") @ 4:5-21
+    Fx(undefined) @ 3:14-5:4
+    E(<object>) @ 12:5-16
+  Fx(undefined) @ 11:14-13:4
+  F(<function>, undefined, ["Rex"], <object>, true, false) @ 18:15-18
+  E(<object>) @ 18:11-25
+  W([d], <object>) @ 18:11-25
+  R(console, <object>) @ 19:1-8
+  G[pre](<object>, "log") @ 19:1-12
+  G(<object>, "log", <function>) @ 19:1-12
+  R(d, <object>) @ 19:13-14
+  G[pre](<object>, "speak") @ 19:13-20
+  G(<object>, "speak", <function>) @ 19:13-20
+  F[pre](<function>, <object>, [], false, true) @ 19:13-20
+  Fe(null, <object>, []) @ 14:8-16:4
+    D(arguments, <arguments>, <object>, false) @ 14:8-16:4
+    Fe(null, <object>, []) @ 6:8-8:4
+      D(arguments, <arguments>, <object>, false) @ 6:8-8:4
+      R(this, <object>) @ 7:12-16
+      G[pre](<object>, "name") @ 7:12-21
+      G(<object>, "name", "Rex") @ 7:12-21
+      L(" makes a noise.") @ 7:24-41
+      B[pre](+, "Rex", " makes a noise.") @ 7:12-41
+      B(+, "Rex", " makes a noise.", "Rex makes a noise.") @ 7:12-41
+      E("Rex makes a noise.") @ 7:12-41
+      Re("Rex makes a noise.") @ 7:5-42
+    Fx("Rex makes a noise.") @ 6:8-8:4
+    L(" Woof!") @ 15:28-36
+    B[pre](+, "Rex makes a noise.", " Woof!") @ 15:12-36
+    B(+, "Rex makes a noise.", " Woof!", "Rex makes a noise. W...") @ 15:12-36
+    E("Rex makes a noise. W...") @ 15:12-36
+    Re("Rex makes a noise. W...") @ 15:5-37
+  Fx("Rex makes a noise. W...") @ 14:8-16:4
+  F(<function>, <object>, [], "Rex makes a noise. W...", false, true) @ 19:13-20
+  F[pre](<function>, <object>, ["Rex makes a noise. W..."], false, true) @ 19:1-12
+Rex makes a noise. Woof!
+  F(<function>, <object>, ["Rex makes a noise. W..."], undefined, false, true) @ 19:1-12
+  E(undefined) @ 19:1-23
+Sx() @ 1:1-20:1

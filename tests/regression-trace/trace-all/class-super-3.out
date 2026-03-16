@@ -1,0 +1,37 @@
+Se() @ 1:1-10:1
+  D(A, <class>, false) @ 1:1-10:1
+  D(B, <class>, false) @ 1:1-10:1
+  D(b, <const>, false) @ 1:1-10:1
+  R(A, <function>) @ 5:17-18
+  R(B, <function>) @ 8:15-16
+  F[pre](<function>, undefined, [], true, false) @ 8:15-16
+  F(<function>, undefined, [], <object>, true, false) @ 8:15-16
+  E(<object>) @ 8:11-18
+  W([b], <object>) @ 8:11-18
+  R(console, <object>) @ 9:1-8
+  G[pre](<object>, "log") @ 9:1-12
+  G(<object>, "log", <function>) @ 9:1-12
+  R(b, <object>) @ 9:13-14
+  G[pre](<object>, "describe") @ 9:13-23
+  G(<object>, "describe", <function>) @ 9:13-23
+  F[pre](<function>, <object>, [], false, true) @ 9:13-23
+  Fe(null, <object>, []) @ 6:11-47
+    D(arguments, <arguments>, <object>, false) @ 6:11-47
+    L("I am a ") @ 6:23-32
+    Fe(null, <object>, []) @ 3:10-33
+      D(arguments, <arguments>, <object>, false) @ 3:10-33
+      L("animal") @ 3:22-30
+      E("animal") @ 3:22-30
+      Re("animal") @ 3:15-31
+    Fx("animal") @ 3:10-33
+    B[pre](+, "I am a ", "animal") @ 6:23-44
+    B(+, "I am a ", "animal", "I am a animal") @ 6:23-44
+    E("I am a animal") @ 6:23-44
+    Re("I am a animal") @ 6:16-45
+  Fx("I am a animal") @ 6:11-47
+  F(<function>, <object>, [], "I am a animal", false, true) @ 9:13-23
+  F[pre](<function>, <object>, ["I am a animal"], false, true) @ 9:1-12
+I am a animal
+  F(<function>, <object>, ["I am a animal"], undefined, false, true) @ 9:1-12
+  E(undefined) @ 9:1-26
+Sx() @ 1:1-10:1

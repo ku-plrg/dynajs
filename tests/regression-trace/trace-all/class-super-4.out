@@ -1,0 +1,51 @@
+Se() @ 1:1-12:1
+  D(A, <class>, false) @ 1:1-12:1
+  D(B, <class>, false) @ 1:1-12:1
+  D(b, <const>, false) @ 1:1-12:1
+  R(A, <function>) @ 6:17-18
+  R(B, <function>) @ 9:15-16
+  F[pre](<function>, undefined, [], true, false) @ 9:15-16
+  F(<function>, undefined, [], <object>, true, false) @ 9:15-16
+  E(<object>) @ 9:11-18
+  W([b], <object>) @ 9:11-18
+  R(b, <object>) @ 10:1-2
+  G[pre](<object>, "setLabel") @ 10:1-11
+  G(<object>, "setLabel", <function>) @ 10:1-11
+  L("dog") @ 10:12-17
+  F[pre](<function>, <object>, ["dog"], false, true) @ 10:1-11
+  Fe(null, <object>, ["dog"]) @ 7:11-35
+    D(arguments, <arguments>, <object>, false) @ 7:11-35
+    D(v, <param>, "dog", false) @ 7:11-35
+    R(v, "dog") @ 7:31-32
+    Fe(null, <object>, ["dog"]) @ 3:12-36
+      D(arguments, <arguments>, <object>, false) @ 3:12-36
+      D(v, <param>, "dog", false) @ 3:12-36
+      R(this, <object>) @ 3:18-22
+      R(v, "dog") @ 3:32-33
+      P[pre](<object>, "_label", "dog") @ 3:18-29
+      P(<object>, "_label", "dog") @ 3:18-29
+      E("dog") @ 3:18-33
+    Fx(undefined) @ 3:12-36
+    E("dog") @ 7:17-32
+  Fx(undefined) @ 7:11-35
+  F(<function>, <object>, ["dog"], undefined, false, true) @ 10:1-11
+  E(undefined) @ 10:1-18
+  R(console, <object>) @ 11:1-8
+  G[pre](<object>, "log") @ 11:1-12
+  G(<object>, "log", <function>) @ 11:1-12
+  R(b, <object>) @ 11:13-14
+  G[pre](<object>, "label") @ 11:13-20
+  Fe(null, <object>, []) @ 4:12-38
+    D(arguments, <arguments>, <object>, false) @ 4:12-38
+    R(this, <object>) @ 4:24-28
+    G[pre](<object>, "_label") @ 4:24-35
+    G(<object>, "_label", "dog") @ 4:24-35
+    E("dog") @ 4:24-35
+    Re("dog") @ 4:17-36
+  Fx("dog") @ 4:12-38
+  G(<object>, "label", "dog") @ 11:13-20
+  F[pre](<function>, <object>, ["dog"], false, true) @ 11:1-12
+dog
+  F(<function>, <object>, ["dog"], undefined, false, true) @ 11:1-12
+  E(undefined) @ 11:1-21
+Sx() @ 1:1-12:1

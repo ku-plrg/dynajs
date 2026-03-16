@@ -1,0 +1,22 @@
+Se() @ 1:1-5:30
+  D(obj, <var>, undefined, false) @ 1:1-5:30
+  L(1) @ 1:18-19
+  L(<object>) @ 1:11-21
+  E(<object>) @ 1:11-21
+  W([obj], <object>) @ 1:11-21
+  R(obj, <object>) @ 3:8-11
+  C(?., <object>) @ 3:8-16
+  De[pre](<object>, "foo") @ 3:8-16
+  De(<object>, "foo", true) @ 3:8-16
+  E(true) @ 3:1-16
+  R(assert, <function>) @ 5:1-7
+  R(obj, <object>) @ 5:8-11
+  G[pre](<object>, "foo") @ 5:8-15
+  G(<object>, "foo", undefined) @ 5:8-15
+  R(undefined, undefined) @ 5:20-29
+  B[pre](===, undefined, undefined) @ 5:8-29
+  B(===, undefined, undefined, true) @ 5:8-29
+  F[pre](<function>, undefined, [true], false, false) @ 5:1-7
+  F(<function>, undefined, [true], undefined, false, false) @ 5:1-7
+  E(undefined) @ 5:1-30
+Sx() @ 1:1-5:30
