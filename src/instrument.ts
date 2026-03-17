@@ -914,8 +914,10 @@ function logThrow(state: State, arg: Expression): void {
 // logging a yield expression
 function logYield(state: State, node: Node, argument: Node | null | undefined, delegate: boolean): void {
   if (!state.isEnabled.Y) {
-    state.write(delegate ? 'yield*' : 'yield');
-    if (argument) {
+    if (!argument) {
+      state.write('(yield)');
+    } else {
+      state.write(delegate ? 'yield*' : 'yield');
       state.write(' ');
       logExpression(state, argument as Expression);
     }
