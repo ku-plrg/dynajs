@@ -354,6 +354,13 @@ function logCall(state: State, callee: Node, isConstructor: boolean, callOptiona
       }
       return;
     }
+    if (property.type === 'PrivateIdentifier') {
+      // TODO: report private field access — bracket notation cannot reach private slots
+      if (isConstructor) state.write('new ');
+      state.walk(object);
+      state.write(optional ? `?.#${(property as any).name}` : `.#${(property as any).name}`);
+      return;
+    }
     state.write(`${LOG.METHOD_CALL}(${newId(callee)}, `);
     state.walk(object);
     state.write(', ');
@@ -361,8 +368,6 @@ function logCall(state: State, callee: Node, isConstructor: boolean, callOptiona
       state.walk(property);
     } else if (property.type === 'Identifier') {
       state.write(`"${property.name}"`);
-    } else if (property.type === 'PrivateIdentifier') {
-      todo('MemberExpression: private identifier');
     } else {
       warn(`MemberExpression: unexpected property type${getLocStr(callee)}`);
     }
@@ -399,6 +404,12 @@ function logTaggedCall(state: State, tag: Node): void {
       }
       return;
     }
+    if (property.type === 'PrivateIdentifier') {
+      // TODO: report private field access — bracket notation cannot reach private slots
+      state.walk(object);
+      state.write(`.#${(property as any).name}`);
+      return;
+    }
     state.write(`${LOG.TAGGED_METHOD}(${newId(tag)}, `);
     state.walk(object);
     state.write(', ');
@@ -406,8 +417,6 @@ function logTaggedCall(state: State, tag: Node): void {
       state.walk(property);
     } else if (property.type === 'Identifier') {
       state.write(`"${property.name}"`);
-    } else if (property.type === 'PrivateIdentifier') {
-      todo('TaggedTemplate: private identifier');
     } else {
       warn(`TaggedTemplate MemberExpression: unexpected property type${getLocStr(tag)}`);
     }
@@ -581,7 +590,7 @@ function logGetField(state: State, expr: Expression): void {
     } else if (property.type === 'Identifier') {
       state.write(optional ? `?.${property.name}` : `.${property.name}`);
     } else if (property.type === 'PrivateIdentifier') {
-      todo('MemberExpression: private identifier');
+      state.write(optional ? `?.#${(property as any).name}` : `.#${(property as any).name}`);
     } else {
       warn(`MemberExpression: unexpected property type${getLocStr(expr)}`);
     }
@@ -591,7 +600,7 @@ function logGetField(state: State, expr: Expression): void {
     // TODO: super hooking
     state.write('super');
     if (property.type === 'PrivateIdentifier') {
-      todo('MemberExpression: private identifier');
+      state.write(`.#${(property as any).name}`);
     } else if (computed) {
       state.write(optional ? '?.[' : '[');
       state.walk(property);
@@ -603,12 +612,16 @@ function logGetField(state: State, expr: Expression): void {
     }
     return;
   }
+  if (property.type === 'PrivateIdentifier') {
+    // TODO: report private field access — bracket notation cannot reach private slots
+    state.walk(object);
+    state.write(optional ? `?.#${(property as any).name}` : `.#${(property as any).name}`);
+    return;
+  }
   state.write(`${LOG.GET_FIELD}(${newId(expr)}, `);
   state.walk(object);
   state.write(', ');
-  if (property.type === 'PrivateIdentifier') {
-    todo('MemberExpression: private identifier');
-  } else if (computed) {
+  if (computed) {
     state.walk(property);
   } else if (property.type === 'Identifier') {
     state.write(`"${property.name}"`);
@@ -636,7 +649,7 @@ function logPutField(state: State, lhs: Node, rhs: Node, body: () => void): void
     } else if (property.type === 'Identifier') {
       state.write(`.${property.name} = `);
     } else if (property.type === 'PrivateIdentifier') {
-      todo('MemberExpression: private identifier');
+      state.write(`.#${(property as any).name} = `);
     } else {
       warn(`MemberExpression: unexpected property type${getLocStr(lhs)}`);
     }
@@ -653,19 +666,24 @@ function logPutField(state: State, lhs: Node, rhs: Node, body: () => void): void
     } else if (property.type === 'Identifier') {
       state.write(`.${property.name} = `);
     } else if (property.type === 'PrivateIdentifier') {
-      todo('MemberExpression: private identifier');
+      state.write(`.#${(property as any).name} = `);
     } else {
       warn(`MemberExpression: unexpected property type${getLocStr(lhs)}`);
     }
     body();
     return;
   }
+  if (property.type === 'PrivateIdentifier') {
+    // TODO: report private field access — bracket notation cannot reach private slots
+    state.walk(object);
+    state.write(`.#${(property as any).name} = `);
+    body();
+    return;
+  }
   state.write(`${LOG.PUT_FIELD}(${newId(lhs)}, `);
   state.walk(object);
   state.write(', ');
-  if (property.type === 'PrivateIdentifier') {
-    todo('MemberExpression: private identifier');
-  } else if (computed) {
+  if (computed) {
     state.walk(property);
   } else if (property.type === 'Identifier') {
     state.write(`"${property.name}"`);

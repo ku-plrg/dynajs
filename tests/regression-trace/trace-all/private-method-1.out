@@ -1,0 +1,34 @@
+Se() @ 1:1-7:1
+  D(C, <class>, false) @ 1:1-7:1
+  D(c, <var>, undefined, false) @ 1:1-7:1
+  R(C, <function>) @ 5:13-14
+  F[pre](<function>, undefined, [], true, false) @ 5:13-14
+  F(<function>, undefined, [], <object>, true, false) @ 5:13-14
+  E(<object>) @ 5:9-16
+  W([c], <object>) @ 5:9-16
+  R(c, <object>) @ 6:1-2
+  G[pre](<object>, "compute") @ 6:1-10
+  G(<object>, "compute", <function>) @ 6:1-10
+  L(3) @ 6:11-12
+  F[pre](<function>, <object>, [3], false, true) @ 6:1-10
+  Fe(null, <object>, [3]) @ 3:10-41
+    D(arguments, <arguments>, <object>, false) @ 3:10-41
+    D(n, <param>, 3, false) @ 3:10-41
+    R(this, <object>) @ 3:23-27
+    R(n, 3) @ 3:36-37
+    Fe(null, <object>, [3]) @ 2:10-31
+      D(arguments, <arguments>, <object>, false) @ 2:10-31
+      D(n, <param>, 3, false) @ 2:10-31
+      R(n, 3) @ 2:23-24
+      L(2) @ 2:27-28
+      B[pre](*, 3, 2) @ 2:23-28
+      B(*, 3, 2, 6) @ 2:23-28
+      E(6) @ 2:23-28
+      Re(6) @ 2:16-29
+    Fx(6) @ 2:10-31
+    E(6) @ 3:23-38
+    Re(6) @ 3:16-39
+  Fx(6) @ 3:10-41
+  F(<function>, <object>, [3], 6, false, true) @ 6:1-10
+  E(6) @ 6:1-13
+Sx() @ 1:1-7:1
