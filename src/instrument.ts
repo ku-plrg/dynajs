@@ -298,6 +298,7 @@ class Scope {
       }
     },
     FunctionExpression: (node, scope, c) => {},
+    ArrowFunctionExpression: (node, scope, c) => {},
     ClassDeclaration: (node, scope, c) => {
       const { id } = node;
       if (id != null) {
@@ -330,6 +331,7 @@ class Scope {
     SwitchStatement: (node, scope, c) => {},
     FunctionDeclaration: (node, scope, c) => {},
     FunctionExpression: (node, scope, c) => {},
+    ArrowFunctionExpression: (node, scope, c) => {},
     ClassDeclaration: (node, scope, c) => {},
     ClassExpression: (node, scope, c) => {},
   }
