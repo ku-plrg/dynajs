@@ -54,7 +54,7 @@ EXIT_ONLY_CASES = list(discover_exit_only_cases())
     ids=[str(js_file.relative_to(TEST_DIR)) for js_file, _ in OUTPUT_CASES],
 )
 def test_trace_all_output(js_file, out_file, run_dynajs, request):
-    result = run_dynajs(ANALYSIS, [js_file])
+    result = run_dynajs(ANALYSIS, [js_file], mode="partial")
     assert_expected_exit_code(result, js_file)
 
     actual = result.stdout.strip()
@@ -73,5 +73,5 @@ def test_trace_all_output(js_file, out_file, run_dynajs, request):
     ids=[str(js_file.relative_to(TEST_DIR)) for js_file in EXIT_ONLY_CASES],
 )
 def test_trace_all_exit(js_file, run_dynajs):
-    result = run_dynajs(ANALYSIS, [js_file])
+    result = run_dynajs(ANALYSIS, [js_file], mode="partial")
     assert_expected_exit_code(result, js_file)

@@ -49,7 +49,8 @@ def run_plain_node(harness_path):
 
 @pytest.fixture
 def run_dynajs(harness_path, dynajs_path):
-    def _run(analysis, args, **kwargs):
+    def _run(analysis, args, mode="partial", **kwargs):
+        mode_flag = "--full" if mode == "full" else "--partial"
         return subprocess.run(
             [
                 "node",
@@ -57,7 +58,7 @@ def run_dynajs(harness_path, dynajs_path):
                 str(harness_path),
                 str(dynajs_path),
                 "analyze",
-                "--partial",
+                mode_flag,
                 "-a",
                 analysis,
                 *map(str, args),

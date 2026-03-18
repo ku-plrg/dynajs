@@ -1,0 +1,16 @@
+{"type":"declare","name":"f","level":0}
+{"type":"read","name":"f","level":0}
+{"type":"literal","valueType":"number","level":0}
+{"type":"invokeFunPre","f":"f","level":0}
+{"type":"functionEnter","fo":"","level":1}
+{"type":"declare","name":"arguments","level":2}
+{"type":"declare","name":"x","level":2}
+{"type":"declare","name":"y","level":2}
+{"type":"read","name":"x","level":2}
+{"type":"write","name":"y","level":2}
+{"type":"read","name":"x","level":2}
+{"type":"read","name":"y","level":2}
+{"type":"binaryPre","op":"*","level":2}
+{"type":"binary","op":"*","level":3}
+{"type":"functionExit","fo":"todo","level":2}
+{"type":"invokeFun","f":"f","level":1}

@@ -1,0 +1,12 @@
+{"type":"literal","valueType":"number","level":0}
+{"type":"literal","valueType":"number","level":0}
+{"type":"binaryPre","op":"+","level":0}
+{"type":"binary","op":"+","level":1}
+{"type":"literal","valueType":"number","level":0}
+{"type":"literal","valueType":"number","level":0}
+{"type":"binaryPre","op":"==","level":0}
+{"type":"binary","op":"==","level":1}
+{"type":"literal","valueType":"number","level":0}
+{"type":"literal","valueType":"number","level":0}
+{"type":"binaryPre","op":"&","level":0}
+{"type":"binary","op":"&","level":1}

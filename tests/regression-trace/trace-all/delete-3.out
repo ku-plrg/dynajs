@@ -1,0 +1,16 @@
+Se() @ 1:1-3:18
+  D(obj, <var>, undefined, false) @ 1:1-3:18
+  D(name, <var>, undefined, false) @ 1:1-3:18
+  L(1) @ 1:19-20
+  L(<object>) @ 1:11-22
+  E(<object>) @ 1:11-22
+  W([obj], <object>) @ 1:11-22
+  L("foo") @ 2:12-17
+  E("foo") @ 2:12-17
+  W([name], "foo") @ 2:12-17
+  R(obj, <object>) @ 3:8-11
+  R(name, "foo") @ 3:12-16
+  De[pre](<object>, "foo") @ 3:8-17
+  De(<object>, "foo", true) @ 3:8-17
+  E(true) @ 3:1-17
+Sx() @ 1:1-3:18

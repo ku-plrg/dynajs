@@ -1,0 +1,17 @@
+{"type":"declare","name":"a","level":0}
+{"type":"declare","name":"o","level":0}
+{"type":"literal","valueType":"number","level":0}
+{"type":"write","name":"a","level":0}
+{"type":"read","name":"a","level":0}
+{"type":"literal","valueType":"number","level":0}
+{"type":"write","name":"a","level":0}
+{"type":"literal","valueType":"number","level":0}
+{"type":"literal","valueType":"object","level":0}
+{"type":"write","name":"o","level":0}
+{"type":"read","name":"o","level":0}
+{"type":"getFieldPre","prop":"p","level":0}
+{"type":"getField","prop":"p","level":1}
+{"type":"read","name":"o","level":0}
+{"type":"literal","valueType":"number","level":0}
+{"type":"putFieldPre","prop":"q","level":0}
+{"type":"putField","prop":"q","level":1}
