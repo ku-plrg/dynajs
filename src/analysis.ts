@@ -260,7 +260,7 @@ function G(id: number, base: any, prop: any, optional: boolean = false): any {
 }
 
 // hook for property writes (set-field)
-function P(id: number, base: any, prop: any, value: any): any {
+function P(id: number, base: any, prop: any, value: any, strict: boolean = false): any {
   let skip = false;
   const pre = D$.analysis.putFieldPre?.(id, base, prop, value);
   if (pre) {
@@ -270,7 +270,13 @@ function P(id: number, base: any, prop: any, value: any): any {
     skip = pre.skip;
   }
   if (!skip) {
-    base[prop] = value;
+    if (strict || base === null || base === undefined) {
+      base[prop] = value;
+    } else if (typeof Reflect !== 'undefined' && Reflect.set) {
+      Reflect.set(Object(base), prop, value);
+    } else {
+      Object(base)[prop] = value;
+    }
   }
   // general memoryWrite fires first
   const generalPost = D$.analysis.memoryWrite?.(id, value);
@@ -299,7 +305,20 @@ function De(id: number, base: any, prop: any, optional: boolean = false): any {
     skip = pre.skip;
   }
   if (!skip) {
-    value = delete base[prop];
+    if (base === null || base === undefined) {
+      value = delete base[prop];
+    } else {
+      const deleteTarget = Object(base);
+      try {
+        if (typeof Reflect !== 'undefined' && Reflect.deleteProperty) {
+          value = Reflect.deleteProperty(deleteTarget, prop);
+        } else {
+          value = delete deleteTarget[prop];
+        }
+      } catch {
+        value = false;
+      }
+    }
   }
   const post = D$.analysis._delete?.(id, base, prop, value);
   if (post) {

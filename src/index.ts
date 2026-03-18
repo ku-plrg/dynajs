@@ -43,6 +43,8 @@ function checkAnalysisHooks(fullOpt: boolean): FeatureTagCheck | undefined {
 // analyze a JS file
 function analyze(targetPath: string, options: any = {}): string {
   const { detail, analysis, full } = options;
+  const nativeObjectCreate = Object.create as typeof Object.create | undefined;
+  const nativeSet = Set;
 
   require(path.resolve(analysis));
 
@@ -51,7 +53,25 @@ function analyze(targetPath: string, options: any = {}): string {
   // override the .js extension handler
   const ModuleAny = Module as any;
   ModuleAny._extensions['.js'] = function (module: any, filename: string) {
-    const instrumentedCode = instrumentFile(filename, { detail, isEnabled: hooks });
+    const currentObjectCreate = Object.create as typeof Object.create | undefined;
+    const currentSet = Set;
+    if (currentObjectCreate !== nativeObjectCreate) {
+      (Object as any).create = nativeObjectCreate;
+    }
+    if (currentSet !== nativeSet) {
+      (globalThis as any).Set = nativeSet;
+    }
+    let instrumentedCode: string;
+    try {
+      instrumentedCode = instrumentFile(filename, { detail, isEnabled: hooks });
+    } finally {
+      if (Object.create !== currentObjectCreate) {
+        (Object as any).create = currentObjectCreate;
+      }
+      if (Set !== currentSet) {
+        (globalThis as any).Set = currentSet;
+      }
+    }
     module._compile(instrumentedCode, filename);
   };
 

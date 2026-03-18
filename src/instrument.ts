@@ -100,6 +100,7 @@ export class State {
   isEnabled: FeatureTagCheck;
   inDerivedClass: boolean;
   isDerivedConstructor: boolean;
+  isStrict: boolean;
 
   constructor(options: Options = {}) {
     this.output = '';
@@ -119,6 +120,7 @@ export class State {
     this.isEnabled = Object.freeze(options.isEnabled ?? { ...FEATURE_CHECK_ALL_TRUE });
     this.inDerivedClass = false;
     this.isDerivedConstructor = false;
+    this.isStrict = false;
   }
 
   // execute body with isLHS = true
@@ -135,6 +137,16 @@ export class State {
     const scope = new Scope(this.scope, forLexical);
     body(scope);
     this.scope = scope;
+  }
+
+  withStrictMode<T>(strict: boolean, body: () => T): T {
+    const prev = this.isStrict;
+    this.isStrict = strict;
+    try {
+      return body();
+    } finally {
+      this.isStrict = prev;
+    }
   }
 
   // wrap
@@ -177,6 +189,16 @@ export class State {
       this.walk(nodes[i]);
     }
   }
+}
+
+function hasUseStrictDirective(body: readonly Node[]): boolean {
+  for (const statement of body) {
+    if (statement.type !== 'ExpressionStatement') return false;
+    const expr = (statement as any).expression;
+    if (expr.type !== 'Literal' || expr.value !== 'use strict') return false;
+    return true;
+  }
+  return false;
 }
 
 // state options
@@ -462,33 +484,36 @@ function logFuncDeclare(state: State, node: Node, isExpr: boolean): void {
 function logFunc(state: State, node: Node, isExpr: boolean): void {
   state.createScope(scope => scope.walkFunction(node, isExpr));
   const { params, body, type, id } = node as Function;
+  const strict = state.isStrict || (body.type === 'BlockStatement' && hasUseStrictDirective(body.body as Node[]));
   state.write('(');
   state.withLHS(() => state.walkArray(params));
   state.write(') {');
-  state.wrap(() => {
-    state.writeln('try {');
+  state.withStrictMode(strict, () => {
     state.wrap(() => {
-      logFuncEnter(state, node as Function);
-      logDeclare(state, node);
-      if (body.type === 'BlockStatement') {
-        for (const statement of body.body) {
+      state.writeln('try {');
+      state.wrap(() => {
+        logFuncEnter(state, node as Function);
+        logDeclare(state, node);
+        if (body.type === 'BlockStatement') {
+          for (const statement of body.body) {
+            state.writeln('');
+            state.walk(statement);
+          }
+        } else {
           state.writeln('');
-          state.walk(statement);
+          logReturn(state, body, () => logExpression(state, body));
         }
-      } else {
-        state.writeln('');
-        logReturn(state, body, () => logExpression(state, body));
-      }
+      });
+      state.writeln(`} catch (${EXCEPTION_VAR}) {`);
+      state.wrap(() => {
+        logException(state, node);
+      });
+      state.writeln(`} finally {`);
+      state.wrap(() => {
+        logFuncExit(state, node);
+      });
+      state.writeln(`}`);
     });
-    state.writeln(`} catch (${EXCEPTION_VAR}) {`);
-    state.wrap(() => {
-      logException(state, node);
-    });
-    state.writeln(`} finally {`);
-    state.wrap(() => {
-      logFuncExit(state, node);
-    });
-    state.writeln(`}`);
   });
   state.writeln('}');
 }
@@ -692,6 +717,7 @@ function logPutField(state: State, lhs: Node, rhs: Node, body: () => void): void
   }
   state.write(', ');
   body();
+  state.write(`, ${state.isStrict}`);
   state.write(')');
 }
 
@@ -1035,25 +1061,28 @@ const visitors: Visitors = {
   },
   Program: (node, state) => {
     const { body } = node;
-    state.createScope(scope => scope.walkArray(body));
-    state.writeln('try {');
-    state.wrap(() => {
-      logScriptEnter(state, node);
-      logDeclare(state, node);
-      for (const statement of body) {
-        state.writeln('');
-        state.walk(statement);
-      }
+    const strict = state.isStrict || hasUseStrictDirective(body as Node[]);
+    state.withStrictMode(strict, () => {
+      state.createScope(scope => scope.walkArray(body));
+      state.writeln('try {');
+      state.wrap(() => {
+        logScriptEnter(state, node);
+        logDeclare(state, node);
+        for (const statement of body) {
+          state.writeln('');
+          state.walk(statement);
+        }
+      });
+      state.writeln(`} catch (${EXCEPTION_VAR}) {`);
+      state.wrap(() => {
+        logException(state, node);
+      });
+      state.writeln(`} finally {`);
+      state.wrap(() => {
+        logScriptExit(state, node);
+      });
+      state.writeln(`}`);
     });
-    state.writeln(`} catch (${EXCEPTION_VAR}) {`);
-    state.wrap(() => {
-      logException(state, node);
-    });
-    state.writeln(`} finally {`);
-    state.wrap(() => {
-      logScriptExit(state, node);
-    });
-    state.writeln(`}`);
   },
   ExpressionStatement: (node, state) => {
     const { expression } = node;
