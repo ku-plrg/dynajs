@@ -1347,10 +1347,13 @@ const visitors: Visitors = {
   },
   LogicalExpression: (node, state) => {
     const { left, right, operator } = node;
+    const isDisabled = true // set to true for now; additional parenthesis is needed
+    if (isDisabled) state.write('(');
     logCondition(state, left, operator);
     state.write(` ${operator} (`);
     state.walk(right);
     state.write(')');
+    if (isDisabled) state.write(')');
   },
   MemberExpression: (node, state) => {
     logGetField(state, node);
