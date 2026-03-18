@@ -1,0 +1,9 @@
+{"type":"declare","name":"obj","level":0}
+{"type":"declare","name":"name","level":0}
+{"type":"literal","valueType":"number","level":0}
+{"type":"literal","valueType":"object","level":0}
+{"type":"write","name":"obj","level":0}
+{"type":"literal","valueType":"string","level":0}
+{"type":"write","name":"name","level":0}
+{"type":"read","name":"obj","level":0}
+{"type":"read","name":"name","level":0}

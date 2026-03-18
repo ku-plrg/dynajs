@@ -698,7 +698,28 @@ function logPutField(state: State, lhs: Node, rhs: Node, body: () => void): void
 // logging a delete operation
 function logDelete(state: State, expr: Node): void {
   if (!state.isEnabled.De) {
-    state.write(`delete ${generate(expr)}`);
+    if (expr.type === 'MemberExpression') {
+      const { object, property, computed, optional } = expr as MemberExpression;
+      state.write('delete ');
+      if (object.type === 'Super') {
+        state.write('super');
+      } else {
+        state.walk(object);
+      }
+      if (computed) {
+        state.write(optional ? '?.[' : '[');
+        state.walk(property);
+        state.write(']');
+      } else if (property.type === 'Identifier') {
+        state.write(optional ? `?.${property.name}` : `.${property.name}`);
+      } else if (property.type === 'PrivateIdentifier') {
+        state.write(optional ? `?.#${(property as any).name}` : `.#${(property as any).name}`);
+      } else {
+        warn(`Delete operator on unexpected property type${getLocStr(expr)}`);
+      }
+    } else {
+      state.write(`delete ${generate(expr)}`);
+    }
     return;
   }
   if (expr.type === 'ChainExpression') {
