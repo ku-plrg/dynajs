@@ -847,7 +847,7 @@ function logCondition(state: State, test: Expression, kind: string, end: boolean
 
 // logging the left side of a switch statement
 function logSwitchLeft(state: State, discriminant: Expression): void {
-  if (!state.isEnabled.C) {
+  if (!state.isEnabled.C && !state.isEnabled.B) {
     logExpression(state, discriminant);
     return;
   }
@@ -858,7 +858,7 @@ function logSwitchLeft(state: State, discriminant: Expression): void {
 
 // logging the right side of a switch case
 function logSwitchRight(state: State, test: Expression): void {
-  if (!state.isEnabled.C) {
+  if (!state.isEnabled.C && !state.isEnabled.B) {
     logExpression(state, test);
     return;
   }

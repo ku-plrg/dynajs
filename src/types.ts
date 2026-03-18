@@ -57,7 +57,7 @@ export const CALLBACK_TO_FEATURES = {
   logicalOr:         ['C'],
   nullishCoalescing: ['C'],
   optionalChain:     ['C'],
-  switchCondition:   ['C'],
+  switchCondition:   ['C', 'B'],
   declare:           ['D'],
   read:              ['R'],
   write:             ['W'],
