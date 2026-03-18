@@ -1622,7 +1622,7 @@ const visitors: Visitors = {
       state.withLHS(() => state.walk(key));
     }
 
-    if (!state.isEnabled.Fi) {
+    if (!state.isEnabled.Fi && !computed) {
       if (value) {
         state.write(' = ');
         state.walk(value);
