@@ -1,6 +1,7 @@
 import yargs from 'yargs/yargs';
 import Module from 'module';
 import path from 'path';
+import { createRequire } from 'node:module';
 import {
   getArgs,
   log,
@@ -11,6 +12,8 @@ import { instrumentFile } from './instrument.js';
 import { SCRIPT_NAME } from './constants/general.js';
 import { setBaseObj } from './analysis.js';
 import { CALLBACK_TO_FEATURES, FEATURE_CHECK_ALL_FALSE, type FeatureTag, type FeatureTagCheck } from './types.js';
+
+const require = createRequire(import.meta.url);
 
 // `instrument` command
 const instrumentCommand = (argv: any): void => {
@@ -40,11 +43,19 @@ function checkAnalysisHooks(fullOpt: boolean): FeatureTagCheck | undefined {
   return tags;
 }
 
+function prepareGlobals(): void {
+  (globalThis as any).print = (...args: any[]) => console.log(...args);
+  (globalThis as any).assert = (condition: any, message?: string) => {
+    if (!condition) throw new Error(message || 'Assertion failed');
+  };
+}
+
 // analyze a JS file
 function analyze(targetPath: string, options: any = {}): string {
   const { detail, analysis, full } = options;
 
   setBaseObj();
+  prepareGlobals();
   require(path.resolve(analysis));
 
   const hooks = checkAnalysisHooks(full);

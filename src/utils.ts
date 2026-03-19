@@ -1,4 +1,4 @@
-import { white, yellow, red } from 'chalk';
+import chalk from 'chalk';
 import inspect from 'object-inspect';
 import fs from 'fs';
 import path from 'path';
@@ -102,7 +102,7 @@ export const BAR = '-'.repeat(80);
 // log a message
 export function log(
   value: any,
-  color: (msg: string) => string = white,
+  color: (msg: string) => string = chalk.white,
   level: LogLevel = LogLevel.LOG,
   header: string = 'INFO',
   customExitCode: number | undefined = undefined,
@@ -136,17 +136,17 @@ export function header(msg: string): void {
 
 // warning message
 export function warn(value: any) {
-  log(value, yellow, LogLevel.WARN, 'WARN');
+  log(value, chalk.yellow, LogLevel.WARN, 'WARN');
 }
 
 // error message
 export function err(value: any) {
-  log(value, red, LogLevel.ERROR, 'ERROR');
+  log(value, chalk.red, LogLevel.ERROR, 'ERROR');
 }
 
 // to-do message
 export function todo(msg: string = '') {
-  log(msg, red, LogLevel.ERROR, 'TODO', EXIT_CODE_TODO);
+  log(msg, chalk.red, LogLevel.ERROR, 'TODO', EXIT_CODE_TODO);
 }
 
 // parse the string into an AST
