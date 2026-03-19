@@ -258,6 +258,24 @@ class Scope {
       }
     }
     this.walk(func.body);
+    // If a named function expression has its name shadowed by a lexical
+    // binding (const/let) at the top level of the function body, update the
+    // scope to reflect the shadowing kind so callers can detect the TDZ.
+    if (isExpr && func.id != null && func.body.type === 'BlockStatement') {
+      const stmts = (func.body as any).body as any[];
+      for (const stmt of stmts) {
+        if (stmt.type === 'VariableDeclaration' &&
+            (stmt.kind === 'let' || stmt.kind === 'const')) {
+          for (const decl of stmt.declarations) {
+            for (const x of collectIdentifiers(decl.id as Pattern)) {
+              if (x === func.id.name) {
+                this.vars[x] = stmt.kind === 'let' ? VarKind.Let : VarKind.Const;
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   walkCatch(node: Node) {
@@ -524,8 +542,18 @@ function logFunc(state: State, node: Node, isExpr: boolean): void {
 function logFuncEnter(state: State, func: Function): void {
   if (!state.isEnabled.Fe) return;
   const { id } = func;
-  // TODO: temporalily use `null` but we need to discuss how to handle this
-  const name = id ? id.name : 'null';
+  let name: string;
+  if (id == null) {
+    // TODO: temporalily use `null` but we need to discuss how to handle this
+    name = 'null';
+  } else {
+    // If the function name is shadowed by a TDZ binding (const/let/class) in
+    // the function body scope, accessing the identifier would throw a
+    // ReferenceError, so use `null` instead.
+    const kind = state.scope?.vars[id.name];
+    const isTDZ = kind === VarKind.Const || kind === VarKind.Let || kind === VarKind.Class;
+    name = isTDZ ? 'null' : id.name;
+  }
   // TODO: for derived class constructors, `this` is not initialized at the beginning, so use `undefined` instead
   const thisArg = state.isDerivedConstructor ? 'undefined' : 'this';
   state.writeln(`${LOG.FUNC_ENTER}(${newId(func)}, ${name}, ${thisArg}, arguments);`);
