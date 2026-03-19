@@ -9,28 +9,44 @@ npm run build
 
 ## Usage
 
+Set `DYNAJS_HOME` to the repository root before using `./dynajs`:
+
+```shell
+export DYNAJS_HOME=/path/to/repo
+ln -s /path/to/repo/dynajs ~/bin/dynajs # or what ever PATH
 ```
-Usage: ./dynajs <command> [options]
 
-Commands:
-  ./dynajs instrument  Instrument a JS file
+Set `DYNAJS_ANALYSIS` to the analysis you want to load, then run your usual
+command through `dynajs`:
 
-Options:
-  --help     Show help                                                 [boolean]
-  --version  Show version number                                       [boolean]
-  --detail   Show detailed process                                     [boolean]
-
-Examples:
-  ./dynajs instrument input.js  Instrument a JS file
-
-You need a command to run `dynajs`.
 ```
+DYNAJS_ANALYSIS=./samples/TraceAll.js dynajs node target.js
+DYNAJS_ANALYSIS=./samples/TraceAll.js dynajs npm run test
+DYNAJS_ANALYSIS=./samples/TraceAll.js DYNAJS_PARTIAL_HOOK=1 dynajs node target.js
+```
+
+`./dynajs` is the new entrypoint. It wraps commands such as `node` or `npm`
+and injects the runtime instrumentation automatically.
+
+`DYNAJS_PARTIAL_HOOK=1` enables partial hook mode. If it is unset, dynajs runs
+with full hooks.
+
+## Legacy CLI
+
+`./dynajs-legacy` keeps the previous CLI for direct `instrument` / `analyze`
+commands:
+
+```shell
+./dynajs-legacy instrument input.js
+./dynajs-legacy analyze -a samples/TraceAll.js input.js
+```
+
+Standalone `instrument` mode is not currently supported through the new
+`./dynajs` entrypoint.
 
 ## For Developers
 
-During the development, you can use the following command to run the
-`dynajs` tool with automatic rebuilding on file changes and detailed
-logging messages:
+Use the watch command below while developing the legacy CLI implementation:
 
 ```shell
 npm run start:watch -- instrument --detail <js file>
@@ -38,9 +54,8 @@ npm run start:watch -- instrument --detail <js file>
 
 > [!WARNING]
 >
-> The watch mode does not update `dist/` directory. You need to run `npm run
-> build` to update `dist/` directory before using `dynajs` command after
-> modifying the source code.
+> The watch mode does not update `dist/` directory. Run `npm run build` before
+> using `./dynajs` or `./dynajs-legacy` after modifying the source code.
 
 ### Testing
 
@@ -48,6 +63,12 @@ You can run the test suite with the following command:
 
 ```shell
 ./run-tests.sh
+```
+
+To run npm-based workflows with dynajs, use the new wrapper style:
+
+```shell
+DYNAJS_ANALYSIS=./samples/TraceAll.js ./dynajs npm run test
 ```
 
 #### Watching Mode

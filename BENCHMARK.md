@@ -1,6 +1,13 @@
 # Benchmark
 
 ## how to run sunspider benchmark
+
+Make sure `DYNAJS_HOME` points to the repository root:
+
+```shell
+export DYNAJS_HOME="$(pwd)"
+```
+
 ```
 ./bench/run-sunspider-benchmark.sh
 ./bench/run-sunspider-benchmark.sh --analysis TraceAll --mode full --bench controlflow-recursive

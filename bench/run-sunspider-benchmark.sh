@@ -25,7 +25,7 @@ usage() {
   cat <<'EOF'
 Usage: bench/run-sunspider-benchmark.sh [options]
 
-Runs the SunSpider suite with the selected analyses and instrumentation modes.
+Runs the SunSpider suite with the selected analyses and hook modes.
 For each run it stores stdout/stderr in a log directory and prints:
   mode, analysis, benchmark, exit status, elapsed time, stdout/stderr sizes
 
@@ -96,6 +96,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 cd "$REPO_ROOT"
+export DYNAJS_HOME="${DYNAJS_HOME:-$REPO_ROOT}"
 
 mapfile -t BENCHMARKS < <(find "$BENCHMARK_DIR" -maxdepth 1 -type f -name '*.js' | sort)
 [[ ${#BENCHMARKS[@]} -gt 0 ]] || die "no benchmarks found under $BENCHMARK_DIR"
@@ -165,8 +166,13 @@ for mode in "${MODES[@]}"; do
 
       start_ms=$(now_ms)
       set +e
-      ./dynajs analyze "--$mode" -a "$analysis" "$bench" >"$stdout_file" 2>"$stderr_file"
-      exit_code=$?
+      if [[ "$mode" == "partial" ]]; then
+        DYNAJS_ANALYSIS="$analysis" DYNAJS_PARTIAL_HOOK=1 ./dynajs node "$bench" >"$stdout_file" 2>"$stderr_file"
+        exit_code=$?
+      else
+        DYNAJS_ANALYSIS="$analysis" ./dynajs node "$bench" >"$stdout_file" 2>"$stderr_file"
+        exit_code=$?
+      fi
       set -e
       end_ms=$(now_ms)
 
