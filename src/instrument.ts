@@ -1279,6 +1279,7 @@ const visitors: Visitors = {
     if (label != null) {
       state.write(` ${label.name}`);
     }
+    state.write(';');
   },
   ContinueStatement: (node, state) => {
     const { label } = node;
