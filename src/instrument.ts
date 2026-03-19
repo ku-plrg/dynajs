@@ -1713,6 +1713,8 @@ const visitors: Visitors = {
         state.write('[');
         state.walk(key);
         state.write(']');
+      } else if (key.type === 'Literal') {
+        state.write(generate(key));
       } else {
         state.withLHS(() => state.walk(key));
       }
@@ -1841,6 +1843,8 @@ const visitors: Visitors = {
       state.write(']');
     } else if (key.type === 'PrivateIdentifier') {
       state.write('#' + (key as any).name);
+    } else if (key.type === 'Literal') {
+      state.write(generate(key));
     } else {
       state.withLHS(() => state.walk(key));
     }
