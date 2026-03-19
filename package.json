@@ -8,7 +8,8 @@
   },
   "scripts": {
     "clean": "rimraf ./dist",
-    "build": "npm run clean && tsc -b",
+    "build": "npm run clean && tsc -b && node ./scripts/build-inject.mjs",
+    "build:inject": "node ./scripts/build-inject.mjs",
     "build:watch": "tsc -b -w",
     "start": "ts-node src",
     "start:watch": "nodemon src --watch src --watch samples -e ts,js --exec 'ts-node'",
@@ -30,6 +31,7 @@
     "@types/node": "^24.10.1",
     "@types/object-inspect": "^1.13.0",
     "@types/yargs": "^17.0.35",
+    "esbuild": "^0.27.4",
     "nodemon": "^3.1.11",
     "npm-run-all": "^4.1.5",
     "rimraf": "^6.1.2",

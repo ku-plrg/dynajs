@@ -1,14 +1,49 @@
 import { register } from "node:module";
 import { pathToFileURL } from "node:url";
+import path from "node:path";
+import Module from 'module';
+import { readFile } from "./utils.js";
+import { setBaseObj } from './analysis.js';
 
-function registerLoader(): void {
-  const DYNAJS_HOME = process.env.DYNAJS_HOME || __dirname;
-  register("./register.js", pathToFileURL(`${DYNAJS_HOME}/dist/`));
+function prepareGlobal(): void {
+  setBaseObj();
+  const DYNAJS_ANALYSIS = process.env.DYNAJS_ANALYSIS;
+  if (DYNAJS_ANALYSIS) {
+    require(path.resolve(DYNAJS_ANALYSIS));
+  }
+  // @ts-ignore - set globalThis.D$ to the analysis object
+  global.print = function print(value) {
+    console.log(value);
+  };
+  // @ts-ignore - set globalThis.assert to a simple assertion function
+  global.assert = function assert(condition, message) {
+    if (!condition) {
+      throw new Error(message || "Assertion failed");
+    }
+  };
+}
+
+function registerESMloader(): void {
+  const baseURL = process.env.DYNAJS_HOME
+    ? pathToFileURL(path.join(process.env.DYNAJS_HOME, "dist/"))
+    : new URL("./", import.meta.url);
+  register("./register.js", baseURL);
+}
+
+function registerCJSloader(): void {
+  const ModuleAny = Module as any;
+  ModuleAny._extensions['.js'] = function (module: any, filename: string) {
+    // TODO instrument file
+    console.log(`Loading cjs: ${filename}`);
+    const code = readFile(filename);
+    module._compile(code, filename);
+  };
 }
 
 function main(): void {
-
-  registerLoader();
+  prepareGlobal();
+  registerCJSloader();
+  registerESMloader();
 }
 // set globalThis
 // globalThis.b = 17;

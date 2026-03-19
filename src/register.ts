@@ -1,12 +1,23 @@
-// loader.mjs
-export async function resolve(specifier: any, context: any, next: any) {
-  // specifier 조작, 로그, 가상 모듈 매핑 등
-  return next(specifier, context);
+import type { LoadHook, ResolveHook } from "node:module";
+
+function isInstrumentTarget(url: string): boolean {
+  return url.startsWith('file://');
 }
 
-export async function load(url: any, context: any, next: any) {
-  console.log('loading...', url)
-  const result = await next(url, context);
-  // result.source 변환 (트랜스파일, 인젝션 등)
-  return result;
+function instrumentSource(source: string, url: string): string {
+  return source; // `// Instrumented by DynaJS\n` + source + `\nconsole.log("Instrumented!");`;
 }
+
+export const resolve: ResolveHook = async (specifier, context, nextResolve) => {
+  return nextResolve(specifier, context);
+};
+
+export const load: LoadHook = async (url, context, nextLoad) => {
+  const result = await nextLoad(url, context);
+  // TODO instrument
+  console.log(`Loading module: ${url}`);
+  if (isInstrumentTarget(url) && result.source) {
+    result.source = instrumentSource(result.source.toString(), url);
+  }
+  return result;
+};

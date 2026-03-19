@@ -9,7 +9,7 @@ import {
 } from './utils.js';
 import { instrumentFile } from './instrument.js';
 import { SCRIPT_NAME } from './constants/general.js';
-import './analysis';
+import { setBaseObj } from './analysis.js';
 import { CALLBACK_TO_FEATURES, FEATURE_CHECK_ALL_FALSE, type FeatureTag, type FeatureTagCheck } from './types.js';
 
 // `instrument` command
@@ -43,9 +43,8 @@ function checkAnalysisHooks(fullOpt: boolean): FeatureTagCheck | undefined {
 // analyze a JS file
 function analyze(targetPath: string, options: any = {}): string {
   const { detail, analysis, full } = options;
-  const nativeObjectCreate = Object.create as typeof Object.create | undefined;
-  const nativeSet = Set;
 
+  setBaseObj();
   require(path.resolve(analysis));
 
   const hooks = checkAnalysisHooks(full);
@@ -53,25 +52,7 @@ function analyze(targetPath: string, options: any = {}): string {
   // override the .js extension handler
   const ModuleAny = Module as any;
   ModuleAny._extensions['.js'] = function (module: any, filename: string) {
-    const currentObjectCreate = Object.create as typeof Object.create | undefined;
-    const currentSet = Set;
-    if (currentObjectCreate !== nativeObjectCreate) {
-      (Object as any).create = nativeObjectCreate;
-    }
-    if (currentSet !== nativeSet) {
-      (globalThis as any).Set = nativeSet;
-    }
-    let instrumentedCode: string;
-    try {
-      instrumentedCode = instrumentFile(filename, { detail, isEnabled: hooks });
-    } finally {
-      if (Object.create !== currentObjectCreate) {
-        (Object as any).create = currentObjectCreate;
-      }
-      if (Set !== currentSet) {
-        (globalThis as any).Set = currentSet;
-      }
-    }
+    let instrumentedCode: string = instrumentFile(filename, { detail, isEnabled: hooks });
     module._compile(instrumentedCode, filename);
   };
 

@@ -679,4 +679,6 @@ type DynaJSType = typeof BASE & {
 }
 
 declare global { var D$: DynaJSType; };
-globalThis.D$ = BASE;
+export function setBaseObj() {
+  globalThis.D$ = BASE as DynaJSType;
+}
