@@ -500,14 +500,21 @@ function logFuncDeclare(state: State, node: Node, isExpr: boolean): void {
   logFunc(state, node, isExpr);
 }
 
+// logging arrow function declaration
+function logArrowFuncDeclare(state: State, node: Node): void {
+  const { async } = node as Function;
+  state.write(async ? 'async ' : '');
+  logFunc(state, node, true, true);
+}
+
 // logging function tail
-function logFunc(state: State, node: Node, isExpr: boolean): void {
+function logFunc(state: State, node: Node, isExpr: boolean, isArrow: boolean = false): void {
   state.createScope(scope => scope.walkFunction(node, isExpr));
   const { params, body, type, id } = node as Function;
   const strict = state.isStrict || (body.type === 'BlockStatement' && hasUseStrictDirective(body.body as Node[]));
   state.write('(');
   state.withLHS(() => state.walkArray(params));
-  state.write(') {');
+  state.write(isArrow ? ') => {' : ') {');
   state.withStrictMode(strict, () => {
     state.wrap(() => {
       state.writeln('try {');
@@ -556,7 +563,26 @@ function logFuncEnter(state: State, func: Function): void {
   }
   // TODO: for derived class constructors, `this` is not initialized at the beginning, so use `undefined` instead
   const thisArg = state.isDerivedConstructor ? 'undefined' : 'this';
-  state.writeln(`${LOG.FUNC_ENTER}(${newId(func)}, ${name}, ${thisArg}, arguments);`);
+  // Arrow functions don't have their own `arguments`; build a synthetic args array from params instead
+  let argsExpr: string;
+  if (func.type === 'ArrowFunctionExpression') {
+    const parts: string[] = [];
+    let ok = true;
+    for (const p of func.params) {
+      if (p.type === 'Identifier') {
+        parts.push((p as Identifier).name);
+      } else if (p.type === 'RestElement' && p.argument.type === 'Identifier') {
+        parts.push(`...${(p.argument as Identifier).name}`);
+      } else {
+        ok = false;
+        break;
+      }
+    }
+    argsExpr = ok ? `[${parts.join(', ')}]` : '[]';
+  } else {
+    argsExpr = 'arguments';
+  }
+  state.writeln(`${LOG.FUNC_ENTER}(${newId(func)}, ${name}, ${thisArg}, ${argsExpr});`);
 }
 
 // logging function exit
@@ -1501,8 +1527,7 @@ const visitors: Visitors = {
   },
   ArrowFunctionExpression: (node, state) => {
     logLiteral(state, node, () => {
-      // TODO use arrow function instead of function
-      logFuncDeclare(state, node, true);
+      logArrowFuncDeclare(state, node);
     });
   },
   YieldExpression: (node, state) => {
