@@ -219,12 +219,14 @@ interface Options {
 class Scope {
   vars: { [name: string]: VarKind };
   spreadVars: Set<string>;
+  tdzShadowedFuncNames: Set<string>;
   parent: Scope | null;
   private forLexical: boolean;
 
   constructor(parent: Scope | null, forLexical: boolean) {
     this.vars = {};
     this.spreadVars = new Set();
+    this.tdzShadowedFuncNames = new Set();
     this.parent = parent;
     this.forLexical = forLexical;
   }
@@ -259,10 +261,7 @@ class Scope {
       }
     }
     this.walk(func.body);
-    // If a named function expression has its name shadowed by a lexical
-    // binding (const/let) at the top level of the function body, update the
-    // scope to reflect the shadowing kind so callers can detect the TDZ.
-    if (isExpr && func.id != null && func.body.type === 'BlockStatement') {
+    if (func.id != null && func.body.type === 'BlockStatement') {
       const stmts = (func.body as any).body as any[];
       for (const stmt of stmts) {
         if (stmt.type === 'VariableDeclaration' &&
@@ -270,10 +269,13 @@ class Scope {
           for (const decl of stmt.declarations) {
             for (const x of collectIdentifiers(decl.id as Pattern)) {
               if (x === func.id.name) {
-                this.vars[x] = stmt.kind === 'let' ? VarKind.Let : VarKind.Const;
+                this.tdzShadowedFuncNames.add(x);
               }
             }
           }
+        } else if (stmt.type === 'ClassDeclaration' && stmt.id != null &&
+                   stmt.id.name === func.id.name) {
+          this.tdzShadowedFuncNames.add(stmt.id.name);
         }
       }
     }
@@ -568,8 +570,7 @@ function logFuncEnter(state: State, func: Function): void {
     // If the function name is shadowed by a TDZ binding (const/let/class) in
     // the function body scope, accessing the identifier would throw a
     // ReferenceError, so use `null` instead.
-    const kind = state.scope?.vars[id.name];
-    const isTDZ = kind === VarKind.Const || kind === VarKind.Let || kind === VarKind.Class;
+    const isTDZ = state.scope?.tdzShadowedFuncNames.has(id.name) ?? false;
     name = isTDZ ? 'null' : id.name;
   }
   // TODO: for derived class constructors, `this` is not initialized at the beginning, so use `undefined` instead
@@ -942,7 +943,11 @@ function logDeclare(state: State, node: Node): void {
   const spreadVars = state.scope?.spreadVars;
   for (const name in vars) {
     const kind = vars[name];
-    const isTDZ = kind === VarKind.Const || kind === VarKind.Let || kind === VarKind.Class;
+    const isTDZ =
+      kind === VarKind.Const ||
+      kind === VarKind.Let ||
+      kind === VarKind.Class ||
+      (state.scope?.tdzShadowedFuncNames.has(name) ?? false);
     const isSpread = spreadVars?.has(name) ?? false;
     if (isTDZ) {
       state.writeln(`${LOG.DECLARE}(${newId(node)}, "${name}", ${kind}, ${isSpread});`);
