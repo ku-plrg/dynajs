@@ -1,0 +1,38 @@
+Se() @ 1:1-10:1
+  D(value, <const>, false) @ 1:1-10:1
+  D(ns, <const>, false) @ 1:1-10:1
+  D(mod, <const>, false) @ 1:1-10:1
+  D(total, <const>, false) @ 1:1-10:1
+  L("data:text/javascript...") @ 4:26-68
+  E("data:text/javascript...") @ 4:26-68
+  E(<object>) @ 4:19-69
+Aw(<object>) @ 4:13-69
+Awr(<object>) @ 4:13-69
+  E(<object>) @ 4:13-69
+  W([mod], <object>) @ 4:13-69
+  R(globalThis, <object>) @ 5:15-25
+  G[pre](<object>, "__export4") @ 5:15-35
+  G(<object>, "__export4", 4) @ 5:15-35
+  R(value, 6) @ 5:38-43
+  B[pre](+, 4, 6) @ 5:15-43
+  B(+, 4, 6, 10) @ 5:15-43
+  R(ns, <object>) @ 5:46-48
+  G[pre](<object>, "extra") @ 5:46-54
+  G(<object>, "extra", 1) @ 5:46-54
+  B[pre](+, 10, 1) @ 5:15-54
+  B(+, 10, 1, 11) @ 5:15-54
+  R(mod, <object>) @ 5:57-60
+  G[pre](<object>, "dyn") @ 5:57-64
+  G(<object>, "dyn", 8) @ 5:57-64
+  B[pre](+, 11, 8) @ 5:15-64
+  B(+, 11, 8, 19) @ 5:15-64
+  E(19) @ 5:15-64
+  W([total], 19) @ 5:15-64
+  R(total, 19) @ 7:16-21
+  R(print, <function>) @ 9:1-6
+  R(total, 19) @ 9:7-12
+  F[pre](<function>, undefined, [19], false, false) @ 9:1-6
+19
+  F(<function>, undefined, [19], undefined, false, false) @ 9:1-6
+  E(undefined) @ 9:1-13
+Sx() @ 1:1-10:1

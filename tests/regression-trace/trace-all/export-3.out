@@ -1,0 +1,15 @@
+Se() @ 1:1-8:1
+  D(named, <const>, false) @ 1:1-8:1
+  D(importedNs, <const>, false) @ 1:1-8:1
+  R(print, <function>) @ 7:1-6
+  R(named, 5) @ 7:7-12
+  R(importedNs, <object>) @ 7:15-25
+  G[pre](<object>, "value") @ 7:15-31
+  G(<object>, "value", 8) @ 7:15-31
+  B[pre](+, 5, 8) @ 7:7-31
+  B(+, 5, 8, 13) @ 7:7-31
+  F[pre](<function>, undefined, [13], false, false) @ 7:1-6
+13
+  F(<function>, undefined, [13], undefined, false, false) @ 7:1-6
+  E(undefined) @ 7:1-32
+Sx() @ 1:1-8:1

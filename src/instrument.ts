@@ -295,6 +295,11 @@ class Scope {
   }
 
   static visitors: RecursiveVisitors<Scope> = {
+    ImportDeclaration: (node, scope, c) => {
+      for (const spec of (node as any).specifiers as any[]) {
+        scope.vars[spec.local.name] = VarKind.Const;
+      }
+    },
     VariableDeclaration: (node, scope, c) => {
       const { kind, declarations } = node;
       if (kind === 'var') {
@@ -328,6 +333,11 @@ class Scope {
   }
 
   static lexicalVisitors: RecursiveVisitors<Scope> = {
+    ImportDeclaration: (node, scope, c) => {
+      for (const spec of (node as any).specifiers as any[]) {
+        scope.vars[spec.local.name] = VarKind.Const;
+      }
+    },
     VariableDeclaration: (node, scope, c) => {
       const { kind, declarations } = node;
       if (kind === 'let' || kind === 'const') {
@@ -1095,6 +1105,78 @@ function needsChainBoundary(state: State, node: Node): boolean {
   }
 }
 
+function isModuleDeclaration(node: Node): boolean {
+  switch (node.type) {
+    case 'ImportDeclaration':
+    case 'ExportNamedDeclaration':
+    case 'ExportDefaultDeclaration':
+    case 'ExportAllDeclaration':
+      return true;
+    default:
+      return false;
+  }
+}
+
+function writeNodeAsSource(state: State, node: Node): void {
+  state.write(generate(node as any));
+}
+
+function writeImportAttributes(state: State, attributes?: readonly Node[] | null): void {
+  if (!attributes || attributes.length === 0) return;
+  state.write(' with { ');
+  for (let i = 0; i < attributes.length; i++) {
+    if (i > 0) state.write(', ');
+    state.walk(attributes[i]);
+  }
+  state.write(' }');
+}
+
+function writeImportClause(state: State, specifiers: readonly Node[]): void {
+  const defaultSpec = specifiers.find(spec => spec.type === 'ImportDefaultSpecifier') as any;
+  const namespaceSpec = specifiers.find(spec => spec.type === 'ImportNamespaceSpecifier') as any;
+  const namedSpecs = specifiers.filter(spec => spec.type === 'ImportSpecifier') as any[];
+  let needsComma = false;
+
+  if (defaultSpec) {
+    state.write(defaultSpec.local.name);
+    needsComma = true;
+  }
+  if (namespaceSpec) {
+    if (needsComma) state.write(', ');
+    state.write(`* as ${namespaceSpec.local.name}`);
+    needsComma = true;
+  }
+  if (namedSpecs.length > 0) {
+    if (needsComma) state.write(', ');
+    state.write('{ ');
+    for (let i = 0; i < namedSpecs.length; i++) {
+      if (i > 0) state.write(', ');
+      const spec = namedSpecs[i];
+      writeNodeAsSource(state, spec.imported);
+      if (spec.local.name !== (spec.imported as any).name) {
+        state.write(` as ${spec.local.name}`);
+      }
+    }
+    state.write(' }');
+  }
+}
+
+function writeExportSpecifiers(state: State, specifiers: readonly Node[]): void {
+  state.write('{ ');
+  for (let i = 0; i < specifiers.length; i++) {
+    if (i > 0) state.write(', ');
+    const spec = specifiers[i] as any;
+    writeNodeAsSource(state, spec.local);
+    const localName = (spec.local as any).name ?? (spec.local as any).value;
+    const exportedName = (spec.exported as any).name ?? (spec.exported as any).value;
+    if (localName !== exportedName) {
+      state.write(' as ');
+      writeNodeAsSource(state, spec.exported);
+    }
+  }
+  state.write(' }');
+}
+
 // -----------------------------------------------------------------------------
 // visitors
 // -----------------------------------------------------------------------------
@@ -1121,6 +1203,17 @@ const visitors: Visitors = {
     const strict = state.isStrict || hasUseStrictDirective(body as Node[]);
     state.withStrictMode(strict, () => {
       state.createScope(scope => scope.walkArray(body));
+      const hasModuleDeclaration = body.some(statement => isModuleDeclaration(statement as Node));
+      if (hasModuleDeclaration) {
+        logScriptEnter(state, node);
+        logDeclare(state, node);
+        for (const statement of body) {
+          state.writeln('');
+          state.walk(statement);
+        }
+        logScriptExit(state, node);
+        return;
+      }
       state.writeln('try {');
       state.wrap(() => {
         logScriptEnter(state, node);
@@ -1641,31 +1734,76 @@ const visitors: Visitors = {
     logRead(state, node, name);
   },
   ImportDeclaration: (node, state) => {
-    todo('ImportDeclaration');
+    state.write('import');
+    if (node.specifiers.length > 0) {
+      state.write(' ');
+      writeImportClause(state, node.specifiers as unknown as Node[]);
+      state.write(' from ');
+    } else {
+      state.write(' ');
+    }
+    writeNodeAsSource(state, node.source);
+    writeImportAttributes(state, (node as any).attributes);
+    state.write(';');
   },
   ImportSpecifier: (node, state) => {
-    todo('ImportSpecifier');
+    writeNodeAsSource(state, node.imported);
+    if (node.local.name !== (node.imported as any).name) {
+      state.write(` as ${node.local.name}`);
+    }
   },
   ImportDefaultSpecifier: (node, state) => {
-    todo('ImportDefaultSpecifier');
+    state.write(node.local.name);
   },
   ImportNamespaceSpecifier: (node, state) => {
-    todo('ImportNamespaceSpecifier');
+    state.write(`* as ${node.local.name}`);
   },
   ImportAttribute: (node, state) => {
-    todo('ImportAttribute');
+    writeNodeAsSource(state, node.key);
+    state.write(': ');
+    writeNodeAsSource(state, node.value);
   },
   ExportNamedDeclaration: (node, state) => {
-    todo('ExportNamedDeclaration');
+    state.write('export ');
+    if (node.declaration) {
+      state.walk(node.declaration);
+      return;
+    }
+    writeExportSpecifiers(state, node.specifiers as unknown as Node[]);
+    if (node.source) {
+      state.write(' from ');
+      writeNodeAsSource(state, node.source);
+      writeImportAttributes(state, (node as any).attributes);
+    }
+    state.write(';');
   },
   ExportSpecifier: (node, state) => {
-    todo('ExportSpecifier');
+    writeNodeAsSource(state, node.local);
+    const localName = (node.local as any).name ?? (node.local as any).value;
+    const exportedName = (node.exported as any).name ?? (node.exported as any).value;
+    if (localName !== exportedName) {
+      state.write(' as ');
+      writeNodeAsSource(state, node.exported);
+    }
   },
   ExportDefaultDeclaration: (node, state) => {
-    todo('ExportDefaultDeclaration');
+    state.write('export default ');
+    const decl = node.declaration as Node;
+    state.walk(decl);
+    if (decl.type !== 'FunctionDeclaration' && decl.type !== 'ClassDeclaration') {
+      state.write(';');
+    }
   },
   ExportAllDeclaration: (node, state) => {
-    todo('ExportAllDeclaration');
+    state.write('export *');
+    if ((node as any).exported) {
+      state.write(' as ');
+      writeNodeAsSource(state, (node as any).exported);
+    }
+    state.write(' from ');
+    writeNodeAsSource(state, node.source);
+    writeImportAttributes(state, (node as any).attributes);
+    state.write(';');
   },
   AwaitExpression: (node, state) => {
     logAwait(state, node, node.argument);
@@ -1680,7 +1818,13 @@ const visitors: Visitors = {
     state.write(')');
   },
   ImportExpression: (node, state) => {
-    todo('ImportExpression');
+    state.write('import(');
+    logExpression(state, (node as any).source);
+    if ((node as any).options) {
+      state.write(', ');
+      logExpression(state, (node as any).options);
+    }
+    state.write(')');
   },
   ParenthesizedExpression: (node, state) => {
     state.write('(');

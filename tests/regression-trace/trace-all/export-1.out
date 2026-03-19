@@ -1,0 +1,31 @@
+Se() @ 1:1-10:1
+  D(value, <const>, false) @ 1:1-10:1
+  D(alias, <const>, false) @ 1:1-10:1
+  D(ns, <const>, false) @ 1:1-10:1
+  D(total, <const>, false) @ 1:1-10:1
+  L("data:text/javascript...") @ 3:25-86
+  E("data:text/javascript...") @ 3:25-86
+  E(<object>) @ 3:18-87
+Aw(<object>) @ 3:12-87
+Awr(<object>) @ 3:12-87
+  E(<object>) @ 3:12-87
+  W([ns], <object>) @ 3:12-87
+  R(value, 40) @ 4:15-20
+  R(alias, 2) @ 4:23-28
+  B[pre](+, 40, 2) @ 4:15-28
+  B(+, 40, 2, 42) @ 4:15-28
+  R(ns, <object>) @ 4:31-33
+  G[pre](<object>, "extra") @ 4:31-39
+  G(<object>, "extra", 5) @ 4:31-39
+  B[pre](+, 42, 5) @ 4:15-39
+  B(+, 42, 5, 47) @ 4:15-39
+  E(47) @ 4:15-39
+  W([total], 47) @ 4:15-39
+  R(total, 47) @ 7:16-21
+  R(print, <function>) @ 9:1-6
+  R(total, 47) @ 9:7-12
+  F[pre](<function>, undefined, [47], false, false) @ 9:1-6
+47
+  F(<function>, undefined, [47], undefined, false, false) @ 9:1-6
+  E(undefined) @ 9:1-13
+Sx() @ 1:1-10:1
