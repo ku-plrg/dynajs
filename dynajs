@@ -22,4 +22,6 @@ if [ -z "$DYNAJS_ANALYSIS" ]; then
   echo "Warning: DYNAJS_ANALYSIS is not set." >&2
 fi
 
+# TODO: check if DYNAJS_PARTIAL_HOOK is set.
+
 NODE_OPTIONS="$NODE_OPTIONS --import $DYNAJS_HOME/dist/import.js" "$@"
