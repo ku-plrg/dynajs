@@ -529,7 +529,8 @@ function Swl(id: number, value: any): any {
 // hook for right side of a switch case
 function Swr(id: number, caseValue: any): any {
   const result = B(id, '===', switchLeft, caseValue);
-  return C(id, 'switch', result);
+  C(id, 'switch', result);
+  return caseValue;
 }
 
 // hook for variable declarations
