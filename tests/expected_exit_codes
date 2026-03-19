@@ -1,3 +1,5 @@
 {
+  "tests/regression-trace/compare-some/switch-1.js": 1,
+  "tests/regression-trace/trace-all/default-property-2.js": 1,
   "tests/regression-trace/trace-all/throw-1.js": 1
 }

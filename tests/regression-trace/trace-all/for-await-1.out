@@ -3,13 +3,13 @@ Se() @ 1:1-13:1
   D(main, <function>, <function>, false) @ 1:1-13:1
   R(main, <function>) @ 12:1-5
   F[pre](<function>, undefined, [], false, false) @ 12:1-5
-  Fe(<function>, <object>, []) @ 6:1-10:2
+  Fe(<function>, undefined, []) @ 6:1-10:2
     D(arguments, <arguments>, <object>, false) @ 6:1-10:2
     R(gen, <function>) @ 7:25-28
     F[pre](<function>, undefined, [], false, false) @ 7:25-28
     F(<function>, undefined, [], <object>, false, false) @ 7:25-28
     O(forIn, <object>) @ 7:25-30
-    Fe(<function>, <object>, []) @ 1:1-4:2
+    Fe(<function>, undefined, []) @ 1:1-4:2
       D(arguments, <arguments>, <object>, false) @ 1:1-4:2
       L(1) @ 2:9-10
       E(1) @ 2:9-10

@@ -2,15 +2,15 @@ import pathlib
 
 import pytest
 
+from target_files import iter_test_targets
+
 
 TEST_DIR = pathlib.Path("tests/regression-node/empty")
 ANALYSIS = "samples/EmptyAnalysis.js"
 
 
 def discover_cases():
-    for js_file in sorted(TEST_DIR.rglob("*.js")):
-        if not js_file.name.endswith("__dynajs__.js"):
-            yield js_file
+    yield from iter_test_targets(TEST_DIR)
 
 
 CASES = list(discover_cases())

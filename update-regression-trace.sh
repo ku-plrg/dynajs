@@ -5,6 +5,8 @@
 
 set -e
 
+export DYNAJS_HOME="${DYNAJS_HOME:-$(pwd)}"
+
 npm run build
 
 PATTERN="${1:-}"
@@ -21,9 +23,12 @@ tests/regression-trace/compare-some samples/CompareSome.js
 EOF
 
 while read -r suite_dir analysis; do
-    find "$suite_dir" -name '*.js' ! -name '*__dynajs__.js' | sort > "$SUITE_TMP_FILE"
+    find "$suite_dir" -type f \( -name '*.js' -o -name '*.cjs' -o -name '*.mjs' \) \
+        ! -name '*__dynajs__.js' \
+        ! -name '*__dynajs__.cjs' \
+        ! -name '*__dynajs__.mjs' | sort > "$SUITE_TMP_FILE"
     while IFS= read -r js_file; do
-        out_file="${js_file%.js}.out"
+        out_file="${js_file%.*}.out"
 
         if [ -n "$PATTERN" ]; then
             case "$js_file" in *"$PATTERN"*) ;; *) continue ;; esac
@@ -34,7 +39,7 @@ while read -r suite_dir analysis; do
             continue
         fi
 
-        if output=$(node --require ./tests/harness.js ./dynajs analyze --full -a "$analysis" "$js_file" 2>/dev/null); then
+        if output=$(DYNAJS_ANALYSIS="$analysis" DYNAJS_PARTIAL_HOOK=1 ./dynajs node "$js_file" 2>/dev/null); then
             printf '%s\n' "$output" > "$out_file"
             echo "  updated: $out_file"
             UPDATED=$((UPDATED + 1))

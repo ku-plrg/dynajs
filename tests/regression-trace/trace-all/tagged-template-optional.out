@@ -12,7 +12,7 @@ Se() @ 1:1-7:1
   L(42) @ 6:35-37
   F[pre](<function>, undefined, [<array>, "world", 42], false, false) @ 6:2-10
   TT[pre](<function>, undefined, <array>, ["world", 42], false) @ 6:2-10
-  Fe(<function>, <object>, [<array>, "world", 42]) @ 2:8-4:4
+  Fe(<function>, undefined, [<array>, "world", 42]) @ 2:8-4:4
     D(tag, <function>, <function>, false) @ 2:8-4:4
     D(arguments, <arguments>, <object>, false) @ 2:8-4:4
     D(strings, <param>, <array>, false) @ 2:8-4:4

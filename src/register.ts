@@ -1,5 +1,5 @@
 import type { LoadHook, ResolveHook } from "node:module";
-import { instrument } from "./instrument.js";
+import { instrument, instrumentFile } from "./instrument.js";
 
 function isInstrumentTarget(url: string): boolean {
   return url.startsWith('file://');
@@ -7,7 +7,9 @@ function isInstrumentTarget(url: string): boolean {
 
 function instrumentSource(source: string, url: string): string {
   // TODO partial hooking
-  return instrument(source, { detail: false });
+  const stripped = url.startsWith('file://') ? url.slice('file://'.length) : url;
+  const str = instrumentFile(stripped, { detail: false }); // TODO options
+  return str;
 }
 
 export const resolve: ResolveHook = async (specifier, context, nextResolve) => {
@@ -16,8 +18,6 @@ export const resolve: ResolveHook = async (specifier, context, nextResolve) => {
 
 export const load: LoadHook = async (url, context, nextLoad) => {
   const result = await nextLoad(url, context);
-  // TODO instrument
-  console.log(`Loading module: ${url}`);
   if (isInstrumentTarget(url) && result.source) {
     result.source = instrumentSource(result.source.toString(), url);
   }

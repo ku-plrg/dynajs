@@ -1,3 +1,4 @@
+import os
 import pathlib
 import shutil
 import subprocess
@@ -25,6 +26,11 @@ def dynajs_path():
 
 
 @pytest.fixture(scope="session")
+def repo_root():
+    return pathlib.Path(__file__).resolve().parent.parent
+
+
+@pytest.fixture(scope="session")
 def harness_path():
     path = pathlib.Path("tests/harness.js")
     if not path.exists():
@@ -48,24 +54,31 @@ def run_plain_node(harness_path):
 
 
 @pytest.fixture
-def run_dynajs(harness_path, dynajs_path):
+def run_dynajs(dynajs_path, repo_root):
     def _run(analysis, args, mode="partial", **kwargs):
-        mode_flag = "--full" if mode == "full" else "--partial"
+        env = dict(kwargs.pop("env", {}))
+        env.update(
+            {
+                **os.environ,
+                "DYNAJS_HOME": str(repo_root),
+                "DYNAJS_ANALYSIS": str((repo_root / analysis).resolve()),
+            }
+        )
+        if mode == "partial":
+            env["DYNAJS_PARTIAL_HOOK"] = "1"
+        else:
+            env.pop("DYNAJS_PARTIAL_HOOK", None)
+
         return subprocess.run(
             [
-                "node",
-                "--require",
-                str(harness_path),
                 str(dynajs_path),
-                "analyze",
-                mode_flag,
-                "-a",
-                analysis,
+                "node",
                 *map(str, args),
             ],
             capture_output=True,
             text=True,
             check=False,
+            env=env,
             **kwargs,
         )
 

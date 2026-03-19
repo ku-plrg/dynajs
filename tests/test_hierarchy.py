@@ -2,11 +2,13 @@ import pathlib
 
 import pytest
 
+from target_files import iter_test_targets
+
 HIERARCHY_DIR = pathlib.Path("tests/regression-trace/hierarchy")
 ANALYSIS = "samples/HierarchyDemo.js"
 
 def discover_hierarchy_cases():
-    for js_file in sorted(HIERARCHY_DIR.rglob("*.js")):
+    for js_file in iter_test_targets(HIERARCHY_DIR):
         out_file = js_file.with_suffix(".out")
         if out_file.exists():
             yield js_file, out_file

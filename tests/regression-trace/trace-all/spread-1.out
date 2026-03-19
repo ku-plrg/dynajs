@@ -10,7 +10,7 @@ Se() @ 1:1-5:9
   R(f, <function>) @ 5:1-2
   R(a, <array>) @ 5:6-7
   F[pre](<function>, undefined, [1, 2, 3], false, false) @ 5:1-2
-  Fe(<function>, <object>, [1, 2, 3]) @ 2:1-4:2
+  Fe(<function>, undefined, [1, 2, 3]) @ 2:1-4:2
     D(arguments, <arguments>, <object>, false) @ 2:1-4:2
     D(x, <param>, 1, false) @ 2:1-4:2
     D(y, <param>, 2, false) @ 2:1-4:2

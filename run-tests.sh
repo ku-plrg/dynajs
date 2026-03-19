@@ -1,5 +1,7 @@
 #!/bin/sh
 
+export DYNAJS_HOME="${DYNAJS_HOME:-$(pwd)}"
+
 # check ptw is installed
 if ! command -v ptw &> /dev/null
 then

@@ -3,6 +3,8 @@ import pathlib
 
 import pytest
 
+from target_files import iter_test_targets
+
 
 TEST_DIR = pathlib.Path("tests/regression-node/trace-all")
 ANALYSIS = "samples/TraceAll.js"
@@ -23,10 +25,7 @@ def assert_expected_exit_code(result, js_file):
 
 
 def discover_output_cases():
-    for js_file in sorted(TEST_DIR.rglob("*.js")):
-        if js_file.name.endswith("__dynajs__.js"):
-            continue
-
+    for js_file in iter_test_targets(TEST_DIR):
         out_file = js_file.with_suffix(".out")
         if out_file.exists():
             yield js_file, out_file
@@ -37,10 +36,7 @@ OUTPUT_CASE_PATHS = {js_file for js_file, _ in OUTPUT_CASES}
 
 
 def discover_exit_only_cases():
-    for js_file in sorted(TEST_DIR.rglob("*.js")):
-        if js_file.name.endswith("__dynajs__.js"):
-            continue
-
+    for js_file in iter_test_targets(TEST_DIR):
         if js_file not in OUTPUT_CASE_PATHS:
             yield js_file
 

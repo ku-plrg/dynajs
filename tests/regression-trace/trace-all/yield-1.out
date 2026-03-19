@@ -11,7 +11,7 @@ Se() @ 1:1-10:11
   G(<object>, "next", <function>) @ 8:1-7
   L(4) @ 8:8-9
   F[pre](<function>, <object>, [4], false, true) @ 8:1-7
-  Fe(<function>, <object>, []) @ 1:1-5:2
+  Fe(<function>, undefined, []) @ 1:1-5:2
     D(arguments, <arguments>, <object>, false) @ 1:1-5:2
     L(1) @ 2:17-18
     E(1) @ 2:17-18
