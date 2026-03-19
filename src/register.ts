@@ -7,20 +7,30 @@ import { log } from "./utils.js";
 
 const targetRoot = path.resolve(process.cwd());
 
-function isInstrumentTarget(url: string): boolean {
+function getFilePathFromUrl(url: string): string | null {
   if (!url.startsWith('file://')) {
+    return null;
+  }
+
+  const parsed = new URL(url);
+  parsed.search = '';
+  parsed.hash = '';
+  return fileURLToPath(parsed);
+}
+
+function isInstrumentTarget(url: string): boolean {
+  const filename = getFilePathFromUrl(url);
+  if (filename === null) {
     return false;
   }
 
-  const filename = fileURLToPath(url);
   const relative = path.relative(targetRoot, filename);
   return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
 }
 
 function instrumentSource(source: string, url: string): string {
-  // TODO partial hooking
-  const stripped = url.startsWith('file://') ? url.slice('file://'.length) : url;
-  const str = instrumentFile(stripped, { detail: false, isScript: false }); // TODO options
+  const filename = getFilePathFromUrl(url) ?? url;
+  const str = instrumentFile(filename, { detail: false, isScript: false }); // TODO options
   return str;
 }
 
