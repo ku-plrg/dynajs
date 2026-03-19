@@ -9,6 +9,7 @@ function prepareGlobal(): void {
   setBaseObj();
   const DYNAJS_ANALYSIS = process.env.DYNAJS_ANALYSIS;
   if (DYNAJS_ANALYSIS) {
+    // NOTE this `require` is filled by `requireBanner` of `scripts/build-inject.mjs`.
     require(path.resolve(DYNAJS_ANALYSIS));
   }
   // @ts-ignore - set globalThis.D$ to the analysis object
