@@ -1,5 +1,7 @@
 import type { LoadHook, ResolveHook } from "node:module";
 import { instrument, instrumentFile } from "./instrument.js";
+import { DYNAJS_VERBOSE as verbose } from "./constants/general.js";
+import { log } from "./utils.js";
 
 function isInstrumentTarget(url: string): boolean {
   return url.startsWith('file://');
@@ -18,6 +20,7 @@ export const resolve: ResolveHook = async (specifier, context, nextResolve) => {
 
 export const load: LoadHook = async (url, context, nextLoad) => {
   const result = await nextLoad(url, context);
+  if (verbose) log(`Loading ${url} with custom loader...`);
   if (isInstrumentTarget(url) && result.source) {
     result.source = instrumentSource(result.source.toString(), url);
   }

@@ -2,9 +2,10 @@ import { register } from "node:module";
 import { pathToFileURL } from "node:url";
 import path from "node:path";
 import Module from 'module';
-import { readFile } from "./utils.js";
+import { log, readFile } from "./utils.js";
 import { setBaseObj } from './analysis.js';
 import { instrument } from "./instrument.js";
+import { DYNAJS_VERBOSE as verbose } from "./constants/general.js";
 
 function prepareGlobal(): void {
   setBaseObj();
@@ -36,6 +37,7 @@ function registerCJSloader(): void {
   const ModuleAny = Module as any;
   ModuleAny._extensions['.js'] = function (module: any, filename: string) {
     const code = readFile(filename);
+    if (verbose) log(`Loading ${filename} with custom loader...`);
     const instrumentedCode = instrument(code, { detail: false, isScript: false }); // TODO: options
     module._compile(instrumentedCode, filename);
   };
