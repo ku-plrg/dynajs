@@ -1408,6 +1408,28 @@ const visitors: Visitors = {
     if (isDisabled) state.write(')');
   },
   MemberExpression: (node, state) => {
+    if (state.isLHS) {
+      // assignment target (e.g. element in destructuring pattern) — cannot wrap
+      // in D$.G(...) because that produces a value, not an lvalue; instead write
+      // the plain member access while still logging reads for object/property
+      const { object, property, computed, optional } = node as MemberExpression;
+      const prev = state.isLHS;
+      state.isLHS = false;
+      state.walk(object);
+      state.isLHS = prev;
+      if (computed) {
+        state.write(optional ? '?.[' : '[');
+        state.isLHS = false;
+        state.walk(property);
+        state.isLHS = prev;
+        state.write(']');
+      } else if (property.type === 'Identifier') {
+        state.write(optional ? `?.${property.name}` : `.${property.name}`);
+      } else if (property.type === 'PrivateIdentifier') {
+        state.write(optional ? `?.#${(property as any).name}` : `.#${(property as any).name}`);
+      }
+      return;
+    }
     logGetField(state, node);
   },
   ConditionalExpression: (node, state) => {
