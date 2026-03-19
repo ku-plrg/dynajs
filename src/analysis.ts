@@ -6,9 +6,9 @@ import {
   log,
   stringify,
   todo,
-} from './utils';
-import type { Analysis } from './types/analysis';
-import * as utils from './utils';
+} from './utils.js';
+import type { Analysis } from './types/analysis.js';
+import * as utils from './utils.js';
 
 // sentinel symbol for optional chain short-circuit propagation
 const chainSkip = Symbol('D$.chainSkip');

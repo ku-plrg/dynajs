@@ -6,11 +6,11 @@ import {
   log,
   readFile,
   stringify,
-} from './utils';
-import { instrumentFile } from './instrument';
-import { SCRIPT_NAME } from './constants/general';
+} from './utils.js';
+import { instrumentFile } from './instrument.js';
+import { SCRIPT_NAME } from './constants/general.js';
 import './analysis';
-import { CALLBACK_TO_FEATURES, FEATURE_CHECK_ALL_FALSE, type FeatureTag, type FeatureTagCheck } from './types';
+import { CALLBACK_TO_FEATURES, FEATURE_CHECK_ALL_FALSE, type FeatureTag, type FeatureTagCheck } from './types.js';
 
 // `instrument` command
 const instrumentCommand = (argv: any): void => {

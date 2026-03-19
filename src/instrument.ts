@@ -3,7 +3,7 @@ import {
   EXCEPTION_VAR,
   TEMP_PARAM_VAR,
   NO_INSTRUMENT,
-} from './constants/general';
+} from './constants/general.js';
 import type {
   AnyNode,
   BinaryExpression,
@@ -39,9 +39,9 @@ import {
   todo,
   warn,
   writeFile,
-} from './utils';
-import { FEATURE_CHECK_ALL_TRUE, type FeatureTagCheck } from './types';
-import * as LOG from './constants/hook';
+} from './utils.js';
+import { FEATURE_CHECK_ALL_TRUE, type FeatureTagCheck } from './types.js';
+import * as LOG from './constants/hook.js';
 
 // instrument a JS file
 export function instrumentFile(filename: string, options: Options = {}): string {

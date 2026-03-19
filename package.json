@@ -20,7 +20,7 @@
     "url": "git+https://github.com/ku-plrg/dynajs.git"
   },
   "license": "BSD-3-Clause",
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/ku-plrg/dynajs/issues"
   },
