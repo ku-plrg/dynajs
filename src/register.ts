@@ -1,11 +1,13 @@
 import type { LoadHook, ResolveHook } from "node:module";
+import { instrument } from "./instrument.js";
 
 function isInstrumentTarget(url: string): boolean {
   return url.startsWith('file://');
 }
 
 function instrumentSource(source: string, url: string): string {
-  return source; // `// Instrumented by DynaJS\n` + source + `\nconsole.log("Instrumented!");`;
+  // TODO partial hooking
+  return instrument(source, { detail: false });
 }
 
 export const resolve: ResolveHook = async (specifier, context, nextResolve) => {

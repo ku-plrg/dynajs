@@ -4,6 +4,7 @@ import path from "node:path";
 import Module from 'module';
 import { readFile } from "./utils.js";
 import { setBaseObj } from './analysis.js';
+import { instrument } from "./instrument.js";
 
 function prepareGlobal(): void {
   setBaseObj();
@@ -34,10 +35,9 @@ function registerESMloader(): void {
 function registerCJSloader(): void {
   const ModuleAny = Module as any;
   ModuleAny._extensions['.js'] = function (module: any, filename: string) {
-    // TODO instrument file
-    console.log(`Loading cjs: ${filename}`);
     const code = readFile(filename);
-    module._compile(code, filename);
+    const instrumentedCode = instrument(code, { detail: false }); // TODO: options
+    module._compile(instrumentedCode, filename);
   };
 }
 
