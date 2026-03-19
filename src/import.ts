@@ -33,12 +33,22 @@ function registerESMloader(): void {
   register("./register.js", baseURL);
 }
 
+const targetRoot = path.resolve(process.cwd());
+
+function isInstrumentTarget(filepath: string): boolean {
+  const relative = path.relative(targetRoot, filepath);
+  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+}
+
 function registerCJSloader(): void {
   const ModuleAny = Module as any;
   ModuleAny._extensions['.js'] = function (module: any, filename: string) {
     const code = readFile(filename);
-    if (verbose) log(`Loading ${filename} with custom loader...`);
-    const instrumentedCode = instrument(code, { detail: false, isScript: false }); // TODO: options
+    if (verbose) log(`Loading (CJS) ${filename} with custom loader...`);
+    let instrumentedCode = code;
+    if (isInstrumentTarget(filename)) {
+      instrumentedCode = instrument(code, { detail: false, isScript: false }); // TODO: options
+    }
     module._compile(instrumentedCode, filename);
   };
 }
