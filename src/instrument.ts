@@ -44,7 +44,7 @@ import { FEATURE_CHECK_ALL_TRUE, type FeatureTagCheck } from './types.js';
 import * as LOG from './constants/hook.js';
 
 // instrument a JS file
-export function instrumentFile(filename: string, options: Options = {}): string {
+export function instrumentFile(filename: string, options: Options): string {
   const code = readFile(filename);
   const { detail } = options;
   options.originalPath = filename;
@@ -62,9 +62,9 @@ export function instrumentFile(filename: string, options: Options = {}): string 
 }
 
 // return the instrumented code
-export function instrument(code: string, options: Options = {}): string {
+export function instrument(code: string, options: Options): string {
   if (options.detail) header('Instrumenting the code...');
-  const ast = parse(code);
+  const ast = parse(code, options.isScript);
   const state = new State(options);
   if (options.detail) log(stringify(ast));
 
@@ -102,7 +102,7 @@ export class State {
   isDerivedConstructor: boolean;
   isStrict: boolean;
 
-  constructor(options: Options = {}) {
+  constructor(options: Options) {
     this.output = '';
     if (options.write != null) {
       this.write = options.write;
@@ -210,6 +210,7 @@ interface Options {
   originalPath?: string
   detail?: boolean
   isEnabled?: FeatureTagCheck
+  isScript: boolean
 }
 
 // -----------------------------------------------------------------------------

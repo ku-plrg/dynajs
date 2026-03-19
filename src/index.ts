@@ -19,7 +19,7 @@ const require = createRequire(import.meta.url);
 const instrumentCommand = (argv: any): void => {
   const [ targetPath ] = getArgs('instrument', argv, 1);
   const { detail } = argv;
-  instrumentFile(targetPath, { detail });
+  instrumentFile(targetPath, { detail, isScript: true });
 }
 
 // `analyze` command
@@ -63,7 +63,7 @@ function analyze(targetPath: string, options: any = {}): string {
   // override the .js extension handler
   const ModuleAny = Module as any;
   ModuleAny._extensions['.js'] = function (module: any, filename: string) {
-    let instrumentedCode: string = instrumentFile(filename, { detail, isEnabled: hooks });
+    let instrumentedCode: string = instrumentFile(filename, { detail, isEnabled: hooks, isScript: true });
     module._compile(instrumentedCode, filename);
   };
 

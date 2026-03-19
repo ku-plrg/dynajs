@@ -150,8 +150,9 @@ export function todo(msg: string = '') {
 }
 
 // parse the string into an AST
-export function parse(code: string): Program {
-  return acorn.parse(code, {locations: true, ecmaVersion: 2025});
+export function parse(code: string, isScript: boolean): Program {
+  const sourceType = isScript ? 'script' : 'module';
+  return acorn.parse(code, {locations: true, ecmaVersion: 2025, sourceType });
 }
 
 // input validity check

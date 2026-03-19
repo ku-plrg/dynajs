@@ -36,7 +36,7 @@ function registerCJSloader(): void {
   const ModuleAny = Module as any;
   ModuleAny._extensions['.js'] = function (module: any, filename: string) {
     const code = readFile(filename);
-    const instrumentedCode = instrument(code, { detail: false }); // TODO: options
+    const instrumentedCode = instrument(code, { detail: false, isScript: false }); // TODO: options
     module._compile(instrumentedCode, filename);
   };
 }

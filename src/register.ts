@@ -8,7 +8,7 @@ function isInstrumentTarget(url: string): boolean {
 function instrumentSource(source: string, url: string): string {
   // TODO partial hooking
   const stripped = url.startsWith('file://') ? url.slice('file://'.length) : url;
-  const str = instrumentFile(stripped, { detail: false }); // TODO options
+  const str = instrumentFile(stripped, { detail: false, isScript: false }); // TODO options
   return str;
 }
 
