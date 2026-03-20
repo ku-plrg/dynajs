@@ -636,7 +636,10 @@ function logForInOfStatement(state: State, node: Node, isForIn: boolean, isAwait
     } else {
       id = left;
     }
+    const needsParens = left.type !== 'VariableDeclaration' && id.type === 'ObjectPattern';
+    if (needsParens) state.write('(');
     logWrite(state, id, right, () => state.write(LOG.TEMP_VAR));
+    if (needsParens) state.write(')');
     state.write(';');
     state.writeln('');
     state.walk(body);

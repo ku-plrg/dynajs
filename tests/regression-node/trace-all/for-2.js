@@ -1,0 +1,1 @@
+for await (let { w, x } of [{ x: 4 }]) { }
