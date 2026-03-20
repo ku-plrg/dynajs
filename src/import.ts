@@ -4,7 +4,7 @@ import path from "node:path";
 import Module from 'module';
 import { log, readFile } from "./utils.js";
 import { setBaseObj } from './analysis.js';
-import { instrument } from "./instrument.js";
+import { instrumentFile } from "./instrument.js";
 import { DYNAJS_VERBOSE as verbose } from "./constants/general.js";
 
 function prepareGlobal(): void {
@@ -40,17 +40,20 @@ function isInstrumentTarget(filepath: string): boolean {
   return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
 }
 
+function cjsLoader (module: any, filename: string) {
+    if (verbose) log(`Loading (CJS) ${filename} with custom loader...`);
+    let code : string;
+    if (isInstrumentTarget(filename)) {
+      code = instrumentFile(filename, { detail: false, isScript: false }); // TODO: options
+    } else {
+      code = readFile(filename);
+    }
+    module._compile(code, filename);
+  };
+
 function registerCJSloader(): void {
   const ModuleAny = Module as any;
-  ModuleAny._extensions['.js'] = function (module: any, filename: string) {
-    const code = readFile(filename);
-    if (verbose) log(`Loading (CJS) ${filename} with custom loader...`);
-    let instrumentedCode = code;
-    if (isInstrumentTarget(filename)) {
-      instrumentedCode = instrument(code, { detail: false, isScript: false }); // TODO: options
-    }
-    module._compile(instrumentedCode, filename);
-  };
+  ModuleAny._extensions['.js'] = cjsLoader;
 }
 
 function main(): void {
