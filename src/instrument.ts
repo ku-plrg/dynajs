@@ -1680,6 +1680,7 @@ const visitors: Visitors = {
       if (i > 0) state.write(', ');
       const elem = elements[i];
       if (elem != null) state.walk(elem);
+      else if (i === elements.length - 1) state.write(',');
     }
     state.write(']');
   },
