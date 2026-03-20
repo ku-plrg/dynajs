@@ -1,4 +1,3 @@
-// This is a sample analysis to compare trace output afterward.
 (function(){
 
     globalThis.__level = globalThis.__level ?? 0;
@@ -12,6 +11,13 @@
             case 'object': return val === null ? 'null' : '<object>';
             case 'function': return '<function>';
         }
+    }
+
+    function specToString(val) {
+        if (typeof val === 'symbol') {
+            return val.toString();
+        }
+        return String(new String(val));
     }
 
     function stringify(val) {
@@ -60,28 +66,28 @@
         },
 
         getFieldPre: function (iid, base, prop) {
-            var proptoString = typeof prop === 'object' || typeof prop === 'function' ? '<side effect>' : prop.toString();
+            var proptoString = typeof prop === 'object' || typeof prop === 'function' ? '<side effect>' : specToString(prop);
             stringify({ type: "getFieldPre", prop: proptoString, level: __level });
             ++__level;
             return { base: base, prop: prop, skip: false };
         },
 
         getField: function (iid, base, prop, result) {
-            var proptoString = typeof prop === 'object' || typeof prop === 'function' ? '<side effect>' : prop.toString();
+            var proptoString = typeof prop === 'object' || typeof prop === 'function' ? '<side effect>' : specToString(prop);
             stringify({ type: "getField", prop: proptoString, level: __level });
             --__level;
             return { result };
         },
 
         putFieldPre: function (iid, base, prop, value) {
-            var proptoString = typeof prop === 'object' || typeof prop === 'function' ? '<side effect>' : prop.toString();
+            var proptoString = typeof prop === 'object' || typeof prop === 'function' ? '<side effect>' : specToString(prop);
             stringify({ type: "putFieldPre", prop: proptoString, level: __level });
             ++__level;
             return { base, prop, value, skip: false };
         },
 
         putField: function (iid, base, prop, value) {
-            var proptoString = typeof prop === 'object' || typeof prop === 'function' ? '<side effect>' : prop.toString();
+            var proptoString = typeof prop === 'object' || typeof prop === 'function' ? '<side effect>' : specToString(prop);
             stringify({ type: "putField", prop: proptoString, level: __level });
             --__level;
             return { result: value };
