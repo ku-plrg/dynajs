@@ -637,6 +637,12 @@ function X(id: number, exception: any): void {
   uncaughtException = { exception };
 }
 
+// hook for catch clause enter — always emitted, clears uncaughtException
+// regardless of isEnabled.D so partial hooking cannot leave it stale
+function Ce(): void {
+  uncaughtException = undefined;
+}
+
 // hook for class field initialization
 function Fi(id: number, obj: any, key: any, isStatic: boolean, value: any): any {
   const post = D$.analysis.fieldInit?.(id, obj, key, isStatic, value);
@@ -671,7 +677,7 @@ const BASE = {
   Ch,
   Se, Sx, F, M, TF, TM, Fe, Fx, Re, O, E, G, P, De,
   U, B, Up, C, Swl, Swr, D, R, W, L, Th, X, Y, Yr, Aw, Awr,
-  Fi, SBe, SBx
+  Fi, SBe, SBx, Ce
 };
 type DynaJSType = typeof BASE & {
   analysis: Analysis;

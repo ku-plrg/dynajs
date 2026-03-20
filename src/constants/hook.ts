@@ -36,3 +36,4 @@ export const CHAIN = DYNAJS_VAR + '.Ch';
 export const FIELD_INIT         = `${DYNAJS_VAR}.Fi`;
 export const STATIC_BLOCK_ENTER = `${DYNAJS_VAR}.SBe`;
 export const STATIC_BLOCK_EXIT  = `${DYNAJS_VAR}.SBx`;
+export const CATCH_ENTER        = `${DYNAJS_VAR}.Ce`;

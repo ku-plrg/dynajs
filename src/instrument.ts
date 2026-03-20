@@ -1361,6 +1361,7 @@ const visitors: Visitors = {
       state.withLHS(() => state.walk(param));
       state.write(') {');
       state.wrap(() => {
+        state.writeln(`${LOG.CATCH_ENTER}();`);
         logDeclare(state, node);
         state.writeln('');
         state.walk(body);
@@ -1908,6 +1909,7 @@ const visitors: Visitors = {
       state.writeln(`} catch (${EXCEPTION_VAR}) {`);
       state.wrap(() => {
         logException(state, node);
+        state.writeln(`throw ${EXCEPTION_VAR};`);
       });
       state.writeln(`} finally {`);
       state.wrap(() => {
