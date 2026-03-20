@@ -1507,15 +1507,8 @@ const visitors: Visitors = {
     } else if (method) {
       logFunc(state, value, true);
     } else if (kind === 'init') {
-      switch (value.type) {
-        case 'AssignmentPattern': 
-          state.write('= ');
-          state.walk(value);
-          break;
-        default:
-          state.write(': ');
-          state.walk(value);
-      }
+      state.write(': ');
+      state.walk(value);
     } else { // kind is 'get' or 'set'
       logFunc(state, value, true);
     }
