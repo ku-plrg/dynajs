@@ -1295,6 +1295,7 @@ const visitors: Visitors = {
     if (label != null) {
       state.write(` ${label.name}`);
     }
+    state.write(';');
   },
   IfStatement: (node, state) => {
     const { test, consequent, alternate } = node;
