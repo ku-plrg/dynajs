@@ -2,17 +2,13 @@ import yargs from 'yargs/yargs';
 import Module from 'module';
 import path from 'path';
 import { createRequire } from 'node:module';
-import {
-  getArgs,
-  log,
-  readFile,
-  stringify,
-} from './utils.js';
+import { getArgs, readFile } from './utils.js';
 import { instrumentFile } from './instrument.js';
 import { SCRIPT_NAME } from './constants/general.js';
 import { setBaseObj } from './analysis.js';
-import { CALLBACK_TO_FEATURES, FEATURE_CHECK_ALL_FALSE, type FeatureTag, type FeatureTagCheck } from './types.js';
+import { checkAnalysisHooks } from './boot.js';
 
+// need `require` to load the analysis callback
 const require = createRequire(import.meta.url);
 
 // `instrument` command
@@ -26,21 +22,6 @@ const instrumentCommand = (argv: any): void => {
 function analyzeCommand(argv: any): void {
   const [ targetPath ] = getArgs('analyze', argv, 1);
   analyze(targetPath, argv);
-}
-
-function checkAnalysisHooks(fullOpt: boolean): FeatureTagCheck | undefined {
-  if (fullOpt) return undefined;
-
-  const analysis = D$.analysis;
-  if (!analysis) return undefined;
-
-  const tags: FeatureTagCheck = { ...FEATURE_CHECK_ALL_FALSE };
-  for (const [callbackName, hookTags] of Object.entries(CALLBACK_TO_FEATURES)) {
-    if (callbackName in analysis) {
-      for (const tag of hookTags) tags[tag as FeatureTag] = true;
-    }
-  }
-  return tags;
 }
 
 function prepareGlobals(): void {

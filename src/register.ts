@@ -1,10 +1,12 @@
-import type { LoadHook, ResolveHook } from "node:module";
+import type { InitializeHook, LoadHook, ResolveHook } from "node:module";
+import type { FeatureTagCheck } from "./types.js";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { instrumentFile } from "./instrument.js";
 import { DYNAJS_VERBOSE as verbose } from "./constants/general.js";
 import { log } from "./utils.js";
 
+let mode: FeatureTagCheck | undefined;
 const targetRoot = path.resolve(process.cwd());
 
 function getFilePathFromUrl(url: string): string | null {
@@ -30,9 +32,13 @@ function isInstrumentTarget(url: string): boolean {
 
 function instrumentSource(source: string, url: string): string {
   const filename = getFilePathFromUrl(url) ?? url;
-  const str = instrumentFile(filename, { detail: false, isScript: false }); // TODO options
+  const str = instrumentFile(filename, { detail: false, isScript: false, isEnabled: mode }); // TODO options
   return str;
 }
+
+export const initialize: InitializeHook = async ({ mode: initialMode }) => {
+  mode = initialMode;
+};
 
 export const resolve: ResolveHook = async (specifier, context, nextResolve) => {
   return nextResolve(specifier, context);

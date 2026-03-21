@@ -5,7 +5,9 @@ import Module from 'module';
 import { log, readFile } from "./utils.js";
 import { setBaseObj } from './analysis.js';
 import { instrumentFile } from "./instrument.js";
-import { DYNAJS_VERBOSE as verbose } from "./constants/general.js";
+import { DYNAJS_PARTIAL_HOOK, DYNAJS_VERBOSE as verbose } from "./constants/general.js";
+import { checkAnalysisHooks } from "./boot.js";
+import { FeatureTagCheck } from "./types.js";
 
 function prepareGlobal(): void {
   setBaseObj();
@@ -26,11 +28,11 @@ function prepareGlobal(): void {
   };
 }
 
-function registerESMloader(): void {
+function registerESMloader(mode : FeatureTagCheck | undefined): void {
   const baseURL = process.env.DYNAJS_HOME
     ? pathToFileURL(path.join(process.env.DYNAJS_HOME, "dist/"))
     : new URL("./", import.meta.url);
-  register("./register.js", baseURL);
+  register("./register.js", baseURL, { data: { mode }});
 }
 
 const targetRoot = path.resolve(process.cwd());
@@ -40,28 +42,24 @@ function isInstrumentTarget(filepath: string): boolean {
   return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
 }
 
-function cjsLoader (module: any, filename: string) {
+function registerCJSloader(mode : FeatureTagCheck | undefined): void {
+  (Module as any)._extensions['.js'] = function cjsLoader (module: any, filename: string) {
     if (verbose) log(`Loading (CJS) ${filename} with custom loader...`);
     let code : string;
     if (isInstrumentTarget(filename)) {
-      code = instrumentFile(filename, { detail: false, isScript: false }); // TODO: options
+      code = instrumentFile(filename, { detail: false, isScript: false, isEnabled: mode }); // TODO: options
     } else {
       code = readFile(filename);
     }
     module._compile(code, filename);
   };
-
-function registerCJSloader(): void {
-  const ModuleAny = Module as any;
-  ModuleAny._extensions['.js'] = cjsLoader;
 }
 
 function main(): void {
   prepareGlobal();
-  registerCJSloader();
-  registerESMloader();
+  const mode : FeatureTagCheck | undefined = checkAnalysisHooks(!DYNAJS_PARTIAL_HOOK);
+  registerCJSloader(mode);
+  registerESMloader(mode);
 }
-// set globalThis
-// globalThis.b = 17;
 
 main();
