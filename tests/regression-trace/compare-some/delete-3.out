@@ -1,1 +1,8 @@
 {"type":"read","name":"Number","level":0}
+{"type":"declare","name":"e","level":0}
+{"type":"read","name":"e","level":0}
+{"type":"read","name":"TypeError","level":0}
+{"type":"binaryPre","op":"instanceof","level":0}
+{"type":"binary","op":"instanceof","level":1}
+{"type":"unaryPre","op":"!","level":0}
+{"type":"unary","op":"!","level":1}
