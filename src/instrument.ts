@@ -132,11 +132,27 @@ export class State {
     return result;
   }
 
-  // create a new scope
-  createScope(body: (scope: Scope) => void, forLexical: boolean = false): void {
+  // create and enter a new scope
+  createScope(body: (scope: Scope) => void, forLexical: boolean = false): Scope {
     const scope = new Scope(this.scope, forLexical);
     body(scope);
     this.scope = scope;
+    return scope;
+  }
+
+  // execute body within a fresh scope and restore the previous scope afterwards
+  withScope<T>(
+    collect: (scope: Scope) => void,
+    body: () => T,
+    forLexical: boolean = false,
+  ): T {
+    const prev = this.scope;
+    this.createScope(collect, forLexical);
+    try {
+      return body();
+    } finally {
+      this.scope = prev;
+    }
   }
 
   withStrictMode<T>(strict: boolean, body: () => T): T {
@@ -522,37 +538,38 @@ function logArrowFuncDeclare(state: State, node: Node): void {
 
 // logging function tail
 function logFunc(state: State, node: Node, isExpr: boolean, isArrow: boolean = false): void {
-  state.createScope(scope => scope.walkFunction(node, isExpr));
-  const { params, body, type, id } = node as Function;
-  const strict = state.isStrict || (body.type === 'BlockStatement' && hasUseStrictDirective(body.body as Node[]));
-  state.write('(');
-  state.withLHS(() => state.walkArray(params));
-  state.write(isArrow ? ') => {' : ') {');
-  state.withStrictMode(strict, () => {
-    state.wrap(() => {
-      state.writeln('try {');
+  state.withScope(scope => scope.walkFunction(node, isExpr), () => {
+    const { params, body, type, id } = node as Function;
+    const strict = state.isStrict || (body.type === 'BlockStatement' && hasUseStrictDirective(body.body as Node[]));
+    state.write('(');
+    state.withLHS(() => state.walkArray(params));
+    state.write(isArrow ? ') => {' : ') {');
+    state.withStrictMode(strict, () => {
       state.wrap(() => {
-        logFuncEnter(state, node as Function);
-        logDeclare(state, node);
-        if (body.type === 'BlockStatement') {
-          for (const statement of body.body) {
+        state.writeln('try {');
+        state.wrap(() => {
+          logFuncEnter(state, node as Function);
+          logDeclare(state, node);
+          if (body.type === 'BlockStatement') {
+            for (const statement of body.body) {
+              state.writeln('');
+              state.walk(statement);
+            }
+          } else {
             state.writeln('');
-            state.walk(statement);
+            logReturn(state, body, () => logExpression(state, body));
           }
-        } else {
-          state.writeln('');
-          logReturn(state, body, () => logExpression(state, body));
-        }
+        });
+        state.writeln(`} catch (${EXCEPTION_VAR}) {`);
+        state.wrap(() => {
+          logException(state, node);
+        });
+        state.writeln(`} finally {`);
+        state.wrap(() => {
+          logFuncExit(state, node);
+        });
+        state.writeln(`}`);
       });
-      state.writeln(`} catch (${EXCEPTION_VAR}) {`);
-      state.wrap(() => {
-        logException(state, node);
-      });
-      state.writeln(`} finally {`);
-      state.wrap(() => {
-        logFuncExit(state, node);
-      });
-      state.writeln(`}`);
     });
   });
   state.writeln('}');
@@ -625,24 +642,25 @@ function logForInOfStatement(state: State, node: Node, isForIn: boolean, isAwait
   logForInOfObject(state, right, true);
   state.write(') {');
   state.wrap(() => {
-    state.createScope(scope => scope.walk(left), true);
-    logDeclare(state, left);
-    state.writeln('');
-    let id: Pattern;
-    if (left.type === 'VariableDeclaration') {
-      const { declarations, kind } = left;
-      state.write(`${kind} `);
-      id = declarations[0].id;
-    } else {
-      id = left;
-    }
-    const needsParens = left.type !== 'VariableDeclaration' && id.type === 'ObjectPattern';
-    if (needsParens) state.write('(');
-    logWrite(state, id, right, () => state.write(LOG.TEMP_VAR));
-    if (needsParens) state.write(')');
-    state.write(';');
-    state.writeln('');
-    state.walk(body);
+    state.withScope(scope => scope.walk(left), () => {
+      logDeclare(state, left);
+      state.writeln('');
+      let id: Pattern;
+      if (left.type === 'VariableDeclaration') {
+        const { declarations, kind } = left;
+        state.write(`${kind} `);
+        id = declarations[0].id;
+      } else {
+        id = left;
+      }
+      const needsParens = left.type !== 'VariableDeclaration' && id.type === 'ObjectPattern';
+      if (needsParens) state.write('(');
+      logWrite(state, id, right, () => state.write(LOG.TEMP_VAR));
+      if (needsParens) state.write(')');
+      state.write(';');
+      state.writeln('');
+      state.walk(body);
+    }, true);
   });
   state.writeln('}');
 }
@@ -1210,36 +1228,37 @@ const visitors: Visitors = {
     const { body } = node;
     const strict = state.isStrict || hasUseStrictDirective(body as Node[]);
     state.withStrictMode(strict, () => {
-      state.createScope(scope => scope.walkArray(body));
-      const hasModuleDeclaration = body.some(statement => isModuleDeclaration(statement as Node));
-      if (hasModuleDeclaration) {
-        logScriptEnter(state, node);
-        logDeclare(state, node);
-        for (const statement of body) {
-          state.writeln('');
-          state.walk(statement);
+      state.withScope(scope => scope.walkArray(body), () => {
+        const hasModuleDeclaration = body.some(statement => isModuleDeclaration(statement as Node));
+        if (hasModuleDeclaration) {
+          logScriptEnter(state, node);
+          logDeclare(state, node);
+          for (const statement of body) {
+            state.writeln('');
+            state.walk(statement);
+          }
+          logScriptExit(state, node);
+          return;
         }
-        logScriptExit(state, node);
-        return;
-      }
-      state.writeln('try {');
-      state.wrap(() => {
-        logScriptEnter(state, node);
-        logDeclare(state, node);
-        for (const statement of body) {
-          state.writeln('');
-          state.walk(statement);
-        }
+        state.writeln('try {');
+        state.wrap(() => {
+          logScriptEnter(state, node);
+          logDeclare(state, node);
+          for (const statement of body) {
+            state.writeln('');
+            state.walk(statement);
+          }
+        });
+        state.writeln(`} catch (${EXCEPTION_VAR}) {`);
+        state.wrap(() => {
+          logException(state, node);
+        });
+        state.writeln(`} finally {`);
+        state.wrap(() => {
+          logScriptExit(state, node);
+        });
+        state.writeln(`}`);
       });
-      state.writeln(`} catch (${EXCEPTION_VAR}) {`);
-      state.wrap(() => {
-        logException(state, node);
-      });
-      state.writeln(`} finally {`);
-      state.wrap(() => {
-        logScriptExit(state, node);
-      });
-      state.writeln(`}`);
     });
   },
   ExpressionStatement: (node, state) => {
@@ -1249,15 +1268,16 @@ const visitors: Visitors = {
   },
   BlockStatement: (node, state) => {
     const { body } = node;
-    state.createScope(scope => scope.walkArray(body), true);
     state.write('{');
-    state.wrap(() => {
-      logDeclare(state, node);
-      for (const statement of body) {
-        state.writeln('');
-        state.walk(statement);
-      }
-    });
+    state.withScope(scope => scope.walkArray(body), () => {
+      state.wrap(() => {
+        logDeclare(state, node);
+        for (const statement of body) {
+          state.writeln('');
+          state.walk(statement);
+        }
+      });
+    }, true);
     state.writeln('}');
   },
   EmptyStatement: (node, state) => {
@@ -1358,22 +1378,23 @@ const visitors: Visitors = {
   },
   CatchClause: (node, state) => {
     const { param, body } = node;
-    state.createScope(scope => scope.walkCatch(node));
     state.write('catch ');
-    if (param != null) {
-      state.write('(');
-      state.withLHS(() => state.walk(param));
-      state.write(') {');
-      state.wrap(() => {
-        state.writeln(`${LOG.CATCH_ENTER}();`);
-        logDeclare(state, node);
-        state.writeln('');
+    state.withScope(scope => scope.walkCatch(node), () => {
+      if (param != null) {
+        state.write('(');
+        state.withLHS(() => state.walk(param));
+        state.write(') {');
+        state.wrap(() => {
+          state.writeln(`${LOG.CATCH_ENTER}();`);
+          logDeclare(state, node);
+          state.writeln('');
+          state.walk(body);
+        });
+        state.writeln('}');
+      } else {
         state.walk(body);
-      });
-      state.writeln('}');
-    } else {
-      state.walk(body);
-    }
+      }
+    });
   },
   WhileStatement: (node, state) => {
     const { test, body } = node;
@@ -1396,20 +1417,21 @@ const visitors: Visitors = {
     if (init != null &&
         init.type === 'VariableDeclaration' &&
         (init.kind === 'let' || init.kind === 'const')) {
-      state.createScope(scope => scope.walk(init), true);
       state.write('{');
-      state.wrap(() => {
-        logDeclare(state, init);
-        state.writeln('');
-        head();
-        state.write('{');
+      state.withScope(scope => scope.walk(init), () => {
         state.wrap(() => {
-          state.writeln('');
-          state.walk(body);
           logDeclare(state, init);
+          state.writeln('');
+          head();
+          state.write('{');
+          state.wrap(() => {
+            state.writeln('');
+            state.walk(body);
+            logDeclare(state, init);
+          });
+          state.writeln('}');
         });
-        state.writeln('}');
-      });
+      }, true);
       state.writeln('}');
     } else {
       // normal for-loop
@@ -1884,36 +1906,37 @@ const visitors: Visitors = {
   },
   StaticBlock: (node, state) => {
     const { body } = node as any;
-    state.createScope(scope => scope.walkArray(body));
     state.write('static {');
-    state.wrap(() => {
-      if (!state.isEnabled.SBe) {
-        logDeclare(state, node);
-        for (const statement of body) {
-          state.writeln('');
-          state.walk(statement);
+    state.withScope(scope => scope.walkArray(body), () => {
+      state.wrap(() => {
+        if (!state.isEnabled.SBe) {
+          logDeclare(state, node);
+          for (const statement of body) {
+            state.writeln('');
+            state.walk(statement);
+          }
+          return;
         }
-        return;
-      }
-      state.writeln('try {');
-      state.wrap(() => {
-        state.writeln(`${LOG.STATIC_BLOCK_ENTER}(${newId(node)}, this);`);
-        logDeclare(state, node);
-        for (const statement of body) {
-          state.writeln('');
-          state.walk(statement);
-        }
+        state.writeln('try {');
+        state.wrap(() => {
+          state.writeln(`${LOG.STATIC_BLOCK_ENTER}(${newId(node)}, this);`);
+          logDeclare(state, node);
+          for (const statement of body) {
+            state.writeln('');
+            state.walk(statement);
+          }
+        });
+        state.writeln(`} catch (${EXCEPTION_VAR}) {`);
+        state.wrap(() => {
+          logException(state, node);
+          state.writeln(`throw ${EXCEPTION_VAR};`);
+        });
+        state.writeln(`} finally {`);
+        state.wrap(() => {
+          state.writeln(`${LOG.STATIC_BLOCK_EXIT}(${newId(node)});`);
+        });
+        state.writeln(`}`);
       });
-      state.writeln(`} catch (${EXCEPTION_VAR}) {`);
-      state.wrap(() => {
-        logException(state, node);
-        state.writeln(`throw ${EXCEPTION_VAR};`);
-      });
-      state.writeln(`} finally {`);
-      state.wrap(() => {
-        state.writeln(`${LOG.STATIC_BLOCK_EXIT}(${newId(node)});`);
-      });
-      state.writeln(`}`);
     });
     state.writeln('}');
   },
