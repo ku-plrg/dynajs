@@ -1417,22 +1417,10 @@ const visitors: Visitors = {
     if (init != null &&
         init.type === 'VariableDeclaration' &&
         (init.kind === 'let' || init.kind === 'const')) {
-      state.write('{');
       state.withScope(scope => scope.walk(init), () => {
-        state.wrap(() => {
-          logDeclare(state, init);
-          state.writeln('');
-          head();
-          state.write('{');
-          state.wrap(() => {
-            state.writeln('');
-            state.walk(body);
-            logDeclare(state, init);
-          });
-          state.writeln('}');
-        });
+        head();
+        emitLexicalForBody(init);
       }, true);
-      state.writeln('}');
     } else {
       // normal for-loop
       head();
@@ -1456,6 +1444,23 @@ const visitors: Visitors = {
       state.write('; ');
       if (update != null) logExpression(state, update);
       state.write(') ');
+    }
+
+    function emitLexicalForBody(decl: Extract<typeof init, { type: 'VariableDeclaration' }>) {
+      state.write('{');
+      state.wrap(() => {
+        logDeclare(state, decl);
+        if (body.type === 'BlockStatement') {
+          for (const statement of body.body) {
+            state.writeln('');
+            state.walk(statement);
+          }
+        } else {
+          state.writeln('');
+          state.walk(body);
+        }
+      });
+      state.writeln('}');
     }
   },
   ForInStatement: (node, state) => {
