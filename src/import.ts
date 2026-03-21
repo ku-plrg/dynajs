@@ -5,7 +5,7 @@ import Module from 'module';
 import { log, readFile } from "./utils.js";
 import { setBaseObj } from './analysis.js';
 import { instrumentFile } from "./instrument.js";
-import { DYNAJS_PARTIAL_HOOK, DYNAJS_VERBOSE as verbose } from "./constants/general.js";
+import { DYNAJS_IGNORE_NODE_MODULES, DYNAJS_PARTIAL_HOOK, DYNAJS_VERBOSE as verbose } from "./constants/general.js";
 import { checkAnalysisHooks } from "./boot.js";
 import { FeatureTagCheck } from "./types.js";
 
@@ -39,6 +39,10 @@ const targetRoot = path.resolve(process.cwd());
 
 function isInstrumentTarget(filepath: string): boolean {
   const relative = path.relative(targetRoot, filepath);
+  // is .includes good enough?
+  if (DYNAJS_IGNORE_NODE_MODULES && relative.includes('node_modules')) {
+    return false;
+  }
   return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
 }
 

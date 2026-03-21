@@ -22,3 +22,4 @@ function checkEnvVar(name: string): boolean {
 // this options are used for `dynajs`, not `dynajs-legacy`.
 export const DYNAJS_VERBOSE = checkEnvVar('DYNAJS_VERBOSE');
 export const DYNAJS_PARTIAL_HOOK = checkEnvVar('DYNAJS_PARTIAL_HOOK');
+export const DYNAJS_IGNORE_NODE_MODULES = checkEnvVar('DYNAJS_IGNORE_NODE_MODULES');

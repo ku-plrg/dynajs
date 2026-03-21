@@ -3,7 +3,7 @@ import type { FeatureTagCheck } from "./types.js";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { instrumentFile } from "./instrument.js";
-import { DYNAJS_VERBOSE as verbose } from "./constants/general.js";
+import { DYNAJS_IGNORE_NODE_MODULES, DYNAJS_VERBOSE as verbose } from "./constants/general.js";
 import { log } from "./utils.js";
 
 let mode: FeatureTagCheck | undefined;
@@ -27,6 +27,12 @@ function isInstrumentTarget(url: string): boolean {
   }
 
   const relative = path.relative(targetRoot, filename);
+
+  // is .includes good enough?
+  if (DYNAJS_IGNORE_NODE_MODULES && relative.includes('node_modules')) {
+    return false;
+  }
+
   return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
 }
 
