@@ -220,18 +220,18 @@ function construct(f: any, args: any): any {
 }
 
 // hook for function enter
-function Fe(id: number, f: any, base: any, args: any): void {
+function Fe(id: number, f: any, base: any, args: any, isAsync: boolean, isGenerator: boolean): void {
   returnStack.push(undefined);
   pushSwitchLeft();
-  D$.analysis.functionEnter?.(id, f, base, args);
+  D$.analysis.functionEnter?.(id, f, base, args, isAsync, isGenerator);
 }
 
 // hook for function exit
-function Fx(id: number, result: any): void {
+function Fx(id: number, isAsync: boolean, isGenerator: boolean): void {
   const exc = uncaughtException;
   const ret = returnStack.pop();
   popSwitchLeft();
-  D$.analysis.functionExit?.(id, ret, exc);
+  D$.analysis.functionExit?.(id, ret, exc, isAsync, isGenerator);
   if (exc) {
     const { exception } = exc;
     uncaughtException = undefined;

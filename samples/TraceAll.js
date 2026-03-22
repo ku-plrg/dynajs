@@ -89,7 +89,7 @@
       str += '], ' + getValue(result) + ', ' + isMethod + ')';
       put(str + getLoc(id));
     },
-    functionEnter: function (id, f, base, args) {
+    functionEnter: function (id, f, base, args, isAsync, isGenerator) {
       var str = 'Fe(' + getValue(f) + ', ' + getValue(base) + ', [';
       for (var i = 0; i < args.length; i++) {
         if (i > 0) str += ', ';
@@ -99,7 +99,7 @@
       put(str + getLoc(id));
       indentIn();
     },
-    functionExit: function (id, returnVal, exc) {
+    functionExit: function (id, returnVal, exc, isAsync, isGenerator) {
       indentOut();
       var loc = getLoc(id);
       if (exc) {

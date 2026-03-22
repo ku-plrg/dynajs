@@ -7,6 +7,7 @@
 
   var featureHits = Object.create(null);
   var featureExecs = Object.create(null);
+  var functionKindHits = Object.create(null);
 
   function ensureFeature(feature) {
     if (!featureHits[feature]) featureHits[feature] = new Set();
@@ -27,14 +28,34 @@
     featureExecs[feature] += 1;
   }
 
+  function recordFunctionKind(feature, id) {
+    if (!functionKindHits[feature]) functionKindHits[feature] = new Set();
+    functionKindHits[feature].add(safeLoc(id));
+  }
+
   var flushed = false;
 
   function printSummary() {
     if (flushed) return;
     flushed = true;
 
-    var names = Object.keys(featureHits).sort(function (a, b) {
-      var diff = featureHits[b].size - featureHits[a].size;
+    var mergedHits = Object.create(null);
+    var mergedExecs = Object.create(null);
+    var featureNames = Object.keys(featureHits);
+    for (var f = 0; f < featureNames.length; f++) {
+      var featureName = featureNames[f];
+      mergedHits[featureName] = featureHits[featureName];
+      mergedExecs[featureName] = featureExecs[featureName];
+    }
+    var functionNames = Object.keys(functionKindHits);
+    for (var g = 0; g < functionNames.length; g++) {
+      var functionName = functionNames[g];
+      mergedHits[functionName] = functionKindHits[functionName];
+      mergedExecs[functionName] = functionKindHits[functionName].size;
+    }
+
+    var names = Object.keys(mergedHits).sort(function (a, b) {
+      var diff = mergedHits[b].size - mergedHits[a].size;
       return diff !== 0 ? diff : a.localeCompare(b);
     });
 
@@ -46,15 +67,15 @@
 
     var totalSites = 0;
     for (var i = 0; i < names.length; i++) {
-      totalSites += featureHits[names[i]].size;
+      totalSites += mergedHits[names[i]].size;
     }
     console.log("  total: " + totalSites);
 
     for (var j = 0; j < names.length; j++) {
       var name = names[j];
-      var sites = Array.from(featureHits[name]).sort();
+      var sites = Array.from(mergedHits[name]).sort();
       console.log(
-        "  " + name + ": " + sites.length + " site(s), " + featureExecs[name] + " execution(s)"
+        "  " + name + ": " + sites.length + " site(s), " + mergedExecs[name] + " execution(s)"
       );
       console.log("    " + sites.join(", "));
     }
@@ -121,6 +142,11 @@
 
     staticBlockEnter: function (id, cls) {
       record("class static blocks", id);
+    },
+
+    functionEnter: function (id, f, base, args, isAsync, isGenerator) {
+      if (isAsync) recordFunctionKind("async functions", id);
+      if (isGenerator) recordFunctionKind("generator functions", id);
     },
   };
 })(D$);

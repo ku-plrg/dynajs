@@ -50,12 +50,16 @@ export type Analysis = {
     id: number,
     f: any,
     base: any,
-    args: any
+    args: any,
+    isAsync: boolean,
+    isGenerator: boolean
   ) => void;
   functionExit?: (
     id: number,
     returnValue: any,
-    exception?: { exception: any }
+    exception: { exception: any } | undefined,
+    isAsync: boolean,
+    isGenerator: boolean
   ) => void;
   _return?: (
     id: number,

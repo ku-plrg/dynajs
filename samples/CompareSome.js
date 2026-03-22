@@ -116,12 +116,12 @@
         //     return { result: val };
         // },
 
-        functionEnter: function (iid, f, base, args) {
+        functionEnter: function (iid, f, base, args, isAsync, isGenerator) {
             stringify({ type: "functionEnter", fo: '', level: __level });
             ++__level;
         },
 
-        functionExit: function (iid, returnVal, wrappedExceptionVal) {
+        functionExit: function (iid, returnVal, wrappedExceptionVal, isAsync, isGenerator) {
             stringify({ type: "functionExit", fo: 'todo', level: __level });
             --__level;
         },
@@ -184,4 +184,3 @@
         // },
     };
 }());
-

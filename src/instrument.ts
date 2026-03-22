@@ -570,7 +570,7 @@ function logFunc(state: State, node: Node, isExpr: boolean, isArrow: boolean = f
         });
         state.writeln(`} finally {`);
         state.wrap(() => {
-          logFuncExit(state, node);
+          logFuncExit(state, node as Function);
         });
         state.writeln(`}`);
       });
@@ -615,13 +615,15 @@ function logFuncEnter(state: State, func: Function): void {
   } else {
     argsExpr = 'arguments';
   }
-  state.writeln(`${LOG.FUNC_ENTER}(${newId(func)}, ${name}, ${thisArg}, ${argsExpr});`);
+  state.writeln(
+    `${LOG.FUNC_ENTER}(${newId(func)}, ${name}, ${thisArg}, ${argsExpr}, ${func.async}, ${func.generator});`
+  );
 }
 
 // logging function exit
-function logFuncExit(state: State, func: Node): void {
+function logFuncExit(state: State, func: Function): void {
   if (!state.isEnabled.Fe) return;
-  state.writeln(`${LOG.FUNC_EXIT}(${newId(func)});`);
+  state.writeln(`${LOG.FUNC_EXIT}(${newId(func)}, ${func.async}, ${func.generator});`);
 }
 
 // logging a return statement

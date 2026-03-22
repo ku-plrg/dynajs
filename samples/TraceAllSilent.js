@@ -15,9 +15,9 @@
     },
     taggedTemplate: function (id, f, base, strings, values, result, isMethod) {
     },
-    functionEnter: function (id, f, base, args) {
+    functionEnter: function (id, f, base, args, isAsync, isGenerator) {
     },
-    functionExit: function (id, returnVal, exc) {
+    functionExit: function (id, returnVal, exc, isAsync, isGenerator) {
     },
     _return: function (id, value) {
     },
