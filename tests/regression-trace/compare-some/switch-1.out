@@ -1,0 +1,5 @@
+{"type":"literal","valueType":"boolean","level":0}
+{"type":"literal","valueType":"boolean","level":0}
+{"type":"binaryPre","op":"===","level":0}
+{"type":"binary","op":"===","level":1}
+{"type":"declare","name":"g","level":0}

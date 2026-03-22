@@ -248,6 +248,10 @@ class Scope {
     this.forLexical = forLexical;
   }
 
+  isLexicalScope(): boolean {
+    return this.forLexical;
+  }
+
   walk(node: Node): void {
     if (!this.forLexical) recursive(node, this, Scope.visitors);
     recursive(node, this, Scope.lexicalVisitors);
@@ -340,6 +344,26 @@ class Scope {
         scope.vars[id.name] = VarKind.Func;
       }
     },
+    BlockStatement: (node, scope, c) => {
+      for (const statement of node.body) {
+        if (statement.type !== 'FunctionDeclaration') {
+          c(statement, scope);
+        }
+      }
+    },
+    SwitchStatement: (node, scope, c) => {
+      c(node.discriminant, scope);
+      for (const switchCase of node.cases) {
+        if (switchCase.test != null) {
+          c(switchCase.test, scope);
+        }
+        for (const statement of switchCase.consequent) {
+          if (statement.type !== 'FunctionDeclaration') {
+            c(statement, scope);
+          }
+        }
+      }
+    },
     FunctionExpression: (node, scope, c) => {},
     ArrowFunctionExpression: (node, scope, c) => {},
     ClassDeclaration: (node, scope, c) => {
@@ -377,7 +401,12 @@ class Scope {
     ForInStatement: (node, scope, c) => {},
     ForOfStatement: (node, scope, c) => {},
     SwitchStatement: (node, scope, c) => {},
-    FunctionDeclaration: (node, scope, c) => {},
+    FunctionDeclaration: (node, scope, c) => {
+      const { id } = node;
+      if (id != null) {
+        scope.vars[id.name] = VarKind.Func;
+      }
+    },
     FunctionExpression: (node, scope, c) => {},
     ArrowFunctionExpression: (node, scope, c) => {},
     ClassDeclaration: (node, scope, c) => {},
@@ -974,15 +1003,18 @@ function logDeclare(state: State, node: Node): void {
   const vars = state.scope?.vars;
   if (!vars) return;
   const spreadVars = state.scope?.spreadVars;
+  const isLexicalScope = state.scope?.isLexicalScope() ?? false;
   for (const name in vars) {
     const kind = vars[name];
+    if (isLexicalScope && kind === VarKind.Func) continue;
     const isTDZ =
       kind === VarKind.Const ||
       kind === VarKind.Let ||
       kind === VarKind.Class ||
       (state.scope?.tdzShadowedFuncNames.has(name) ?? false);
     const isSpread = spreadVars?.has(name) ?? false;
-    if (isTDZ) {
+    const omitValue = isTDZ;
+    if (omitValue) {
       state.writeln(`${LOG.DECLARE}(${newId(node)}, "${name}", ${kind}, ${isSpread});`);
     } else {
       state.writeln(`${LOG.DECLARE}(${newId(node)}, "${name}", ${kind}, ${isSpread}, ${name});`);
@@ -1586,12 +1618,14 @@ const visitors: Visitors = {
     state.write('switch (');
     logSwitchLeft(state, discriminant);
     state.write(') {');
-    state.wrap(() => {
-      for (const switchCase of cases) {
-        state.writeln('');
-        state.walk(switchCase);
-      }
-    });
+    state.withScope(scope => scope.walkArray(cases as unknown as Node[]), () => {
+      state.wrap(() => {
+        for (const switchCase of cases) {
+          state.writeln('');
+          state.walk(switchCase);
+        }
+      });
+    }, true);
     state.writeln('}');
   },
   SwitchCase: (node, state) => {
@@ -1720,6 +1754,9 @@ const visitors: Visitors = {
     logForInOfStatement(state, node, true, false);
   },
   FunctionDeclaration: (node, state) => {
+    if (state.isEnabled.D && state.scope?.isLexicalScope() && node.id != null) {
+      state.writeln(`${LOG.DECLARE}(${newId(node)}, "${node.id.name}", ${VarKind.Func}, false);`);
+    }
     logFuncDeclare(state, node, false);
   },
   VariableDeclaration: (node, state) => {
