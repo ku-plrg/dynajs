@@ -3,8 +3,9 @@ import type { FeatureTagCheck } from "./types.js";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { instrument } from "./instrument.js";
-import { DYNAJS_IGNORE_NODE_MODULES, DYNAJS_VERBOSE as verbose } from "./constants/general.js";
-import { getInstrumentedName, log, writeFile } from "./utils.js";
+import { DYNAJS_IGNORE_NODE_MODULES, DYNAJS_STAT, DYNAJS_VERBOSE as verbose } from "./constants/general.js";
+import { getInstrumentedName, getStatName, log, writeFile } from "./utils.js";
+import { recordStat, writeStatFile } from "./statistics.js";
 
 let mode: FeatureTagCheck | undefined;
 const targetRoot = path.resolve(process.cwd());
@@ -40,9 +41,17 @@ function writeInstrumentedFile(instrumentedPath: string, content: string): void 
   writeFile(instrumentedPath, content);
 }
 
+function writeStatisticsFile(statPath: string, source: string): void {
+  writeStatFile(statPath, recordStat(source));
+}
+
 function instrumentSource(source: string, url: string): string {
   const filename = getFilePathFromUrl(url) ?? url;
   const instrumentedPath = getInstrumentedName(filename);
+  if (DYNAJS_STAT) {
+    const statPath = getStatName(filename);
+    writeStatisticsFile(statPath, source);
+  }
   const instrumentedSource = instrument(source, {
     detail: false,
     isScript: false,

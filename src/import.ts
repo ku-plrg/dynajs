@@ -2,12 +2,13 @@ import { register } from "node:module";
 import { pathToFileURL } from "node:url";
 import path from "node:path";
 import Module from 'module';
-import { getInstrumentedName, log, writeFile } from "./utils.js";
+import { getInstrumentedName, getStatName, log, writeFile } from "./utils.js";
 import { setBaseObj } from './analysis.js';
 import { instrument } from "./instrument.js";
-import { DYNAJS_IGNORE_NODE_MODULES, DYNAJS_PARTIAL_HOOK, DYNAJS_VERBOSE as verbose } from "./constants/general.js";
+import { DYNAJS_IGNORE_NODE_MODULES, DYNAJS_PARTIAL_HOOK, DYNAJS_STAT, DYNAJS_VERBOSE as verbose } from "./constants/general.js";
 import { checkAnalysisHooks } from "./boot.js";
 import { FeatureTagCheck } from "./types.js";
+import { recordStat, writeStatFile } from "./statistics.js";
 
 function prepareGlobal(): void {
   setBaseObj();
@@ -50,6 +51,10 @@ function writeInstrumentedFile(instrumentedPath: string, content: string): void 
   writeFile(instrumentedPath, content);
 }
 
+function writeStatisticsFile(statPath: string, code: string): void {
+  writeStatFile(statPath, recordStat(code));
+}
+
 function registerCJSloader(mode : FeatureTagCheck | undefined): void {
   const previousCompile = (Module as any).prototype._compile;
 
@@ -61,6 +66,12 @@ function registerCJSloader(mode : FeatureTagCheck | undefined): void {
     }
 
     const instrumentedPath = getInstrumentedName(filename);
+
+    if (DYNAJS_STAT) {
+      const statPath = getStatName(filename);
+      writeStatisticsFile(statPath, code);
+    }
+
     const instrumentedCode = instrument(code, {
       detail: false,
       isScript: false,

@@ -64,6 +64,11 @@ export function getInstrumentedName(filename: string): string {
   return `${name}__${SCRIPT_NAME}__.js`;
 }
 
+export function getStatName(filename: string): string {
+  const name = getNameWithoutExtension(filename);
+  return `${name}__${SCRIPT_NAME}__.dynajs-stats-json`;
+}
+
 // get command arguments
 export function getArgs(cmd: string, argv: any, expected: number): string[] {
   if (argv._.length - 1 != expected) {

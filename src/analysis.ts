@@ -774,9 +774,10 @@ type DynaJSType = typeof BASE & {
   analysis: Analysis;
   idToLoc: (id: number) => string;
   ids: Record<string, [number, number, number, number]>;
+  stats?: unknown;
 }
 
 declare global { var D$: DynaJSType; };
 export function setBaseObj() {
-  globalThis.D$ = BASE as DynaJSType;
+  globalThis.D$ = { ...BASE } as DynaJSType;
 }

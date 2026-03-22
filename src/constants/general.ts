@@ -23,3 +23,4 @@ function checkEnvVar(name: string): boolean {
 export const DYNAJS_VERBOSE = checkEnvVar('DYNAJS_VERBOSE');
 export const DYNAJS_PARTIAL_HOOK = checkEnvVar('DYNAJS_PARTIAL_HOOK');
 export const DYNAJS_IGNORE_NODE_MODULES = checkEnvVar('DYNAJS_IGNORE_NODE_MODULES');
+export const DYNAJS_STAT = checkEnvVar('DYNAJS_STAT');
