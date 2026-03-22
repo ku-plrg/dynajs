@@ -426,10 +426,11 @@ function logCall(state: State, callee: Node, isConstructor: boolean, callOptiona
       return;
     }
     if (property.type === 'PrivateIdentifier') {
-      // TODO: report private field access — bracket notation cannot reach private slots
-      if (isConstructor) state.write('new ');
+      state.write(`${LOG.PRIVATE_METHOD_CALL}(${newId(callee)}, `);
       state.walk(object);
-      state.write(optional ? `?.#${(property as any).name}` : `.#${(property as any).name}`);
+      state.write(`, "${getPrivateName(property)}", ${isConstructor}, ${optional}, ${callOptional}, `);
+      writePrivateGetter(state, property);
+      state.write(')');
       return;
     }
     state.write(`${LOG.METHOD_CALL}(${newId(callee)}, `);
@@ -476,9 +477,11 @@ function logTaggedCall(state: State, tag: Node): void {
       return;
     }
     if (property.type === 'PrivateIdentifier') {
-      // TODO: report private field access — bracket notation cannot reach private slots
+      state.write(`${LOG.PRIVATE_TAGGED_METHOD}(${newId(tag)}, `);
       state.walk(object);
-      state.write(`.#${(property as any).name}`);
+      state.write(`, "${getPrivateName(property)}", `);
+      writePrivateGetter(state, property);
+      state.write(')');
       return;
     }
     state.write(`${LOG.TAGGED_METHOD}(${newId(tag)}, `);
@@ -727,9 +730,12 @@ function logGetField(state: State, expr: Expression): void {
     return;
   }
   if (property.type === 'PrivateIdentifier') {
-    // TODO: report private field access — bracket notation cannot reach private slots
+    state.write(`${LOG.PRIVATE_GET_FIELD}(${newId(expr)}, `);
     state.walk(object);
-    state.write(optional ? `?.#${(property as any).name}` : `.#${(property as any).name}`);
+    state.write(`, "${getPrivateName(property)}", `);
+    writePrivateGetter(state, property);
+    if (optional) state.write(', true');
+    state.write(')');
     return;
   }
   state.write(`${LOG.GET_FIELD}(${newId(expr)}, `);
@@ -788,10 +794,13 @@ function logPutField(state: State, lhs: Node, rhs: Node, body: () => void): void
     return;
   }
   if (property.type === 'PrivateIdentifier') {
-    // TODO: report private field access — bracket notation cannot reach private slots
+    state.write(`${LOG.PRIVATE_PUT_FIELD}(${newId(lhs)}, `);
     state.walk(object);
-    state.write(`.#${(property as any).name} = `);
+    state.write(`, "${getPrivateName(property)}", `);
     body();
+    state.write(', ');
+    writePrivateSetter(state, property);
+    state.write(')');
     return;
   }
   state.write(`${LOG.PUT_FIELD}(${newId(lhs)}, `);
@@ -1201,6 +1210,19 @@ function writeExportSpecifiers(state: State, specifiers: readonly Node[]): void 
     }
   }
   state.write(' }');
+}
+
+function getPrivateName(node: Node): string {
+  return `#${(node as any).name}`;
+}
+
+function writePrivateGetter(state: State, property: Node): void {
+  state.write(`${TEMP_PARAM_VAR} => ${TEMP_PARAM_VAR}.${getPrivateName(property)}`);
+}
+
+function writePrivateSetter(state: State, property: Node): void {
+  const valueParam = `${TEMP_PARAM_VAR}v`;
+  state.write(`(${TEMP_PARAM_VAR}, ${valueParam}) => ${TEMP_PARAM_VAR}.${getPrivateName(property)} = ${valueParam}`);
 }
 
 // -----------------------------------------------------------------------------

@@ -18,6 +18,8 @@ Se() @ 1:1-7:1
     D(v, <param>, 5, false) @ 3:7-27
     R(this, <object>) @ 3:13-17
     R(v, 5) @ 3:23-24
+    P[pre](<object>, "#x", 5) @ 3:13-20
+    P(<object>, "#x", 5) @ 3:13-20
     E(5) @ 3:13-24
   Fx(undefined) @ 3:7-27
   F(<function>, <object>, [5], undefined, false, true) @ 6:1-7

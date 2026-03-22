@@ -15,7 +15,10 @@ Se() @ 1:1-7:1
     D(arguments, <arguments>, <object>, false) @ 3:10-41
     D(n, <param>, 3, false) @ 3:10-41
     R(this, <object>) @ 3:23-27
+    G[pre](<object>, "#double") @ 3:23-35
+    G(<object>, "#double", <function>) @ 3:23-35
     R(n, 3) @ 3:36-37
+    F[pre](<function>, <object>, [3], false, true) @ 3:23-35
     Fe(null, <object>, [3]) @ 2:10-31
       D(arguments, <arguments>, <object>, false) @ 2:10-31
       D(n, <param>, 3, false) @ 2:10-31
@@ -26,6 +29,7 @@ Se() @ 1:1-7:1
       E(6) @ 2:23-28
       Re(6) @ 2:16-29
     Fx(6) @ 2:10-31
+    F(<function>, <object>, [3], 6, false, true) @ 3:23-35
     E(6) @ 3:23-38
     Re(6) @ 3:16-39
   Fx(6) @ 3:10-41

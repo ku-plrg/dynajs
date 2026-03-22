@@ -75,6 +75,31 @@ function M(id: number, base: any, prop: any, isConstructor: boolean, memberOptio
   }
 }
 
+function Mp(
+  id: number,
+  base: any,
+  prop: any,
+  isConstructor: boolean,
+  memberOptional: boolean,
+  callOptional: boolean,
+  getter: (base: any) => any,
+): any {
+  if (base === chainSkip) return () => chainSkip;
+  if (memberOptional) {
+    base = C(id, '?.', base);
+    if (base === null || base === undefined) return () => chainSkip;
+  }
+  let f = Gp(id, base, prop, getter);
+  if (f === chainSkip) return () => chainSkip;
+  if (callOptional) {
+    f = C(id, '?.', f);
+    if (f === null || f === undefined || f === chainSkip) return () => chainSkip;
+  }
+  return function() {
+    return invokeFun(id, base, f, arguments, isConstructor, true);
+  }
+}
+
 // hook for tagged template function calls
 function TF(id: number, f: any): any {
   return function(this: any, strings: any, ...values: any[]) {
@@ -85,6 +110,13 @@ function TF(id: number, f: any): any {
 // hook for tagged template method calls
 function TM(id: number, base: any, prop: any): any {
   const f = G(id, base, prop);
+  return function(strings: any, ...values: any[]) {
+    return invokeTT(id, base, f, strings, values, true);
+  }
+}
+
+function TMp(id: number, base: any, prop: any, getter: (base: any) => any): any {
+  const f = Gp(id, base, prop, getter);
   return function(strings: any, ...values: any[]) {
     return invokeTT(id, base, f, strings, values, true);
   }
@@ -259,6 +291,38 @@ function G(id: number, base: any, prop: any, optional: boolean = false): any {
   return value;
 }
 
+function Gp(
+  id: number,
+  base: any,
+  prop: any,
+  getter: (base: any) => any,
+  optional: boolean = false,
+): any {
+  if (base === chainSkip) return chainSkip;
+  if (optional) {
+    base = C(id, '?.', base);
+    if (base === null || base === undefined) return chainSkip;
+  }
+  let skip = false;
+  let value;
+  const pre = D$.analysis.getFieldPre?.(id, base, prop);
+  if (pre) {
+    base = pre.base;
+    prop = pre.prop;
+    skip = pre.skip;
+  }
+  if (!skip) {
+    value = getter(base);
+  }
+  const generalPost = D$.analysis.memoryAccess?.(id, value);
+  if (generalPost) value = generalPost.result;
+  const post = D$.analysis.getField?.(id, base, prop, value);
+  if (post) {
+    value = post.result;
+  }
+  return value;
+}
+
 // hook for property writes (set-field)
 function P(id: number, base: any, prop: any, value: any, strict: boolean = false): any {
   let skip = false;
@@ -282,6 +346,33 @@ function P(id: number, base: any, prop: any, value: any, strict: boolean = false
   const generalPost = D$.analysis.memoryWrite?.(id, value);
   if (generalPost) value = generalPost.result;
   // specific putField fires second and wins
+  const post = D$.analysis.putField?.(id, base, prop, value);
+  if (post) {
+    value = post.result;
+  }
+  return value;
+}
+
+function Pp(
+  id: number,
+  base: any,
+  prop: any,
+  value: any,
+  writer: (base: any, value: any) => any,
+): any {
+  let skip = false;
+  const pre = D$.analysis.putFieldPre?.(id, base, prop, value);
+  if (pre) {
+    base = pre.base;
+    prop = pre.prop;
+    value = pre.value;
+    skip = pre.skip;
+  }
+  if (!skip) {
+    writer(base, value);
+  }
+  const generalPost = D$.analysis.memoryWrite?.(id, value);
+  if (generalPost) value = generalPost.result;
   const post = D$.analysis.putField?.(id, base, prop, value);
   if (post) {
     value = post.result;
@@ -675,7 +766,7 @@ const BASE = {
   utils,
   chainSkip,
   Ch,
-  Se, Sx, F, M, TF, TM, Fe, Fx, Re, O, E, G, P, De,
+  Se, Sx, F, M, Mp, TF, TM, TMp, Fe, Fx, Re, O, E, G, Gp, P, Pp, De,
   U, B, Up, C, Swl, Swr, D, R, W, L, Th, X, Y, Yr, Aw, Awr,
   Fi, SBe, SBx, Ce
 };
