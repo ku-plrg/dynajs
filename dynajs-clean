@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -eu
+
+target_dir=${1:-$(pwd)}
+
+if [ ! -d "$target_dir" ]; then
+  echo "error: target is not a directory: $target_dir" >&2
+  exit 1
+fi
+
+if ! git -C "$target_dir" rev-parse --show-toplevel >/dev/null 2>&1; then
+  echo "error: target is not under a git-managed directory: $target_dir" >&2
+  exit 1
+fi
+
+find "$target_dir" -type f \
+  \( -name '*__dynajs__.js' -o -name '*__dynajs__.dynajs-stats-json' \) \
+  -exec rm -f {} +
