@@ -13,12 +13,14 @@ export const CALLBACK_TO_FEATURES = {
   scriptEnter:       ['Se'],
   scriptExit:        ['Se'],
   // invokeFun hooks also cover tagged-template call sites (TF/TM coerce to F/M)
-  invokeFunPre:      ['F', 'TF'],
-  invokeFun:         ['F', 'TF'],
+  // and async/generator resume boundaries when yield/await wrappers are present.
+  invokeFunPre:      ['F', 'TF', 'Y', 'Aw'],
+  invokeFun:         ['F', 'TF', 'Y', 'Aw'],
   taggedTemplatePre: ['TF'],
   taggedTemplate:    ['TF'],
-  functionEnter:     ['Fe'],
-  functionExit:      ['Fe'],
+  // Function-level analyses also observe generator/async suspension/resumption.
+  functionEnter:     ['Fe', 'Y', 'Aw'],
+  functionExit:      ['Fe', 'Y', 'Aw'],
   _return:           ['Re'],
   getFieldPre:       ['G'],
   getField:          ['G'],
