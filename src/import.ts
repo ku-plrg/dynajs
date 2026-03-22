@@ -2,9 +2,9 @@ import { register } from "node:module";
 import { pathToFileURL } from "node:url";
 import path from "node:path";
 import Module from 'module';
-import { log, readFile } from "./utils.js";
+import { getInstrumentedName, log, writeFile } from "./utils.js";
 import { setBaseObj } from './analysis.js';
-import { instrumentFile } from "./instrument.js";
+import { instrument } from "./instrument.js";
 import { DYNAJS_IGNORE_NODE_MODULES, DYNAJS_PARTIAL_HOOK, DYNAJS_VERBOSE as verbose } from "./constants/general.js";
 import { checkAnalysisHooks } from "./boot.js";
 import { FeatureTagCheck } from "./types.js";
@@ -46,16 +46,30 @@ function isInstrumentTarget(filepath: string): boolean {
   return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
 }
 
+function writeInstrumentedFile(instrumentedPath: string, content: string): void {
+  writeFile(instrumentedPath, content);
+}
+
 function registerCJSloader(mode : FeatureTagCheck | undefined): void {
-  (Module as any)._extensions['.js'] = function cjsLoader (module: any, filename: string) {
-    if (verbose) log(`Loading (CJS) ${filename} with custom loader...`);
-    let code : string;
-    if (isInstrumentTarget(filename)) {
-      code = instrumentFile(filename, { detail: false, isScript: false, isEnabled: mode }); // TODO: options
-    } else {
-      code = readFile(filename);
+  const previousCompile = (Module as any).prototype._compile;
+
+  (Module as any).prototype._compile = function compileHook(code: string, filename: string) {
+    if (verbose) log(`Compiling (CJS) ${filename} with custom loader...`);
+
+    if (!isInstrumentTarget(filename)) {
+      return previousCompile.call(this, code, filename);
     }
-    module._compile(code, filename);
+
+    const instrumentedPath = getInstrumentedName(filename);
+    const instrumentedCode = instrument(code, {
+      detail: false,
+      isScript: false,
+      isEnabled: mode,
+      originalPath: filename,
+      instrumentedPath,
+    });
+    writeInstrumentedFile(instrumentedPath, instrumentedCode);
+    return previousCompile.call(this, instrumentedCode, filename);
   };
 }
 

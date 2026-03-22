@@ -2,9 +2,9 @@ import type { InitializeHook, LoadHook, ResolveHook } from "node:module";
 import type { FeatureTagCheck } from "./types.js";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { instrumentFile } from "./instrument.js";
+import { instrument } from "./instrument.js";
 import { DYNAJS_IGNORE_NODE_MODULES, DYNAJS_VERBOSE as verbose } from "./constants/general.js";
-import { log } from "./utils.js";
+import { getInstrumentedName, log, writeFile } from "./utils.js";
 
 let mode: FeatureTagCheck | undefined;
 const targetRoot = path.resolve(process.cwd());
@@ -36,10 +36,22 @@ function isInstrumentTarget(url: string): boolean {
   return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
 }
 
+function writeInstrumentedFile(instrumentedPath: string, content: string): void {
+  writeFile(instrumentedPath, content);
+}
+
 function instrumentSource(source: string, url: string): string {
   const filename = getFilePathFromUrl(url) ?? url;
-  const str = instrumentFile(filename, { detail: false, isScript: false, isEnabled: mode }); // TODO options
-  return str;
+  const instrumentedPath = getInstrumentedName(filename);
+  const instrumentedSource = instrument(source, {
+    detail: false,
+    isScript: false,
+    isEnabled: mode,
+    originalPath: filename,
+    instrumentedPath,
+  });
+  writeInstrumentedFile(instrumentedPath, instrumentedSource);
+  return instrumentedSource;
 }
 
 export const initialize: InitializeHook = async ({ mode: initialMode }) => {
