@@ -1,7 +1,7 @@
 (function (D$) {
 
   // NOTE setting the first argument of StringBuilder `false` disables string concat, to prevent RangeError (still prints to console)
-  var builder = new D$.utils.StringBuilder(true);
+  var builder = new D$.utils.StringBuilder(false);
   function put(str) { console.log(builder.put(str)); }
   var indentIn = builder.indentIn;
   var indentOut = builder.indentOut;
