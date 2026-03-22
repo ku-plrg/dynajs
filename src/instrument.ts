@@ -5,6 +5,7 @@ import {
   NO_INSTRUMENT,
 } from './constants/general.js';
 import type {
+  AssignmentExpression,
   AnyNode,
   BinaryExpression,
   CatchClause,
@@ -1225,6 +1226,234 @@ function writePrivateSetter(state: State, property: Node): void {
   state.write(`(${TEMP_PARAM_VAR}, ${valueParam}) => ${TEMP_PARAM_VAR}.${getPrivateName(property)} = ${valueParam}`);
 }
 
+function getAssignmentBinaryOperator(operator: string): string | null {
+  switch (operator) {
+    case '+=': return '+';
+    case '-=': return '-';
+    case '*=': return '*';
+    case '/=': return '/';
+    case '%=': return '%';
+    case '**=': return '**';
+    case '<<=': return '<<';
+    case '>>=': return '>>';
+    case '>>>=': return '>>>';
+    case '|=': return '|';
+    case '^=': return '^';
+    case '&=': return '&';
+    default: return null;
+  }
+}
+
+function getLogicalAssignmentOperator(operator: string): string | null {
+  switch (operator) {
+    case '&&=': return '&&';
+    case '||=': return '||';
+    case '??=': return '??';
+    default: return null;
+  }
+}
+
+function nextTempSlot(node: Node): string {
+  return `${LOG.TEMP_VAR}${newId(node)}`;
+}
+
+function writeTempRef(state: State, slot: string): void {
+  state.write(slot);
+}
+
+function writeCompoundMemberGet(
+  state: State,
+  expr: MemberExpression,
+  objectRef: string,
+  propertyRef: string | null,
+): void {
+  const { property, computed, optional } = expr;
+  if (!state.isEnabled.G) {
+    writeTempRef(state, objectRef);
+    if (computed) {
+      state.write(optional ? '?.[' : '[');
+      if (propertyRef != null) writeTempRef(state, propertyRef);
+      else state.walk(property);
+      state.write(']');
+    } else if (property.type === 'Identifier') {
+      state.write(optional ? `?.${property.name}` : `.${property.name}`);
+    } else if (property.type === 'PrivateIdentifier') {
+      state.write(optional ? `?.#${(property as any).name}` : `.#${(property as any).name}`);
+    } else {
+      warn(`MemberExpression: unexpected property type${getLocStr(expr)}`);
+    }
+    return;
+  }
+  if (property.type === 'PrivateIdentifier') {
+    state.write(`${LOG.PRIVATE_GET_FIELD}(${newId(expr)}, `);
+    writeTempRef(state, objectRef);
+    state.write(`, "${getPrivateName(property)}", `);
+    writePrivateGetter(state, property);
+    if (optional) state.write(', true');
+    state.write(')');
+    return;
+  }
+  state.write(`${LOG.GET_FIELD}(${newId(expr)}, `);
+  writeTempRef(state, objectRef);
+  state.write(', ');
+  if (computed) {
+    if (propertyRef != null) writeTempRef(state, propertyRef);
+    else state.walk(property);
+  } else if (property.type === 'Identifier') {
+    state.write(`"${property.name}"`);
+  } else {
+    warn(`MemberExpression: unexpected property type${getLocStr(expr)}`);
+  }
+  if (optional) state.write(', true');
+  state.write(')');
+}
+
+function writeCompoundMemberPut(
+  state: State,
+  lhs: MemberExpression,
+  rhs: Node,
+  objectRef: string,
+  propertyRef: string | null,
+  body: () => void,
+): void {
+  const { property, computed } = lhs;
+  if (!state.isEnabled.P) {
+    writeTempRef(state, objectRef);
+    if (computed) {
+      state.write('[');
+      if (propertyRef != null) writeTempRef(state, propertyRef);
+      else state.walk(property);
+      state.write('] = ');
+    } else if (property.type === 'Identifier') {
+      state.write(`.${property.name} = `);
+    } else if (property.type === 'PrivateIdentifier') {
+      state.write(`.#${(property as any).name} = `);
+    } else {
+      warn(`MemberExpression: unexpected property type${getLocStr(lhs)}`);
+    }
+    body();
+    return;
+  }
+  if (property.type === 'PrivateIdentifier') {
+    state.write(`${LOG.PRIVATE_PUT_FIELD}(${newId(lhs)}, `);
+    writeTempRef(state, objectRef);
+    state.write(`, "${getPrivateName(property)}", `);
+    body();
+    state.write(', ');
+    writePrivateSetter(state, property);
+    state.write(')');
+    return;
+  }
+  state.write(`${LOG.PUT_FIELD}(${newId(lhs)}, `);
+  writeTempRef(state, objectRef);
+  state.write(', ');
+  if (computed) {
+    if (propertyRef != null) writeTempRef(state, propertyRef);
+    else state.walk(property);
+  } else if (property.type === 'Identifier') {
+    state.write(`"${property.name}"`);
+  } else {
+    warn(`MemberExpression: unexpected property type${getLocStr(lhs)}`);
+  }
+  state.write(', ');
+  body();
+  state.write(`, ${state.isStrict}`);
+  state.write(')');
+}
+
+function writeAssignmentWrite(
+  state: State,
+  lhs: Node,
+  rhs: Node,
+  body: () => void,
+  objectRef?: string,
+  propertyRef?: string | null,
+): void {
+  if (lhs.type === 'MemberExpression') {
+    if (objectRef != null) {
+      writeCompoundMemberPut(state, lhs as MemberExpression, rhs, objectRef, propertyRef ?? null, body);
+    } else {
+      logPutField(state, lhs, rhs, body);
+    }
+    return;
+  }
+  logWrite(state, lhs, rhs, body);
+}
+
+function writeCompoundAssignmentRead(
+  state: State,
+  lhs: Node,
+  objectRef?: string,
+  propertyRef?: string | null,
+): void {
+  if (lhs.type === 'MemberExpression') {
+    if (objectRef != null) {
+      writeCompoundMemberGet(state, lhs as MemberExpression, objectRef, propertyRef ?? null);
+    } else {
+      logGetField(state, lhs as Expression);
+    }
+    return;
+  }
+  state.walk(lhs);
+}
+
+function writeCompoundAssignmentValue(state: State, node: AssignmentExpression): void {
+  const { left, right, operator } = node;
+  const binaryOperator = getAssignmentBinaryOperator(operator);
+  const logicalOperator = getLogicalAssignmentOperator(operator);
+  if (binaryOperator == null && logicalOperator == null) {
+    state.write(generate(node));
+    return;
+  }
+
+  if (left.type !== 'Identifier' && left.type !== 'MemberExpression') {
+    state.write(generate(node));
+    return;
+  }
+
+  if (left.type === 'MemberExpression' && left.object.type === 'Super') {
+    state.write(generate(node));
+    return;
+  }
+
+  const needsTemps = left.type === 'MemberExpression';
+  const objectSlot = needsTemps ? nextTempSlot(left.object) : null;
+  const propertySlot = needsTemps && left.computed ? nextTempSlot(left.property) : null;
+
+  if (needsTemps) {
+    state.write('(');
+    state.write(`${objectSlot} = `);
+    state.walk(left.object);
+    state.write(', ');
+    if (propertySlot) {
+      state.write(`${propertySlot} = `);
+      state.walk(left.property);
+      state.write(', ');
+    }
+  }
+
+  if (binaryOperator != null) {
+    writeAssignmentWrite(state, left, node, () => {
+      state.write(`${LOG.BINARY_OP}(${newId(node)}, "${binaryOperator}", `);
+      writeCompoundAssignmentRead(state, left, objectSlot ?? undefined, propertySlot);
+      state.write(', ');
+      state.walk(right);
+      state.write(')');
+    }, objectSlot ?? undefined, propertySlot);
+  } else {
+    state.write(`${LOG.CONDITION}(${newId(left)}, "${logicalOperator}", `);
+    writeCompoundAssignmentRead(state, left, objectSlot ?? undefined, propertySlot);
+    state.write(`) ${logicalOperator} `);
+    state.write('(');
+    writeAssignmentWrite(state, left, node, () => state.walk(right), objectSlot ?? undefined, propertySlot);
+    state.write(')');
+  }
+
+  if (needsTemps) {
+    state.write(')');
+  }
+}
+
 // -----------------------------------------------------------------------------
 // visitors
 // -----------------------------------------------------------------------------
@@ -1590,10 +1819,7 @@ const visitors: Visitors = {
         break;
       }
       default: {
-        // TODO: apply injection to the left-hand side
-        state.write(generate(left));
-        state.write(` ${operator} `);
-        state.walk(right);
+        writeCompoundAssignmentValue(state, node);
       }
     }
     if (enabled) state.write(')');
