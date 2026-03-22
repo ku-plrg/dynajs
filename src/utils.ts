@@ -266,10 +266,14 @@ export const kindToStr: { [key in VarKind]: string } = {
 }
 
 export const locToStr = (loc: [number, number, number, number]): string => {
-  const [startRow, startCol, endRow, endCol] = loc;
-  return startRow == endRow
+  if (Array.isArray(loc)) {
+
+    const [startRow, startCol, endRow, endCol] = loc;
+    return startRow == endRow
     ? `${startRow}:${startCol}-${endCol}`
     : `${startRow}:${startCol}-${endRow}:${endCol}`;
+  }
+  return 'unknown location';
 }
 
 export const getLocFromNode = (node: Node): [number, number, number, number] => {
