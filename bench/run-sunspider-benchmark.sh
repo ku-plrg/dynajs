@@ -32,7 +32,7 @@ For each run it stores stdout/stderr in a log directory and prints:
 Options:
   --analysis NAME   Run only analyses matching NAME or NAME.js (repeatable)
   --mode MODE       Run only one mode: full, partial, or baseline (repeatable)
-  --bench NAME      Run only benchmarks matching NAME or NAME.js (repeatable)
+  --bench NAME      Run only benchmarks matching NAME or NAME.cjs (repeatable)
   --output-dir DIR  Write logs and CSV into DIR
   --help            Show this help
 EOF
@@ -51,12 +51,23 @@ trim_spaces() {
   awk '{print $1}'
 }
 
+strip_ext() {
+  local value="$1"
+  value="${value%.js}"
+  value="${value%.cjs}"
+  printf '%s\n' "$value"
+}
+
 matches_filter() {
   local value="$1"
   shift
+  local value_stem
+  value_stem=$(strip_ext "$value")
   local filter
   for filter in "$@"; do
-    if [[ "$value" == "$filter" || "$value" == "${filter%.js}.js" || "${value%.js}" == "${filter%.js}" ]]; then
+    local filter_stem
+    filter_stem=$(strip_ext "$filter")
+    if [[ "$value" == "$filter" || "$value_stem" == "$filter_stem" ]]; then
       return 0
     fi
   done
@@ -98,7 +109,7 @@ done
 cd "$REPO_ROOT"
 export DYNAJS_HOME="${DYNAJS_HOME:-$REPO_ROOT}"
 
-mapfile -t BENCHMARKS < <(find "$BENCHMARK_DIR" -maxdepth 1 -type f -name '*.js' | sort)
+mapfile -t BENCHMARKS < <(find "$BENCHMARK_DIR" -maxdepth 1 -type f -name '*.cjs' | sort)
 [[ ${#BENCHMARKS[@]} -gt 0 ]] || die "no benchmarks found under $BENCHMARK_DIR"
 
 if [[ ${#FILTER_ANALYSES[@]} -gt 0 ]]; then
@@ -185,10 +196,10 @@ for mode in "${MODES[@]}"; do
     if [[ "$mode" == "baseline" ]]; then
       analysis_name="baseline"
     else
-      analysis_name=$(basename "$analysis" .js)
+      analysis_name=$(strip_ext "$(basename "$analysis")")
     fi
     for bench in "${BENCHMARKS[@]}"; do
-      bench_name=$(basename "$bench" .js)
+      bench_name=$(strip_ext "$(basename "$bench")")
       prefix="${mode}__${analysis_name}__${bench_name}"
       stdout_file="$OUTPUT_DIR/logs/${prefix}.stdout"
       stderr_file="$OUTPUT_DIR/logs/${prefix}.stderr"
