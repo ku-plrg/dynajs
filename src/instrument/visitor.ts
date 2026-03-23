@@ -24,7 +24,7 @@ export const visitors: Visitors = {
   },
   Literal: (node, state) => {
     const { value } = node;
-    l.logLiteral(state, node, () => value);
+    l.logLiteral(state, node);
   },
   Program: (node, state) => {
     const { body } = node;
