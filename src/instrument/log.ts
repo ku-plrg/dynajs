@@ -710,44 +710,33 @@ export function logThrow(state: State, arg: acorn.Expression): void {
 }
 
 // logging a yield expression
-export function logYield(state: State, node: acorn.Node, argument: acorn.Node | null | undefined, delegate: boolean): void {
+export function logYield(state: State, node: acorn.Node, argument: acorn.Expression | null | undefined, delegate: boolean): void {
   if (!state.isEnabled.Y) {
-    if (!argument) {
-      state.write('(yield)');
-    } else {
-      state.write(delegate ? 'yield*' : 'yield');
-      state.write(' ');
-      logExpression(state, argument as acorn.Expression);
-    }
-    return;
-  }
-  state.write(`${LOG.YIELD_RESULT}(${newId(node)}, yield${delegate ? '*' : ''} ${LOG.YIELD}(${newId(node)}, `);
-  if (argument) {
-    logExpression(state, argument as acorn.Expression);
+    state.write('yield');
+    if (delegate) state.write('*');
+    state.write(' ');
+    if (argument) logExpression(state, argument);
+    else state.write('undefined');
   } else {
-    state.write('undefined');
+    state.write(`${LOG.YIELD_RESULT}(${newId(node)}, yield${delegate ? '*' : ''} ${LOG.YIELD}(${newId(node)}, `);
+    if (argument) logExpression(state, argument);
+    else state.write('undefined');
+    state.writeln(`, ${delegate}))`);
   }
-  state.writeln(`, ${delegate}))`);
 }
 
 // logging an await expression
-export function logAwait(state: State, node: acorn.Node, argument: acorn.Node | null | undefined): void {
+export function logAwait(state: State, node: acorn.Node, argument: acorn.Expression | null | undefined): void {
   if (!state.isEnabled.Aw) {
     state.write('await ');
-    if (argument) {
-      logExpression(state, argument as acorn.Expression);
-    } else {
-      state.write('undefined');
-    }
-    return;
-  }
-  state.write(`${LOG.AWAIT_RESULT}(${newId(node)}, await ${LOG.AWAIT}(${newId(node)}, `);
-  if (argument) {
-    logExpression(state, argument as acorn.Expression);
+    if (argument) logExpression(state, argument);
+    else state.write('undefined');
   } else {
-    state.write('undefined');
+    state.write(`${LOG.AWAIT_RESULT}(${newId(node)}, await ${LOG.AWAIT}(${newId(node)}, `);
+    if (argument) logExpression(state, argument);
+    else state.write('undefined');
+    state.write(`))`);
   }
-  state.write(`))`);
 }
 
 // logging an exception
