@@ -438,6 +438,18 @@ function logCall(state: State, callee: Node, isConstructor: boolean, callOptiona
     state.walk(callee);
     return;
   }
+  // Preserve direct-eval semantics. Rewriting `eval(...)` through a wrapper
+  // turns it into an indirect call, which changes scope and breaks local lookups.
+  if (
+    !isConstructor &&
+    !callOptional &&
+    callee.type === 'Identifier' &&
+    (callee as Identifier).name === 'eval'
+  ) {
+    // TODO: hook eval calls
+    state.write('eval');
+    return;
+  }
   if (callee.type === 'MemberExpression') {
     const { object, property, computed, optional } = callee as MemberExpression;
     if (object.type === 'Super') {
