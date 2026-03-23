@@ -14,7 +14,7 @@ ANALYSES=(
   "samples/TraceAll.js"
 )
 
-MODES=("full" "partial")
+MODES=("full" "partial" "baseline")
 BENCHMARK_DIR="bench/sunspider"
 OUTPUT_DIR=""
 FILTER_ANALYSES=()
@@ -31,7 +31,7 @@ For each run it stores stdout/stderr in a log directory and prints:
 
 Options:
   --analysis NAME   Run only analyses matching NAME or NAME.js (repeatable)
-  --mode MODE       Run only one mode: full or partial (repeatable)
+  --mode MODE       Run only one mode: full, partial, or baseline (repeatable)
   --bench NAME      Run only benchmarks matching NAME or NAME.js (repeatable)
   --output-dir DIR  Write logs and CSV into DIR
   --help            Show this help
@@ -131,9 +131,19 @@ if [[ ${#FILTER_BENCHES[@]} -gt 0 ]]; then
   BENCHMARKS=("${filtered[@]}")
 fi
 
-[[ ${#ANALYSES[@]} -gt 0 ]] || die "no analyses matched the requested filters"
 [[ ${#MODES[@]} -gt 0 ]] || die "no modes matched the requested filters"
 [[ ${#BENCHMARKS[@]} -gt 0 ]] || die "no benchmarks matched the requested filters"
+
+needs_analysis=0
+for mode in "${MODES[@]}"; do
+  if [[ "$mode" != "baseline" ]]; then
+    needs_analysis=1
+    break
+  fi
+done
+if [[ $needs_analysis -eq 1 && ${#ANALYSES[@]} -eq 0 ]]; then
+  die "no analyses matched the requested filters"
+fi
 
 if [[ -z "$OUTPUT_DIR" ]]; then
   timestamp=$(date '+%Y%m%d-%H%M%S')
@@ -148,16 +158,35 @@ mode,analysis,benchmark,exit_code,elapsed_ms,stdout_lines,stdout_bytes,stderr_li
 EOF
 
 printf 'Output directory: %s\n' "$OUTPUT_DIR"
-printf 'Runs: %d analyses x %d modes x %d benchmarks = %d\n' \
-  "${#ANALYSES[@]}" "${#MODES[@]}" "${#BENCHMARKS[@]}" \
-  "$(( ${#ANALYSES[@]} * ${#MODES[@]} * ${#BENCHMARKS[@]} ))"
+total_runs=0
+for mode in "${MODES[@]}"; do
+  if [[ "$mode" == "baseline" ]]; then
+    total_runs=$((total_runs + ${#BENCHMARKS[@]}))
+  else
+    total_runs=$((total_runs + (${#ANALYSES[@]} * ${#BENCHMARKS[@]})))
+  fi
+done
+printf 'Selected analyses: %d\n' "${#ANALYSES[@]}"
+printf 'Selected modes: %d\n' "${#MODES[@]}"
+printf 'Selected benchmarks: %d\n' "${#BENCHMARKS[@]}"
+printf 'Planned runs: %d\n' "$total_runs"
 printf '\n'
 printf '%-8s %-18s %-28s %6s %10s %12s %12s\n' \
   "mode" "analysis" "benchmark" "exit" "time_ms" "stdout_B" "stderr_B"
 
 for mode in "${MODES[@]}"; do
-  for analysis in "${ANALYSES[@]}"; do
-    analysis_name=$(basename "$analysis" .js)
+  if [[ "$mode" == "baseline" ]]; then
+    mode_analyses=("baseline")
+  else
+    mode_analyses=("${ANALYSES[@]}")
+  fi
+
+  for analysis in "${mode_analyses[@]}"; do
+    if [[ "$mode" == "baseline" ]]; then
+      analysis_name="baseline"
+    else
+      analysis_name=$(basename "$analysis" .js)
+    fi
     for bench in "${BENCHMARKS[@]}"; do
       bench_name=$(basename "$bench" .js)
       prefix="${mode}__${analysis_name}__${bench_name}"
@@ -166,7 +195,10 @@ for mode in "${MODES[@]}"; do
 
       start_ms=$(now_ms)
       set +e
-      if [[ "$mode" == "partial" ]]; then
+      if [[ "$mode" == "baseline" ]]; then
+        node "$bench" >"$stdout_file" 2>"$stderr_file"
+        exit_code=$?
+      elif [[ "$mode" == "partial" ]]; then
         DYNAJS_ANALYSIS="$analysis" DYNAJS_PARTIAL_HOOK=1 ./dynajs node "$bench" >"$stdout_file" 2>"$stderr_file"
         exit_code=$?
       else
