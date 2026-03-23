@@ -6,7 +6,6 @@ Se() @ 1:1-8:1
   Fe(<function>, undefined, [1]) @ 1:1-6:2
     D(arguments, <arguments>, <object>, false) @ 1:1-6:2
     D(x, <param>, 1, false) @ 1:1-6:2
-    D(g, <function>, <function>, false) @ 1:1-6:2
     R(g, <function>) @ 5:10-11
     L(2) @ 5:12-13
     F[pre](<function>, undefined, [2], false, false) @ 5:10-11
