@@ -4,7 +4,7 @@ import path from "node:path";
 import Module from 'module';
 import { getInstrumentedName, getStatName, log, writeFile } from "../utils.js";
 import { setBaseObj } from '../analysis.js';
-import { instrument } from "../instrument.js";
+import { instrument } from "../instrument/main.js";
 import { checkAnalysisHooks } from "../boot.js";
 import { FeatureTagCheck } from "../types.js";
 import { recordStat, writeStatFile } from "../statistics.js";

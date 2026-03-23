@@ -2,7 +2,7 @@ import type { InitializeHook, LoadHook, ResolveHook } from "node:module";
 import type { FeatureTagCheck } from "../types.js";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { instrument } from "../instrument.js";
+import { instrument } from "../instrument/main.js";
 import { getInstrumentedName, getStatName, log, writeFile } from "../utils.js";
 import { recordStat, writeStatFile } from "../statistics.js";
 import { getRuntimeOptions } from "./options.js";

@@ -3,7 +3,7 @@ import Module from 'module';
 import path from 'path';
 import { createRequire } from 'node:module';
 import { getArgs, readFile } from './utils.js';
-import { instrumentFile } from './instrument.js';
+import { instrumentFile } from './instrument/main.js';
 import { SCRIPT_NAME } from './constants/general.js';
 import { setBaseObj } from './analysis.js';
 import { checkAnalysisHooks } from './boot.js';
