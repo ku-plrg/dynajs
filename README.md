@@ -16,20 +16,14 @@ export DYNAJS_HOME=/path/to/repo
 ln -s /path/to/repo/dynajs ~/bin/dynajs # or what ever PATH
 ```
 
-Set `DYNAJS_ANALYSIS` to the analysis you want to load, then run your usual
-command through `dynajs`:
+Set `DYNAJS_OPTIONS` and run your usual command through `dynajs`:
 
 ```
-DYNAJS_ANALYSIS=./samples/TraceAll.js dynajs node target.js
-DYNAJS_ANALYSIS=./samples/TraceAll.js dynajs npm run test
-DYNAJS_ANALYSIS=./samples/TraceAll.js DYNAJS_PARTIAL_HOOK=1 dynajs node target.js
+DYNAJS_OPTIONS='--analysis ./samples/TraceAll.js' dynajs node target.js
+DYNAJS_OPTIONS='--analysis ./samples/TraceAll.js' dynajs npm run test
+DYNAJS_OPTIONS='--analysis ./samples/TraceAll.js --partial' dynajs node target.js
 ```
 
-`./dynajs` is the new entrypoint. It wraps commands such as `node` or `npm`
-and injects the runtime instrumentation automatically.
-
-`DYNAJS_PARTIAL_HOOK=1` enables partial hook mode. If it is unset, dynajs runs
-with full hooks.
 
 ## Legacy CLI
 
@@ -68,7 +62,7 @@ You can run the test suite with the following command:
 To run npm-based workflows with dynajs, use the new wrapper style:
 
 ```shell
-DYNAJS_ANALYSIS=./samples/TraceAll.js ./dynajs npm run test
+DYNAJS_OPTIONS='--analysis ./samples/TraceAll.js' ./dynajs npm run test
 ```
 
 #### Watching Mode

@@ -3,12 +3,13 @@ import type { FeatureTagCheck } from "../types.js";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { instrument } from "../instrument.js";
-import { DYNAJS_IGNORE_NODE_MODULES, DYNAJS_STAT, DYNAJS_VERBOSE as verbose } from "../constants/general.js";
 import { getInstrumentedName, getStatName, log, writeFile } from "../utils.js";
 import { recordStat, writeStatFile } from "../statistics.js";
+import { getRuntimeOptions } from "./options.js";
 
 let mode: FeatureTagCheck | undefined;
 const targetRoot = path.resolve(process.cwd());
+const options = getRuntimeOptions();
 
 function getFilePathFromUrl(url: string): string | null {
   if (!url.startsWith('file://')) {
@@ -30,7 +31,7 @@ function isInstrumentTarget(url: string): boolean {
   const relative = path.relative(targetRoot, filename);
 
   // is .includes good enough?
-  if (DYNAJS_IGNORE_NODE_MODULES && relative.includes('node_modules')) {
+  if (options.ignoreNodeModules && relative.includes('node_modules')) {
     return false;
   }
 
@@ -48,7 +49,7 @@ function writeStatisticsFile(statPath: string, source: string): void {
 function instrumentSource(source: string, url: string): string {
   const filename = getFilePathFromUrl(url) ?? url;
   const instrumentedPath = getInstrumentedName(filename);
-  if (DYNAJS_STAT) {
+  if (options.stat) {
     const statPath = getStatName(filename);
     writeStatisticsFile(statPath, source);
   }
@@ -73,9 +74,11 @@ export const resolve: ResolveHook = async (specifier, context, nextResolve) => {
 
 export const load: LoadHook = async (url, context, nextLoad) => {
   const result = await nextLoad(url, context);
-  if (verbose) log(`Loading (ESM) ${url} with custom loader...`);
   if (isInstrumentTarget(url) && result.source) {
+    if (options.verbose) log(`Loading (ESM) ${url} with custom loader...`);
     result.source = instrumentSource(result.source.toString(), url);
+  } else {
+    if (options.verbose) log(`Skipping (ESM) ${url}...`);
   }
   return result;
 };

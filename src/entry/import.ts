@@ -5,17 +5,16 @@ import Module from 'module';
 import { getInstrumentedName, getStatName, log, writeFile } from "../utils.js";
 import { setBaseObj } from '../analysis.js';
 import { instrument } from "../instrument.js";
-import { DYNAJS_IGNORE_NODE_MODULES, DYNAJS_PARTIAL_HOOK, DYNAJS_STAT, DYNAJS_VERBOSE as verbose } from "../constants/general.js";
 import { checkAnalysisHooks } from "../boot.js";
 import { FeatureTagCheck } from "../types.js";
 import { recordStat, writeStatFile } from "../statistics.js";
+import { getRuntimeOptions, printHelp, RuntimeOptions } from "./options.js";
 
-function prepareGlobal(): void {
+function prepareGlobal(options: RuntimeOptions): void {
   setBaseObj();
-  const DYNAJS_ANALYSIS = process.env.DYNAJS_ANALYSIS;
-  if (DYNAJS_ANALYSIS) {
+  if (options.analysis) {
     // NOTE this `require` is filled by `requireBanner` of `scripts/build-inject.mjs`.
-    require(path.resolve(DYNAJS_ANALYSIS));
+    require(path.resolve(options.analysis));
     process.on('exit', () => D$.analysis?.endExecution?.());
   }
   // @ts-ignore - set globalThis.D$ to the analysis object
@@ -30,19 +29,19 @@ function prepareGlobal(): void {
   };
 }
 
-function registerESMloader(mode : FeatureTagCheck | undefined): void {
-  const baseURL = process.env.DYNAJS_HOME
-    ? pathToFileURL(path.join(process.env.DYNAJS_HOME, "dist/entry/"))
+function registerESMloader(mode : FeatureTagCheck | undefined, options: RuntimeOptions): void {
+  const baseURL = options.home
+    ? pathToFileURL(path.join(options.home, "dist/entry/"))
     : new URL("./", import.meta.url); // should throw error instead
   register("./register.js", baseURL, { data: { mode }});
 }
 
 const targetRoot = path.resolve(process.cwd());
 
-function isInstrumentTarget(filepath: string): boolean {
+function isInstrumentTarget(filepath: string, options: RuntimeOptions): boolean {
   const relative = path.relative(targetRoot, filepath);
   // is .includes good enough?
-  if (DYNAJS_IGNORE_NODE_MODULES && relative.includes('node_modules')) {
+  if (options.ignoreNodeModules && relative.includes('node_modules')) {
     return false;
   }
   return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
@@ -56,19 +55,21 @@ function writeStatisticsFile(statPath: string, code: string): void {
   writeStatFile(statPath, recordStat(code));
 }
 
-function registerCJSloader(mode : FeatureTagCheck | undefined): void {
+function registerCJSloader(mode : FeatureTagCheck | undefined, options: RuntimeOptions): void {
   const previousCompile = (Module as any).prototype._compile;
 
   (Module as any).prototype._compile = function compileHook(code: string, filename: string) {
-    if (verbose) log(`Compiling (CJS) ${filename} with custom loader...`);
 
-    if (!isInstrumentTarget(filename)) {
+    if (!isInstrumentTarget(filename, options)) {
+      if (options.verbose) log(`Skipping (CJS) ${filename}...`);
       return previousCompile.call(this, code, filename);
     }
+    
+    if (options.verbose) log(`Compiling (CJS) ${filename} with custom loader...`);
 
     const instrumentedPath = getInstrumentedName(filename);
 
-    if (DYNAJS_STAT) {
+    if (options.stat) {
       const statPath = getStatName(filename);
       writeStatisticsFile(statPath, code);
     }
@@ -85,16 +86,18 @@ function registerCJSloader(mode : FeatureTagCheck | undefined): void {
   };
 }
 
-function parseOpts(): void {
-
-}
-
 function main(): void {
-  const opts = parseOpts();
-  prepareGlobal();
-  const mode : FeatureTagCheck | undefined = checkAnalysisHooks(!DYNAJS_PARTIAL_HOOK);
-  registerCJSloader(mode);
-  registerESMloader(mode);
+  const options = getRuntimeOptions();
+
+  if (options.help) {
+    printHelp();
+    process.exit(0);
+  }
+
+  prepareGlobal(options);
+  const mode : FeatureTagCheck | undefined = checkAnalysisHooks(!options.partialHook);
+  registerCJSloader(mode, options);
+  registerESMloader(mode, options);
 }
 
 main();

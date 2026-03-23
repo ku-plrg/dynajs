@@ -57,17 +57,18 @@ def run_plain_node(harness_path):
 def run_dynajs(dynajs_path, repo_root):
     def _run(analysis, args, mode="partial", **kwargs):
         env = dict(kwargs.pop("env", {}))
+        options = [f"--analysis={(repo_root / analysis).resolve()}"]
+        if mode == "partial":
+            options.append("--partial")
+        else:
+            options.append("--full")
         env.update(
             {
                 **os.environ,
                 "DYNAJS_HOME": str(repo_root),
-                "DYNAJS_ANALYSIS": str((repo_root / analysis).resolve()),
+                "DYNAJS_OPTIONS": " ".join(map(str, options)),
             }
         )
-        if mode == "partial":
-            env["DYNAJS_PARTIAL_HOOK"] = "1"
-        else:
-            env.pop("DYNAJS_PARTIAL_HOOK", None)
 
         return subprocess.run(
             [

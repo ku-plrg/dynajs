@@ -1,0 +1,74 @@
+import parseArgs from 'yargs-parser';
+
+export type RuntimeOptions = {
+  help: boolean;
+  analysis?: string;
+  home?: string;
+  verbose: boolean;
+  partialHook: boolean;
+  ignoreNodeModules: boolean;
+  stat: boolean;
+};
+
+function getStringValue(value: unknown): string | undefined {
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
+}
+
+export function printHelp(): void {
+  console.log(`
+Usage: DYNAJS_OPTIONS="<options>" dynajs <command> [args...]
+
+\`dynajs\` runs the given command with injected \`NODE_OPTIONS\`,
+so it can be used with \`node\`, \`npm\`, \`npx\`, and other Node-based commands.
+
+Options:
+  --help, -h            Show this help message
+  --analysis, -a <path> Path to the analysis callback module
+  --home <path>         Base path for resolving analysis and target scripts
+  --verbose             Enable verbose logging
+  --partial             Enable partial instrumentation (only instrument features with hooks)
+  --full                Enable full instrumentation (instrument all features)
+  --ignore-node-modules Ignore files in node_modules directory
+  --stat                Generate statistics files for each instrumented file
+`);
+}
+
+export function getRuntimeOptions(): RuntimeOptions {
+  const parsed = parseArgs(process.env.DYNAJS_OPTIONS ?? '', {
+    alias: {
+      analysis: ['a'],
+    },
+    boolean: [
+      'help',
+      'verbose',
+      'partial',
+      'full',
+      'ignore-node-modules',
+      'stat',
+    ],
+    string: [
+      'analysis',
+      'home',
+    ],
+    configuration: {
+      'short-option-groups': false,
+    },
+  });
+
+  const full = typeof parsed.full === 'boolean' ? parsed.full : undefined;
+  const partial = typeof parsed.partial === 'boolean' ? parsed.partial : false;
+
+  if (full && partial) {
+    throw new Error('DYNAJS_OPTIONS cannot contain both --full and --partial.');
+  }
+
+  return {
+    help: typeof parsed.help === 'boolean' ? parsed.help : false,
+    analysis: getStringValue(parsed.analysis) ?? process.env.DYNAJS_ANALYSIS,
+    home: getStringValue(parsed.home) ?? process.env.DYNAJS_HOME,
+    verbose: typeof parsed.verbose === 'boolean' ? parsed.verbose : false,
+    partialHook: full ? false : partial ?? false,
+    ignoreNodeModules: typeof parsed['ignore-node-modules'] === 'boolean' ? parsed['ignore-node-modules'] : false,
+    stat: typeof parsed.stat === 'boolean' ? parsed.stat : false,
+  };
+}
