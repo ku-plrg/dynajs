@@ -1,6 +1,6 @@
 (function (D$) {
 
-  var builder = new D$.utils.StringBuilder();
+  var builder = new D$.utils.StringBuilder(false /* prevent RangeError */);
   function put(str) { console.log(builder.put(str)); }
 
   const MAX_STRING_LENGTH = 20;
