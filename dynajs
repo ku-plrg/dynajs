@@ -24,4 +24,4 @@ fi
 
 # TODO: check if DYNAJS_PARTIAL_HOOK is set.
 
-NODE_OPTIONS="$NODE_OPTIONS --import $DYNAJS_HOME/dist/import.js" "$@"
+NODE_OPTIONS="$NODE_OPTIONS --import $DYNAJS_HOME/dist/entry/import.js" "$@"

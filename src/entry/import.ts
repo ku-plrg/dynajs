@@ -2,13 +2,13 @@ import { register } from "node:module";
 import { pathToFileURL } from "node:url";
 import path from "node:path";
 import Module from 'module';
-import { getInstrumentedName, getStatName, log, writeFile } from "./utils.js";
-import { setBaseObj } from './analysis.js';
-import { instrument } from "./instrument.js";
-import { DYNAJS_IGNORE_NODE_MODULES, DYNAJS_PARTIAL_HOOK, DYNAJS_STAT, DYNAJS_VERBOSE as verbose } from "./constants/general.js";
-import { checkAnalysisHooks } from "./boot.js";
-import { FeatureTagCheck } from "./types.js";
-import { recordStat, writeStatFile } from "./statistics.js";
+import { getInstrumentedName, getStatName, log, writeFile } from "../utils.js";
+import { setBaseObj } from '../analysis.js';
+import { instrument } from "../instrument.js";
+import { DYNAJS_IGNORE_NODE_MODULES, DYNAJS_PARTIAL_HOOK, DYNAJS_STAT, DYNAJS_VERBOSE as verbose } from "../constants/general.js";
+import { checkAnalysisHooks } from "../boot.js";
+import { FeatureTagCheck } from "../types.js";
+import { recordStat, writeStatFile } from "../statistics.js";
 
 function prepareGlobal(): void {
   setBaseObj();
@@ -32,8 +32,8 @@ function prepareGlobal(): void {
 
 function registerESMloader(mode : FeatureTagCheck | undefined): void {
   const baseURL = process.env.DYNAJS_HOME
-    ? pathToFileURL(path.join(process.env.DYNAJS_HOME, "dist/"))
-    : new URL("./", import.meta.url);
+    ? pathToFileURL(path.join(process.env.DYNAJS_HOME, "dist/entry/"))
+    : new URL("./", import.meta.url); // should throw error instead
   register("./register.js", baseURL, { data: { mode }});
 }
 
@@ -85,7 +85,12 @@ function registerCJSloader(mode : FeatureTagCheck | undefined): void {
   };
 }
 
+function parseOpts(): void {
+
+}
+
 function main(): void {
+  const opts = parseOpts();
   prepareGlobal();
   const mode : FeatureTagCheck | undefined = checkAnalysisHooks(!DYNAJS_PARTIAL_HOOK);
   registerCJSloader(mode);

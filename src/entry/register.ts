@@ -1,11 +1,11 @@
 import type { InitializeHook, LoadHook, ResolveHook } from "node:module";
-import type { FeatureTagCheck } from "./types.js";
+import type { FeatureTagCheck } from "../types.js";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { instrument } from "./instrument.js";
-import { DYNAJS_IGNORE_NODE_MODULES, DYNAJS_STAT, DYNAJS_VERBOSE as verbose } from "./constants/general.js";
-import { getInstrumentedName, getStatName, log, writeFile } from "./utils.js";
-import { recordStat, writeStatFile } from "./statistics.js";
+import { instrument } from "../instrument.js";
+import { DYNAJS_IGNORE_NODE_MODULES, DYNAJS_STAT, DYNAJS_VERBOSE as verbose } from "../constants/general.js";
+import { getInstrumentedName, getStatName, log, writeFile } from "../utils.js";
+import { recordStat, writeStatFile } from "../statistics.js";
 
 let mode: FeatureTagCheck | undefined;
 const targetRoot = path.resolve(process.cwd());

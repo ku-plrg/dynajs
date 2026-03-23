@@ -7,12 +7,12 @@ const requireBanner = [
 
 const entryPoints = [
   {
-    entry: "src/import.ts",
-    outfile: "dist/import.js",
+    entry: "src/entry/import.ts",
+    outfile: "dist/entry/import.js",
   },
   {
-    entry: "src/register.ts",
-    outfile: "dist/register.js",
+    entry: "src/entry/register.ts",
+    outfile: "dist/entry/register.js",
   },
 ];
 
