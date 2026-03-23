@@ -135,7 +135,7 @@ export const visitors: Visitors = {
     state.write('switch (');
     l.logSwitchLeft(state, discriminant);
     state.write(') {');
-    state.withScope(scope => scope.walkArray(cases as unknown as acorn.Node[]), () => {
+    state.withScope(scope => scope.walkArray(cases), () => {
       state.wrap(() => {
         for (const switchCase of cases) {
           state.writeln('');
@@ -575,7 +575,7 @@ export const visitors: Visitors = {
     state.write('import');
     if (node.specifiers.length > 0) {
       state.write(' ');
-      l.writeImportClause(state, node.specifiers as unknown as acorn.Node[]);
+      l.writeImportClause(state, node.specifiers);
       state.write(' from ');
     } else {
       state.write(' ');
@@ -607,7 +607,7 @@ export const visitors: Visitors = {
       state.walk(node.declaration);
       return;
     }
-    l.writeExportSpecifiers(state, node.specifiers as unknown as acorn.Node[]);
+    l.writeExportSpecifiers(state, node.specifiers);
     if (node.source) {
       state.write(' from ');
       l.writeNodeAsSource(state, node.source);
