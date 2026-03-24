@@ -780,18 +780,6 @@ export function needsChainBoundary(state: State, node: acorn.Node): boolean {
   }
 }
 
-export function isModuleDeclaration(node: acorn.Statement | acorn.ModuleDeclaration): boolean {
-  switch (node.type) {
-    case 'ImportDeclaration':
-    case 'ExportNamedDeclaration':
-    case 'ExportDefaultDeclaration':
-    case 'ExportAllDeclaration':
-      return true;
-    default:
-      return false;
-  }
-}
-
 export function writeNodeAsSource(state: State, node: acorn.Node): void {
   state.write(generate(node as any));
 }

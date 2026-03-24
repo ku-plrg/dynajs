@@ -3,7 +3,7 @@ import * as l from './log.js';
 import type * as acorn from 'acorn';
 import { recursive, type RecursiveVisitors } from 'acorn-walk';
 import type { State } from './state.js';
-import { todo, VarKind, log } from '../utils.js';
+import { todo, VarKind, log, header } from '../utils.js';
 import { generate } from 'astring';
 import { EXCEPTION_VAR } from '../constants/general.js';
 
@@ -33,35 +33,14 @@ const visitors: RecursiveVisitors<State> = {
     const strict = state.isStrict || l.hasUseStrictDirective(body);
     state.withStrictMode(strict, () => {
       state.withScope(scope => scope.walkArray(body), () => {
-        const hasModuleDeclaration = body.some(l.isModuleDeclaration);
-        if (hasModuleDeclaration) {
-          l.logScriptEnter(state, node);
-          l.logDeclare(state, node);
-          for (const statement of body) {
-            state.writeln('');
-            state.walk(statement);
-          }
-          l.logScriptExit(state, node);
-          return;
+        switch (sourceType) {
+          case 'script':
+            visitorHelper.Script(node, state);
+            break;
+          case 'module':
+            visitorHelper.Module(node, state);
+            break;
         }
-        state.writeln('try {');
-        state.wrap(() => {
-          l.logScriptEnter(state, node);
-          l.logDeclare(state, node);
-          for (const statement of body) {
-            state.writeln('');
-            state.walk(statement);
-          }
-        });
-        state.writeln(`} catch (${EXCEPTION_VAR}) {`);
-        state.wrap(() => {
-          l.logException(state, node);
-        });
-        state.writeln(`} finally {`);
-        state.wrap(() => {
-          l.logScriptExit(state, node);
-        });
-        state.writeln(`}`);
       });
     });
   },
@@ -751,4 +730,128 @@ const visitors: RecursiveVisitors<State> = {
     });
     state.writeln('}');
   },
+}
+
+type TopLevelBodyNode = acorn.Statement | acorn.ModuleDeclaration;
+type TopLevelBodyChunk =
+  | { kind: 'statement'; nodes: acorn.Statement[] }
+  | { kind: 'declaration' | 'moduleDeclaration'; node: TopLevelBodyNode };
+
+function isTopLevelModuleDeclaration(node: TopLevelBodyNode): node is acorn.ModuleDeclaration {
+  switch (node.type) {
+    case 'ImportDeclaration':
+    case 'ExportNamedDeclaration':
+    case 'ExportDefaultDeclaration':
+    case 'ExportAllDeclaration':
+      return true;
+    default:
+      return false;
+  }
+}
+
+function isTopLevelDeclaration(node: TopLevelBodyNode): node is acorn.VariableDeclaration | acorn.FunctionDeclaration | acorn.ClassDeclaration {
+  switch (node.type) {
+    case 'VariableDeclaration':
+    case 'FunctionDeclaration':
+    case 'ClassDeclaration':
+      return true;
+    default:
+      return false;
+  }
+}
+
+function splitTopLevelBody(body: readonly TopLevelBodyNode[]): TopLevelBodyChunk[] {
+  const chunks: TopLevelBodyChunk[] = [];
+  let statements: acorn.Statement[] = [];
+
+  const flushStatements = (): void => {
+    if (statements.length === 0) return;
+    chunks.push({ kind: 'statement', nodes: statements });
+    statements = [];
+  };
+
+  for (const node of body) {
+    if (isTopLevelModuleDeclaration(node)) {
+      flushStatements();
+      chunks.push({ kind: 'moduleDeclaration', node });
+      continue;
+    }
+    if (isTopLevelDeclaration(node)) {
+      flushStatements();
+      chunks.push({ kind: 'declaration', node });
+      continue;
+    }
+    statements.push(node);
+  }
+
+  flushStatements();
+  return chunks;
+}
+
+/**
+ * not a `Visitor` in the sense of `acorn-walk`.
+ * a collection of helper functions for visiting certain nodes, to avoid code duplication in the main visitors
+ */
+const visitorHelper = {
+  Script: (node: acorn.Program, state: State) => {
+    const { body } = node;
+    state.writeln('try {');
+    state.wrap(() => {
+      l.logScriptEnter(state, node);
+      l.logDeclare(state, node);
+      for (const statement of body) {
+        state.writeln('');
+        state.walk(statement);
+      }
+    });
+    state.writeln(`} catch (${EXCEPTION_VAR}) {`);
+    state.wrap(() => {
+      l.logException(state, node);
+    });
+    state.writeln(`} finally {`);
+    state.wrap(() => {
+      l.logScriptExit(state, node);
+    });
+    state.writeln(`}`);
+  },
+  Module: (node: acorn.Program, state: State) => {
+    const { body } = node;
+    const chunks = splitTopLevelBody(body);
+    l.logScriptEnter(state, node);
+    l.logDeclare(state, node);
+
+    if (state.verbose) {
+      log(`Module body is split into ${chunks.length} chunk(s) for separate try-catch instrumentation.`);
+      header('Chunks:');
+      chunks.forEach((chunk, index) => {
+        log(`Chunk ${index + 1}: kind = ${chunk.kind}, nodes = [${chunk.kind === 'statement' ? chunk.nodes.map(n => n.type).join(', ') : chunk.node.type}]`);
+      });
+      header('Chunk End');
+    }
+
+    for (const chunk of chunks) {
+      state.writeln('');
+
+      if (chunk.kind !== 'statement') {
+        // TODO wrap rhs of each declaration using try-catch inside of IIFE (of arrow function)
+        state.walk(chunk.node);
+        continue;
+      }
+
+      state.writeln('try {');
+      state.wrap(() => {
+        for (const statement of chunk.nodes) {
+          state.writeln('');
+          state.walk(statement);
+        }
+      });
+      state.writeln(`} catch (${EXCEPTION_VAR}) {`);
+      state.wrap(() => {
+        l.logException(state, node);
+      });
+      state.writeln(`}`);
+    }
+
+    l.logScriptExit(state, node);
+  }
 }
