@@ -5,11 +5,11 @@ import path from "node:path";
 import { instrument } from "../instrument/main.js";
 import { getInstrumentedName, getStatName, log, writeFile } from "../utils.js";
 import { recordStat, writeStatFile } from "../statistics.js";
-import { getRuntimeOptions } from "./options.js";
+import type { RuntimeOptions } from "./options.js";
 
 let mode: FeatureTagCheck | undefined;
+let options: RuntimeOptions;
 const targetRoot = path.resolve(process.cwd());
-const options = getRuntimeOptions();
 
 function getFilePathFromUrl(url: string): string | null {
   if (!url.startsWith('file://')) {
@@ -54,7 +54,7 @@ function instrumentSource(source: string, url: string): string {
     writeStatisticsFile(statPath, source);
   }
   const instrumentedSource = instrument(source, {
-    verbose: false,
+    verbose: options.verbose,
     isScript: false,
     isEnabled: mode,
     originalPath: filename,
@@ -64,8 +64,9 @@ function instrumentSource(source: string, url: string): string {
   return instrumentedSource;
 }
 
-export const initialize: InitializeHook = async ({ mode: initialMode }) => {
-  mode = initialMode;
+export const initialize: InitializeHook = async (data) => {
+  mode = data.mode;
+  options = data.options;
 };
 
 export const resolve: ResolveHook = async (specifier, context, nextResolve) => {

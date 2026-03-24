@@ -2,7 +2,7 @@ import * as LOG from '../constants/hook.js';
 import * as l from './log.js';
 import type * as acorn from 'acorn';
 import type { State } from './state.js';
-import { todo, VarKind } from '../utils.js';
+import { todo, VarKind, log } from '../utils.js';
 import { generate } from 'astring';
 import { EXCEPTION_VAR } from '../constants/general.js';
 
@@ -27,7 +27,8 @@ export const visitors: Visitors = {
     l.logLiteral(state, node);
   },
   Program: (node, state) => {
-    const { body } = node;
+    const { body, sourceType } = node;
+    if (state.verbose) log(`Instrumenting ${sourceType}...`);
     const strict = state.isStrict || l.hasUseStrictDirective(body);
     state.withStrictMode(strict, () => {
       state.withScope(scope => scope.walkArray(body), () => {
@@ -79,8 +80,8 @@ export const visitors: Visitors = {
         }
       });
     }, true);
-    state.write('}');
-    state.writeln(';');
+    // should not add semicolon after block statement if it's followed by else or catch or finally
+    state.write('} ');
   },
   EmptyStatement: (node, state) => {
     state.write(';');

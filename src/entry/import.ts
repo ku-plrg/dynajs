@@ -33,7 +33,7 @@ function registerESMloader(mode : FeatureTagCheck | undefined, options: RuntimeO
   const baseURL = options.home
     ? pathToFileURL(path.join(options.home, "dist/entry/"))
     : new URL("./", import.meta.url); // should throw error instead
-  register("./register.js", baseURL, { data: { mode }});
+  register("./register.js", baseURL, { data: { mode, options } });
 }
 
 const targetRoot = path.resolve(process.cwd());
@@ -75,8 +75,8 @@ function registerCJSloader(mode : FeatureTagCheck | undefined, options: RuntimeO
     }
 
     const instrumentedCode = instrument(code, {
-      verbose: false,
-      isScript: false,
+      ...options,
+      isScript: false, // ???
       isEnabled: mode,
       originalPath: filename,
       instrumentedPath,
@@ -92,6 +92,11 @@ function main(): void {
   if (options.help) {
     printHelp();
     process.exit(0);
+  }
+
+  if (options.verbose) {
+    log("Starting DynAJS with options:");
+    log(JSON.stringify(options, null, 2));
   }
 
   prepareGlobal(options);
