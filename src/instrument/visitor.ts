@@ -28,7 +28,7 @@ export const visitors: Visitors = {
   },
   Program: (node, state) => {
     const { body } = node;
-    const strict = state.isStrict || l.hasUseStrictDirective(body as acorn.Node[]);
+    const strict = state.isStrict || l.hasUseStrictDirective(body);
     state.withStrictMode(strict, () => {
       state.withScope(scope => scope.walkArray(body), () => {
         const hasModuleDeclaration = body.some(l.isModuleDeclaration);
@@ -343,12 +343,12 @@ export const visitors: Visitors = {
       state.write(': ');
       state.walk(value);
     } else if (method) {
-      l.logFunc(state, value, true);
+      l.logFuncTail(state, value as acorn.Function, true, false);
     } else if (kind === 'init') {
       state.write(': ');
       state.walk(value);
     } else { // kind is 'get' or 'set'
-      l.logFunc(state, value, true);
+      l.logFuncTail(state, value as acorn.Function, true, false);
     }
   },
   FunctionExpression: (node, state) => {
@@ -556,7 +556,7 @@ export const visitors: Visitors = {
     }
     const isDerivedConstructor = kind === 'constructor' && state.inDerivedClass;
     if (isDerivedConstructor) state.isDerivedConstructor = true;
-    l.logFunc(state, value, true);
+    l.logFuncTail(state, value, true, false);
     if (isDerivedConstructor) state.isDerivedConstructor = false;
   },
   ClassDeclaration: (node, state) => {

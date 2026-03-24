@@ -6,7 +6,7 @@ import type { State } from './state.js';
 import { EXCEPTION_VAR, TEMP_PARAM_VAR } from '../constants/general.js';
 import { generate } from 'astring';
 
-export function hasUseStrictDirective(body: readonly acorn.Node[]): boolean {
+export function hasUseStrictDirective(body: readonly acorn.AnyNode[]): boolean {
   for (const statement of body) {
     if (statement.type !== 'ExpressionStatement') return false;
     const expr = (statement as any).expression;
@@ -168,26 +168,28 @@ export function logClassDeclare(state: State, node: acorn.Node, isExpr: boolean)
 }
 
 // logging function declaration
-export function logFuncDeclare(state: State, node: acorn.Node, isExpr: boolean): void {
-  const { id, generator, async } = node as acorn.Function;
-  state.write(async ? 'async ' : '');
-  state.write(generator ? 'function* ' : 'function ');
-  if (id != null) state.write(id.name);
-  logFunc(state, node, isExpr);
+export function logFuncDeclare(state: State, node: acorn.Function, isExpr: boolean): void {
+  const { id, generator, async } = node;
+  if (async) state.write('async ');
+  state.write('function');
+  if (generator) state.write('*');
+  state.write(' ');
+  if (id) state.write(id.name);
+  logFuncTail(state, node, isExpr, false);
 }
 
 // logging arrow function declaration
-export function logArrowFuncDeclare(state: State, node: acorn.Node): void {
+export function logArrowFuncDeclare(state: State, node: acorn.Function): void {
   const { async } = node as acorn.Function;
   state.write(async ? 'async ' : '');
-  logFunc(state, node, true, true);
+  logFuncTail(state, node, true, true);
 }
 
 // logging function tail
-export function logFunc(state: State, node: acorn.Node, isExpr: boolean, isArrow: boolean = false): void {
+export function logFuncTail(state: State, node: acorn.Function, isExpr: boolean, isArrow: boolean): void {
   state.withScope(scope => scope.walkFunction(node, isExpr), () => {
-    const { params, body, type, id } = node as acorn.Function;
-    const strict = state.isStrict || (body.type === 'BlockStatement' && hasUseStrictDirective(body.body as acorn.Node[]));
+    const { params, body, type, id } = node;
+    const strict = state.isStrict || (body.type === 'BlockStatement' && hasUseStrictDirective(body.body));
     state.write('(');
     state.withLHS(() => state.walkArray(params));
     state.write(isArrow ? ') => {' : ') {');
