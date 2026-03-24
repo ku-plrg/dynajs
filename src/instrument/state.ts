@@ -1,6 +1,6 @@
 import { FEATURE_CHECK_ALL_TRUE, FeatureTagCheck } from '../types.js';
 import { Scope } from './scope.js';
-import { visitors } from './visitor.js';
+import { walkNode } from './visitor.js';
 import type * as acorn from 'acorn';
 
 // -----------------------------------------------------------------------------
@@ -115,8 +115,7 @@ export class State {
 
   // walk the AST nodes in an array recursively
   walk(node: acorn.Node): void {
-    // @ts-ignore
-    visitors[node.type](node, this);
+    walkNode(node, this);
   }
 
   // walk the AST nodes in an array recursively with newline

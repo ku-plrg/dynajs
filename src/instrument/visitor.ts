@@ -1,6 +1,7 @@
 import * as LOG from '../constants/hook.js';
 import * as l from './log.js';
 import type * as acorn from 'acorn';
+import { recursive, type RecursiveVisitors } from 'acorn-walk';
 import type { State } from './state.js';
 import { todo, VarKind, log } from '../utils.js';
 import { generate } from 'astring';
@@ -9,12 +10,12 @@ import { EXCEPTION_VAR } from '../constants/general.js';
 // -----------------------------------------------------------------------------
 // visitors
 // -----------------------------------------------------------------------------
-type Visitors = {
-  [type in acorn.AnyNode['type']]?:
-    (node: Extract<acorn.AnyNode, { type: type }>, state: State) => void
+
+export function walkNode(node: acorn.Node, state: State): void {
+  recursive(node, state, visitors);
 }
 
-export const visitors: Visitors = {
+const visitors: RecursiveVisitors<State> = {
   Identifier: (node, state) => {
     if (state.isLHS) {
       state.write(node.name);
