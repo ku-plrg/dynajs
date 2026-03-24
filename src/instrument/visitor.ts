@@ -1,5 +1,5 @@
 import * as LOG from '../constants/hook.js';
-import * as l from './log.js';
+import * as write from './write.js';
 import type * as acorn from 'acorn';
 import { recursive, type RecursiveVisitors } from 'acorn-walk';
 import type { State } from './state.js';
@@ -20,17 +20,17 @@ const visitors: RecursiveVisitors<State> = {
     if (state.isLHS) {
       state.write(node.name);
     } else {
-      l.logRead(state, node, node.name);
+      write.logRead(state, node, node.name);
     }
   },
   Literal: (node, state) => {
     const { value } = node;
-    l.logLiteral(state, node);
+    write.logLiteral(state, node);
   },
   Program: (node, state) => {
     const { body, sourceType } = node;
     if (state.verbose) log(`Instrumenting ${sourceType}...`);
-    const strict = state.isStrict || l.hasUseStrictDirective(body);
+    const strict = state.isStrict || write.hasUseStrictDirective(body);
     state.withStrictMode(strict, () => {
       state.withScope(scope => scope.walkArray(body), () => {
         switch (sourceType) {
@@ -45,7 +45,7 @@ const visitors: RecursiveVisitors<State> = {
     });
   },
   ExpressionStatement: (node, state) => {
-    l.logExpression(state, node.expression);
+    write.logExpression(state, node.expression);
     state.write(';');
   },
   BlockStatement: (node, state) => {
@@ -53,7 +53,7 @@ const visitors: RecursiveVisitors<State> = {
     state.write('{');
     state.withScope(scope => scope.walkArray(body), () => {
       state.wrap(() => {
-        l.logDeclare(state, node);
+        write.logDeclare(state, node);
         for (const statement of body) {
           state.writeln('');
           state.walk(statement);
@@ -74,8 +74,8 @@ const visitors: RecursiveVisitors<State> = {
   },
   ReturnStatement: (node, state) => {
     const { argument } = node;
-    l.logReturn(state, node, () => {
-      if (argument) l.logExpression(state, argument);
+    write.logReturn(state, node, () => {
+      if (argument) write.logExpression(state, argument);
       else state.write('undefined');
     });
   },
@@ -103,7 +103,7 @@ const visitors: RecursiveVisitors<State> = {
   IfStatement: (node, state) => {
     const { test, consequent, alternate } = node;
     state.write('if (');
-    l.logCondition(state, test, 'if', true);
+    write.logCondition(state, test, 'if', true);
     state.write(') ');
     state.walk(consequent);
     if (alternate != null) {
@@ -114,7 +114,7 @@ const visitors: RecursiveVisitors<State> = {
   SwitchStatement: (node, state) => {
     const { discriminant, cases } = node;
     state.write('switch (');
-    l.logSwitchLeft(state, discriminant);
+    write.logSwitchLeft(state, discriminant);
     state.write(') {');
     state.withScope(scope => scope.walkArray(cases), () => {
       state.wrap(() => {
@@ -130,7 +130,7 @@ const visitors: RecursiveVisitors<State> = {
     const { test, consequent } = node;
     if (test != null) {
       state.write('case ');
-      l.logSwitchRight(state, test);
+      write.logSwitchRight(state, test);
       state.write(':');
     } else {
       state.write('default:');
@@ -145,7 +145,7 @@ const visitors: RecursiveVisitors<State> = {
   ThrowStatement: (node, state) => {
     const { argument } = node;
     state.write('throw ');
-    l.logThrow(state, argument);
+    write.logThrow(state, argument);
     state.write(';');
   },
   TryStatement: (node, state) => {
@@ -171,7 +171,7 @@ const visitors: RecursiveVisitors<State> = {
         state.write(') {');
         state.wrap(() => {
           state.writeln(`${LOG.CATCH_ENTER}();`);
-          l.logDeclare(state, node);
+          write.logDeclare(state, node);
           state.writeln('');
           state.walk(body);
         });
@@ -184,7 +184,7 @@ const visitors: RecursiveVisitors<State> = {
   WhileStatement: (node, state) => {
     const { test, body } = node;
     state.write('while (');
-    l.logCondition(state, test, 'while', true);
+    write.logCondition(state, test, 'while', true);
     state.write(') ');
     state.walk(body);
   },
@@ -193,7 +193,7 @@ const visitors: RecursiveVisitors<State> = {
     state.write('do ');
     state.walk(body);
     state.write(' while (');
-    l.logCondition(state, test, 'do-while', true);
+    write.logCondition(state, test, 'do-while', true);
     state.write(');');
   },
   ForStatement: (node, state) => {
@@ -219,22 +219,22 @@ const visitors: RecursiveVisitors<State> = {
           state.walk(init);
           state.write(' ');
         } else {
-          l.logExpression(state, init);
+          write.logExpression(state, init);
           state.write('; ');
         }
       } else {
         state.write('; ');
       }
-      if (test != null) l.logCondition(state, test, 'for', true);
+      if (test != null) write.logCondition(state, test, 'for', true);
       state.write('; ');
-      if (update != null) l.logExpression(state, update);
+      if (update != null) write.logExpression(state, update);
       state.write(') ');
     }
 
     function emitLexicalForBody(decl: Extract<typeof init, { type: 'VariableDeclaration' }>) {
       state.write('{');
       state.wrap(() => {
-        l.logDeclare(state, decl);
+        write.logDeclare(state, decl);
         if (body.type === 'BlockStatement') {
           for (const statement of body.body) {
             state.writeln('');
@@ -249,13 +249,13 @@ const visitors: RecursiveVisitors<State> = {
     }
   },
   ForInStatement: (node, state) => {
-    l.logForInOfStatement(state, node, true, false);
+    write.logForInOfStatement(state, node, true, false);
   },
   FunctionDeclaration: (node, state) => {
     if (state.isEnabled.D && state.scope?.isLexicalScope() && node.id != null) {
-      state.writeln(`${LOG.DECLARE}(${l.newId(node)}, "${node.id.name}", ${VarKind.Func}, false);`);
+      state.writeln(`${LOG.DECLARE}(${write.newId(node)}, "${node.id.name}", ${VarKind.Func}, false);`);
     }
-    l.logFuncDeclare(state, node, false);
+    write.logFuncDeclare(state, node, false);
   },
   VariableDeclaration: (node, state) => {
     const { kind, declarations } = node;
@@ -268,14 +268,14 @@ const visitors: RecursiveVisitors<State> = {
     if (init == null) {
       state.withLHS(() => state.walk(id));
     } else {
-      l.logWrite(state, id, init, () => l.logExpression(state, init));
+      write.logWrite(state, id, init, () => write.logExpression(state, init));
     }
   },
   ThisExpression: (node, state) => {
-    l.logRead(state, node, 'this');
+    write.logRead(state, node, 'this');
   },
   ArrayExpression: (node, state) => {
-    l.logLiteral(state, node, () => {
+    write.logLiteral(state, node, () => {
       const { elements } = node;
       state.write('[');
       for (const elem of elements) {
@@ -288,7 +288,7 @@ const visitors: RecursiveVisitors<State> = {
     });
   },
   ObjectExpression: (node, state) => {
-    l.logLiteral(state, node, () => {
+    write.logLiteral(state, node, () => {
       const { properties } = node;
       state.write('{');
       state.wrap(() => {
@@ -324,27 +324,27 @@ const visitors: RecursiveVisitors<State> = {
       state.write(': ');
       state.walk(value);
     } else if (method) {
-      l.logFuncTail(state, value as acorn.Function, true, false);
+      write.logFuncTail(state, value as acorn.Function, true, false);
     } else if (kind === 'init') {
       state.write(': ');
       state.walk(value);
     } else { // kind is 'get' or 'set'
-      l.logFuncTail(state, value as acorn.Function, true, false);
+      write.logFuncTail(state, value as acorn.Function, true, false);
     }
   },
   FunctionExpression: (node, state) => {
-    l.logLiteral(state, node, () => {
-      l.logFuncDeclare(state, node, true);
+    write.logLiteral(state, node, () => {
+      write.logFuncDeclare(state, node, true);
     });
   },
   UnaryExpression: (node, state) => {
-    l.logUnaryOp(state, node);
+    write.logUnaryOp(state, node);
   },
   UpdateExpression: (node, state) => {
-    l.logUpdateOp(state, node);
+    write.logUpdateOp(state, node);
   },
   BinaryExpression: (node, state) => {
-    l.logBinaryOp(state, node);
+    write.logBinaryOp(state, node);
   },
   AssignmentExpression: (node, state) => {
     const { left, right, operator } = node;
@@ -352,11 +352,11 @@ const visitors: RecursiveVisitors<State> = {
     if (enabled) state.write('(');
     switch (operator) {
       case '=': {
-        l.logWrite(state, left, right, () => state.walk(right));
+        write.logWrite(state, left, right, () => state.walk(right));
         break;
       }
       default: {
-        l.writeCompoundAssignmentValue(state, node);
+        write.writeCompoundAssignmentValue(state, node);
       }
     }
     if (enabled) state.write(')');
@@ -365,7 +365,7 @@ const visitors: RecursiveVisitors<State> = {
     const { left, right, operator } = node;
     const isDisabled = true // set to true for now; additional parenthesis is needed
     if (isDisabled) state.write('(');
-    l.logCondition(state, left, operator);
+    write.logCondition(state, left, operator);
     state.write(` ${operator} (`);
     state.walk(right);
     state.write(')');
@@ -394,11 +394,11 @@ const visitors: RecursiveVisitors<State> = {
       }
       return;
     }
-    l.logGetField(state, node);
+    write.logGetField(state, node);
   },
   ConditionalExpression: (node, state) => {
     const { test, consequent, alternate } = node;
-    l.logCondition(state, test, '?');
+    write.logCondition(state, test, '?');
     state.write(' ? ');
     state.walk(consequent);
     state.write(' : ');
@@ -406,14 +406,14 @@ const visitors: RecursiveVisitors<State> = {
   },
   CallExpression: (node, state) => {
     const { callee, arguments: args, optional } = node;
-    l.logCall(state, callee, false, optional);
+    write.logCall(state, callee, false, optional);
     state.write('(');
     state.walkArray(args);
     state.write(')');
   },
   NewExpression: (node, state) => {
     const { callee, arguments: args } = node;
-    l.logCall(state, callee, true, false);
+    write.logCall(state, callee, true, false);
     state.write('(');
     state.walkArray(args);
     state.write(')');
@@ -425,7 +425,7 @@ const visitors: RecursiveVisitors<State> = {
   },
   ForOfStatement: (node, state) => {
     // TODO: await should be hooked in some way
-    l.logForInOfStatement(state, node, false, node.await);
+    write.logForInOfStatement(state, node, false, node.await);
   },
   Super: (node, state) => {
     // TODO: super hooking
@@ -436,16 +436,16 @@ const visitors: RecursiveVisitors<State> = {
     state.walk(node.argument);
   },
   ArrowFunctionExpression: (node, state) => {
-    l.logLiteral(state, node, () => {
-      l.logArrowFuncDeclare(state, node);
+    write.logLiteral(state, node, () => {
+      write.logArrowFuncDeclare(state, node);
     });
   },
   YieldExpression: (node, state) => {
-    l.logYield(state, node, node.argument, node.delegate);
+    write.logYield(state, node, node.argument, node.delegate);
   },
   TemplateLiteral: (node, state) => {
     // TODO it is not distinguished with string literal for the user
-    l.logLiteral(state, node, () => {
+    write.logLiteral(state, node, () => {
       const { quasis, expressions } = node;
       state.write('`');
       const length = expressions.length;
@@ -461,7 +461,7 @@ const visitors: RecursiveVisitors<State> = {
     });
   },
   TaggedTemplateExpression: (node, state) => {
-    l.logTaggedCall(state, node.tag);
+    write.logTaggedCall(state, node.tag);
     const { quasis, expressions } = node.quasi;
     state.write('`');
     const length = expressions.length;
@@ -506,7 +506,7 @@ const visitors: RecursiveVisitors<State> = {
     state.write(' = ');
     const prev = state.isLHS;
     state.isLHS = false;
-    l.logExpression(state, node.right as acorn.Expression);
+    write.logExpression(state, node.right as acorn.Expression);
     state.isLHS = prev;
   },
   ClassBody: (node, state) => {
@@ -537,36 +537,36 @@ const visitors: RecursiveVisitors<State> = {
     }
     const isDerivedConstructor = kind === 'constructor' && state.inDerivedClass;
     if (isDerivedConstructor) state.isDerivedConstructor = true;
-    l.logFuncTail(state, value, true, false);
+    write.logFuncTail(state, value, true, false);
     if (isDerivedConstructor) state.isDerivedConstructor = false;
   },
   ClassDeclaration: (node, state) => {
-    l.logClassDeclare(state, node, false);
+    write.logClassDeclare(state, node, false);
   },
   ClassExpression: (node, state) => {
-    l.logLiteral(state, node, () => {
-      l.logClassDeclare(state, node, true);
+    write.logLiteral(state, node, () => {
+      write.logClassDeclare(state, node, true);
     });
   },
   MetaProperty: (node, state) => {
     const name = `${node.meta.name}.${node.property.name}`;
-    l.logRead(state, node, name);
+    write.logRead(state, node, name);
   },
   ImportDeclaration: (node, state) => {
     state.write('import');
     if (node.specifiers.length > 0) {
       state.write(' ');
-      l.writeImportClause(state, node.specifiers);
+      write.writeImportClause(state, node.specifiers);
       state.write(' from ');
     } else {
       state.write(' ');
     }
-    l.writeNodeAsSource(state, node.source);
-    l.writeImportAttributes(state, (node as any).attributes);
+    write.writeNodeAsSource(state, node.source);
+    write.writeImportAttributes(state, (node as any).attributes);
     state.write(';');
   },
   ImportSpecifier: (node, state) => {
-    l.writeNodeAsSource(state, node.imported);
+    write.writeNodeAsSource(state, node.imported);
     if (node.local.name !== (node.imported as any).name) {
       state.write(` as ${node.local.name}`);
     }
@@ -578,9 +578,9 @@ const visitors: RecursiveVisitors<State> = {
     state.write(`* as ${node.local.name}`);
   },
   ImportAttribute: (node, state) => {
-    l.writeNodeAsSource(state, node.key);
+    write.writeNodeAsSource(state, node.key);
     state.write(': ');
-    l.writeNodeAsSource(state, node.value);
+    write.writeNodeAsSource(state, node.value);
   },
   ExportNamedDeclaration: (node, state) => {
     state.write('export ');
@@ -588,21 +588,21 @@ const visitors: RecursiveVisitors<State> = {
       state.walk(node.declaration);
       return;
     }
-    l.writeExportSpecifiers(state, node.specifiers);
+    write.writeExportSpecifiers(state, node.specifiers);
     if (node.source) {
       state.write(' from ');
-      l.writeNodeAsSource(state, node.source);
-      l.writeImportAttributes(state, (node as any).attributes);
+      write.writeNodeAsSource(state, node.source);
+      write.writeImportAttributes(state, (node as any).attributes);
     }
     state.write(';');
   },
   ExportSpecifier: (node, state) => {
-    l.writeNodeAsSource(state, node.local);
+    write.writeNodeAsSource(state, node.local);
     const localName = (node.local as any).name ?? (node.local as any).value;
     const exportedName = (node.exported as any).name ?? (node.exported as any).value;
     if (localName !== exportedName) {
       state.write(' as ');
-      l.writeNodeAsSource(state, node.exported);
+      write.writeNodeAsSource(state, node.exported);
     }
   },
   ExportDefaultDeclaration: (node, state) => {
@@ -617,18 +617,18 @@ const visitors: RecursiveVisitors<State> = {
     state.write('export *');
     if ((node as any).exported) {
       state.write(' as ');
-      l.writeNodeAsSource(state, (node as any).exported);
+      write.writeNodeAsSource(state, (node as any).exported);
     }
     state.write(' from ');
-    l.writeNodeAsSource(state, node.source);
-    l.writeImportAttributes(state, (node as any).attributes);
+    write.writeNodeAsSource(state, node.source);
+    write.writeImportAttributes(state, (node as any).attributes);
     state.write(';');
   },
   AwaitExpression: (node, state) => {
-    l.logAwait(state, node, node.argument);
+    write.logAwait(state, node, node.argument);
   },
   ChainExpression: (node, state) => {
-    if (!l.needsChainBoundary(state, node.expression)) {
+    if (!write.needsChainBoundary(state, node.expression)) {
       state.walk(node.expression);
       return;
     }
@@ -638,10 +638,10 @@ const visitors: RecursiveVisitors<State> = {
   },
   ImportExpression: (node, state) => {
     state.write('import(');
-    l.logExpression(state, (node as any).source);
+    write.logExpression(state, (node as any).source);
     if ((node as any).options) {
       state.write(', ');
-      l.logExpression(state, (node as any).options);
+      write.logExpression(state, (node as any).options);
     }
     state.write(')');
   },
@@ -674,7 +674,7 @@ const visitors: RecursiveVisitors<State> = {
       return;
     }
 
-    const id = l.newId(node);
+    const id = write.newId(node);
     state.write(` = ${LOG.FIELD_INIT}(${id}, this, `);
     if (computed) {
       state.walk(key);
@@ -700,7 +700,7 @@ const visitors: RecursiveVisitors<State> = {
     state.withScope(scope => scope.walkArray(body), () => {
       state.wrap(() => {
         if (!state.isEnabled.SBe) {
-          l.logDeclare(state, node);
+          write.logDeclare(state, node);
           for (const statement of body) {
             state.writeln('');
             state.walk(statement);
@@ -709,8 +709,8 @@ const visitors: RecursiveVisitors<State> = {
         }
         state.writeln('try {');
         state.wrap(() => {
-          state.writeln(`${LOG.STATIC_BLOCK_ENTER}(${l.newId(node)}, this);`);
-          l.logDeclare(state, node);
+          state.writeln(`${LOG.STATIC_BLOCK_ENTER}(${write.newId(node)}, this);`);
+          write.logDeclare(state, node);
           for (const statement of body) {
             state.writeln('');
             state.walk(statement);
@@ -718,12 +718,12 @@ const visitors: RecursiveVisitors<State> = {
         });
         state.writeln(`} catch (${EXCEPTION_VAR}) {`);
         state.wrap(() => {
-          l.logException(state, node);
+          write.logException(state, node);
           state.writeln(`throw ${EXCEPTION_VAR};`);
         });
         state.writeln(`} finally {`);
         state.wrap(() => {
-          state.writeln(`${LOG.STATIC_BLOCK_EXIT}(${l.newId(node)});`);
+          state.writeln(`${LOG.STATIC_BLOCK_EXIT}(${write.newId(node)});`);
         });
         state.writeln(`}`);
       });
@@ -788,6 +788,96 @@ function splitTopLevelBody(body: readonly TopLevelBodyNode[]): TopLevelBodyChunk
   return chunks;
 }
 
+function writeModuleDeclarationChunk(node: TopLevelBodyNode, program: acorn.Program, state: State): void {
+  switch (node.type) {
+    case 'VariableDeclaration':
+      writeModuleVariableDeclaration(node, program, state);
+      return;
+    case 'FunctionDeclaration':
+    case 'ClassDeclaration':
+    case 'ImportDeclaration':
+    case 'ExportAllDeclaration':
+      state.walk(node);
+      return;
+    case 'ExportNamedDeclaration':
+      state.write('export ');
+      if (node.declaration) {
+        writeModuleDeclarationChunk(node.declaration as TopLevelBodyNode, program, state);
+        return;
+      }
+      write.writeExportSpecifiers(state, node.specifiers);
+      if (node.source) {
+        state.write(' from ');
+        write.writeNodeAsSource(state, node.source);
+        write.writeImportAttributes(state, (node as any).attributes);
+      }
+      state.write(';');
+      return;
+    case 'ExportDefaultDeclaration': {
+      state.write('export default ');
+      const decl = node.declaration as acorn.Node;
+      if (decl.type === 'FunctionDeclaration' || decl.type === 'ClassDeclaration') {
+        state.walk(decl);
+      } else {
+        writeModuleWrappedExpression(decl as acorn.Expression, program, state);
+        state.write(';');
+      }
+      return;
+    }
+    default:
+      state.walk(node);
+  }
+}
+
+function writeModuleVariableDeclaration(
+  node: acorn.VariableDeclaration,
+  program: acorn.Program,
+  state: State,
+): void {
+  state.write(node.kind + ' ');
+  for (let i = 0; i < node.declarations.length; i++) {
+    if (i > 0) state.write(', ');
+    writeModuleVariableDeclarator(node.declarations[i], program, state);
+  }
+  state.write(';');
+}
+
+function writeModuleVariableDeclarator(
+  node: acorn.VariableDeclarator,
+  program: acorn.Program,
+  state: State,
+): void {
+  const { id, init } = node;
+  if (init == null) {
+    state.withLHS(() => state.walk(id));
+    return;
+  }
+  write.logWrite(state, id, init, () => writeModuleWrappedExpression(init as acorn.Expression, program, state));
+}
+
+function writeModuleWrappedExpression(
+  expression: acorn.Expression,
+  program: acorn.Program,
+  state: State,
+): void {
+  state.write('(() => {');
+  state.wrap(() => {
+    state.writeln('try {');
+    state.wrap(() => {
+      state.writeln('return ');
+      write.logExpression(state, expression);
+      state.write(';');
+    });
+    state.writeln(`} catch (${EXCEPTION_VAR}) {`);
+    state.wrap(() => {
+      write.logException(state, program);
+      state.writeln(`throw ${EXCEPTION_VAR};`);
+    });
+    state.writeln('}');
+  });
+  state.writeln('})()');
+}
+
 /**
  * not a `Visitor` in the sense of `acorn-walk`.
  * a collection of helper functions for visiting certain nodes, to avoid code duplication in the main visitors
@@ -797,8 +887,8 @@ const visitorHelper = {
     const { body } = node;
     state.writeln('try {');
     state.wrap(() => {
-      l.logScriptEnter(state, node);
-      l.logDeclare(state, node);
+      write.logScriptEnter(state, node);
+      write.logDeclare(state, node);
       for (const statement of body) {
         state.writeln('');
         state.walk(statement);
@@ -806,19 +896,19 @@ const visitorHelper = {
     });
     state.writeln(`} catch (${EXCEPTION_VAR}) {`);
     state.wrap(() => {
-      l.logException(state, node);
+      write.logException(state, node);
     });
     state.writeln(`} finally {`);
     state.wrap(() => {
-      l.logScriptExit(state, node);
+      write.logScriptExit(state, node);
     });
     state.writeln(`}`);
   },
   Module: (node: acorn.Program, state: State) => {
     const { body } = node;
     const chunks = splitTopLevelBody(body);
-    l.logScriptEnter(state, node);
-    l.logDeclare(state, node);
+    write.logScriptEnter(state, node);
+    write.logDeclare(state, node);
 
     if (state.verbose) {
       log(`Module body is split into ${chunks.length} chunk(s) for separate try-catch instrumentation.`);
@@ -833,8 +923,7 @@ const visitorHelper = {
       state.writeln('');
 
       if (chunk.kind !== 'statement') {
-        // TODO wrap rhs of each declaration using try-catch inside of IIFE (of arrow function)
-        state.walk(chunk.node);
+        writeModuleDeclarationChunk(chunk.node, node, state);
         continue;
       }
 
@@ -847,11 +936,11 @@ const visitorHelper = {
       });
       state.writeln(`} catch (${EXCEPTION_VAR}) {`);
       state.wrap(() => {
-        l.logException(state, node);
+        write.logException(state, node);
       });
       state.writeln(`}`);
     }
 
-    l.logScriptExit(state, node);
+    write.logScriptExit(state, node);
   }
 }

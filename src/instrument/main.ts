@@ -16,7 +16,7 @@ import {
 
 import { State, type StateOption } from './state.js';
 // TODO : move this to return value, instead of shared mutable state
-import { idToLoc } from './log.js';
+import { idToLoc } from './write.js';
 
 // instrument a JS file
 export function instrumentFile(filename: string, options: StateOption): string {
