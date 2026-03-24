@@ -43,7 +43,7 @@ Standalone `instrument` mode is not currently supported through the new
 Use the watch command below while developing the legacy CLI implementation:
 
 ```shell
-npm run start:watch -- instrument --detail <js file>
+npm run start:watch -- instrument --verbose <js file>
 ```
 
 > [!WARNING]

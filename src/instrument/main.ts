@@ -21,27 +21,27 @@ import { idToLoc } from './log.js';
 // instrument a JS file
 export function instrumentFile(filename: string, options: StateOption): string {
   const code = readFile(filename);
-  const { detail } = options;
+  const { verbose } = options;
   options.originalPath = filename;
-  if (detail) log(`The instrumentation target file is \`${filename}\`.`);
+  if (verbose) log(`The instrumentation target file is \`${filename}\`.`);
 
   const outputPath = getInstrumentedName(filename);
   options.instrumentedPath = outputPath;
-  if (detail) log('Instrumentation completed.');
+  if (verbose) log('Instrumentation completed.');
 
   const instrumentedCode = instrument(code, options);
   writeFile(outputPath, instrumentedCode);
-  if (detail) log(`Instrumented file written to \`${outputPath}\`.`);
+  if (verbose) log(`Instrumented file written to \`${outputPath}\`.`);
 
   return instrumentedCode;
 }
 
 // return the instrumented code
 export function instrument(code: string, options: StateOption): string {
-  if (options.detail) header('Instrumenting the code...');
+  if (options.verbose) header('Instrumenting the code...');
   const ast = parse(code, options.isScript);
   const state = new State(options);
-  if (options.detail) log(stringify(ast));
+  if (options.verbose) log(stringify(ast));
 
   let output = code
 
@@ -54,7 +54,7 @@ ${state.output}`;
 ${DYNAJS_VAR}.ids = ${JSON.stringify(idToLoc)};
 ${output}`;
 
-  if (options.detail) log(output.trim());
+  if (options.verbose) log(output.trim());
   return output;
 }
 

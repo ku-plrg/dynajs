@@ -14,8 +14,8 @@ const require = createRequire(import.meta.url);
 // `instrument` command
 const instrumentCommand = (argv: any): void => {
   const [ targetPath ] = getArgs('instrument', argv, 1);
-  const { detail } = argv;
-  instrumentFile(targetPath, { detail, isScript: true });
+  const { verbose } = argv;
+  instrumentFile(targetPath, { verbose, isScript: true });
 }
 
 // `analyze` command
@@ -33,7 +33,7 @@ function prepareGlobals(): void {
 
 // analyze a JS file
 function analyze(targetPath: string, options: any = {}): string {
-  const { detail, analysis, full } = options;
+  const { verbose, analysis, full } = options;
 
   setBaseObj();
   prepareGlobals();
@@ -44,7 +44,7 @@ function analyze(targetPath: string, options: any = {}): string {
   // override the .js extension handler
   const ModuleAny = Module as any;
   ModuleAny._extensions['.js'] = function (module: any, filename: string) {
-    let instrumentedCode: string = instrumentFile(filename, { detail, isEnabled: hooks, isScript: true });
+    let instrumentedCode: string = instrumentFile(filename, { verbose, isEnabled: hooks, isScript: true });
     module._compile(instrumentedCode, filename);
   };
 
@@ -97,9 +97,9 @@ try {
       analyzeCommand
     )
     .example('$0 analyze input.js', 'Analyze a JS file')
-    .option('detail', {
+    .option('verbose', {
       type: 'boolean',
-      description: 'Show detailed process',
+      description: 'Use verbose logging',
     })
     .demandCommand(1, `You need a command to run \`${SCRIPT_NAME}\`.`)
     .parse();

@@ -54,7 +54,7 @@ function instrumentSource(source: string, url: string): string {
     writeStatisticsFile(statPath, source);
   }
   const instrumentedSource = instrument(source, {
-    detail: false,
+    verbose: false,
     isScript: false,
     isEnabled: mode,
     originalPath: filename,

@@ -14,7 +14,7 @@ export interface StateOption {
   lineEnd?: string
   instrumentedPath?: string
   originalPath?: string
-  detail?: boolean
+  verbose?: boolean
   isEnabled?: FeatureTagCheck
   isScript: boolean
 }
@@ -30,7 +30,7 @@ export class State {
   isLHS: boolean;
   instrumentedPath: string;
   originalPath: string;
-  detail: boolean;
+  verbose: boolean;
   isEnabled: FeatureTagCheck;
   inDerivedClass: boolean;
   isDerivedConstructor: boolean;
@@ -50,7 +50,7 @@ export class State {
     this.isLHS = false;
     this.instrumentedPath = options.instrumentedPath ?? '';
     this.originalPath = options.originalPath ?? '';
-    this.detail = options.detail ?? false;
+    this.verbose = options.verbose ?? false;
     this.isEnabled = Object.freeze(options.isEnabled ?? { ...FEATURE_CHECK_ALL_TRUE });
     this.inDerivedClass = false;
     this.isDerivedConstructor = false;
