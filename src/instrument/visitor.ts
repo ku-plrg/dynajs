@@ -1,4 +1,4 @@
-import * as LOG from '../constants/hook.js';
+import * as LOG from './constant.js';
 import * as write from './write.js';
 import type * as acorn from 'acorn';
 import { recursive, type RecursiveVisitors } from 'acorn-walk';

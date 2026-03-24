@@ -1,4 +1,4 @@
-import * as LOG from '../constants/hook.js';
+import * as LOG from './constant.js';
 import type * as acorn from 'acorn';
 import { getLocFromNode, VarKind, warn } from '../utils.js';
 import { collectIdentifiers, getLocStr } from "./aux.js";
