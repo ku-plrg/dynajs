@@ -31,7 +31,7 @@ export const visitors: Visitors = {
     const strict = state.isStrict || l.hasUseStrictDirective(body as acorn.Node[]);
     state.withStrictMode(strict, () => {
       state.withScope(scope => scope.walkArray(body), () => {
-        const hasModuleDeclaration = body.some(statement => l.isModuleDeclaration(statement as acorn.Node));
+        const hasModuleDeclaration = body.some(l.isModuleDeclaration);
         if (hasModuleDeclaration) {
           l.logScriptEnter(state, node);
           l.logDeclare(state, node);
@@ -64,8 +64,7 @@ export const visitors: Visitors = {
     });
   },
   ExpressionStatement: (node, state) => {
-    const { expression } = node;
-    l.logExpression(state, expression);
+    l.logExpression(state, node.expression);
     state.write(';');
   },
   BlockStatement: (node, state) => {
@@ -80,7 +79,8 @@ export const visitors: Visitors = {
         }
       });
     }, true);
-    state.writeln('}');
+    state.write('}');
+    state.writeln(';');
   },
   EmptyStatement: (node, state) => {
     state.write(';');
@@ -92,9 +92,9 @@ export const visitors: Visitors = {
     todo('WithStatement');
   },
   ReturnStatement: (node, state) => {
-    const arg = node.argument;
+    const { argument } = node;
     l.logReturn(state, node, () => {
-      if (arg) l.logExpression(state, arg);
+      if (argument) l.logExpression(state, argument);
       else state.write('undefined');
     });
   },

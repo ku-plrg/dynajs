@@ -318,22 +318,22 @@ export function logForInOfStatement(state: State, node: acorn.Node, isForIn: boo
 export function logForInOfObject(state: State, expr: acorn.Expression, isForIn: boolean): void {
   if (!state.isEnabled.O) {
     state.walk(expr);
-    return;
+  } else {
+    state.write(`${LOG.FOR_IN_OF_OBJECT}(${newId(expr)}, `);
+    state.walk(expr);
+    state.write(`, ${isForIn})`);
   }
-  state.write(`${LOG.FOR_IN_OF_OBJECT}(${newId(expr)}, `);
-  state.walk(expr);
-  state.write(`, ${isForIn})`);
 }
 
 // logging end of an expression
 export function logExpression(state: State, expr: acorn.Expression): void {
   if (!state.isEnabled.E) {
     state.walk(expr);
-    return;
+  } else {
+    state.write(`${LOG.EXPRESSION}(${newId(expr)}, `);
+    state.walk(expr);
+    state.write(')');
   }
-  state.write(`${LOG.EXPRESSION}(${newId(expr)}, `);
-  state.walk(expr);
-  state.write(')');
 }
 
 // logging a property read (get-field) operation
@@ -778,7 +778,7 @@ export function needsChainBoundary(state: State, node: acorn.Node): boolean {
   }
 }
 
-export function isModuleDeclaration(node: acorn.Node): boolean {
+export function isModuleDeclaration(node: acorn.Statement | acorn.ModuleDeclaration): boolean {
   switch (node.type) {
     case 'ImportDeclaration':
     case 'ExportNamedDeclaration':
