@@ -76,7 +76,7 @@ function registerCJSloader(mode : FeatureTagCheck | undefined, options: RuntimeO
 
     const instrumentedCode = instrument(code, {
       ...options,
-      isScript: false, // ???
+      isScript: true, // ???
       isEnabled: mode,
       originalPath: filename,
       instrumentedPath,
