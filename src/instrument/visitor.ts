@@ -860,12 +860,17 @@ function writeModuleWrappedExpression(
   program: acorn.Program,
   state: State,
 ): void {
-  state.write('(() => {');
+  const isAwait = expression.type === 'AwaitExpression';
+  const targetExpression = isAwait ? (expression as acorn.AwaitExpression).argument : expression;
+  if (isAwait) state.write('await');
+  state.write('(');
+  if (isAwait) state.write('async');
+  state.write('() => {');
   state.wrap(() => {
     state.writeln('try {');
     state.wrap(() => {
       state.writeln('return ');
-      write.logExpression(state, expression);
+      write.logExpression(state, targetExpression);
       state.write(';');
     });
     state.writeln(`} catch (${EXCEPTION_VAR}) {`);
