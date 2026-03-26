@@ -861,8 +861,10 @@ function writeModuleWrappedExpression(
   state: State,
 ): void {
   const isAwait = expression.type === 'AwaitExpression';
-  const targetExpression = isAwait ? (expression as acorn.AwaitExpression).argument : expression;
-  if (isAwait) state.write('await');
+  const awaitExpression = isAwait ? expression as acorn.AwaitExpression : null;
+  if (isAwait) {
+    state.write(`${LOG.AWAIT_RESULT}(${write.newId(expression)}, await ${LOG.AWAIT}(${write.newId(expression)}, `);
+  }
   state.write('(');
   if (isAwait) state.write('async');
   state.write('() => {');
@@ -870,7 +872,7 @@ function writeModuleWrappedExpression(
     state.writeln('try {');
     state.wrap(() => {
       state.writeln('return ');
-      write.logExpression(state, targetExpression);
+      write.logExpression(state, isAwait ? awaitExpression!.argument : expression);
       state.write(';');
     });
     state.writeln(`} catch (${EXCEPTION_VAR}) {`);
@@ -881,6 +883,7 @@ function writeModuleWrappedExpression(
     state.writeln('}');
   });
   state.writeln('})()');
+  if (isAwait) state.write('))');
 }
 
 /**

@@ -8,7 +8,6 @@ Se() @ 1:1-10:1
   E(<object>) @ 4:19-69
 Aw(<object>) @ 4:13-69
 Awr(<object>) @ 4:13-69
-  E(<object>) @ 4:13-69
   W([mod], <object>) @ 4:13-69
   R(globalThis, <object>) @ 5:15-25
   G[pre](<object>, "__export4") @ 5:15-35
@@ -29,6 +28,7 @@ Awr(<object>) @ 4:13-69
   E(19) @ 5:15-64
   W([total], 19) @ 5:15-64
   R(total, 19) @ 7:16-21
+  E(19) @ 7:16-21
   R(print, <function>) @ 9:1-6
   R(total, 19) @ 9:7-12
   F[pre](<function>, undefined, [19], false, false) @ 9:1-6

@@ -8,7 +8,6 @@ Se() @ 1:1-10:1
   E(<object>) @ 3:18-87
 Aw(<object>) @ 3:12-87
 Awr(<object>) @ 3:12-87
-  E(<object>) @ 3:12-87
   W([ns], <object>) @ 3:12-87
   R(value, 40) @ 4:15-20
   R(alias, 2) @ 4:23-28
@@ -22,6 +21,7 @@ Awr(<object>) @ 3:12-87
   E(47) @ 4:15-39
   W([total], 47) @ 4:15-39
   R(total, 47) @ 7:16-21
+  E(47) @ 7:16-21
   R(print, <function>) @ 9:1-6
   R(total, 47) @ 9:7-12
   F[pre](<function>, undefined, [47], false, false) @ 9:1-6
