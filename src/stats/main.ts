@@ -4,6 +4,7 @@ import { ancestor } from 'acorn-walk';
 import type { AncestorVisitors } from 'acorn-walk';
 import { stringify, writeFile } from '../utils.js';
 import { FEATURE_STRINGS } from './constant.js';
+import { ECMA_VERSION } from '../constant.js';
 
 export type FeatureString = (typeof FEATURE_STRINGS)[number];
 export type FeatureCounts = Partial<Record<FeatureString, number>>;
@@ -24,7 +25,7 @@ function parseForStats(code: string): Program | null {
   const parseOptions = {
     allowHashBang: true,
     allowReturnOutsideFunction: true,
-    ecmaVersion: 2025 as const,
+    ecmaVersion: ECMA_VERSION,
     sourceType: 'module' as const,
   };
 

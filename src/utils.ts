@@ -3,12 +3,9 @@ import inspect from 'object-inspect';
 import fs from 'fs';
 import path from 'path';
 import * as acorn from 'acorn';
-import {
-  Program,
-  Node,
-} from 'acorn';
+import { ECMA_VERSION, EXIT_CODE_TODO, SCRIPT_NAME } from './constant.js';
+import type { Program, Node } from 'acorn';
 
-import { EXIT_CODE_TODO, SCRIPT_NAME } from './constant.js';
 
 enum LogLevel {
   LOG,
@@ -157,7 +154,7 @@ export function todo(msg: string = '') {
 // parse the string into an AST
 export function parse(code: string, isScript: boolean): Program {
   const sourceType = isScript ? 'script' : 'module';
-  return acorn.parse(code, {locations: true, ecmaVersion: 2025, sourceType });
+  return acorn.parse(code, {locations: true, ecmaVersion: ECMA_VERSION, sourceType });
 }
 
 // input validity check
