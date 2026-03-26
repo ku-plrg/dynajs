@@ -3,7 +3,7 @@ import {
   EXCEPTION_VAR,
   TEMP_PARAM_VAR,
   NO_INSTRUMENT,
-} from '../constants/general.js';
+} from '../constant.js';
 import {
   getInstrumentedName,
   header,

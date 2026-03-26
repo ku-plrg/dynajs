@@ -3,7 +3,7 @@ import type * as acorn from 'acorn';
 import { getLocFromNode, VarKind, warn } from '../utils.js';
 import { collectIdentifiers, getLocStr } from "./aux.js";
 import type { State } from './state.js';
-import { EXCEPTION_VAR, TEMP_PARAM_VAR } from '../constants/general.js';
+import { EXCEPTION_VAR, TEMP_PARAM_VAR } from '../constant.js';
 import { generate } from 'astring';
 
 export function hasUseStrictDirective(body: readonly acorn.AnyNode[]): boolean {

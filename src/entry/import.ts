@@ -7,7 +7,7 @@ import { setBaseObj } from '../analysis.js';
 import { instrument } from "../instrument/main.js";
 import { checkAnalysisHooks } from "../boot.js";
 import type { CallbackHint } from "../partial.js";
-import { recordStat, writeStatFile } from "../statistics.js";
+import { recordStat, writeStatFile } from "../stats/main.js";
 import { getRuntimeOptions, printHelp, RuntimeOptions } from "./options.js";
 
 function prepareGlobal(options: RuntimeOptions): void {

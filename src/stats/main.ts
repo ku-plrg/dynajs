@@ -2,57 +2,8 @@ import * as acorn from 'acorn';
 import type { AnyNode, Program } from 'acorn';
 import { ancestor } from 'acorn-walk';
 import type { AncestorVisitors } from 'acorn-walk';
-import { stringify, writeFile } from './utils.js';
-
-const FEATURE_STRINGS = [
-  'async functions',
-  'generator functions',
-  'async generator functions',
-  'default parameters',
-  'rest parameters',
-  'rest/spread bindings',
-  'let declarations',
-  'const declarations',
-  'class declarations',
-  'class inheritance',
-  'class expressions',
-  'arrow functions',
-  'for-await-of loops',
-  'for-of loops',
-  'tagged template literals',
-  'template literals',
-  'bigint literals',
-  'numeric separators',
-  'exponentiation operator',
-  'nullish coalescing',
-  'logical assignment operators',
-  'optional chaining',
-  'yield* expressions',
-  'yield expressions',
-  'await expressions',
-  'top-level await',
-  'destructuring patterns',
-  'object spread properties',
-  'spread expressions',
-  'computed property names',
-  'object shorthand properties',
-  'object method definitions',
-  'private accessors',
-  'private methods',
-  'class accessors',
-  'class methods',
-  'class static fields',
-  'class instance fields',
-  'private fields',
-  'private member access',
-  'class static blocks',
-  'import declarations',
-  'export declarations',
-  'dynamic import',
-  'new.target',
-  'import.meta',
-  'optional catch binding',
-] as const;
+import { stringify, writeFile } from '../utils.js';
+import { FEATURE_STRINGS } from './constant.js';
 
 export type FeatureString = (typeof FEATURE_STRINGS)[number];
 export type FeatureCounts = Partial<Record<FeatureString, number>>;

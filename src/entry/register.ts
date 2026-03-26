@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { instrument } from "../instrument/main.js";
 import { getInstrumentedName, getStatName, log, writeFile } from "../utils.js";
-import { recordStat, writeStatFile } from "../statistics.js";
+import { recordStat, writeStatFile } from "../stats/main.js";
 import type { RuntimeOptions } from "./options.js";
 
 let mode: CallbackHint | undefined;

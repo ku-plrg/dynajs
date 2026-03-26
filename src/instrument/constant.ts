@@ -1,4 +1,4 @@
-import { DYNAJS_VAR } from "../constants/general.js";
+import { DYNAJS_VAR } from "../constant.js";
 
 // logging function names
 export const SCRIPT_ENTER = DYNAJS_VAR + '.Se';
