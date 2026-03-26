@@ -2,99 +2,126 @@
 // -----------------------------------------------------------------------------
 // adaptive instrumentation: parse analysis file to determine needed hooks
 // -----------------------------------------------------------------------------
+import type { Analysis } from './types/analysis.js';
 
+type Unpartial<T> = {
+  [K in keyof T]-?: T[K];
+};
 
-// Maps each analysis callback name to the runtime feature tags it requires.
-// Most callbacks need exactly one tag, but callbacks that sit higher in the
-// hierarchy (e.g. invokeFun) also require their specialised variants
-// (e.g. taggedTemplate) because those variants coerce their args and fire
-// the parent callback too.
-export const CALLBACK_TO_FEATURES = {
-  scriptEnter:       ['Se'],
-  scriptExit:        ['Se'],
-  // invokeFun hooks also cover tagged-template call sites (TF/TM coerce to F/M)
-  // and async/generator resume boundaries when yield/await wrappers are present.
-  invokeFunPre:      ['F', 'TF', 'Y', 'Aw'],
-  invokeFun:         ['F', 'TF', 'Y', 'Aw'],
-  taggedTemplatePre: ['TF'],
-  taggedTemplate:    ['TF'],
-  // Function-level analyses also observe generator/async suspension/resumption.
-  functionEnter:     ['Fe', 'Y', 'Aw'],
-  functionExit:      ['Fe', 'Y', 'Aw'],
-  _return:           ['Re'],
-  getFieldPre:       ['G'],
-  getField:          ['G'],
-  memoryAccess:      ['G', 'R'],
-  putFieldPre:       ['P'],
-  putField:          ['P'],
-  memoryWrite:       ['P', 'W'],
-  unaryPre:          ['U'],
-  unary:             ['U'],
-  arithmeticUnaryPre: ['U'],
-  arithmeticUnary:   ['U'],
-  logicalUnaryPre:   ['U'],
-  logicalUnary:      ['U'],
-  bitwiseUnaryPre:   ['U'],
-  bitwiseUnary:      ['U'],
-  typeofUnaryPre:    ['U'],
-  typeofUnary:       ['U'],
-  voidUnaryPre:      ['U'],
-  voidUnary:         ['U'],
-  updateUnaryPre:    ['U'],
-  updateUnary:       ['U'],
-  binaryPre:         ['B'],
-  binary:            ['B'],
-  arithmeticBinaryPre: ['B'],
-  arithmeticBinary:  ['B'],
-  comparisonBinaryPre: ['B'],
-  comparisonBinary:  ['B'],
-  bitwiseBinaryPre:  ['B'],
-  bitwiseBinary:     ['B'],
-  condition:         ['C'],
-  ifCondition:       ['C'],
-  whileCondition:    ['C'],
-  forCondition:      ['C'],
-  ternaryCondition:  ['C'],
-  logicalAnd:        ['C'],
-  logicalOr:         ['C'],
-  nullishCoalescing: ['C'],
-  optionalChain:     ['C'],
-  switchCondition:   ['C', 'B'],
-  declare:           ['D'],
-  read:              ['R'],
-  write:             ['W'],
-  literal:           ['L'],
-  numberLiteral:     ['L'],
-  bigintLiteral:     ['L'],
-  stringLiteral:     ['L'],
-  booleanLiteral:    ['L'],
-  nullLiteral:       ['L'],
-  regexpLiteral:     ['L'],
-  arrayLiteral:      ['L'],
-  objectLiteral:     ['L'],
-  functionLiteral:   ['L'],
-  endExpression:     ['E'],
-  _throw:            ['Th'],
-  _yield:            ['Y'],
-  _resume:           ['Y'],
-  _await:            ['Aw'],
-  _awaitResult:      ['Aw'],
-  forInOfObject:     ['O'],
-  fieldInit:         ['Fi'],
-  staticBlockEnter:  ['SBe'],
-  staticBlockExit:   ['SBe'],
-  _deletePre:        ['De'],
-  _delete:           ['De'],
-} as const;
+export type CallbacksOnly = Omit<Analysis, 'result'>;
 
-export type FeatureTag = typeof CALLBACK_TO_FEATURES[keyof typeof CALLBACK_TO_FEATURES][number];
+export type CallbackHint = Record<keyof CallbacksOnly, boolean>;
 
-export type FeatureTagCheck = Record<FeatureTag, boolean>;
+export const callbackHintFull: Record<keyof Unpartial<CallbacksOnly>, true> = {
+  endExecution: true,
+  scriptEnter: true,
+  scriptExit: true,
+  invokeFunPre: true,
+  invokeFun: true,
+  taggedTemplatePre: true,
+  taggedTemplate: true,
+  functionEnter: true,
+  functionExit: true,
+  _return: true,
+  forInOfObject: true,
+  endExpression: true,
+  getFieldPre: true,
+  getField: true,
+  putFieldPre: true,
+  putField: true,
+  _deletePre: true,
+  _delete: true,
+  unaryPre: true,
+  unary: true,
+  arithmeticUnaryPre: true,
+  arithmeticUnary: true,
+  logicalUnaryPre: true,
+  logicalUnary: true,
+  bitwiseUnaryPre: true,
+  bitwiseUnary: true,
+  typeofUnaryPre: true,
+  typeofUnary: true,
+  voidUnaryPre: true,
+  voidUnary: true,
+  updateUnaryPre: true,
+  updateUnary: true,
+  binaryPre: true,
+  binary: true,
+  arithmeticBinaryPre: true,
+  arithmeticBinary: true,
+  comparisonBinaryPre: true,
+  comparisonBinary: true,
+  bitwiseBinaryPre: true,
+  bitwiseBinary: true,
+  condition: true,
+  ifCondition: true,
+  whileCondition: true,
+  forCondition: true,
+  ternaryCondition: true,
+  logicalAnd: true,
+  logicalOr: true,
+  nullishCoalescing: true,
+  optionalChain: true,
+  switchCondition: true,
+  declare: true,
+  memoryAccess: true,
+  read: true,
+  memoryWrite: true,
+  write: true,
+  literal: true,
+  numberLiteral: true,
+  bigintLiteral: true,
+  stringLiteral: true,
+  booleanLiteral: true,
+  nullLiteral: true,
+  regexpLiteral: true,
+  arrayLiteral: true,
+  objectLiteral: true,
+  functionLiteral: true,
+  _throw: true,
+  _yield: true,
+  _resume: true,
+  _await: true,
+  _awaitResult: true,
+  fieldInit: true,
+  staticBlockEnter: true,
+  staticBlockExit: true,
+};
 
-export const FEATURE_CHECK_ALL_FALSE: FeatureTagCheck = Object.fromEntries(
-  Object.values(CALLBACK_TO_FEATURES).flat().map<[FeatureTag, boolean]>(tag => [tag, false])
-) as FeatureTagCheck;
+export const callbackHintEmpty: Record<keyof Unpartial<CallbacksOnly>, false> = Object.fromEntries(Object.keys(callbackHintFull).map(k => [k, false])) as Record<keyof Unpartial<CallbacksOnly>, false>;
 
-export const FEATURE_CHECK_ALL_TRUE: FeatureTagCheck = Object.fromEntries(
-  Object.values(CALLBACK_TO_FEATURES).flat().map<[FeatureTag, boolean]>(tag => [tag, true])
-) as FeatureTagCheck;
+export class PartialChecker {
+  callbackHint: CallbackHint;
+  constructor(callbackHint: CallbackHint | undefined) { 
+    this.callbackHint = callbackHint ?? callbackHintFull;
+  }
+
+  get shouldWrapThrow() {
+    return true;
+  }
+
+  // TODO - set as true temporairily
+  get P() { return true; }
+  get G() { return true; }
+  get De() { return true; }
+  get Aw() { return true; }
+  get Y() { return true; }
+  get F() { return true; }
+  get L() { return true; }
+  get U() { return true; }
+  get W() { return true; }
+  get Th() { return true; }
+  get B() { return true; }
+  get D() { return true; }
+  get R() { return true; }
+  get C() { return true; }
+  get Re() { return true; }
+  get O() { return true; }
+  get E() { return true; }
+  get Fe() { return true; }
+  get TF() { return true; }
+  get S() { return true; }
+  get Se() { return true; }
+  get SBe() { return true; }
+  get Fi() { return true; }
+}

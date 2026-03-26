@@ -6,7 +6,7 @@ import { getInstrumentedName, getStatName, log, writeFile } from "../utils.js";
 import { setBaseObj } from '../analysis.js';
 import { instrument } from "../instrument/main.js";
 import { checkAnalysisHooks } from "../boot.js";
-import { FeatureTagCheck } from "../partial.js";
+import type { CallbackHint } from "../partial.js";
 import { recordStat, writeStatFile } from "../statistics.js";
 import { getRuntimeOptions, printHelp, RuntimeOptions } from "./options.js";
 
@@ -29,7 +29,7 @@ function prepareGlobal(options: RuntimeOptions): void {
   };
 }
 
-function registerESMloader(mode : FeatureTagCheck | undefined, options: RuntimeOptions): void {
+function registerESMloader(mode : CallbackHint | undefined, options: RuntimeOptions): void {
   const baseURL = options.home
     ? pathToFileURL(path.join(options.home, "dist/entry/"))
     : new URL("./", import.meta.url); // should throw error instead
@@ -55,7 +55,7 @@ function writeStatisticsFile(statPath: string, code: string): void {
   writeStatFile(statPath, recordStat(code));
 }
 
-function registerCJSloader(mode : FeatureTagCheck | undefined, options: RuntimeOptions): void {
+function registerCJSloader(mode : CallbackHint | undefined, options: RuntimeOptions): void {
   const previousCompile = (Module as any).prototype._compile;
 
   (Module as any).prototype._compile = function compileHook(code: string, filename: string) {
@@ -77,7 +77,7 @@ function registerCJSloader(mode : FeatureTagCheck | undefined, options: RuntimeO
     const instrumentedCode = instrument(code, {
       ...options,
       isScript: true, // ???
-      isEnabled: mode,
+      callbackHint: mode,
       originalPath: filename,
       instrumentedPath,
     });
@@ -100,7 +100,7 @@ function main(): void {
   }
 
   prepareGlobal(options);
-  const mode : FeatureTagCheck | undefined = checkAnalysisHooks(!options.partialHook);
+  const mode : CallbackHint | undefined = checkAnalysisHooks(!options.partialHook);
   registerCJSloader(mode, options);
   registerESMloader(mode, options);
 }

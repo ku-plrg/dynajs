@@ -247,7 +247,7 @@ export const visitors: RecursiveVisitors<State> = {
     write.logForInOfStatement(state, node, true, false);
   },
   FunctionDeclaration: (node, state) => {
-    if (state.isEnabled.D && state.scope?.isLexicalScope() && node.id != null) {
+    if (state.partial.D && state.scope?.isLexicalScope() && node.id != null) {
       state.writeln(`${LOG.DECLARE}(${write.newId(node)}, "${node.id.name}", ${VarKind.Func}, false);`);
     }
     write.logFuncDeclare(state, node, false);
@@ -660,7 +660,7 @@ export const visitors: RecursiveVisitors<State> = {
       state.withLHS(() => state.walk(key));
     }
 
-    if (!state.isEnabled.Fi && !computed) {
+    if (!state.partial.Fi && !computed) {
       if (value) {
         state.write(' = ');
         state.walk(value);
@@ -694,7 +694,7 @@ export const visitors: RecursiveVisitors<State> = {
     state.write('static {');
     state.withScope(scope => scope.walkArray(body), () => {
       state.wrap(() => {
-        if (!state.isEnabled.SBe) {
+        if (!state.partial.SBe) {
           write.logDeclare(state, node);
           for (const statement of body) {
             state.writeln('');

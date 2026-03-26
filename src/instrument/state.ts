@@ -1,7 +1,7 @@
 import { recursive } from 'acorn-walk';
-import { FEATURE_CHECK_ALL_TRUE, FeatureTagCheck } from '../partial.js';
 import { Scope } from './scope.js';
 import { visitors } from './visitor.js';
+import { PartialChecker, type CallbackHint } from '../partial.js';
 import type * as acorn from 'acorn';
 
 // -----------------------------------------------------------------------------
@@ -16,7 +16,7 @@ export interface StateOption {
   instrumentedPath?: string
   originalPath?: string
   verbose?: boolean
-  isEnabled?: FeatureTagCheck
+  callbackHint: CallbackHint | undefined
   isScript: boolean
 }
 
@@ -32,7 +32,7 @@ export class State {
   instrumentedPath: string;
   originalPath: string;
   verbose: boolean;
-  isEnabled: FeatureTagCheck;
+  partial: PartialChecker;
   inDerivedClass: boolean;
   isDerivedConstructor: boolean;
   isStrict: boolean;
@@ -52,7 +52,7 @@ export class State {
     this.instrumentedPath = options.instrumentedPath ?? '';
     this.originalPath = options.originalPath ?? '';
     this.verbose = options.verbose ?? false;
-    this.isEnabled = Object.freeze(options.isEnabled ?? { ...FEATURE_CHECK_ALL_TRUE });
+    this.partial = new PartialChecker(options.callbackHint);
     this.inDerivedClass = false;
     this.isDerivedConstructor = false;
     // non-strict by default for scripts, strict by default for modules

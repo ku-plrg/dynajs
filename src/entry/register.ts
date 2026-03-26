@@ -1,5 +1,5 @@
 import type { InitializeHook, LoadHook, ResolveHook } from "node:module";
-import type { FeatureTagCheck } from "../partial.js";
+import type { CallbackHint } from "../partial.js";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { instrument } from "../instrument/main.js";
@@ -7,7 +7,7 @@ import { getInstrumentedName, getStatName, log, writeFile } from "../utils.js";
 import { recordStat, writeStatFile } from "../statistics.js";
 import type { RuntimeOptions } from "./options.js";
 
-let mode: FeatureTagCheck | undefined;
+let mode: CallbackHint | undefined;
 let options: RuntimeOptions;
 const targetRoot = path.resolve(process.cwd());
 
@@ -56,7 +56,7 @@ function instrumentSource(source: string, url: string): string {
   const instrumentedSource = instrument(source, {
     verbose: options.verbose,
     isScript: false,
-    isEnabled: mode,
+    callbackHint: mode,
     originalPath: filename,
     instrumentedPath,
   });
