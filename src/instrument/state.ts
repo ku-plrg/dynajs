@@ -1,6 +1,7 @@
+import { recursive } from 'acorn-walk';
 import { FEATURE_CHECK_ALL_TRUE, FeatureTagCheck } from '../types.js';
 import { Scope } from './scope.js';
-import { walkNode } from './visitor.js';
+import { visitors } from './visitor.js';
 import type * as acorn from 'acorn';
 
 // -----------------------------------------------------------------------------
@@ -114,9 +115,9 @@ export class State {
     this.write(str);
   }
 
-  // walk the AST nodes in an array recursively
+  // walk the AST nodes recursively
   walk(node: acorn.Node): void {
-    walkNode(node, this);
+    recursive(node, this, visitors);
   }
 
   // walk the AST nodes in an array recursively with newline
