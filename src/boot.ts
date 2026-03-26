@@ -1,4 +1,4 @@
-import { CALLBACK_TO_FEATURES, FEATURE_CHECK_ALL_FALSE, FeatureTag, FeatureTagCheck } from "./types.js";
+import { CALLBACK_TO_FEATURES, FEATURE_CHECK_ALL_FALSE, FeatureTag, FeatureTagCheck } from "./partial.js";
 
 export function checkAnalysisHooks(fullOpt: boolean): FeatureTagCheck | undefined {
   if (fullOpt) return undefined;

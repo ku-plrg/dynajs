@@ -6,7 +6,7 @@ import { getInstrumentedName, getStatName, log, writeFile } from "../utils.js";
 import { setBaseObj } from '../analysis.js';
 import { instrument } from "../instrument/main.js";
 import { checkAnalysisHooks } from "../boot.js";
-import { FeatureTagCheck } from "../types.js";
+import { FeatureTagCheck } from "../partial.js";
 import { recordStat, writeStatFile } from "../statistics.js";
 import { getRuntimeOptions, printHelp, RuntimeOptions } from "./options.js";
 

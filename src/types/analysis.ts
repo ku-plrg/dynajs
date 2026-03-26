@@ -1,18 +1,18 @@
 // -----------------------------------------------------------------------------
 // analysis callback types
 // -----------------------------------------------------------------------------
-export type Analysis = {
-  endExecution?: () => void;
-  scriptEnter?: (
+type FullAnalysis = {
+  endExecution: () => void;
+  scriptEnter: (
     id: number,
     instrumentedPath: string,
     originalPath: string
   ) => void;
-  scriptExit?: (
+  scriptExit: (
     id: number,
     exc?: { exception: any }
   ) => void;
-  invokeFunPre?: (
+  invokeFunPre: (
     id: number,
     f: any,
     base: any,
@@ -20,7 +20,7 @@ export type Analysis = {
     isConstructor: boolean,
     isMethod: boolean
   ) => { f: any, base: any, args: any, skip: boolean } | void;
-  invokeFun?: (
+  invokeFun: (
     id: number,
     f: any,
     base: any,
@@ -29,7 +29,7 @@ export type Analysis = {
     isConstructor: boolean,
     isMethod: boolean
   ) => { result: any } | void;
-  taggedTemplatePre?: (
+  taggedTemplatePre: (
     id: number,
     f: any,
     base: any,
@@ -37,7 +37,7 @@ export type Analysis = {
     values: any[],
     isMethod: boolean
   ) => { f: any, base: any, strings: any, values: any[], skip: boolean } | void;
-  taggedTemplate?: (
+  taggedTemplate: (
     id: number,
     f: any,
     base: any,
@@ -46,7 +46,7 @@ export type Analysis = {
     result: any,
     isMethod: boolean
   ) => { result: any } | void;
-  functionEnter?: (
+  functionEnter: (
     id: number,
     f: any,
     base: any,
@@ -54,152 +54,152 @@ export type Analysis = {
     isAsync: boolean,
     isGenerator: boolean
   ) => void;
-  functionExit?: (
+  functionExit: (
     id: number,
     returnValue: any,
     exception: { exception: any } | undefined,
     isAsync: boolean,
     isGenerator: boolean
   ) => void;
-  _return?: (
+  _return: (
     id: number,
     value: any
   ) => { result: any } | void;
-  forInOfObject?: (
+  forInOfObject: (
     id: number,
     value: any,
     isForIn: boolean
   ) => { result: any } | void;
-  endExpression?: (
+  endExpression: (
     id: number,
     value: any
   ) => void;
-  getFieldPre?: (
+  getFieldPre: (
     id: number,
     base: any,
     prop: any
   ) => { base: any, prop: any, skip: boolean } | void;
-  getField?: (
+  getField: (
     id: number,
     base: any,
     prop: any,
     result: any
   ) => { result: any } | void;
-  putFieldPre?: (
+  putFieldPre: (
     id: number,
     base: any,
     prop: any,
     value: any
   ) => { base: any, prop: any, value: any, skip: boolean } | void;
-  putField?: (
+  putField: (
     id: number,
     base: any,
     prop: any,
     value: any
   ) => { result: any } | void;
-  _deletePre?: (
+  _deletePre: (
     id: number,
     base: any,
     prop: any
   ) => { base: any, prop: any, skip: boolean } | void;
-  _delete?: (
+  _delete: (
     id: number,
     base: any,
     prop: any,
     value: boolean
   ) => { result: boolean } | void;
-  unaryPre?: (
+  unaryPre: (
     id: number,
     op: string,
     prefix: boolean,
     operand: any
   ) => { op: string, operand: any, skip: boolean } | void;
-  unary?: (
+  unary: (
     id: number,
     op: string,
     prefix: boolean,
     operand: any,
     result: any
   ) => { result: any } | void;
-  arithmeticUnaryPre?: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean } | void;
-  arithmeticUnary?: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
-  logicalUnaryPre?: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean } | void;
-  logicalUnary?: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
-  bitwiseUnaryPre?: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean } | void;
-  bitwiseUnary?: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
-  typeofUnaryPre?: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean } | void;
-  typeofUnary?: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
-  voidUnaryPre?: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean } | void;
-  voidUnary?: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
-  updateUnaryPre?: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean } | void;
-  updateUnary?: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
-  binaryPre?: (
+  arithmeticUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean } | void;
+  arithmeticUnary: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
+  logicalUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean } | void;
+  logicalUnary: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
+  bitwiseUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean } | void;
+  bitwiseUnary: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
+  typeofUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean } | void;
+  typeofUnary: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
+  voidUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean } | void;
+  voidUnary: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
+  updateUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean } | void;
+  updateUnary: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
+  binaryPre: (
     id: number,
     op: string,
     left: any,
     right: any
   ) => { op: string, left: any, right: any, skip: boolean } | void;
-  binary?: (
+  binary: (
     id: number,
     op: string,
     left: any,
     right: any,
     result: any
   ) => { result: any } | void;
-  arithmeticBinaryPre?: (
+  arithmeticBinaryPre: (
     id: number,
     op: string,
     left: any,
     right: any
   ) => { op: string, left: any, right: any, skip: boolean } | void;
-  arithmeticBinary?: (
+  arithmeticBinary: (
     id: number,
     op: string,
     left: any,
     right: any,
     result: any
   ) => { result: any } | void;
-  comparisonBinaryPre?: (
+  comparisonBinaryPre: (
     id: number,
     op: string,
     left: any,
     right: any
   ) => { op: string, left: any, right: any, skip: boolean } | void;
-  comparisonBinary?: (
+  comparisonBinary: (
     id: number,
     op: string,
     left: any,
     right: any,
     result: any
   ) => { result: any } | void;
-  bitwiseBinaryPre?: (
+  bitwiseBinaryPre: (
     id: number,
     op: string,
     left: any,
     right: any
   ) => { op: string, left: any, right: any, skip: boolean } | void;
-  bitwiseBinary?: (
+  bitwiseBinary: (
     id: number,
     op: string,
     left: any,
     right: any,
     result: any
   ) => { result: any } | void;
-  condition?: (
+  condition: (
     id: number,
     op: string,
     value: any
   ) => { result: any } | void;
-  ifCondition?: (id: number, value: any) => { result: any } | void;
-  whileCondition?: (id: number, value: any) => { result: any } | void;
-  forCondition?: (id: number, value: any) => { result: any } | void;
-  ternaryCondition?: (id: number, value: any) => { result: any } | void;
-  logicalAnd?: (id: number, value: any) => { result: any } | void;
-  logicalOr?: (id: number, value: any) => { result: any } | void;
-  nullishCoalescing?: (id: number, value: any) => { result: any } | void;
-  optionalChain?: (id: number, value: any) => { result: any } | void;
-  switchCondition?: (id: number, value: any) => { result: any } | void;
-  declare?: (
+  ifCondition: (id: number, value: any) => { result: any } | void;
+  whileCondition: (id: number, value: any) => { result: any } | void;
+  forCondition: (id: number, value: any) => { result: any } | void;
+  ternaryCondition: (id: number, value: any) => { result: any } | void;
+  logicalAnd: (id: number, value: any) => { result: any } | void;
+  logicalOr: (id: number, value: any) => { result: any } | void;
+  nullishCoalescing: (id: number, value: any) => { result: any } | void;
+  optionalChain: (id: number, value: any) => { result: any } | void;
+  switchCondition: (id: number, value: any) => { result: any } | void;
+  declare: (
     id: number,
     name: string,
     kind: string,
@@ -207,60 +207,62 @@ export type Analysis = {
     value: any,
     isSpread: boolean
   ) => void;
-  memoryAccess?: (id: number, value: any) => { result: any } | void;
-  read?: (
+  memoryAccess: (id: number, value: any) => { result: any } | void;
+  read: (
     id: number,
     name: string,
     value: any
   ) => { result: any } | void;
-  memoryWrite?: (id: number, value: any) => { result: any } | void;
-  write?: (
+  memoryWrite: (id: number, value: any) => { result: any } | void;
+  write: (
     id: number,
     names: string[],
     value: any
   ) => { result: any } | void;
-  literal?: (
+  literal: (
     id: number,
     value: any
   ) => { result: any } | void;
-  numberLiteral?: (id: number, value: any) => { result: any } | void;
-  bigintLiteral?: (id: number, value: any) => { result: any } | void;
-  stringLiteral?: (id: number, value: any) => { result: any } | void;
-  booleanLiteral?: (id: number, value: any) => { result: any } | void;
-  nullLiteral?: (id: number, value: any) => { result: any } | void;
-  regexpLiteral?: (id: number, value: any) => { result: any } | void;
-  arrayLiteral?: (id: number, value: any) => { result: any } | void;
-  objectLiteral?: (id: number, value: any) => { result: any } | void;
-  functionLiteral?: (id: number, value: any) => { result: any } | void;
-  _throw?: (
+  numberLiteral: (id: number, value: any) => { result: any } | void;
+  bigintLiteral: (id: number, value: any) => { result: any } | void;
+  stringLiteral: (id: number, value: any) => { result: any } | void;
+  booleanLiteral: (id: number, value: any) => { result: any } | void;
+  nullLiteral: (id: number, value: any) => { result: any } | void;
+  regexpLiteral: (id: number, value: any) => { result: any } | void;
+  arrayLiteral: (id: number, value: any) => { result: any } | void;
+  objectLiteral: (id: number, value: any) => { result: any } | void;
+  functionLiteral: (id: number, value: any) => { result: any } | void;
+  _throw: (
     id: number,
     val: any
   ) => { result: any } | void;
-  _yield?: (
+  _yield: (
     id: number,
     value: any,
     isDelegate: boolean
   ) => { result: any } | void;
-  _resume?: (
+  _resume: (
     id: number,
     value: any
   ) => { result: any } | void;
-  _await?: (
+  _await: (
     id: number,
     value: any
   ) => { result: any } | void;
-  _awaitResult?: (
+  _awaitResult: (
     id: number,
     value: any
   ) => { result: any } | void;
-  fieldInit?: (
+  fieldInit: (
     id: number,
     obj: any,
     key: any,
     isStatic: boolean,
     value: any
   ) => { result: any } | void;
-  staticBlockEnter?: (id: number, cls: any) => void;
-  staticBlockExit?: (id: number) => void;
-  result?: any;
+  staticBlockEnter: (id: number, cls: any) => void;
+  staticBlockExit: (id: number) => void;
+  result: any;
 }
+
+export type Analysis = Partial<FullAnalysis>;

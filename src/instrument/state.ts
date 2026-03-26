@@ -1,5 +1,5 @@
 import { recursive } from 'acorn-walk';
-import { FEATURE_CHECK_ALL_TRUE, FeatureTagCheck } from '../types.js';
+import { FEATURE_CHECK_ALL_TRUE, FeatureTagCheck } from '../partial.js';
 import { Scope } from './scope.js';
 import { visitors } from './visitor.js';
 import type * as acorn from 'acorn';

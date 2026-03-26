@@ -1,5 +1,5 @@
 import type { InitializeHook, LoadHook, ResolveHook } from "node:module";
-import type { FeatureTagCheck } from "../types.js";
+import type { FeatureTagCheck } from "../partial.js";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { instrument } from "../instrument/main.js";
