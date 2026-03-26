@@ -54,7 +54,8 @@ export class State {
     this.isEnabled = Object.freeze(options.isEnabled ?? { ...FEATURE_CHECK_ALL_TRUE });
     this.inDerivedClass = false;
     this.isDerivedConstructor = false;
-    this.isStrict = false;
+    // non-strict by default for scripts, strict by default for modules
+    this.isStrict = options.isScript ? false : true;
   }
 
   // execute body with isLHS = true
