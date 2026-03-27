@@ -3,6 +3,7 @@
 // adaptive instrumentation: parse analysis file to determine needed hooks
 // -----------------------------------------------------------------------------
 import type { Analysis } from './types/analysis.js';
+import type * as acorn from 'acorn';
 
 type Unpartial<T> = {
   [K in keyof T]-?: T[K];
@@ -107,16 +108,50 @@ export class PartialChecker {
   get Aw() { return true; }
   get Y() { return true; }
   get F() { return true; }
-  get L() { return true; }
+  
+  literal(node: acorn.Literal | acorn.ArrayExpression | acorn.ObjectExpression | acorn.FunctionExpression | acorn.ClassExpression | acorn.TemplateLiteral | acorn.ArrowFunctionExpression): boolean { 
+    if (this.callbackHint.literal) return true;
+
+    switch (node.type) {
+      case 'Literal':
+        if (this.callbackHint.numberLiteral && typeof node.value === 'number') return true;
+        if (this.callbackHint.bigintLiteral && typeof node.value === 'bigint') return true;
+        if (this.callbackHint.stringLiteral && typeof node.value === 'string') return true;
+        if (this.callbackHint.booleanLiteral && typeof node.value === 'boolean') return true;
+        if (this.callbackHint.nullLiteral && node.value === null) return true;
+        if (this.callbackHint.regexpLiteral && node.regex) return true;
+        break;
+      case 'ArrayExpression':
+        if (this.callbackHint.arrayLiteral) return true;
+        break;
+      case 'ObjectExpression':
+        if (this.callbackHint.objectLiteral) return true;
+        break;
+      case 'FunctionExpression':
+      case 'ArrowFunctionExpression':
+        if (this.callbackHint.functionLiteral) return true;
+        break;
+      case 'ClassExpression':
+        if (this.callbackHint.functionLiteral) return true;
+        break;
+      case 'TemplateLiteral':
+        if (this.callbackHint.functionLiteral) return true;
+        break;
+    }
+
+    return false;
+  }
+
+  get W() { return this.callbackHint.write; }
+
   get U() { return true; }
-  get W() { return true; }
   get Th() { return true; }
   get B() { return true; }
   get D() { return true; }
   get R() { return true; }
   get C() { return true; }
   get Re() { return true; }
-  get O() { return true; }
+  get forLoopRhsObj() { return true; }
   get E() { return true; }
   get Fe() { return true; }
   get TF() { return true; }

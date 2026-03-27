@@ -197,7 +197,7 @@ export function logFuncTail(state: State, node: acorn.Function, isExpr: boolean,
       state.wrap(() => {
         state.writeln('try {');
         state.wrap(() => {
-          logFuncEnter(state, node as acorn.Function);
+          logFuncEnter(state, node);
           logDeclare(state, node);
           if (body.type === 'BlockStatement') {
             for (const statement of body.body) {
@@ -272,7 +272,7 @@ export function logFuncExit(state: State, func: acorn.Function): void {
 }
 
 // logging a return statement
-export function logReturn(state: State, expr: acorn.Node, body: () => void): void {
+export function logReturn(state: State, expr: acorn.ReturnStatement | acorn.Expression, body: () => void): void {
   if (!state.partial.Re) {
     state.write('return ');
     body();
@@ -285,8 +285,8 @@ export function logReturn(state: State, expr: acorn.Node, body: () => void): voi
 }
 
 // logging a for-in/of statement
-export function logForInOfStatement(state: State, node: acorn.Node, isForIn: boolean, isAwait: boolean): void {
-  const { left, right, body } = node as (acorn.ForInStatement | acorn.ForOfStatement);
+export function logForInOfStatement(state: State, node: acorn.ForInStatement | acorn.ForOfStatement, isForIn: boolean, isAwait: boolean): void {
+  const { left, right, body } = node;
   const awaitStr = isAwait ? 'await ' : '';
   const prep = isForIn ? 'in' : 'of';
   state.write(`for ${awaitStr}(${LOG.TEMP_VAR} ${prep} `);
@@ -318,7 +318,7 @@ export function logForInOfStatement(state: State, node: acorn.Node, isForIn: boo
 
 // logging the RHS object of a for-in/of statement
 export function logForInOfObject(state: State, expr: acorn.Expression, isForIn: boolean): void {
-  if (!state.partial.O) {
+  if (!state.partial.forLoopRhsObj) {
     state.walk(expr);
   } else {
     state.write(`${LOG.FOR_IN_OF_OBJECT}(${newId(expr)}, `);
@@ -468,7 +468,7 @@ export function logPutField(state: State, lhs: acorn.Node, rhs: acorn.Node, body
 }
 
 // logging a delete operation
-export function logDelete(state: State, expr: acorn.Node): void {
+export function logDelete(state: State, expr: acorn.Expression): void {
   if (!state.partial.De) {
     if (expr.type === 'MemberExpression') {
       const { object, property, computed, optional } = expr as acorn.MemberExpression;
@@ -497,7 +497,7 @@ export function logDelete(state: State, expr: acorn.Node): void {
   if (expr.type === 'ChainExpression') {
     // delete a?.b — wrap with Ch to convert chainSkip → undefined
     state.write(`${LOG.CHAIN}(`);
-    logDelete(state, (expr as any).expression);
+    logDelete(state, expr.expression);
     state.write(')');
   } else if (expr.type === 'MemberExpression') {
     const { object, property, computed, optional } = expr as acorn.MemberExpression;
@@ -614,7 +614,7 @@ export function logSwitchRight(state: State, test: acorn.Expression): void {
 }
 
 // logging a variable declaration
-export function logDeclare(state: State, node: acorn.Node): void {
+export function logDeclare(state: State, node: acorn.Pattern | acorn.Identifier | acorn.BlockStatement | acorn.CatchClause | acorn.VariableDeclaration | acorn.StaticBlock | acorn.Program | acorn.Function): void {
   if (!state.partial.D) return;
   const vars = state.scope?.vars;
   if (!vars) return;
@@ -648,7 +648,7 @@ export function logRead(state: State, node: acorn.ThisExpression | acorn.MetaPro
 }
 
 // logging a variable write
-export function logWrite(state: State, lhs: acorn.Node, rhs: acorn.Node, body: () => void): void {
+export function logWrite(state: State, lhs: acorn.Pattern | acorn.Expression, rhs: acorn.Node, body: () => void): void {
   if (lhs.type === 'MemberExpression') {
     logPutField(state, lhs, rhs, body);
   } else if (lhs.type === 'ObjectPattern' || lhs.type === 'ArrayPattern') {
@@ -683,8 +683,8 @@ export function logWrite(state: State, lhs: acorn.Node, rhs: acorn.Node, body: (
 }
 
 // logging a literal
-export function logLiteral(state: State, literal: acorn.Node, body?: () => void): void {
-  const enabled = state.partial.L;
+export function logLiteral(state: State, literal: acorn.Literal | acorn.ArrayExpression | acorn.ObjectExpression | acorn.FunctionExpression | acorn.ClassExpression | acorn.TemplateLiteral | acorn.ArrowFunctionExpression, body?: () => void): void {
+  const enabled = state.partial.literal(literal);
   if (!enabled) {
     // to handle iife like (function(){})() or (function () {}).call(...)
     const isFunctionLike = literal.type === 'FunctionExpression' || literal.type === 'ClassExpression' || literal.type === 'ArrowFunctionExpression';
@@ -840,15 +840,15 @@ export function writeExportSpecifiers(state: State, specifiers: readonly acorn.N
   state.write(' }');
 }
 
-function getPrivateName(node: acorn.Node): string {
-  return `#${(node as any).name}`;
+function getPrivateName(node: acorn.PrivateIdentifier): string {
+  return `#${node.name}`;
 }
 
-function writePrivateGetter(state: State, property: acorn.Node): void {
+function writePrivateGetter(state: State, property: acorn.PrivateIdentifier): void {
   state.write(`${TEMP_PARAM_VAR} => ${TEMP_PARAM_VAR}.${getPrivateName(property)}`);
 }
 
-function writePrivateSetter(state: State, property: acorn.Node): void {
+function writePrivateSetter(state: State, property: acorn.PrivateIdentifier): void {
   const valueParam = `${TEMP_PARAM_VAR}v`;
   state.write(`(${TEMP_PARAM_VAR}, ${valueParam}) => ${TEMP_PARAM_VAR}.${getPrivateName(property)} = ${valueParam}`);
 }
@@ -990,7 +990,7 @@ export function writeCompoundMemberPut(
 
 export function writeAssignmentWrite(
   state: State,
-  lhs: acorn.Node,
+  lhs: acorn.Identifier | acorn.MemberExpression,
   rhs: acorn.Node,
   body: () => void,
   objectRef?: string,
@@ -1009,15 +1009,15 @@ export function writeAssignmentWrite(
 
 export function writeCompoundAssignmentRead(
   state: State,
-  lhs: acorn.Node,
+  lhs: acorn.Identifier | acorn.MemberExpression,
   objectRef?: string,
   propertyRef?: string | null,
 ): void {
   if (lhs.type === 'MemberExpression') {
     if (objectRef != null) {
-      writeCompoundMemberGet(state, lhs as acorn.MemberExpression, objectRef, propertyRef ?? null);
+      writeCompoundMemberGet(state, lhs, objectRef, propertyRef ?? null);
     } else {
-      logGetField(state, lhs as acorn.Expression);
+      logGetField(state, lhs);
     }
     return;
   }
