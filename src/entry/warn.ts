@@ -13,7 +13,7 @@ export function tryToRegisterWarningHook(): void {
         if (!warned.has(specifier) && target.has(specifier)) {
           warned.add(specifier);
           warn(
-            `Detected import/require of ${specifier}. This module is not instrumented and may cause incomplete analysis results. Consider bridging it with dynajs API exposed via \`globalThis.D$.instrument\`.`,
+            `Detected import/require of ${specifier}. This module is not instrumented and may cause incomplete analysis results. Consider bridging it with dynajs API exposed via \`globalThis.D$.instrument\`. @ ${context.parentURL ?? 'unknown'}.`,
           );
         }
 
