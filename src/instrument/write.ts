@@ -22,14 +22,14 @@ export function hasUseStrictDirective(body: readonly acorn.AnyNode[]): boolean {
 
 // logging script enter
 export function logScriptEnter(state: State, program: acorn.Node): void {
-  if (!state.partial.Se) return;
+  if (!state.partial.scriptEnter) return;
   const { instrumentedPath: i, originalPath: o } = state;
   state.writeln(`${LOG.SCRIPT_ENTER}(${newId(program)}, "${i}", "${o}");`);
 }
 
 // logging script exit
 export function logScriptExit(state: State, program: acorn.Node): void {
-  if (!state.partial.Se) return;
+  if (!state.partial.scriptExit) return;
   state.writeln(`${LOG.SCRIPT_EXIT}(${newId(program)});`);
 }
 
@@ -42,12 +42,11 @@ export function logCall(state: State, callee: acorn.Node, isConstructor: boolean
   }
   // Preserve direct-eval semantics. Rewriting `eval(...)` through a wrapper
   // turns it into an indirect call, which changes scope and breaks local lookups.
-  if (
-    !isConstructor &&
+  const isDirectEval = !isConstructor &&
     !callOptional &&
     callee.type === 'Identifier' &&
-    (callee as acorn.Identifier).name === 'eval'
-  ) {
+    (callee as acorn.Identifier).name === 'eval';
+  if (isDirectEval) {
     // TODO: hook eval calls
     state.write('eval');
     return;
@@ -615,7 +614,7 @@ export function logSwitchRight(state: State, test: acorn.Expression): void {
 
 // logging a variable declaration
 export function logDeclare(state: State, node: acorn.Pattern | acorn.Identifier | acorn.BlockStatement | acorn.CatchClause | acorn.VariableDeclaration | acorn.StaticBlock | acorn.Program | acorn.Function): void {
-  if (!state.partial.D) return;
+  if (!state.partial.declare) return;
   const vars = state.scope?.vars;
   if (!vars) return;
   const spreadVars = state.scope?.spreadVars;

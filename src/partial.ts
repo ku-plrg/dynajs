@@ -98,8 +98,13 @@ export class PartialChecker {
   }
 
   get shouldWrapThrow() {
+    // hooks using uncaughtException: X, Ce, Sx, Fx;
     return true;
   }
+
+  get declare() { return this.callbackHint.declare; }
+  get scriptEnter() { return this.callbackHint.scriptEnter; }
+  get scriptExit() { return this.callbackHint.scriptExit; }
 
   // TODO - set as true temporairily
   get P() { return true; }
@@ -147,7 +152,7 @@ export class PartialChecker {
   get U() { return true; }
   get Th() { return true; }
   get B() { return true; }
-  get D() { return true; }
+  
   get R() { return true; }
   get C() { return true; }
   get Re() { return true; }
@@ -156,7 +161,7 @@ export class PartialChecker {
   get Fe() { return true; }
   get TF() { return true; }
   get S() { return true; }
-  get Se() { return true; }
+
   get SBe() { return true; }
   get Fi() { return true; }
 }

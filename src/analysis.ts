@@ -8,7 +8,10 @@ import {
   todo,
 } from './utils.js';
 import type { Analysis } from './types/analysis.js';
+import type { RuntimeOptions } from './entry/options.js';
 import * as utils from './utils.js';
+import { instrument } from './instrument/main.js';
+import { StateOption } from './instrument/state.js';
 
 // sentinel symbol for optional chain short-circuit propagation
 const chainSkip = Symbol('D$.chainSkip');
@@ -752,7 +755,7 @@ function SBx(id: number): void {
 }
 
 // get the location string from an id
-function idToLoc(id: number) {
+function idToLoc(id: number): string {
   return locToStr(D$.ids[id]);
 };
 
@@ -760,8 +763,8 @@ function idToLoc(id: number) {
 // assign to the global D$ variable
 // -----------------------------------------------------------------------------
 const BASE = {
-  analysis: {},
-  ids: {},
+  analysis: {} as Analysis,
+  ids: {} as Record<string, [number, number, number, number]>,
   idToLoc,
   utils,
   chainSkip,
@@ -770,14 +773,35 @@ const BASE = {
   U, B, Up, C, Swl, Swr, D, R, W, L, Th, X, Y, Yr, Aw, Awr,
   Fi, SBe, SBx, Ce
 };
-type DynaJSType = typeof BASE & {
-  analysis: Analysis;
-  idToLoc: (id: number) => string;
-  ids: Record<string, [number, number, number, number]>;
+type GENERATED = {
+  // on-the-fly instrumentation API
+  instrument: (code: string, filename: string | undefined) => string;
+}
+type DynaJSType = typeof BASE & GENERATED & {
   stats?: unknown;
 }
 
 declare global { var D$: DynaJSType; };
-export function setBaseObj() {
-  globalThis.D$ = { ...BASE } as DynaJSType;
+export function setBaseObj(runtimeOpts : RuntimeOptions) {
+  let counter = 0;
+
+  const generated = {
+
+    instrument: (code: string, filename: string | undefined) => {
+
+      log(`instrumenting(${++counter}) ${filename ?? 'code'}...`);
+
+      const instrumentOpt : StateOption = {
+        ...runtimeOpts,
+        isScript: true,
+        callbackHint: undefined, // TODO mode,
+        originalPath: filename,
+        instrumentedPath: undefined, // TODO newPath,
+      };
+
+      return instrument(code, instrumentOpt);
+    }
+  }
+  const dynaJSType = { ...BASE, ...generated } as DynaJSType;
+  globalThis.D$ =  dynaJSType;
 }

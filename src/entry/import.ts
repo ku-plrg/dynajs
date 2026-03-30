@@ -8,10 +8,12 @@ import { instrument } from "../instrument/main.js";
 import { checkAnalysisHooks } from "../boot.js";
 import type { CallbackHint } from "../partial.js";
 import { recordStat, writeStatFile } from "../stats/main.js";
-import { getRuntimeOptions, printHelp, RuntimeOptions } from "./options.js";
+import { getRuntimeOptions, printHelp, type RuntimeOptions } from "./options.js";
+import type { StateOption } from "../instrument/state.js";
+import { tryToRegisterWarningHook } from "./warn.js";
 
 function prepareGlobal(options: RuntimeOptions): void {
-  setBaseObj();
+  setBaseObj(options);
   if (options.analysis) {
     // NOTE this `require` is filled by `requireBanner` of `scripts/build-inject.mjs`.
     require(path.resolve(options.analysis));
@@ -55,7 +57,7 @@ function writeStatisticsFile(statPath: string, code: string): void {
   writeStatFile(statPath, recordStat(code));
 }
 
-function registerCJSloader(mode : CallbackHint | undefined, options: RuntimeOptions): void {
+function registerCJSloader(mode : CallbackHint | undefined, options: Readonly<RuntimeOptions>): void {
   const previousCompile = (Module as any).prototype._compile;
 
   (Module as any).prototype._compile = function compileHook(code: string, filename: string) {
@@ -67,22 +69,24 @@ function registerCJSloader(mode : CallbackHint | undefined, options: RuntimeOpti
     
     if (options.verbose) log(`Compiling (CJS) ${filename} with custom loader...`);
 
-    const instrumentedPath = getInstrumentedName(filename);
-
     if (options.stat) {
       const statPath = getStatName(filename);
       writeStatisticsFile(statPath, code);
     }
 
-    const instrumentedCode = instrument(code, {
+    const newPath = getInstrumentedName(filename);
+
+    const instrumentOpt : StateOption = {
       ...options,
-      isScript: true, // ???
+      isScript: true,
       callbackHint: mode,
       originalPath: filename,
-      instrumentedPath,
-    });
-    writeInstrumentedFile(instrumentedPath, instrumentedCode);
-    return previousCompile.call(this, instrumentedCode, filename);
+      instrumentedPath: newPath,
+    };
+
+    const newCode = instrument(code, instrumentOpt);
+    writeInstrumentedFile(newPath, newCode);
+    return previousCompile.call(this, newCode, filename);
   };
 }
 
@@ -103,6 +107,7 @@ function main(): void {
   const mode : CallbackHint | undefined = checkAnalysisHooks(!options.partialHook);
   registerCJSloader(mode, options);
   registerESMloader(mode, options);
+  tryToRegisterWarningHook();
 }
 
 main();

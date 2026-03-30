@@ -247,7 +247,7 @@ export const visitors: RecursiveVisitors<State> = {
     write.logForInOfStatement(state, node, true, false);
   },
   FunctionDeclaration: (node, state) => {
-    if (state.partial.D && state.scope?.isLexicalScope() && node.id != null) {
+    if (state.partial.declare && state.scope?.isLexicalScope() && node.id != null) {
       state.writeln(`${LOG.DECLARE}(${write.newId(node)}, "${node.id.name}", ${VarKind.Func}, false);`);
     }
     write.logFuncDeclare(state, node, false);
@@ -887,8 +887,9 @@ function writeModuleWrappedExpression(
  */
 const visitorHelper = {
   Script: (node: acorn.Program, state: State) => {
+    const useThrow = state.partial.shouldWrapThrow;
     const { body } = node;
-    state.writeln('try {');
+    if (useThrow) state.writeln('try {');
     state.wrap(() => {
       write.logScriptEnter(state, node);
       write.logDeclare(state, node);
@@ -897,15 +898,15 @@ const visitorHelper = {
         state.walk(statement);
       }
     });
-    state.writeln(`} catch (${EXCEPTION_VAR}) {`);
-    state.wrap(() => {
+    if (useThrow) state.writeln(`} catch (${EXCEPTION_VAR}) {`);
+    if (useThrow) state.wrap(() => {
       write.logException(state, node);
     });
-    state.writeln(`} finally {`);
-    state.wrap(() => {
+    if (useThrow) state.writeln(`} finally {`);
+    if (useThrow) state.wrap(() => {
       write.logScriptExit(state, node);
     });
-    state.writeln(`}`);
+    if (useThrow) state.writeln(`}`);
   },
   Module: (node: acorn.Program, state: State) => {
     const { body } = node;
