@@ -793,7 +793,7 @@ export function setBaseObj(runtimeOpts : RuntimeOptions) {
 
       const instrumentOpt : StateOption = {
         ...runtimeOpts,
-        isScript: true,
+        isScript: false, // treat as module code for now - see issue #5
         callbackHint: undefined, // TODO mode,
         originalPath: filename,
         instrumentedPath: undefined, // TODO newPath,
