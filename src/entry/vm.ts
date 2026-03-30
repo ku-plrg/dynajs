@@ -93,7 +93,7 @@ function instrumentVmScript(
   const instrumentedCode = instrument(code, {
     verbose: options.verbose,
     pos: options.pos,
-    isScript: true,
+    isScript: false,
     callbackHint: mode,
     originalPath,
     instrumentedPath,
