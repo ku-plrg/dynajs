@@ -1,15 +1,7 @@
 import yargs from 'yargs/yargs';
-import Module from 'module';
-import path from 'path';
-import { createRequire } from 'node:module';
-import { getArgs, readFile } from './utils.js';
+import { err, getArgs } from './utils.js';
 import { instrumentFile } from './instrument/main.js';
 import { SCRIPT_NAME } from './constant.js';
-import { setBaseObj } from './analysis.js';
-import { checkAnalysisHooks } from './boot.js';
-
-// need `require` to load the analysis callback
-const require = createRequire(import.meta.url);
 
 // `instrument` command
 const instrumentCommand = (argv: any): void => {
@@ -19,44 +11,8 @@ const instrumentCommand = (argv: any): void => {
 }
 
 // `analyze` command
-function analyzeCommand(argv: any): void {
-  const [ targetPath ] = getArgs('analyze', argv, 1);
-  analyze(targetPath, argv);
-}
-
-function prepareGlobals(): void {
-  (globalThis as any).print = (...args: any[]) => console.log(...args);
-  (globalThis as any).assert = (condition: any, message?: string) => {
-    if (!condition) throw new Error(message || 'Assertion failed');
-  };
-}
-
-// analyze a JS file
-function analyze(targetPath: string, options: any = {}): string {
-  const { verbose, analysis, full } = options;
-
-  setBaseObj();
-  prepareGlobals();
-  require(path.resolve(analysis));
-
-  const hooks = checkAnalysisHooks(full);
-
-  // override the .js extension handler
-  const ModuleAny = Module as any;
-  ModuleAny._extensions['.js'] = function (module: any, filename: string) {
-    let instrumentedCode: string = instrumentFile(filename, { verbose, callbackHint: hooks, isScript: true });
-    module._compile(instrumentedCode, filename);
-  };
-
-  // setup exit handler to end the analysis
-  process.on('exit', () => D$.analysis?.endExecution?.());
-
-  // load and run the target script
-  const script = path.resolve(targetPath);
-  const code = readFile(script);
-  Module.Module.runMain(script);
-
-  return D$.analysis.result;
+function analyzeCommand(): void {
+  err('`analyze` command is dropped. Please use new `dynajs` instead. run DYNAJS_OPTIONS="--help" dynajs to see usage.');
 }
 
 // main function to parse command line arguments
