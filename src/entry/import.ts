@@ -10,6 +10,7 @@ import type { CallbackHint } from "../partial.js";
 import { recordStat, writeStatFile } from "../stats/main.js";
 import { getRuntimeOptions, printHelp, type RuntimeOptions } from "./options.js";
 import type { StateOption } from "../instrument/state.js";
+import { registerVmHook } from "./vm.js";
 import { tryToRegisterWarningHook } from "./warn.js";
 
 function prepareGlobal(options: RuntimeOptions): void {
@@ -105,6 +106,7 @@ function main(): void {
 
   prepareGlobal(options);
   const mode : CallbackHint | undefined = checkAnalysisHooks(!options.partialHook);
+  registerVmHook(mode, options);
   registerCJSloader(mode, options);
   registerESMloader(mode, options);
   tryToRegisterWarningHook();
