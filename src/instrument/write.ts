@@ -3,7 +3,12 @@ import type * as acorn from 'acorn';
 import { getLocFromNode, VarKind, warn } from '../utils.js';
 import { collectIdentifiers, getLocStr } from "./aux.js";
 import type { State } from './state.js';
-import { EXCEPTION_VAR, TEMP_PARAM_VAR } from '../constant.js';
+import {
+  POS_MODE_DEFAULT,
+  EXCEPTION_VAR,
+  PosMode,
+  TEMP_PARAM_VAR,
+} from '../constant.js';
 import { generate } from 'astring';
 
 export function hasUseStrictDirective(body: readonly acorn.AnyNode[]): boolean {
@@ -748,14 +753,25 @@ export function logException(state: State, program: acorn.Node): void {
 // -----------------------------------------------------------------------------
 // unique id generator
 // -----------------------------------------------------------------------------
-export let idToLoc: { [id: number]: [number, number, number, number] } = {};
 let numId = 0;
 const ID_INC_STEP = 1;
+let fileIdToLoc: { [id: number]: [number, number, number, number] } = {};
+let currentLocMode: PosMode = POS_MODE_DEFAULT;
+
+export function beginLocCollection(locMode: PosMode): void {
+  currentLocMode = locMode;
+  fileIdToLoc = {};
+}
+
+export function getFileIdToLoc(): { [id: number]: [number, number, number, number] } {
+  return fileIdToLoc;
+}
+
 export function newId(node: acorn.Node): number {
   var id = numId;
   numId += ID_INC_STEP;
-  if (node.loc) {
-    idToLoc[id] = getLocFromNode(node);
+  if (node.loc && currentLocMode !== PosMode.OFF) {
+    fileIdToLoc[id] = getLocFromNode(node);
   }
   return id;
 }

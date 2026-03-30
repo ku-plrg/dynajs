@@ -1,4 +1,6 @@
 import parseArgs from 'yargs-parser';
+import { POS_MODE_DEFAULT, PosMode } from '../constant.js';
+import { raise } from '../utils.js';
 
 export type RuntimeOptions = {
   help: boolean;
@@ -8,10 +10,26 @@ export type RuntimeOptions = {
   partialHook: boolean;
   ignoreNodeModules: boolean;
   stat: boolean;
+  pos: PosMode;
 };
 
 function getStringValue(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined;
+}
+
+function parseLocMode(value: unknown): PosMode {
+  switch (value) {
+    case undefined:
+      return POS_MODE_DEFAULT;
+    case PosMode.PERSIST:
+    case PosMode.MEMORY:
+    case PosMode.OFF:
+      return value;
+    default:
+      raise(
+        `Invalid --pos value: ${String(value)}. Expected one of: ${PosMode.PERSIST}, ${PosMode.MEMORY}, ${PosMode.OFF}.`,
+      );
+  }
 }
 
 export function printHelp(): void {
@@ -30,6 +48,7 @@ Options:
   --full                Enable full instrumentation (instrument all features)
   --ignore-node-modules Ignore files in node_modules directory
   --stat                Generate statistics files for each instrumented file
+  --pos <mode>          Position tracking mode: ${PosMode.PERSIST} | ${PosMode.MEMORY} | ${PosMode.OFF} (default: ${POS_MODE_DEFAULT})
 `);
 }
 
@@ -37,6 +56,7 @@ export function getRuntimeOptions(): RuntimeOptions {
   const parsed = parseArgs(process.env.DYNAJS_OPTIONS ?? '', {
     alias: {
       analysis: ['a'],
+      pos: ['position'],
     },
     boolean: [
       'help',
@@ -49,6 +69,7 @@ export function getRuntimeOptions(): RuntimeOptions {
     string: [
       'analysis',
       'home',
+      'pos',
     ],
     configuration: {
       'short-option-groups': false,
@@ -70,5 +91,6 @@ export function getRuntimeOptions(): RuntimeOptions {
     partialHook: full ? false : partial ?? false,
     ignoreNodeModules: typeof parsed['ignore-node-modules'] === 'boolean' ? parsed['ignore-node-modules'] : false,
     stat: typeof parsed.stat === 'boolean' ? parsed.stat : false,
+    pos: parseLocMode(getStringValue(parsed.pos)),
   };
 }

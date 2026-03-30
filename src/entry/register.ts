@@ -55,6 +55,7 @@ function instrumentSource(source: string, url: string): string {
   }
   const instrumentedSource = instrument(source, {
     verbose: options.verbose,
+    pos: options.pos,
     isScript: false,
     callbackHint: mode,
     originalPath: filename,

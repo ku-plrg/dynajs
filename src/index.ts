@@ -1,13 +1,19 @@
 import yargs from 'yargs/yargs';
 import { err, getArgs } from './utils.js';
 import { instrumentFile } from './instrument/main.js';
-import { SCRIPT_NAME } from './constant.js';
+import { PosMode, SCRIPT_NAME } from './constant.js';
 
 // `instrument` command
 const instrumentCommand = (argv: any): void => {
   const [ targetPath ] = getArgs('instrument', argv, 1);
   const { verbose } = argv;
-  instrumentFile(targetPath, { verbose, isScript: true, callbackHint: undefined });
+  instrumentFile(targetPath, {
+    verbose,
+    isScript: true,
+    callbackHint: undefined,
+    // use PosMode.PERSIST for static instrumentation - cause there is no `on-the-fly` behaviour in this command.
+    pos: PosMode.PERSIST,
+  });
 }
 
 // `analyze` command
