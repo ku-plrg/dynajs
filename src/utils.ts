@@ -146,6 +146,12 @@ export function err(value: any) {
   log(value, chalk.red, LogLevel.ERROR, 'ERROR');
 }
 
+// error message, with throwing an exception
+export function raise(value: any): never {
+  err(value);
+  throw new Error(getString(value));
+}
+
 // to-do message
 export function todo(msg: string = '') {
   log(msg, chalk.red, LogLevel.ERROR, 'TODO', EXIT_CODE_TODO);
