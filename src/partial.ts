@@ -106,15 +106,14 @@ export class PartialChecker {
   get scriptEnter() { return this.callbackHint.scriptEnter; }
   get scriptExit() { return this.callbackHint.scriptExit; }
 
-  // TODO - set as true temporairily
-  get P() { return true; }
-  get G() { return true; }
-  get De() { return true; }
-  get Aw() { return true; }
-  get Y() { return true; }
-  get F() { return true; }
-  
-  literal(node: acorn.Literal | acorn.ArrayExpression | acorn.ObjectExpression | acorn.FunctionExpression | acorn.ClassExpression | acorn.TemplateLiteral | acorn.ArrowFunctionExpression): boolean { 
+  get P() { return this.callbackHint.putFieldPre || this.callbackHint.putField || this.callbackHint.memoryWrite; }
+  get G() { return this.callbackHint.getFieldPre || this.callbackHint.getField || this.callbackHint.memoryAccess; }
+  get De() { return this.callbackHint._deletePre || this.callbackHint._delete; }
+  get Aw() { return this.callbackHint._await || this.callbackHint._awaitResult || this.callbackHint.invokeFunPre || this.callbackHint.invokeFun || this.callbackHint.functionEnter || this.callbackHint.functionExit; }
+  get Y() { return this.callbackHint._yield || this.callbackHint._resume || this.callbackHint.invokeFunPre || this.callbackHint.invokeFun || this.callbackHint.functionEnter || this.callbackHint.functionExit; }
+  get F() { return this.callbackHint.invokeFunPre || this.callbackHint.invokeFun; }
+
+  literal(node: acorn.Literal | acorn.ArrayExpression | acorn.ObjectExpression | acorn.FunctionExpression | acorn.ClassExpression | acorn.TemplateLiteral | acorn.ArrowFunctionExpression): boolean {
     if (this.callbackHint.literal) return true;
 
     switch (node.type) {
@@ -147,21 +146,42 @@ export class PartialChecker {
     return false;
   }
 
-  get W() { return this.callbackHint.write; }
+  get W() { return this.callbackHint.write || this.callbackHint.memoryWrite; }
 
-  get U() { return true; }
-  get Th() { return true; }
-  get B() { return true; }
-  
-  get R() { return true; }
-  get C() { return true; }
-  get Re() { return true; }
-  get forLoopRhsObj() { return true; }
-  get E() { return true; }
-  get Fe() { return true; }
-  get TF() { return true; }
-  get S() { return true; }
+  get U() {
+    return this.callbackHint.unaryPre || this.callbackHint.unary ||
+      this.callbackHint.arithmeticUnaryPre || this.callbackHint.arithmeticUnary ||
+      this.callbackHint.logicalUnaryPre || this.callbackHint.logicalUnary ||
+      this.callbackHint.bitwiseUnaryPre || this.callbackHint.bitwiseUnary ||
+      this.callbackHint.typeofUnaryPre || this.callbackHint.typeofUnary ||
+      this.callbackHint.voidUnaryPre || this.callbackHint.voidUnary ||
+      this.callbackHint.updateUnaryPre || this.callbackHint.updateUnary;
+  }
+  get Th() { return this.callbackHint._throw; }
+  get B() {
+    return this.callbackHint.binaryPre || this.callbackHint.binary ||
+      this.callbackHint.arithmeticBinaryPre || this.callbackHint.arithmeticBinary ||
+      this.callbackHint.comparisonBinaryPre || this.callbackHint.comparisonBinary ||
+      this.callbackHint.bitwiseBinaryPre || this.callbackHint.bitwiseBinary ||
+      this.callbackHint.switchCondition;
+  }
 
-  get SBe() { return true; }
-  get Fi() { return true; }
+  get R() { return this.callbackHint.read || this.callbackHint.memoryAccess; }
+  get C() {
+    return this.callbackHint.condition || this.callbackHint.ifCondition ||
+      this.callbackHint.whileCondition || this.callbackHint.forCondition ||
+      this.callbackHint.ternaryCondition || this.callbackHint.logicalAnd ||
+      this.callbackHint.logicalOr || this.callbackHint.nullishCoalescing ||
+      this.callbackHint.optionalChain || this.callbackHint.switchCondition;
+  }
+  get Re() { return this.callbackHint._return; }
+  get forLoopRhsObj() { return this.callbackHint.forInOfObject; }
+  get E() { return this.callbackHint.endExpression; }
+  get Fe() { return this.callbackHint.functionEnter || this.callbackHint.functionExit; }
+  // invokeFun callbacks also fire for tagged-template call sites (TF coerces to F)
+  get TF() { return this.callbackHint.taggedTemplatePre || this.callbackHint.taggedTemplate || this.callbackHint.invokeFunPre || this.callbackHint.invokeFun; }
+  get S() { return this.callbackHint.scriptEnter || this.callbackHint.scriptExit; }
+
+  get SBe() { return this.callbackHint.staticBlockEnter || this.callbackHint.staticBlockExit; }
+  get Fi() { return this.callbackHint.fieldInit; }
 }
