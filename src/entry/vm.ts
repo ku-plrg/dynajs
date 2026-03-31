@@ -15,6 +15,7 @@ const mutableVm = vm as any;
 let vmCounter = 0;
 let patched = false;
 const compileWarnings = new Set<string>();
+const vmOutputRoot = path.resolve(process.cwd(), '.dynajs', 'vm');
 
 type VmScriptOptions = {
   filename?: string;
@@ -36,7 +37,7 @@ function resolveVmFilename(kind: string, filename: unknown): string {
   }
 
   vmCounter += 1;
-  return path.resolve(process.cwd(), `.dynajs-vm-${kind}-${vmCounter}.js`);
+  return path.join(vmOutputRoot, `${kind}-${vmCounter}.js`);
 }
 
 function writeStatistics(statPath: string, source: string): void {

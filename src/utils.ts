@@ -33,6 +33,7 @@ export function walkDir(dir: string, callback: (filename: string) => void): void
 
 // write the file
 export function writeFile(filename: string, content: string): void {
+  fs.mkdirSync(path.dirname(filename), { recursive: true });
   fs.writeFileSync(filename, content);
 }
 
