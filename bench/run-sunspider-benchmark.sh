@@ -210,10 +210,10 @@ for mode in "${MODES[@]}"; do
         node "$bench" >"$stdout_file" 2>"$stderr_file"
         exit_code=$?
       elif [[ "$mode" == "partial" ]]; then
-        DYNAJS_ANALYSIS="$analysis" DYNAJS_PARTIAL_HOOK=1 ./dynajs node "$bench" >"$stdout_file" 2>"$stderr_file"
+        DYNAJS_OPTIONS="--analysis=$analysis --partial --pos persist" ./dynajs node "$bench" >"$stdout_file" 2>"$stderr_file"
         exit_code=$?
       else
-        DYNAJS_ANALYSIS="$analysis" ./dynajs node "$bench" >"$stdout_file" 2>"$stderr_file"
+        DYNAJS_OPTIONS="--analysis=$analysis" ./dynajs node "$bench" >"$stdout_file" 2>"$stderr_file"
         exit_code=$?
       fi
       set -e
