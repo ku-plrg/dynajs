@@ -56,19 +56,23 @@ def run_plain_node(harness_path):
 @pytest.fixture
 def run_dynajs(dynajs_path, repo_root):
     def _run(analysis, args, mode="partial", **kwargs):
-        env = dict(kwargs.pop("env", {}))
-        options = [f"--analysis={(repo_root / analysis).resolve()}"]
+        extra_env = dict(kwargs.pop("env", {}))
+        options = [f"--analysis={(repo_root / analysis).resolve()}", "--pos", "persist"]
         if mode == "partial":
             options.append("--partial")
         else:
             options.append("--full")
-        env.update(
-            {
-                **os.environ,
-                "DYNAJS_HOME": str(repo_root),
-                "DYNAJS_OPTIONS": " ".join(map(str, options)),
-            }
-        )
+        base_env = dict(os.environ)
+        existing_options = base_env.get("DYNAJS_OPTIONS")
+        if existing_options:
+            options = [existing_options, *options]
+
+        env = {
+            **base_env,
+            **extra_env,
+            "DYNAJS_HOME": str(repo_root),
+            "DYNAJS_OPTIONS": " ".join(map(str, options)),
+        }
 
         return subprocess.run(
             [
