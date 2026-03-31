@@ -65,7 +65,12 @@ export const visitors: RecursiveVisitors<State> = {
     state.write('debugger;');
   },
   WithStatement: (node, state) => {
-    todo('WithStatement');
+    const { object, body } = node;
+    state.write('with (');
+    state.walk(object);
+    state.write(') ');
+    state.walk(body);
+    state.write(' ');
   },
   ReturnStatement: (node, state) => {
     const { argument } = node;
