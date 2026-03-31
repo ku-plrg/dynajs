@@ -39,7 +39,7 @@ while read -r suite_dir analysis; do
             continue
         fi
 
-        if output=$(DYNAJS_ANALYSIS="$analysis" DYNAJS_PARTIAL_HOOK=1 ./dynajs node "$js_file" 2>/dev/null); then
+        if output=$(DYNAJS_OPTIONS="--analysis=$analysis --partial --pos persist" ./dynajs node "$js_file" 2>/dev/null); then
             printf '%s\n' "$output" > "$out_file"
             echo "  updated: $out_file"
             UPDATED=$((UPDATED + 1))
