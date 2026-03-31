@@ -15,5 +15,7 @@ if ! git -C "$target_dir" rev-parse --show-toplevel >/dev/null 2>&1; then
 fi
 
 find "$target_dir" -type f \
-  \( -name '*__dynajs__.js' -o -name '*__dynajs__.dynajs-stats-json' -o -name '*_jalangi_babel_.js' \) \
+  \( -name '*__dynajs__.js' -o -name '*__dynajs__.dynajs-stats-json' -o -name '*_jalangi_babel_.js' -o -name '.dynajs-vm-*.js' \) \
   -exec rm -f {} +
+
+rm -rf "$target_dir/.dynajs"

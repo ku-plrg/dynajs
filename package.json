@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "bin": {
-    "dynajs": "./dist/index.js"
+    "dynajs": "./dynajs",
+    "dynajs-clean": "./dynajs-clean",
+    "dynajs-inject": "./dynajs-inject",
+    "dynajs-stats": "./dynajs-stats"
   },
   "scripts": {
     "clean": "rimraf ./dist",
@@ -13,6 +16,7 @@
     "build:watch": "tsc -b -w",
     "start": "ts-node src",
     "start:watch": "nodemon src --watch src --watch samples -e ts,js --exec 'ts-node'",
+    "sunspider": "npm run build && ./bench/run-sunspider-benchmark.sh",
     "test": "",
     "test:watch": ""
   },
