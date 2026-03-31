@@ -5,7 +5,6 @@ import {
   locToStr,
   log,
   stringify,
-  todo,
 } from './utils.js';
 import type { Analysis } from './types/analysis.js';
 import type { RuntimeOptions } from './entry/options.js';

@@ -11,7 +11,6 @@ import {
   readFile,
   strToKind,
   stringify,
-  todo,
   warn,
   writeFile,
 } from '../utils.js';
@@ -65,8 +64,6 @@ export function collectIdentifiers(node: acorn.Pattern): string[] {
       case 'MemberExpression':
         // assignment target, not a new variable binding
         break;
-      default:
-        todo(`collectIdentifiers: ${(node as acorn.Node).type}`);
     }
   }
   collect(node);

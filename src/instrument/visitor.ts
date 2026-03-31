@@ -3,7 +3,7 @@ import * as write from './write.js';
 import type * as acorn from 'acorn';
 import type { RecursiveVisitors } from 'acorn-walk';
 import type { State } from './state.js';
-import { todo, VarKind, log, header } from '../utils.js';
+import { VarKind, log, header } from '../utils.js';
 import { generate } from 'astring';
 import { EXCEPTION_VAR } from '../constant.js';
 
