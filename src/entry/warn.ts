@@ -1,6 +1,8 @@
 import { warn } from '../utils.js';
+import { isPatched } from './vm.js';
 
 export function tryToRegisterWarningHook(): void {
+  if (isPatched()) return; // if vm is already patched, no need to register warning hook
   // NOTE `registerHooks` is a version dependent feature, so we need to dynamically import it and handle the case where it's not available.
   import('node:module').then(({ registerHooks }) => {
     const warned = new Set();

@@ -137,6 +137,10 @@ function instrumentCompileFunctionBody(
   return code;
 }
 
+export function isPatched(): boolean {
+  return patched;
+}
+
 export function registerVmHook(mode: CallbackHint | undefined, options: RuntimeOptions): void {
   if (patched) return;
   patched = true;
