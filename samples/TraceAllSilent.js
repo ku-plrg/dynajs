@@ -67,9 +67,5 @@
     },
     fieldInit: function (id, obj, key, isStatic, value) {
     },
-    staticBlockEnter: function (id, cls) {
-    },
-    staticBlockExit: function (id) {
-    },
   }
 })(D$);

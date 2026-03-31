@@ -85,8 +85,6 @@ export const callbackHintFull: Record<keyof Unpartial<CallbacksOnly>, true> = {
   _await: true,
   _awaitResult: true,
   fieldInit: true,
-  staticBlockEnter: true,
-  staticBlockExit: true,
 };
 
 export const callbackHintEmpty: Record<keyof Unpartial<CallbacksOnly>, false> = Object.fromEntries(Object.keys(callbackHintFull).map(k => [k, false])) as Record<keyof Unpartial<CallbacksOnly>, false>;
@@ -182,6 +180,5 @@ export class PartialChecker {
   get TF() { return this.callbackHint.taggedTemplatePre || this.callbackHint.taggedTemplate || this.callbackHint.invokeFunPre || this.callbackHint.invokeFun; }
   get S() { return this.callbackHint.scriptEnter || this.callbackHint.scriptExit; }
 
-  get SBe() { return this.callbackHint.staticBlockEnter || this.callbackHint.staticBlockExit; }
   get Fi() { return this.callbackHint.fieldInit; }
 }

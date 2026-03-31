@@ -260,8 +260,6 @@ type FullAnalysis = {
     isStatic: boolean,
     value: any
   ) => { result: any } | void;
-  staticBlockEnter: (id: number, cls: any) => void;
-  staticBlockExit: (id: number) => void;
   result: any;
 }
 

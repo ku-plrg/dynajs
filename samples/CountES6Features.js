@@ -140,10 +140,6 @@
       return { result: value };
     },
 
-    staticBlockEnter: function (id, cls) {
-      record("class static blocks", id);
-    },
-
     functionEnter: function (id, f, base, args, isAsync, isGenerator) {
       if (isAsync) recordFunctionKind("async functions", id);
       if (isGenerator) recordFunctionKind("generator functions", id);

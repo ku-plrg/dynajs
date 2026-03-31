@@ -85,7 +85,7 @@ export function getRuntimeOptions(): RuntimeOptions {
 
   return {
     help: typeof parsed.help === 'boolean' ? parsed.help : false,
-    analysis: getStringValue(parsed.analysis) ?? process.env.DYNAJS_ANALYSIS,
+    analysis: getStringValue(parsed.analysis),
     home: getStringValue(parsed.home) ?? process.env.DYNAJS_HOME,
     verbose: typeof parsed.verbose === 'boolean' ? parsed.verbose : false,
     partialHook: full ? false : partial ?? false,

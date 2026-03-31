@@ -699,33 +699,11 @@ export const visitors: RecursiveVisitors<State> = {
     state.write('static {');
     state.withScope(scope => scope.walkArray(body), () => {
       state.wrap(() => {
-        if (!state.partial.SBe) {
-          write.logDeclare(state, node);
-          for (const statement of body) {
-            state.writeln('');
-            state.walk(statement);
-          }
-          return;
+        write.logDeclare(state, node);
+        for (const statement of body) {
+          state.writeln('');
+          state.walk(statement);
         }
-        state.writeln('try {');
-        state.wrap(() => {
-          state.writeln(`${LOG.STATIC_BLOCK_ENTER}(${write.newId(node)}, this);`);
-          write.logDeclare(state, node);
-          for (const statement of body) {
-            state.writeln('');
-            state.walk(statement);
-          }
-        });
-        state.writeln(`} catch (${EXCEPTION_VAR}) {`);
-        state.wrap(() => {
-          write.logException(state, node);
-          state.writeln(`throw ${EXCEPTION_VAR};`);
-        });
-        state.writeln(`} finally {`);
-        state.wrap(() => {
-          state.writeln(`${LOG.STATIC_BLOCK_EXIT}(${write.newId(node)});`);
-        });
-        state.writeln(`}`);
       });
     });
     state.writeln('}');

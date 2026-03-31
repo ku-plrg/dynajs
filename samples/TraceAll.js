@@ -251,13 +251,5 @@
       var loc = getLoc(id);
       put('Fi(' + (isStatic ? 'static ' : '') + key + ' = ' + v + ')' + loc);
     },
-    staticBlockEnter: function (id, cls) {
-      put('SBe()' + getLoc(id));
-      indentIn();
-    },
-    staticBlockExit: function (id) {
-      indentOut();
-      put('SBx()');
-    },
   }
 })(D$);
