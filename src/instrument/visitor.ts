@@ -398,11 +398,13 @@ export const visitors: RecursiveVisitors<State> = {
   },
   ConditionalExpression: (node, state) => {
     const { test, consequent, alternate } = node;
+    state.write('(');
     write.logCondition(state, test, '?');
     state.write(' ? ');
     state.walk(consequent);
     state.write(' : ');
     state.walk(alternate);
+    state.write(')');
   },
   CallExpression: (node, state) => {
     const { callee, arguments: args, optional } = node;
@@ -894,6 +896,7 @@ const visitorHelper = {
   Module: (node: acorn.Program, state: State) => {
     const { body } = node;
     const chunks = splitTopLevelBody(body);
+    const useThrow = state.partial.shouldWrapThrow;
     write.logScriptEnter(state, node);
     write.logDeclare(state, node);
 
@@ -914,18 +917,18 @@ const visitorHelper = {
         continue;
       }
 
-      state.writeln('try {');
+      if (useThrow) state.writeln('try {');
       state.wrap(() => {
         for (const statement of chunk.nodes) {
           state.writeln('');
           state.walk(statement);
         }
       });
-      state.writeln(`} catch (${EXCEPTION_VAR}) {`);
-      state.wrap(() => {
+      if (useThrow) state.writeln(`} catch (${EXCEPTION_VAR}) {`);
+      if (useThrow) state.wrap(() => {
         write.logException(state, node);
       });
-      state.writeln(`}`);
+      if (useThrow) state.writeln(`}`);
     }
 
     write.logScriptExit(state, node);
