@@ -17,6 +17,7 @@ Se() @ 1:1-12:1
     D(arguments, <arguments>, <object>, false) @ 7:11-35
     D(v, <param>, "dog", false) @ 7:11-35
     R(v, "dog") @ 7:31-32
+    Ps[pre](<object>, "label", "dog") @ 7:17-28
     Fe(null, <object>, ["dog"]) @ 3:12-36
       D(arguments, <arguments>, <object>, false) @ 3:12-36
       D(v, <param>, "dog", false) @ 3:12-36
@@ -26,6 +27,7 @@ Se() @ 1:1-12:1
       P(<object>, "_label", "dog") @ 3:18-29
       E("dog") @ 3:18-33
     Fx(undefined) @ 3:12-36
+    Ps(<object>, "label", "dog") @ 7:17-28
     E("dog") @ 7:17-32
   Fx(undefined) @ 7:11-35
   F(<function>, <object>, ["dog"], undefined, false, true) @ 10:1-11

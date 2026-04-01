@@ -10,6 +10,7 @@ Se() @ 1:1-20:1
     D(arguments, <arguments>, <object>, false) @ 11:14-13:4
     D(name, <param>, "Rex", false) @ 11:14-13:4
     R(name, "Rex") @ 12:11-15
+    Su[pre](["Rex"]) @ 12:5-10
     Fe(null, <object>, ["Rex"]) @ 3:14-5:4
       D(arguments, <arguments>, <object>, false) @ 3:14-5:4
       D(name, <param>, "Rex", false) @ 3:14-5:4
@@ -19,6 +20,7 @@ Se() @ 1:1-20:1
       P(<object>, "name", "Rex") @ 4:5-14
       E("Rex") @ 4:5-21
     Fx(undefined) @ 3:14-5:4
+    Su(["Rex"], <object>) @ 12:5-10
     E(<object>) @ 12:5-16
   Fx(undefined) @ 11:14-13:4
   F(<function>, undefined, ["Rex"], <object>, true, false) @ 18:15-18
@@ -33,6 +35,9 @@ Se() @ 1:1-20:1
   F[pre](<function>, <object>, [], false, true) @ 19:13-20
   Fe(null, <object>, []) @ 14:8-16:4
     D(arguments, <arguments>, <object>, false) @ 14:8-16:4
+    Gs[pre](<object>, "speak") @ 15:12-23
+    Gs(<object>, "speak", <function>) @ 15:12-23
+    Sm[pre](<object>, "speak", []) @ 15:12-23
     Fe(null, <object>, []) @ 6:8-8:4
       D(arguments, <arguments>, <object>, false) @ 6:8-8:4
       R(this, <object>) @ 7:12-16
@@ -44,6 +49,7 @@ Se() @ 1:1-20:1
       E("Rex makes a noise.") @ 7:12-41
       Re("Rex makes a noise.") @ 7:5-42
     Fx("Rex makes a noise.") @ 6:8-8:4
+    Sm(<object>, "speak", [], "Rex makes a noise.") @ 15:12-23
     L(" Woof!") @ 15:28-36
     B[pre](+, "Rex makes a noise.", " Woof!") @ 15:12-36
     B(+, "Rex makes a noise.", " Woof!", "Rex makes a noise. W...") @ 15:12-36

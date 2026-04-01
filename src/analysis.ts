@@ -743,6 +743,93 @@ function Fi(id: number, obj: any, key: any, isStatic: boolean, value: any): any 
   return value;
 }
 
+// hook for super() constructor calls
+// caller is (...args) => super(...args); returns function so args flow normally
+function Su(id: number, caller: (...args: any[]) => any): any {
+  return function() {
+    let args: any[] = Array.from(arguments);
+    const pre = D$.analysis.superCallPre?.(id, args);
+    if (pre) args = pre.args;
+    let result = caller(...args);
+    const post = D$.analysis.superCall?.(id, args, result);
+    if (post) result = post.result;
+    return result;
+  };
+}
+
+// helper to dispatch super method call hooks around an already-resolved function
+function invokeSuperMethod(id: number, thisVal: any, prop: any, f: any, rawArgs: IArguments): any {
+  let args: any[] = Array.from(rawArgs);
+  const pre = D$.analysis.superMethodCallPre?.(id, thisVal, prop, args);
+  if (pre) {
+    prop = pre.prop;
+    args = pre.args;
+  }
+  let result = Function.prototype.apply.call(f, thisVal, args);
+  const post = D$.analysis.superMethodCall?.(id, thisVal, prop, args, result);
+  if (post) result = post.result;
+  return result;
+}
+
+// hook for super.method() / super[k]() calls
+// getter is () => super.method (thunk); returns function so args flow normally
+// memberOptional is always false for super (super?.method() is not valid syntax)
+function Sm(
+  id: number,
+  thisVal: any,
+  prop: any,
+  _isConstructor: boolean,
+  _memberOptional: boolean,
+  callOptional: boolean,
+  getter: () => any,
+): any {
+  let f = Gs(id, thisVal, prop, getter);
+  if (f === chainSkip) return () => chainSkip;
+  if (callOptional) {
+    f = C(id, '?.', f);
+    if (f === null || f === undefined || f === chainSkip) return () => chainSkip;
+  }
+  return function() {
+    return invokeSuperMethod(id, thisVal, prop, f, arguments);
+  };
+}
+
+// hook for super.prop / super[k] reads
+// getter is () => super.prop (thunk, ignores thisVal since super is lexical)
+function Gs(
+  id: number,
+  thisVal: any,
+  prop: any,
+  getter: () => any,
+): any {
+  let value: any;
+  const pre = D$.analysis.superGetFieldPre?.(id, thisVal, prop);
+  if (pre) prop = pre.prop;
+  value = getter();
+  const post = D$.analysis.superGetField?.(id, thisVal, prop, value);
+  if (post) value = post.result;
+  return value;
+}
+
+// hook for super.prop = v / super[k] = v writes
+// writer is (v) => super.prop = v
+function Ps(
+  id: number,
+  thisVal: any,
+  prop: any,
+  value: any,
+  writer: (v: any) => void,
+): any {
+  const pre = D$.analysis.superPutFieldPre?.(id, thisVal, prop, value);
+  if (pre) {
+    prop = pre.prop;
+    value = pre.value;
+  }
+  writer(value);
+  D$.analysis.superPutField?.(id, thisVal, prop, value);
+  return value;
+}
+
 // get the location string from an id
 function idToLoc(id: number): string {
   return locToStr(D$.ids[id]);
@@ -760,7 +847,7 @@ const BASE = {
   Ch,
   Se, Sx, F, M, Mp, TF, TM, TMp, Fe, Fx, Re, O, E, G, Gp, P, Pp, De,
   U, B, Up, C, Swl, Swr, D, R, W, L, Th, X, Y, Yr, Aw, Awr,
-  Fi, Ce
+  Fi, Ce, Su, Sm, Gs, Ps
 };
 type GENERATED = {
   // on-the-fly instrumentation API

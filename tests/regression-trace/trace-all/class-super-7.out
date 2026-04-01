@@ -21,12 +21,16 @@ Se() @ 1:1-13:1
     E("foo") @ 7:15-20
     W([m], "foo") @ 7:15-20
     R(m, "foo") @ 8:18-19
+    Gs[pre](<object>, "foo") @ 8:12-20
+    Gs(<object>, "foo", <function>) @ 8:12-20
+    Sm[pre](<object>, "foo", []) @ 8:12-20
     Fe(null, <object>, []) @ 3:6-23
       D(arguments, <arguments>, <object>, false) @ 3:6-23
       L(42) @ 3:18-20
       E(42) @ 3:18-20
       Re(42) @ 3:11-21
     Fx(42) @ 3:6-23
+    Sm(<object>, "foo", [], 42) @ 8:12-20
     E(42) @ 8:12-22
     Re(42) @ 8:5-23
   Fx(42) @ 6:6-9:4

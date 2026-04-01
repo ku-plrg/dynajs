@@ -19,20 +19,28 @@ Se() @ 1:1-13:1
   F[pre](<function>, <object>, [], false, true) @ 12:13-20
   Fe(null, <object>, []) @ 9:8-42
     D(arguments, <arguments>, <object>, false) @ 9:8-42
+    Gs[pre](<object>, "speak") @ 9:20-31
+    Gs(<object>, "speak", <function>) @ 9:20-31
+    Sm[pre](<object>, "speak", []) @ 9:20-31
     Fe(null, <object>, []) @ 6:8-42
       D(arguments, <arguments>, <object>, false) @ 6:8-42
+      Gs[pre](<object>, "speak") @ 6:20-31
+      Gs(<object>, "speak", <function>) @ 6:20-31
+      Sm[pre](<object>, "speak", []) @ 6:20-31
       Fe(null, <object>, []) @ 3:8-26
         D(arguments, <arguments>, <object>, false) @ 3:8-26
         L("A") @ 3:20-23
         E("A") @ 3:20-23
         Re("A") @ 3:13-24
       Fx("A") @ 3:8-26
+      Sm(<object>, "speak", [], "A") @ 6:20-31
       L("B") @ 6:36-39
       B[pre](+, "A", "B") @ 6:20-39
       B(+, "A", "B", "AB") @ 6:20-39
       E("AB") @ 6:20-39
       Re("AB") @ 6:13-40
     Fx("AB") @ 6:8-42
+    Sm(<object>, "speak", [], "AB") @ 9:20-31
     L("C") @ 9:36-39
     B[pre](+, "AB", "C") @ 9:20-39
     B(+, "AB", "C", "ABC") @ 9:20-39

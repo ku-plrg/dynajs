@@ -39,3 +39,7 @@ export const AWAIT_RESULT = DYNAJS_VAR + '.Awr';
 export const CHAIN = DYNAJS_VAR + '.Ch';
 export const FIELD_INIT         = `${DYNAJS_VAR}.Fi`;
 export const CATCH_ENTER        = `${DYNAJS_VAR}.Ce`;
+export const SUPER_CALL         = `${DYNAJS_VAR}.Su`;
+export const SUPER_METHOD_CALL  = `${DYNAJS_VAR}.Sm`;
+export const SUPER_GET_FIELD    = `${DYNAJS_VAR}.Gs`;
+export const SUPER_PUT_FIELD    = `${DYNAJS_VAR}.Ps`;

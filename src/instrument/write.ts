@@ -59,17 +59,38 @@ export function logCall(state: State, callee: acorn.Node, isConstructor: boolean
   if (callee.type === 'MemberExpression') {
     const { object, property, computed, optional } = callee as acorn.MemberExpression;
     if (object.type === 'Super') {
-      // TODO: super hooking
-      if (isConstructor) state.write('new ');
-      state.write('super');
-      if (computed) {
-        state.write(optional ? '?.[' : '[');
-        state.walk(property);
-        state.write(']');
-      } else if (property.type === 'Identifier') {
-        state.write(optional ? `?.${property.name}` : `.${property.name}`);
-      } else if (property.type === 'PrivateIdentifier') {
-        state.write(`#${(property as any).name}`);
+      if (state.partial.Sm) {
+        state.write(`${LOG.SUPER_METHOD_CALL}(${newId(callee)}, this, `);
+        if (computed) {
+          state.write(`${LOG.TEMP_VAR} = (`);
+          state.walk(property);
+          state.write(')');
+        } else if (property.type === 'Identifier') {
+          state.write(`"${property.name}"`);
+        } else if (property.type === 'PrivateIdentifier') {
+          state.write(`"#${(property as any).name}"`);
+        }
+        state.write(`, ${isConstructor}, ${optional}, ${callOptional}, `);
+        if (computed) {
+          state.write(`() => super[${LOG.TEMP_VAR}]`);
+        } else if (property.type === 'Identifier') {
+          state.write(`() => super.${property.name}`);
+        } else if (property.type === 'PrivateIdentifier') {
+          state.write(`() => super.#${(property as any).name}`);
+        }
+        state.write(')');
+      } else {
+        if (isConstructor) state.write('new ');
+        state.write('super');
+        if (computed) {
+          state.write(optional ? '?.[' : '[');
+          state.walk(property);
+          state.write(']');
+        } else if (property.type === 'Identifier') {
+          state.write(optional ? `?.${property.name}` : `.${property.name}`);
+        } else if (property.type === 'PrivateIdentifier') {
+          state.write(`#${(property as any).name}`);
+        }
       }
       return;
     }
@@ -93,8 +114,12 @@ export function logCall(state: State, callee: acorn.Node, isConstructor: boolean
     }
     state.write(`, ${isConstructor}, ${optional}, ${callOptional})`);
   } else if (callee.type === 'Super') {
-    // TODO: super hooking
-    state.write('super');
+    if (state.partial.Su) {
+      const argsVar = `${TEMP_PARAM_VAR}a`;
+      state.write(`${LOG.SUPER_CALL}(${newId(callee)}, (...${argsVar}) => super(...${argsVar}))`);
+    } else {
+      state.write('super');
+    }
   } else {
     state.write(`${LOG.FUNCTION_CALL}(${newId(callee)}, `);
     state.walk(callee);
@@ -345,13 +370,39 @@ export function logExpression(state: State, expr: acorn.Expression): void {
 // logging a property read (get-field) operation
 export function logGetField(state: State, expr: acorn.Expression): void {
   const { object, property, computed, optional } = expr as acorn.MemberExpression;
-  if (!state.partial.G) {
-    if (object.type === 'Super') {
-      // TODO: super hooking
-      state.write('super');
+  if (object.type === 'Super') {
+    if (state.partial.Gs) {
+      state.write(`${LOG.SUPER_GET_FIELD}(${newId(expr)}, this, `);
+      if (computed) {
+        state.write(`${LOG.TEMP_VAR} = (`);
+        state.walk(property);
+        state.write('), () => super[' + LOG.TEMP_VAR + ']');
+      } else if (property.type === 'Identifier') {
+        state.write(`"${property.name}", () => super.${property.name}`);
+      } else if (property.type === 'PrivateIdentifier') {
+        state.write(`"#${(property as any).name}", () => super.#${(property as any).name}`);
+      } else {
+        warn(`MemberExpression: unexpected super property type${getLocStr(expr)}`);
+      }
+      state.write(')');
     } else {
-      state.walk(object);
+      state.write('super');
+      if (computed) {
+        state.write(optional ? '?.[' : '[');
+        state.walk(property);
+        state.write(']');
+      } else if (property.type === 'Identifier') {
+        state.write(optional ? `?.${property.name}` : `.${property.name}`);
+      } else if (property.type === 'PrivateIdentifier') {
+        state.write(optional ? `?.#${(property as any).name}` : `.#${(property as any).name}`);
+      } else {
+        warn(`MemberExpression: unexpected super property type${getLocStr(expr)}`);
+      }
     }
+    return;
+  }
+  if (!state.partial.G) {
+    state.walk(object);
     if (computed) {
       state.write(optional ? '?.[' : '[');
       state.walk(property);
@@ -360,22 +411,6 @@ export function logGetField(state: State, expr: acorn.Expression): void {
       state.write(optional ? `?.${property.name}` : `.${property.name}`);
     } else if (property.type === 'PrivateIdentifier') {
       state.write(optional ? `?.#${(property as any).name}` : `.#${(property as any).name}`);
-    } else {
-      warn(`MemberExpression: unexpected property type${getLocStr(expr)}`);
-    }
-    return;
-  }
-  if (object.type === 'Super') {
-    // TODO: super hooking
-    state.write('super');
-    if (property.type === 'PrivateIdentifier') {
-      state.write(`.#${(property as any).name}`);
-    } else if (computed) {
-      state.write(optional ? '?.[' : '[');
-      state.walk(property);
-      state.write(']');
-    } else if (property.type === 'Identifier') {
-      state.write(optional ? `?.${property.name}` : `.${property.name}`);
     } else {
       warn(`MemberExpression: unexpected property type${getLocStr(expr)}`);
     }
@@ -407,30 +442,47 @@ export function logGetField(state: State, expr: acorn.Expression): void {
 // logging a property write (put-field) operation
 export function logPutField(state: State, lhs: acorn.Node, rhs: acorn.Node, body: () => void): void {
   const { object, property, computed } = lhs as acorn.MemberExpression;
-  if (!state.partial.P) {
-    if (object.type === 'Super') {
-      // TODO: super hooking
+  if (object.type === 'Super') {
+    if (state.partial.Ps) {
+      const valVar = `${TEMP_PARAM_VAR}v`;
+      state.write(`${LOG.SUPER_PUT_FIELD}(${newId(lhs)}, this, `);
+      if (computed) {
+        state.write(`${LOG.TEMP_VAR} = (`);
+        state.walk(property);
+        state.write('), ');
+        body();
+        state.write(`, ${valVar} => super[${LOG.TEMP_VAR}] = ${valVar}`);
+      } else if (property.type === 'Identifier') {
+        state.write(`"${property.name}", `);
+        body();
+        state.write(`, ${valVar} => super.${property.name} = ${valVar}`);
+      } else if (property.type === 'PrivateIdentifier') {
+        state.write(`"#${(property as any).name}", `);
+        body();
+        state.write(`, ${valVar} => super.#${(property as any).name} = ${valVar}`);
+      } else {
+        warn(`MemberExpression: unexpected super property type${getLocStr(lhs)}`);
+      }
+      state.write(')');
+    } else {
       state.write('super');
-    } else {
-      state.walk(object);
+      if (computed) {
+        state.write('[');
+        state.walk(property);
+        state.write('] = ');
+      } else if (property.type === 'Identifier') {
+        state.write(`.${property.name} = `);
+      } else if (property.type === 'PrivateIdentifier') {
+        state.write(`.#${(property as any).name} = `);
+      } else {
+        warn(`MemberExpression: unexpected super property type${getLocStr(lhs)}`);
+      }
+      body();
     }
-    if (computed) {
-      state.write('[');
-      state.walk(property);
-      state.write('] = ');
-    } else if (property.type === 'Identifier') {
-      state.write(`.${property.name} = `);
-    } else if (property.type === 'PrivateIdentifier') {
-      state.write(`.#${(property as any).name} = `);
-    } else {
-      warn(`MemberExpression: unexpected property type${getLocStr(lhs)}`);
-    }
-    body();
     return;
   }
-  if (object.type === 'Super') {
-    // TODO: super hooking
-    state.write('super');
+  if (!state.partial.P) {
+    state.walk(object);
     if (computed) {
       state.write('[');
       state.walk(property);

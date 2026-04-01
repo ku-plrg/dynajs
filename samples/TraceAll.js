@@ -251,5 +251,53 @@
       var loc = getLoc(id);
       put('Fi(' + (isStatic ? 'static ' : '') + key + ' = ' + v + ')' + loc);
     },
+    superCallPre: function (id, args) {
+      var str = 'Su[pre]([';
+      for (var i = 0; i < args.length; i++) {
+        if (i > 0) str += ', ';
+        str += getValue(args[i]);
+      }
+      str += '])';
+      put(str + getLoc(id));
+    },
+    superCall: function (id, args, thisVal) {
+      var str = 'Su([';
+      for (var i = 0; i < args.length; i++) {
+        if (i > 0) str += ', ';
+        str += getValue(args[i]);
+      }
+      str += '], ' + getValue(thisVal) + ')';
+      put(str + getLoc(id));
+    },
+    superMethodCallPre: function (id, thisVal, prop, args) {
+      var str = 'Sm[pre](' + getValue(thisVal) + ', ' + getValue(prop) + ', [';
+      for (var i = 0; i < args.length; i++) {
+        if (i > 0) str += ', ';
+        str += getValue(args[i]);
+      }
+      str += '])';
+      put(str + getLoc(id));
+    },
+    superMethodCall: function (id, thisVal, prop, args, result) {
+      var str = 'Sm(' + getValue(thisVal) + ', ' + getValue(prop) + ', [';
+      for (var i = 0; i < args.length; i++) {
+        if (i > 0) str += ', ';
+        str += getValue(args[i]);
+      }
+      str += '], ' + getValue(result) + ')';
+      put(str + getLoc(id));
+    },
+    superGetFieldPre: function (id, thisVal, prop) {
+      put('Gs[pre](' + getValue(thisVal) + ', ' + getValue(prop) + ')' + getLoc(id));
+    },
+    superGetField: function (id, thisVal, prop, value) {
+      put('Gs(' + getValue(thisVal) + ', ' + getValue(prop) + ', ' + getValue(value) + ')' + getLoc(id));
+    },
+    superPutFieldPre: function (id, thisVal, prop, value) {
+      put('Ps[pre](' + getValue(thisVal) + ', ' + getValue(prop) + ', ' + getValue(value) + ')' + getLoc(id));
+    },
+    superPutField: function (id, thisVal, prop, value) {
+      put('Ps(' + getValue(thisVal) + ', ' + getValue(prop) + ', ' + getValue(value) + ')' + getLoc(id));
+    },
   }
 })(D$);

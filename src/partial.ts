@@ -85,6 +85,14 @@ export const callbackHintFull: Record<keyof Unpartial<CallbacksOnly>, true> = {
   _await: true,
   _awaitResult: true,
   fieldInit: true,
+  superCallPre: true,
+  superCall: true,
+  superMethodCallPre: true,
+  superMethodCall: true,
+  superGetFieldPre: true,
+  superGetField: true,
+  superPutFieldPre: true,
+  superPutField: true,
 };
 
 export const callbackHintEmpty: Record<keyof Unpartial<CallbacksOnly>, false> = Object.fromEntries(Object.keys(callbackHintFull).map(k => [k, false])) as Record<keyof Unpartial<CallbacksOnly>, false>;
@@ -181,4 +189,8 @@ export class PartialChecker {
   get S() { return this.callbackHint.scriptEnter || this.callbackHint.scriptExit; }
 
   get Fi() { return this.callbackHint.fieldInit; }
+  get Su() { return this.callbackHint.superCallPre || this.callbackHint.superCall; }
+  get Sm() { return this.callbackHint.superMethodCallPre || this.callbackHint.superMethodCall; }
+  get Gs() { return this.callbackHint.superGetFieldPre || this.callbackHint.superGetField; }
+  get Ps() { return this.callbackHint.superPutFieldPre || this.callbackHint.superPutField; }
 }

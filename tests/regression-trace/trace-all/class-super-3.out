@@ -18,12 +18,14 @@ Se() @ 1:1-10:1
   Fe(null, <object>, []) @ 6:11-47
     D(arguments, <arguments>, <object>, false) @ 6:11-47
     L("I am a ") @ 6:23-32
+    Gs[pre](<object>, "tag") @ 6:35-44
     Fe(null, <object>, []) @ 3:10-33
       D(arguments, <arguments>, <object>, false) @ 3:10-33
       L("animal") @ 3:22-30
       E("animal") @ 3:22-30
       Re("animal") @ 3:15-31
     Fx("animal") @ 3:10-33
+    Gs(<object>, "tag", "animal") @ 6:35-44
     B[pre](+, "I am a ", "animal") @ 6:23-44
     B(+, "I am a ", "animal", "I am a animal") @ 6:23-44
     E("I am a animal") @ 6:23-44

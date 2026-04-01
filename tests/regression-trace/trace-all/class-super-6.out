@@ -11,12 +11,16 @@ Se() @ 1:1-9:1
   F[pre](<function>, <function>, [], false, true) @ 8:13-20
   Fe(null, <function>, []) @ 6:15-54
     D(arguments, <arguments>, <object>, false) @ 6:15-54
+    Gs[pre](<function>, "greet") @ 6:27-38
+    Gs(<function>, "greet", <function>) @ 6:27-38
+    Sm[pre](<function>, "greet", []) @ 6:27-38
     Fe(null, <function>, []) @ 3:15-44
       D(arguments, <arguments>, <object>, false) @ 3:15-44
       L("Hello from A") @ 3:27-41
       E("Hello from A") @ 3:27-41
       Re("Hello from A") @ 3:20-42
     Fx("Hello from A") @ 3:15-44
+    Sm(<function>, "greet", [], "Hello from A") @ 6:27-38
     L(" and B") @ 6:43-51
     B[pre](+, "Hello from A", " and B") @ 6:27-51
     B(+, "Hello from A", " and B", "Hello from A and B") @ 6:27-51

@@ -260,6 +260,51 @@ type FullAnalysis = {
     isStatic: boolean,
     value: any
   ) => { result: any } | void;
+  superCallPre: (
+    id: number,
+    args: any[]
+  ) => { args: any[] } | void;
+  superCall: (
+    id: number,
+    args: any[],
+    thisVal: any
+  ) => { result: any } | void;
+  superMethodCallPre: (
+    id: number,
+    thisVal: any,
+    prop: any,
+    args: any[]
+  ) => { prop: any, args: any[] } | void;
+  superMethodCall: (
+    id: number,
+    thisVal: any,
+    prop: any,
+    args: any[],
+    result: any
+  ) => { result: any } | void;
+  superGetFieldPre: (
+    id: number,
+    thisVal: any,
+    prop: any
+  ) => { prop: any } | void;
+  superGetField: (
+    id: number,
+    thisVal: any,
+    prop: any,
+    value: any
+  ) => { result: any } | void;
+  superPutFieldPre: (
+    id: number,
+    thisVal: any,
+    prop: any,
+    value: any
+  ) => { prop: any, value: any } | void;
+  superPutField: (
+    id: number,
+    thisVal: any,
+    prop: any,
+    value: any
+  ) => void;
   result: any;
 }
 
