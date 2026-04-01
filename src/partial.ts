@@ -105,7 +105,8 @@ export class PartialChecker {
 
   get shouldWrapThrow() {
     // hooks using uncaughtException: X, Ce, Sx, Fx;
-    return true;
+    // consumers of uncaughtException
+    return this.callbackHint.functionExit || this.callbackHint.scriptExit;
   }
 
   get declare() { return this.callbackHint.declare; }

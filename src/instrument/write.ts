@@ -219,13 +219,40 @@ export function logFuncTail(state: State, node: acorn.Function, isExpr: boolean,
   state.withScope(scope => scope.walkFunction(node, isExpr), () => {
     const { params, body, type, id } = node;
     const strict = state.isStrict || (body.type === 'BlockStatement' && hasUseStrictDirective(body.body));
+    const wrapWithExceptionFrame = state.partial.Fe || state.partial.shouldWrapThrow;
     state.write('(');
     state.withLHS(() => state.walkArray(params));
     state.write(isArrow ? ') => {' : ') {');
     state.withStrictMode(strict, () => {
       state.wrap(() => {
-        state.writeln('try {');
-        state.wrap(() => {
+        if (wrapWithExceptionFrame) {
+          state.writeln('try {');
+          state.wrap(() => {
+            logFuncEnter(state, node);
+            logDeclare(state, node);
+            if (body.type === 'BlockStatement') {
+              for (const statement of body.body) {
+                state.writeln('');
+                state.walk(statement);
+              }
+            } else {
+              state.writeln('');
+              logReturn(state, body, () => logExpression(state, body));
+            }
+          });
+          state.writeln(`} catch (${EXCEPTION_VAR}) {`);
+          state.wrap(() => {
+            logException(state, node);
+            if (!state.partial.Fe) {
+              state.writeln(`throw ${EXCEPTION_VAR};`);
+            }
+          });
+          state.writeln(`} finally {`);
+          state.wrap(() => {
+            logFuncExit(state, node as acorn.Function);
+          });
+          state.writeln(`}`);
+        } else {
           logFuncEnter(state, node);
           logDeclare(state, node);
           if (body.type === 'BlockStatement') {
@@ -237,16 +264,7 @@ export function logFuncTail(state: State, node: acorn.Function, isExpr: boolean,
             state.writeln('');
             logReturn(state, body, () => logExpression(state, body));
           }
-        });
-        state.writeln(`} catch (${EXCEPTION_VAR}) {`);
-        state.wrap(() => {
-          logException(state, node);
-        });
-        state.writeln(`} finally {`);
-        state.wrap(() => {
-          logFuncExit(state, node as acorn.Function);
-        });
-        state.writeln(`}`);
+        }
       });
     });
   });
@@ -1147,4 +1165,3 @@ export function writeCompoundAssignmentValue(state: State, node: acorn.Assignmen
     state.write(')');
   }
 }
-
