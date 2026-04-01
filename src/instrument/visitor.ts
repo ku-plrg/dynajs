@@ -409,7 +409,8 @@ export const visitors: RecursiveVisitors<State> = {
   CallExpression: (node, state) => {
     const { callee, arguments: args, optional } = node;
     write.logCall(state, callee, false, optional);
-    state.write('(');
+    // TODO fix optional chain issue
+    state.write(optional && !state.partial.F ? '?.(' : '(');
     state.walkArray(args);
     state.write(')');
   },
