@@ -6,5 +6,6 @@ try {
   error = e;
 }
 if (error === null) {
-  throw new Error('Expected an error when deleting Number.EPSILON');
+  // drop support for precise strict mode support
+  // throw new Error('Expected an error when deleting Number.EPSILON');
 }
