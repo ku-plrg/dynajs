@@ -18,7 +18,7 @@ const instrumentCommand = (argv: any): void => {
 
 // `analyze` command
 function analyzeCommand(): void {
-  err('`analyze` command is dropped. Please use new `dynajs` instead. run DYNAJS_OPTIONS="--help" dynajs to see usage.');
+  err('`analyze` command is dropped. Please use new `dynajs` instead. run `dynajs` or `DYNAJS_OPTIONS="--help" dynajs node` to see usage.');
 }
 
 // main function to parse command line arguments
