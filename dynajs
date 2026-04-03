@@ -13,13 +13,13 @@ fi
 
 # check if DYNAJS_HOME is set. If it is not set, print an error message and exit
 if [ -z "$DYNAJS_HOME" ]; then
-  echo "Error: DYNAJS_HOME is not set. Please set it to the directory where dynajs is installed." >&2
+  echo "Error: DYNAJS_HOME is not set. Please set it to the repository root of dynajs." >&2
   exit 1
 fi
 
 # check if DYNAJS_OPTIONS is set. If it is not set, print a warning message
 if [ -z "$DYNAJS_OPTIONS" ]; then
-  echo "Warning: DYNAJS_OPTIONS is not set." >&2
+  echo "Warning: DYNAJS_OPTIONS is not set. run \`dynajs\` for usage information." >&2
 fi
 
 IMPORT_OPT="--import $DYNAJS_HOME/dist/entry/import.js"
