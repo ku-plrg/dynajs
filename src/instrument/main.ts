@@ -19,6 +19,7 @@ import {
 import { State, type StateOption } from './state.js';
 // TODO : move this to return value, instead of shared mutable state
 import { beginLocCollection, getFileIdToLoc } from './write.js';
+import { fixNamedEvaluations } from './fix.namedeval.js';
 
 function mergeLocsToRuntime(fileLocs: { [id: number]: [number, number, number, number] }): void {
   const runtime = (globalThis as any).D$;
@@ -57,6 +58,7 @@ export function instrument(code: string, options: StateOption): string {
   let output = code
 
   if (code.indexOf(NO_INSTRUMENT) == -1) {
+    fixNamedEvaluations(ast);
     state.walk(ast);
     output = `// INSTRUMENTED BY DYNAJS
 ${state.output}`;

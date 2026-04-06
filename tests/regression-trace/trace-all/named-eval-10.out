@@ -1,0 +1,12 @@
+Se() @ 1:1-4:1
+  D(f, <var>, undefined, false) @ 1:1-4:1
+  L(<function>) @ 2:9-23
+  E(<function>) @ 2:9-23
+  W([f], <function>) @ 2:9-23
+  R(f, <function>) @ 3:1-2
+  L(0) @ 3:6-7
+  B[pre](+, <function>, 0) @ 3:1-7
+  B(+, <function>, 0, "function f() {\n     ...") @ 3:1-7
+  W([f], "function f() {\n     ...") @ 3:1-7
+  E("function f() {\n     ...") @ 3:1-7
+Sx() @ 1:1-4:1

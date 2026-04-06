@@ -1,0 +1,84 @@
+import { simple } from 'acorn-walk';
+import type * as acorn from 'acorn';
+
+// Synthesizes an `id` on an anonymous FunctionExpression or ArrowFunctionExpression
+// so that logFuncEnter can emit the inferred name rather than null.
+// Only mutates when func.id is already null; named functions are left untouched.
+function applyNamedEvaluation(
+  func: acorn.FunctionExpression | acorn.ArrowFunctionExpression,
+  name: string,
+): void {
+  if (func.id == null) {
+    (func as any).id = { type: 'Identifier', name, start: func.start, end: func.start } as acorn.Identifier;
+  }
+}
+
+function isFuncExpr(node: acorn.AnyNode): node is acorn.FunctionExpression | acorn.ArrowFunctionExpression {
+  return node.type === 'FunctionExpression' || node.type === 'ArrowFunctionExpression';
+}
+
+// Named function expressions create an internal name binding (e.g. `function foo() {}`
+// makes `foo` accessible within the body).  Arrow functions have no such binding, so
+// the synthetic id can only be emitted safely when a same-named variable is in scope.
+// This predicate identifies the cases where we can safely reference the name inside
+// the function body regardless of outer scope.
+function hasSelfBinding(func: acorn.FunctionExpression | acorn.ArrowFunctionExpression): boolean {
+  return func.type === 'FunctionExpression';
+}
+
+// A simple ASCII identifier check.  Names from non-identifier string literals (e.g.
+// "foo bar") cannot be used as function names in generated source.
+const IDENTIFIER_RE = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/;
+function isIdentifier(name: string): boolean {
+  return IDENTIFIER_RE.test(name);
+}
+
+// Pre-pass: mutate all anonymous functions that sit in NamedEvaluation positions
+// so downstream instrumentation picks up the inferred name.
+// Covers:
+//   - VariableDeclarator:     const foo = function() {}  /  const foo = () => {}
+//   - Property (init, non-computed, non-method):  { bar: function() {} }
+//   - AssignmentExpression (=, simple LHS):  x = function() {}  /  obj.p = () => {}
+export function fixNamedEvaluations(ast: acorn.Node): void {
+  simple(ast, {
+    VariableDeclarator(node) {
+      const { id, init } = node as acorn.VariableDeclarator;
+      if (init != null && id.type === 'Identifier' && isFuncExpr(init)) {
+        applyNamedEvaluation(init, id.name);
+      }
+    },
+
+    Property(node) {
+      const { key, value, kind, method, computed, shorthand } = node as acorn.Property;
+      if (kind === 'init' && !method && !shorthand && !computed && isFuncExpr(value)) {
+        // Arrow functions don't have an internal name binding, so the name would be
+        // an unresolvable free variable inside the body.  Only apply for FunctionExpression.
+        if (!hasSelfBinding(value)) return;
+        if (key.type === 'Identifier') {
+          applyNamedEvaluation(value, key.name);
+        } else if (key.type === 'Literal' && typeof key.value === 'string' && isIdentifier(key.value)) {
+          applyNamedEvaluation(value, key.value);
+        }
+      }
+    },
+
+    AssignmentExpression(node) {
+      const { left, right, operator } = node as acorn.AssignmentExpression;
+      if (operator === '=' && isFuncExpr(right)) {
+        const func = right;
+        if (left.type === 'Identifier') {
+          // Identifier LHS is always in scope — safe for both FunctionExpression and arrow.
+          applyNamedEvaluation(func, (left as acorn.Identifier).name);
+        } else if (
+          left.type === 'MemberExpression' &&
+          !(left as acorn.MemberExpression).computed &&
+          (left as acorn.MemberExpression).property.type === 'Identifier'
+        ) {
+          // The property name is NOT a variable binding, so only FunctionExpression is safe.
+          if (!hasSelfBinding(func)) return;
+          applyNamedEvaluation(func, ((left as acorn.MemberExpression).property as acorn.Identifier).name);
+        }
+      }
+    },
+  });
+}

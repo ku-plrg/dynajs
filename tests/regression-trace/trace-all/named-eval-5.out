@@ -1,0 +1,14 @@
+Se() @ 1:1-5:1
+  D(f, <var>, undefined, false) @ 1:1-5:1
+  L(<function>) @ 3:5-19
+  W([f], <function>) @ 3:5-19
+  E(<function>) @ 3:1-19
+  R(f, <function>) @ 4:1-2
+  F[pre](<function>, undefined, [], false, false) @ 4:1-2
+  Fe(<function>, undefined, []) @ 3:5-19
+    D(f, <function>, <function>, false) @ 3:5-19
+    D(arguments, <arguments>, <object>, false) @ 3:5-19
+  Fx(undefined) @ 3:5-19
+  F(<function>, undefined, [], undefined, false, false) @ 4:1-2
+  E(undefined) @ 4:1-4
+Sx() @ 1:1-5:1

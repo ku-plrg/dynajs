@@ -1,0 +1,6 @@
+Se() @ 1:1-3:2
+  D(f, <var>, undefined, false) @ 1:1-3:2
+  L(<function>) @ 1:9-3:2
+  E(<function>) @ 1:9-3:2
+  W([f], <function>) @ 1:9-3:2
+Sx() @ 1:1-3:2

@@ -17,7 +17,8 @@ Se() @ 1:1-2:24
   L(2) @ 2:19-20
   L(3) @ 2:21-22
   F[pre](<function>, <object>, [1, 2, 3], false, true) @ 2:1-14
-  Fe(null, <object>, [1, 2, 3]) @ 1:25-59
+  Fe(<function>, <object>, [1, 2, 3]) @ 1:25-59
+    D(bar, <function>, <function>, false) @ 1:25-59
     D(arguments, <arguments>, <object>, false) @ 1:25-59
     D(args, <param>, <array>, true) @ 1:25-59
     R(args, <array>) @ 1:52-56

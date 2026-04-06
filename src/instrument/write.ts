@@ -277,7 +277,7 @@ export function logFuncEnter(state: State, func: acorn.Function): void {
   const { id } = func;
   let name: string;
   if (id == null) {
-    // TODO: temporalily use `null` but we need to discuss how to handle this
+    // No inferred name was set by the fixNamedEvaluations pre-pass for this context.
     name = 'null';
   } else {
     // If the function name is shadowed by a TDZ binding (const/let/class) in
