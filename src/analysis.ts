@@ -3,8 +3,6 @@ import {
   err,
   kindToStr,
   locToStr,
-  log,
-  stringify,
 } from './utils.js';
 import type { Analysis } from './types/analysis.js';
 import type { RuntimeOptions } from './entry/options.js';
@@ -835,6 +833,16 @@ function idToLoc(id: number): string {
   return locToStr(D$.ids[id]);
 };
 
+// hook for eval code instrumentation
+function Ev(id: number, code: any, isDirect: boolean): any {
+  if (typeof code !== 'string') return code;
+  const pre = D$.analysis.instrumentCodePre?.(id, code, isDirect);
+  if (pre) code = pre.code;
+  const instCode = D$.instrument(code, isDirect ? 'eval' : 'evalIndirect');
+  const post = D$.analysis.instrumentCode?.(id, instCode, isDirect);
+  return post ? post.result : instCode;
+}
+
 // -----------------------------------------------------------------------------
 // assign to the global D$ variable
 // -----------------------------------------------------------------------------
@@ -847,7 +855,7 @@ const BASE = {
   Ch,
   Se, Sx, F, M, Mp, TF, TM, TMp, Fe, Fx, Re, O, E, G, Gp, P, Pp, De,
   U, B, Up, C, Swl, Swr, D, R, W, L, Th, X, Y, Yr, Aw, Awr,
-  Fi, Ce, Su, Sm, Gs, Ps
+  Fi, Ce, Su, Sm, Gs, Ps, Ev
 };
 type GENERATED = {
   // on-the-fly instrumentation API
@@ -864,8 +872,6 @@ export function setBaseObj(runtimeOpts : RuntimeOptions) {
   const generated = {
 
     instrument: (code: string, filename: string | undefined) => {
-
-      log(`instrumenting(${++counter}) ${filename ?? 'code'}...`);
 
       const instrumentOpt : StateOption = {
         ...runtimeOpts,

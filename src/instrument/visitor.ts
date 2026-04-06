@@ -408,10 +408,23 @@ export const visitors: RecursiveVisitors<State> = {
   },
   CallExpression: (node, state) => {
     const { callee, arguments: args, optional } = node;
+    const isDirectEval = !optional &&
+      callee.type === 'Identifier' &&
+      (callee as acorn.Identifier).name === 'eval';
     write.logCall(state, callee, false, optional);
     // TODO fix optional chain issue
     state.write(optional && !state.partial.F ? '?.(' : '(');
-    state.walkArray(args);
+    if (isDirectEval && state.partial.Ev && args.length >= 1) {
+      state.write(`${LOG.EVAL_CODE}(${write.newId(node)}, `);
+      state.walk(args[0]);
+      state.write(', true)');
+      if (args.length > 1) {
+        state.write(', ');
+        state.walkArray(args.slice(1));
+      }
+    } else {
+      state.walkArray(args);
+    }
     state.write(')');
   },
   NewExpression: (node, state) => {

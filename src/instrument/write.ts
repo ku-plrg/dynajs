@@ -52,7 +52,9 @@ export function logCall(state: State, callee: acorn.Node, isConstructor: boolean
     callee.type === 'Identifier' &&
     (callee as acorn.Identifier).name === 'eval';
   if (isDirectEval) {
-    // TODO: hook eval calls
+    // Direct eval must stay as a direct call to preserve scope semantics.
+    // The argument is wrapped by the CallExpression visitor via D$.Ev when
+    // instrumentCodePre/instrumentCode callbacks are active.
     state.write('eval');
     return;
   }

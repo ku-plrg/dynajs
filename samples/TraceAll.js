@@ -299,5 +299,15 @@
     superPutField: function (id, thisVal, prop, value) {
       put('Ps(' + getValue(thisVal) + ', ' + getValue(prop) + ', ' + getValue(value) + ')' + getLoc(id));
     },
+    instrumentCodePre: function (id, code, isDirect) {
+      var v = getValue(code);
+      var loc = getLoc(id);
+      put('Ev[pre](' + v + ', ' + isDirect + ')' + loc);
+    },
+    instrumentCode: function (id, code, isDirect) {
+      var v = getValue(code);
+      var loc = getLoc(id);
+      put('Ev(' + v + ', ' + isDirect + ')' + loc);
+    },
   }
 })(D$);

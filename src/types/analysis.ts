@@ -940,6 +940,40 @@ type FullAnalysis = {
     value: any
   ) => void;
 
+  // ---------------------------------------------------------------------------
+  // Eval hooking
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Called before eval'd code is instrumented. Return value can replace the
+   * code string that will be instrumented.
+   *
+   * @param id - Source location identifier (the eval call site).
+   * @param code - The code string passed to eval.
+   * @param isDirect - `true` for direct eval, `false` for indirect.
+   * @returns `{ code }` to replace the code string, or `void`.
+   */
+  instrumentCodePre: (
+    id: number,
+    code: string,
+    isDirect: boolean
+  ) => { code: string } | void;
+
+  /**
+   * Called after eval'd code has been instrumented. Return value can replace
+   * the instrumented code string that will actually be eval'd.
+   *
+   * @param id - Source location identifier (the eval call site).
+   * @param code - The instrumented code string.
+   * @param isDirect - `true` for direct eval, `false` for indirect.
+   * @returns `{ result }` to replace the instrumented code string, or `void`.
+   */
+  instrumentCode: (
+    id: number,
+    code: string,
+    isDirect: boolean
+  ) => { result: string } | void;
+
   result: any;
 }
 

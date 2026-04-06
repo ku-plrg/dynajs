@@ -43,3 +43,4 @@ export const SUPER_CALL         = `${DYNAJS_VAR}.Su`;
 export const SUPER_METHOD_CALL  = `${DYNAJS_VAR}.Sm`;
 export const SUPER_GET_FIELD    = `${DYNAJS_VAR}.Gs`;
 export const SUPER_PUT_FIELD    = `${DYNAJS_VAR}.Ps`;
+export const EVAL_CODE          = `${DYNAJS_VAR}.Ev`;
