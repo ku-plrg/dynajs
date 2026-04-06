@@ -19,7 +19,7 @@ import {
 import { State, type StateOption } from './state.js';
 // TODO : move this to return value, instead of shared mutable state
 import { beginLocCollection, getFileIdToLoc } from './write.js';
-import { fixNamedEvaluations } from './fix.namedeval.js';
+import { fixNamedEvaluations } from './fix-named-eval.js';
 
 function mergeLocsToRuntime(fileLocs: { [id: number]: [number, number, number, number] }): void {
   const runtime = (globalThis as any).D$;
