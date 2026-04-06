@@ -40,6 +40,7 @@ function isIdentifier(name: string): boolean {
 //   - Property (init, non-computed, non-method):  { bar: function() {} }
 //   - AssignmentExpression (=, simple LHS):  x = function() {}  /  obj.p = () => {}
 export function fixNamedEvaluations(ast: acorn.Node): void {
+  // NOTE if there is a performance issue then call this in each node of visitor in visitor.ts using `recursive`
   simple(ast, {
     VariableDeclarator(node) {
       const { id, init } = node as acorn.VariableDeclarator;
