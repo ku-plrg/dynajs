@@ -837,7 +837,10 @@ function idToLoc(id: number): string {
 function Ev(id: number, code: any, isDirect: boolean): any {
   if (typeof code !== 'string') return code;
   const pre = D$.analysis.instrumentCodePre?.(id, code, isDirect);
-  if (pre) code = pre.code;
+  if (pre) {
+    code = pre.code;
+    if (pre.skip) return code;
+  }
   const instCode = D$.instrument(code, isDirect ? 'eval' : 'evalIndirect');
   const post = D$.analysis.instrumentCode?.(id, instCode, isDirect);
   return post ? post.result : instCode;

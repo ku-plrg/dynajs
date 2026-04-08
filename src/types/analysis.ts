@@ -946,18 +946,19 @@ type FullAnalysis = {
 
   /**
    * Called before eval'd code is instrumented. Return value can replace the
-   * code string that will be instrumented.
+   * code string that will be instrumented, or set `skip: true` to skip
+   * instrumentation and eval the original code as-is.
    *
    * @param id - Source location identifier (the eval call site).
    * @param code - The code string passed to eval.
    * @param isDirect - `true` for direct eval, `false` for indirect.
-   * @returns `{ code }` to replace the code string, or `void`.
+   * @returns `{ code, skip }` to replace/skip, or `void`.
    */
   instrumentCodePre: (
     id: number,
     code: string,
     isDirect: boolean
-  ) => { code: string } | void;
+  ) => { code: string, skip?: boolean } | void;
 
   /**
    * Called after eval'd code has been instrumented. Return value can replace
