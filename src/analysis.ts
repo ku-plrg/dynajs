@@ -835,7 +835,6 @@ function idToLoc(id: number): string {
 
 // hook for eval code instrumentation
 function Ev(id: number, code: any, isDirect: boolean): any {
-  if (typeof code !== 'string') return code;
   const pre = D$.analysis.instrumentCodePre?.(id, code, isDirect);
   if (pre) {
     code = pre.code;

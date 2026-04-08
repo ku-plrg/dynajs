@@ -956,9 +956,9 @@ type FullAnalysis = {
    */
   instrumentCodePre: (
     id: number,
-    code: string,
+    code: string | any,
     isDirect: boolean
-  ) => { code: string, skip?: boolean } | void;
+  ) => { code: string | any, skip?: boolean } | void;
 
   /**
    * Called after eval'd code has been instrumented. Return value can replace
@@ -971,9 +971,9 @@ type FullAnalysis = {
    */
   instrumentCode: (
     id: number,
-    code: string,
+    code: string | any,
     isDirect: boolean
-  ) => { result: string } | void;
+  ) => { result: string | any } | void;
 
   result: any;
 }
