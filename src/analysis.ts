@@ -840,7 +840,10 @@ function Ev(id: number, code: any, isDirect: boolean): any {
     code = pre.code;
     if (pre.skip) return code;
   }
-  const instCode = D$.instrument(code, isDirect ? 'eval' : 'evalIndirect');
+  const instCode =
+    typeof code === 'string' ? 
+      D$.instrument(code, isDirect ? 'eval' : 'evalIndirect')
+    : code;
   const post = D$.analysis.instrumentCode?.(id, instCode, isDirect);
   return post ? post.result : instCode;
 }
