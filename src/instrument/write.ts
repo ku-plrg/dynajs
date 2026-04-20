@@ -776,6 +776,16 @@ export function logLiteral(state: State, literal: acorn.Literal | acorn.ArrayExp
   state.write(`)`);
 }
 
+// logging a synthesized string literal for template literal quasis.
+export function writeQuasiLiteral(state: State, refNode: acorn.Node, value: string): void {
+  const synthetic = { type: 'Literal', value, raw: JSON.stringify(value) } as unknown as acorn.Literal;
+  if (state.partial.literal(synthetic)) {
+    state.write(`${LOG.LITERAL}(${newId(refNode)}, ${JSON.stringify(value)})`);
+  } else {
+    state.write(JSON.stringify(value));
+  }
+}
+
 // logging a throw statement
 export function logThrow(state: State, arg: acorn.Expression): void {
   if (!state.partial.Th) {

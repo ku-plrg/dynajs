@@ -460,21 +460,34 @@ export const visitors: RecursiveVisitors<State> = {
     write.logYield(state, node, node.argument, node.delegate);
   },
   TemplateLiteral: (node, state) => {
-    // TODO it is not distinguished with string literal for the user
-    write.logLiteral(state, node, () => {
-      const { quasis, expressions } = node;
-      state.write('`');
-      const length = expressions.length;
+    // rewrite `a${x}b${y}c` as "a".concat(x, "b").concat(y, "c")
+    const { quasis, expressions } = node;
+    const length = expressions.length;
 
-      for (let i = 0; i < length; i++) {
-        state.walk(quasis[i]);
-        state.write('${');
-        state.walk(expressions[i]);
-        state.write('}');
+    if (length === 0) {
+      write.writeQuasiLiteral(state, node, quasis[0].value.cooked ?? quasis[0].value.raw);
+      return;
+    }
+
+    const useMethodCall = state.partial.F;
+    // open outer-to-inner `D$.M(id, ` wrappers; IDs are allocated outermost-first
+    for (let i = 0; i < length; i++) {
+      if (useMethodCall) {
+        state.write(`${LOG.METHOD_CALL}(${write.newId(node)}, `);
       }
-      state.walk(quasis[quasis.length - 1]);
-      state.write('`');
-    });
+    }
+    write.writeQuasiLiteral(state, node, quasis[0].value.cooked ?? quasis[0].value.raw);
+    for (let i = 0; i < length; i++) {
+      if (useMethodCall) {
+        state.write(`, "concat", false, false, false)(`);
+      } else {
+        state.write('.concat(');
+      }
+      state.walk(expressions[i]);
+      state.write(', ');
+      write.writeQuasiLiteral(state, node, quasis[i + 1].value.cooked ?? quasis[i + 1].value.raw);
+      state.write(')');
+    }
   },
   TaggedTemplateExpression: (node, state) => {
     write.logTaggedCall(state, node.tag);
