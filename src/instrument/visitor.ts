@@ -948,7 +948,16 @@ const visitorHelper = {
       state.wrap(() => {
         for (const statement of chunk.nodes) {
           state.writeln('');
-          state.walk(statement);
+          if (statement.type === 'ExpressionStatement') {
+            // Track every top-level ExpressionStatement through Lcs so the
+            // script's completion value survives through the trailing Sx/Lcv
+            // statements, matching the value `eval(userCode)` would return.
+            state.write(`${LOG.LCV_SET}(`);
+            write.logExpression(state, statement.expression);
+            state.write(');');
+          } else {
+            state.walk(statement);
+          }
         }
       });
       if (useThrow) state.writeln(`} catch (${EXCEPTION_VAR}) {`);
@@ -959,5 +968,9 @@ const visitorHelper = {
     }
 
     write.logScriptExit(state, node);
+    // Final statement: evaluates to `lastComputedValue`, giving callers of
+    // `eval(...)` / `new Function(...)` the user's completion value.
+    state.writeln('');
+    state.write(`${LOG.LCV_GET}();`);
   }
 }

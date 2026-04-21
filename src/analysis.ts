@@ -20,6 +20,8 @@ let returnStack: any[] = [];
 // store uncaught exception
 let uncaughtException: { exception: any } | undefined = undefined;
 
+let lastComputedValue: any = undefined;
+
 // store left side of a switch statement
 let switchLeft: any = undefined;
 let switchStack: any[] = [];
@@ -32,7 +34,19 @@ function popSwitchLeft() { switchLeft = switchStack.pop(); }
 
 // hook for script enter
 function Se(id: number, instrumentedPath: string, originalPath: string): void {
+  lastComputedValue = undefined;
   D$.analysis.scriptEnter?.(id, instrumentedPath, originalPath);
+}
+
+// Sets and returns the last computed expression-statement value.
+function Lcs(value: any): any {
+  lastComputedValue = value;
+  return value;
+}
+
+// Returns the last computed expression-statement value.
+function Lcv(): any {
+  return lastComputedValue;
 }
 
 // hook for script exit
@@ -883,7 +897,7 @@ const BASE = {
   Ch,
   Se, Sx, F, M, Mp, TF, TM, TMp, Fe, Fx, Re, O, E, G, Gp, P, Pp, De,
   U, B, Up, C, Swl, Swr, D, R, W, L, Th, X, Y, Yr, Aw, Awr,
-  Fi, Ce, Su, Sm, Gs, Ps, Ev
+  Fi, Ce, Su, Sm, Gs, Ps, Ev, Lcs, Lcv
 };
 type GENERATED = {
   // on-the-fly instrumentation API
