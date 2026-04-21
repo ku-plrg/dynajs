@@ -718,6 +718,25 @@ function L(id: number, value: any): any {
   return value;
 }
 
+// hook for template literal chain
+function TL(id: number, base: any, expr: any, quasi: string): any {
+  let skip = false;
+  const pre = D$.analysis.templateConcatPre?.(id, base, expr, quasi);
+  if (pre) {
+    base = pre.base;
+    expr = pre.expr;
+    quasi = pre.quasi;
+    skip = pre.skip;
+  }
+  let result: any;
+  if (!skip) {
+    result = base + spec.ToString(expr) + quasi;
+  }
+  const post = D$.analysis.templateConcat?.(id, base, expr, quasi, result);
+  if (post) result = post.result;
+  return result;
+}
+
 // hook for throw statements
 function Th(id: number, value: any): any {
   const post = D$.analysis._throw?.(id, value);
@@ -896,7 +915,7 @@ const BASE = {
   chainSkip,
   Ch,
   Se, Sx, F, M, Mp, TF, TM, TMp, Fe, Fx, Re, O, E, G, Gp, P, Pp, De,
-  U, B, Up, C, Swl, Swr, D, R, W, L, Th, X, Y, Yr, Aw, Awr,
+  U, B, Up, C, Swl, Swr, D, R, W, L, TL, Th, X, Y, Yr, Aw, Awr,
   Fi, Ce, Su, Sm, Gs, Ps, Ev, Lcs, Lcv
 };
 type GENERATED = {

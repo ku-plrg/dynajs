@@ -133,6 +133,50 @@ type FullAnalysis = {
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
+  // Template literal concatenation — Pre/Post pair
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Called at each step of a template literal chain, before the quasi/expression
+   * pair is concatenated onto the running base string. The instrumentation
+   * rewrites `` `a${x}b${y}c` `` as nested `TL(id2, TL(id1, "a", x, "b"), y, "c")`
+   * calls, so this fires once per interpolated expression.
+   *
+   * @param id - Source location identifier of the template literal.
+   * @param base - The running base string (outer accumulated value).
+   * @param expr - The interpolated expression value (pre-`ToString`).
+   * @param quasi - The template element text following the expression.
+   * @returns Replacement `{ base, expr, quasi, skip }`, or `void`. When `skip`
+   *          is true the concatenation is suppressed and the step returns
+   *          `undefined`.
+   */
+  templateConcatPre: (
+    id: number,
+    base: any,
+    expr: any,
+    quasi: string
+  ) => { base: any, expr: any, quasi: string, skip: boolean } | void;
+
+  /**
+   * Called after a template literal chain step has concatenated `base`, `expr`,
+   * and `quasi` (or was skipped via {@link templateConcatPre}).
+   *
+   * @param id - Source location identifier of the template literal.
+   * @param base - The running base string at entry.
+   * @param expr - The interpolated expression value at entry.
+   * @param quasi - The template element text following the expression.
+   * @param result - The concatenated string (`undefined` if skipped).
+   * @returns `{ result }` to replace the step's output, or `void`.
+   */
+  templateConcat: (
+    id: number,
+    base: any,
+    expr: any,
+    quasi: string,
+    result: any
+  ) => { result: any } | void;
+
+  // ---------------------------------------------------------------------------
   // Function body entry / exit
   // ---------------------------------------------------------------------------
 

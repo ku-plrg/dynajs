@@ -460,7 +460,7 @@ export const visitors: RecursiveVisitors<State> = {
     write.logYield(state, node, node.argument, node.delegate);
   },
   TemplateLiteral: (node, state) => {
-    // rewrite `a${x}b${y}c` as "a".concat(x, "b").concat(y, "c")
+    // rewrite `a${x}b${y}c` as D$.TL(id2, D$.TL(id1, "a", x, "b"), y, "c")
     const { quasis, expressions } = node;
     const length = expressions.length;
 
@@ -469,20 +469,13 @@ export const visitors: RecursiveVisitors<State> = {
       return;
     }
 
-    const useMethodCall = state.partial.F;
-    // open outer-to-inner `D$.M(id, ` wrappers; IDs are allocated outermost-first
+    // open outer-to-inner `D$.TL(id, ` wrappers; IDs are allocated outermost-first
     for (let i = 0; i < length; i++) {
-      if (useMethodCall) {
-        state.write(`${LOG.METHOD_CALL}(${write.newId(node)}, `);
-      }
+      state.write(`${LOG.TEMPLATE_LITERAL}(${write.newId(node)}, `);
     }
     write.writeQuasiLiteral(state, node, quasis[0].value.cooked ?? quasis[0].value.raw);
     for (let i = 0; i < length; i++) {
-      if (useMethodCall) {
-        state.write(`, "concat", false, false, false)(`);
-      } else {
-        state.write('.concat(');
-      }
+      state.write(', ');
       state.walk(expressions[i]);
       state.write(', ');
       write.writeQuasiLiteral(state, node, quasis[i + 1].value.cooked ?? quasis[i + 1].value.raw);

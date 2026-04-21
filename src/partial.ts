@@ -21,6 +21,8 @@ export const callbackHintFull: Record<keyof Unpartial<CallbacksOnly>, true> = {
   invokeFun: true,
   taggedTemplatePre: true,
   taggedTemplate: true,
+  templateConcatPre: true,
+  templateConcat: true,
   functionEnter: true,
   functionExit: true,
   _return: true,
