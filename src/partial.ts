@@ -120,7 +120,11 @@ export class PartialChecker {
   get De() { return this.callbackHint._deletePre || this.callbackHint._delete; }
   get Aw() { return this.callbackHint._await || this.callbackHint._awaitResult || this.callbackHint.invokeFunPre || this.callbackHint.invokeFun || this.callbackHint.functionEnter || this.callbackHint.functionExit; }
   get Y() { return this.callbackHint._yield || this.callbackHint._resume || this.callbackHint.invokeFunPre || this.callbackHint.invokeFun || this.callbackHint.functionEnter || this.callbackHint.functionExit; }
-  get F() { return this.callbackHint.invokeFunPre || this.callbackHint.invokeFun; }
+
+  // Function-constructor interception (for instrumentCodePre/instrumentCode on
+  // `new Function(...)` bodies) happens inside the invokeFun runtime helper,
+  // so call sites must be wrapped whenever eval hooks are requested too.
+  get F() { return this.callbackHint.invokeFunPre || this.callbackHint.invokeFun || this.callbackHint.instrumentCodePre || this.callbackHint.instrumentCode; }
 
   literal(node: acorn.Literal | acorn.ArrayExpression | acorn.ObjectExpression | acorn.FunctionExpression | acorn.ClassExpression | acorn.TemplateLiteral | acorn.ArrowFunctionExpression): boolean {
     if (this.callbackHint.literal) return true;

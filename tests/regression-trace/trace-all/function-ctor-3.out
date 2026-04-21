@@ -1,0 +1,26 @@
+Se() @ 1:1-4:1
+  D(h, <var>, undefined, false) @ 1:1-4:1
+  R(Function, <function>) @ 2:13-21
+  L("return 7;") @ 2:22-33
+  F[pre](<function>, undefined, ["return 7;"], true, false) @ 2:13-21
+  Ev[pre]("(function anonymous(...", false) @ 2:13-21
+  Ev("// DYNAJS DO NOT INS...", false) @ 2:13-21
+  Se() @ 1:1-3:3
+    L(<function>) @ 1:2-3:2
+    E(<function>) @ 1:2-3:2
+  Sx() @ 1:1-3:3
+  F(<function>, undefined, ["return 7;"], <function>, true, false) @ 1:2-3:2
+  E(<function>) @ 1:2-3:2
+  W([h], <function>) @ 1:2-3:2
+  R(h, <function>) @ 1:2-3:2
+  F[pre](<function>, undefined, [], false, false) @ 1:2-3:2
+  Fe(<function>, <object>, []) @ 1:2-3:2
+    D(anonymous, <function>, <function>, false) @ 1:2-3:2
+    D(arguments, <arguments>, <object>, false) @ 1:2-3:2
+    L(7) @ 2:8-9
+    E(7) @ 2:8-9
+    Re(7) @ 2:1-10
+  Fx(7) @ 1:2-3:2
+  F(<function>, undefined, [], 7, false, false) @ 1:2-3:2
+  E(7) @ 2:8-9
+Sx() @ 1:1-3:3

@@ -7,6 +7,7 @@ import {
 import type { Analysis } from './types/analysis.js';
 import type { RuntimeOptions } from './entry/options.js';
 import * as utils from './utils.js';
+import * as spec from './spec.js';
 import { instrument } from './instrument/main.js';
 import { StateOption } from './instrument/state.js';
 
@@ -166,6 +167,26 @@ function invokeTT(id: number, base: any, f: any, strings: any, values: any[], is
   return result;
 }
 
+const FUNC_CONSTRUCTOR = globalThis.Function;
+const INDIRECT_EVAL: typeof eval = globalThis.eval;
+
+// Instruments a `Function(...)`/`new Function(...)` call so that its body
+// participates in the analysis. The last argument is treated as the function
+// body and the preceding ones as parameter lists, matching the Function
+// constructor semantics.
+function invokeFunctionConstructor(id: number, f: any, args: any): any {
+  const argArr: string[] = Array.prototype.slice.call(args).map((v: any) => spec.ToString(v));
+  // Invoke the original constructor first so that invalid params or body
+  // throw exactly the error the user would normally see.
+  f.apply(null, argArr);
+  const paramList = argArr.slice(0, Math.max(argArr.length - 1, 0)).join(', ');
+  const body = argArr.length > 0 ? argArr[argArr.length - 1] : '';
+  const wrapped = `(function anonymous(${paramList}) {\n${body}\n})`;
+  const processed = Ev(id, wrapped, false);
+  if (typeof processed !== 'string') return processed;
+  return INDIRECT_EVAL(processed);
+}
+
 // helper function to invoke a function
 function invokeFun(
   id: number,
@@ -185,10 +206,12 @@ function invokeFun(
     skip = pre.skip;
   }
   if (!skip) {
-    if (isConstructor) {
+    if (f === FUNC_CONSTRUCTOR) {
+      result = invokeFunctionConstructor(id, f, args);
+    } else if (isConstructor) {
       result = construct(f, args);
     } else {
-      result = Function.prototype.apply.call(f, base, args);
+      result = FUNC_CONSTRUCTOR.prototype.apply.call(f, base, args);
     }
   }
   const post = D$.analysis.invokeFun?.(id, f, base, args, result, isConstructor, isMethod);
