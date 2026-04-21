@@ -718,21 +718,27 @@ function L(id: number, value: any): any {
   return value;
 }
 
-// hook for template literal chain
+// hook for template literal chain — each step fires templateConcat twice
+// (base + expr, then intermediate + quasi) so the binary-pair hook can be
+// reused outside of templates.
 function TL(id: number, base: any, expr: any, quasi: string): any {
+  const intermediate = templateConcatStep(id, base, expr);
+  return templateConcatStep(id, intermediate, quasi);
+}
+
+function templateConcatStep(id: number, left: any, right: any): any {
   let skip = false;
-  const pre = D$.analysis.templateConcatPre?.(id, base, expr, quasi);
+  const pre = D$.analysis.templateConcatPre?.(id, left, right);
   if (pre) {
-    base = pre.base;
-    expr = pre.expr;
-    quasi = pre.quasi;
+    left = pre.left;
+    right = pre.right;
     skip = pre.skip;
   }
   let result: any;
   if (!skip) {
-    result = base + spec.ToString(expr) + quasi;
+    result = left + spec.ToString(right);
   }
-  const post = D$.analysis.templateConcat?.(id, base, expr, quasi, result);
+  const post = D$.analysis.templateConcat?.(id, left, right, result);
   if (post) result = post.result;
   return result;
 }

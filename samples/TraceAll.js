@@ -89,11 +89,11 @@
       str += '], ' + getValue(result) + ', ' + isMethod + ')';
       put(str + getLoc(id));
     },
-    templateConcatPre: function (id, base, expr, quasi) {
-      put('TL[pre](' + getValue(base) + ', ' + getValue(expr) + ', ' + getValue(quasi) + ')' + getLoc(id));
+    templateConcatPre: function (id, left, right) {
+      put('TL[pre](' + getValue(left) + ', ' + getValue(right) + ')' + getLoc(id));
     },
-    templateConcat: function (id, base, expr, quasi, result) {
-      put('TL(' + getValue(base) + ', ' + getValue(expr) + ', ' + getValue(quasi) + ', ' + getValue(result) + ')' + getLoc(id));
+    templateConcat: function (id, left, right, result) {
+      put('TL(' + getValue(left) + ', ' + getValue(right) + ', ' + getValue(result) + ')' + getLoc(id));
     },
     functionEnter: function (id, f, base, args, isAsync, isGenerator) {
       var str = 'Fe(' + getValue(f) + ', ' + getValue(base) + ', [';

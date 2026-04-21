@@ -133,46 +133,42 @@ type FullAnalysis = {
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
-  // Template literal concatenation — Pre/Post pair
+  // Template literal concatenation — Pre/Post pair (binary)
   // ---------------------------------------------------------------------------
 
   /**
-   * Called at each step of a template literal chain, before the quasi/expression
-   * pair is concatenated onto the running base string. The instrumentation
-   * rewrites `` `a${x}b${y}c` `` as nested `TL(id2, TL(id1, "a", x, "b"), y, "c")`
-   * calls, so this fires once per interpolated expression.
+   * Called before each binary concatenation step inside a template literal.
+   * Each interpolated expression fires this twice per TL step: once for
+   * `(base, expr)` and once for `(intermediate, quasi)`. The pair-shaped
+   * signature lets the hook be reused for non-template string concatenation.
    *
    * @param id - Source location identifier of the template literal.
-   * @param base - The running base string (outer accumulated value).
-   * @param expr - The interpolated expression value (pre-`ToString`).
-   * @param quasi - The template element text following the expression.
-   * @returns Replacement `{ base, expr, quasi, skip }`, or `void`. When `skip`
-   *          is true the concatenation is suppressed and the step returns
+   * @param left - The accumulated left-hand string.
+   * @param right - The next value to concatenate (raw, pre-`ToString`).
+   * @returns Replacement `{ left, right, skip }`, or `void`. When `skip` is
+   *          true the concatenation is suppressed and the step returns
    *          `undefined`.
    */
   templateConcatPre: (
     id: number,
-    base: any,
-    expr: any,
-    quasi: string
-  ) => { base: any, expr: any, quasi: string, skip: boolean } | void;
+    left: any,
+    right: any
+  ) => { left: any, right: any, skip: boolean } | void;
 
   /**
-   * Called after a template literal chain step has concatenated `base`, `expr`,
-   * and `quasi` (or was skipped via {@link templateConcatPre}).
+   * Called after each binary concatenation step inside a template literal
+   * (or after it was skipped via {@link templateConcatPre}).
    *
    * @param id - Source location identifier of the template literal.
-   * @param base - The running base string at entry.
-   * @param expr - The interpolated expression value at entry.
-   * @param quasi - The template element text following the expression.
+   * @param left - The left operand at entry.
+   * @param right - The right operand at entry.
    * @param result - The concatenated string (`undefined` if skipped).
    * @returns `{ result }` to replace the step's output, or `void`.
    */
   templateConcat: (
     id: number,
-    base: any,
-    expr: any,
-    quasi: string,
+    left: any,
+    right: any,
     result: any
   ) => { result: any } | void;
 
