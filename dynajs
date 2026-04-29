@@ -24,9 +24,11 @@ fi
 
 IMPORT_OPT="--import $DYNAJS_HOME/dist/entry/import.js"
 
+COMBINED_NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }$IMPORT_OPT${DYNAJS_NODE_OPTIONS_POST:+ $DYNAJS_NODE_OPTIONS_POST}"
+
 # if no arguments are provided AND DYNAJS_OPTIONS is not set, use `node` to print the help message
 if [ "$#" -eq 0 ] && [ -z "$DYNAJS_OPTIONS" ]; then
-  DYNAJS_OPTIONS="--help" NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }$IMPORT_OPT" node
+  DYNAJS_OPTIONS="--help" NODE_OPTIONS="$COMBINED_NODE_OPTIONS" node
 else
-  NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }$IMPORT_OPT" "$@"
+  NODE_OPTIONS="$COMBINED_NODE_OPTIONS" "$@"
 fi
