@@ -12,6 +12,7 @@ import { getRuntimeOptions, printHelp, type RuntimeOptions } from "./options.js"
 import type { StateOption } from "../instrument/state.js";
 import { registerVmHook } from "./vm.js";
 import { tryToRegisterWarningHook } from "./warn.js";
+import { isInstrumentTarget } from "./include.js";
 
 function prepareGlobal(options: RuntimeOptions): void {
   setBaseObj(options);
@@ -37,17 +38,6 @@ function registerESMloader(mode : CallbackHint | undefined, options: RuntimeOpti
     ? pathToFileURL(path.join(options.home, "dist/entry/"))
     : new URL("./", import.meta.url); // should throw error instead
   register("./register.js", baseURL, { data: { mode, options } });
-}
-
-const targetRoot = path.resolve(process.cwd());
-
-function isInstrumentTarget(filepath: string, options: RuntimeOptions): boolean {
-  const relative = path.relative(targetRoot, filepath);
-  // is .includes good enough?
-  if (options.ignoreNodeModules && relative.includes('node_modules')) {
-    return false;
-  }
-  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
 }
 
 function writeInstrumentedFile(instrumentedPath: string, content: string): void {

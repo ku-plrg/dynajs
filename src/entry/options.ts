@@ -1,3 +1,4 @@
+import path from 'node:path';
 import parseArgs from 'yargs-parser';
 import { POS_MODE_DEFAULT, PosMode } from '../constant.js';
 import { raise } from '../utils.js';
@@ -11,10 +12,42 @@ export type RuntimeOptions = {
   ignoreNodeModules: boolean;
   stat: boolean;
   pos: PosMode;
+  includeRoots: string[];
 };
 
 function getStringValue(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined;
+}
+
+function collectIncludeRoots(parsed: parseArgs.Arguments): string[] {
+  const collected: string[] = [process.cwd()];
+
+  const fromEnv = process.env.DYNAJS_INCLUDE;
+  if (fromEnv && fromEnv.length > 0) {
+    for (const entry of fromEnv.split(path.delimiter)) {
+      if (entry.length > 0) collected.push(entry);
+    }
+  }
+
+  const fromArgs = parsed.include;
+  if (typeof fromArgs === 'string' && fromArgs.length > 0) {
+    collected.push(fromArgs);
+  } else if (Array.isArray(fromArgs)) {
+    for (const entry of fromArgs) {
+      if (typeof entry === 'string' && entry.length > 0) collected.push(entry);
+    }
+  }
+
+  const seen = new Set<string>();
+  const resolved: string[] = [];
+  for (const entry of collected) {
+    const abs = path.resolve(entry);
+    if (!seen.has(abs)) {
+      seen.add(abs);
+      resolved.push(abs);
+    }
+  }
+  return resolved;
 }
 
 function parseLocMode(value: unknown): PosMode {
@@ -49,6 +82,8 @@ Options:
   --ignore-node-modules Ignore files in node_modules directory
   --stat                Generate statistics files for each instrumented file
   --pos <mode>          Position tracking mode: ${PosMode.PERSIST} | ${PosMode.MEMORY} | ${PosMode.OFF} (default: ${POS_MODE_DEFAULT})
+  --include <path>      Additional directory to instrument (repeatable; cwd is always included).
+                        Also configurable via DYNAJS_INCLUDE env var (path-delimited list).
 `);
 }
 
@@ -71,6 +106,9 @@ export function getRuntimeOptions(): RuntimeOptions {
       'home',
       'pos',
     ],
+    array: [
+      'include',
+    ],
     configuration: {
       'short-option-groups': false,
     },
@@ -92,5 +130,6 @@ export function getRuntimeOptions(): RuntimeOptions {
     ignoreNodeModules: typeof parsed['ignore-node-modules'] === 'boolean' ? parsed['ignore-node-modules'] : false,
     stat: typeof parsed.stat === 'boolean' ? parsed.stat : false,
     pos: parseLocMode(getStringValue(parsed.pos)),
+    includeRoots: collectIncludeRoots(parsed),
   };
 }

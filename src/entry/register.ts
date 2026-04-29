@@ -1,41 +1,20 @@
 import type { InitializeHook, LoadHook, ResolveHook } from "node:module";
 import type { CallbackHint } from "../partial.js";
-import { fileURLToPath } from "node:url";
-import path from "node:path";
 import { instrument } from "../instrument/main.js";
 import { getInstrumentedName, getStatName, log, writeFile } from "../utils.js";
 import { recordStat, writeStatFile } from "../stats/main.js";
 import type { RuntimeOptions } from "./options.js";
+import { getFilePathFromUrl, isInstrumentTarget as isInstrumentTargetPath } from "./include.js";
 
 let mode: CallbackHint | undefined;
 let options: RuntimeOptions;
-const targetRoot = path.resolve(process.cwd());
-
-function getFilePathFromUrl(url: string): string | null {
-  if (!url.startsWith('file://')) {
-    return null;
-  }
-
-  const parsed = new URL(url);
-  parsed.search = '';
-  parsed.hash = '';
-  return fileURLToPath(parsed);
-}
 
 function isInstrumentTarget(url: string): boolean {
   const filename = getFilePathFromUrl(url);
   if (filename === null) {
     return false;
   }
-
-  const relative = path.relative(targetRoot, filename);
-
-  // is .includes good enough?
-  if (options.ignoreNodeModules && relative.includes('node_modules')) {
-    return false;
-  }
-
-  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+  return isInstrumentTargetPath(filename, options);
 }
 
 function writeInstrumentedFile(instrumentedPath: string, content: string): void {
