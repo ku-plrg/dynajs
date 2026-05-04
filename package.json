@@ -17,6 +17,7 @@
     "start": "ts-node src",
     "start:watch": "nodemon src --watch src --watch samples -e ts,js --exec 'ts-node'",
     "sunspider": "npm run build && ./bench/run-sunspider-benchmark.sh",
+    "format": "prettier --write . | grep -v '(unchanged)$'",
     "test": "",
     "test:watch": ""
   },
