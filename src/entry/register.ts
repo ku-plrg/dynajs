@@ -5,6 +5,7 @@ import { getInstrumentedName, getStatName, log, writeFile } from "../utils.js";
 import { recordStat, writeStatFile } from "../stats/main.js";
 import type { RuntimeOptions } from "./options.js";
 import { getFilePathFromUrl, isInstrumentTarget as isInstrumentTargetPath } from "./include.js";
+import { initializeIdGenerator } from "../instrument/write.js";
 
 let mode: CallbackHint | undefined;
 let options: RuntimeOptions;
@@ -47,6 +48,7 @@ function instrumentSource(source: string, url: string): string {
 export const initialize: InitializeHook = async (data) => {
   mode = data.mode;
   options = data.options;
+  initializeIdGenerator(true);
 };
 
 export const resolve: ResolveHook = async (specifier, context, nextResolve) => {

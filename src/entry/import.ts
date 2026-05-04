@@ -13,6 +13,7 @@ import type { StateOption } from "../instrument/state.js";
 import { registerVmHook } from "./vm.js";
 import { tryToRegisterWarningHook } from "./warn.js";
 import { isInstrumentTarget } from "./include.js";
+import { initializeIdGenerator } from "../instrument/write.js";
 
 function prepareGlobal(options: RuntimeOptions): void {
   setBaseObj(options);
@@ -49,6 +50,8 @@ function writeStatisticsFile(statPath: string, code: string): void {
 }
 
 function registerCJSloader(mode : CallbackHint | undefined, options: Readonly<RuntimeOptions>): void {
+  initializeIdGenerator(false);
+
   const previousCompile = (Module as any).prototype._compile;
 
   (Module as any).prototype._compile = function compileHook(code: string, filename: string) {

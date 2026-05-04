@@ -11,13 +11,13 @@ Se() @ 1:1-4:1
     L(<function>) @ 1:2-3:2
     E(<function>) @ 1:2-3:2
   Sx() @ 1:1-3:3
-  F(<function>, undefined, ["a", "b", "return a + b;"], <function>, true, false) @ 1:2-3:2
-  E(<function>) @ 1:2-3:2
-  W([f], <function>) @ 1:2-3:2
-  R(f, <function>) @ 2:12-13
-  L(2) @ 1:2-3:2
-  L(3) @ 1:2-3:2
-  F[pre](<function>, undefined, [2, 3], false, false) @ 2:8-9
+  F(<function>, undefined, ["a", "b", "return a + b;"], <function>, true, false) @ 2:13-21
+  E(<function>) @ 2:9-48
+  W([f], <function>) @ 2:9-48
+  R(f, <function>) @ 3:1-2
+  L(2) @ 3:3-4
+  L(3) @ 3:6-7
+  F[pre](<function>, undefined, [2, 3], false, false) @ 3:1-2
   Fe(<function>, <object>, [2, 3]) @ 1:2-3:2
     D(anonymous, <function>, <function>, false) @ 1:2-3:2
     D(arguments, <arguments>, <object>, false) @ 1:2-3:2
@@ -30,6 +30,6 @@ Se() @ 1:1-4:1
     E(5) @ 2:8-13
     Re(5) @ 2:1-14
   Fx(5) @ 1:2-3:2
-  F(<function>, undefined, [2, 3], 5, false, false) @ 2:8-9
-  E(5) @ 2:8-13
-Sx() @ 1:1-3:3
+  F(<function>, undefined, [2, 3], 5, false, false) @ 3:1-2
+  E(5) @ 3:1-8
+Sx() @ 1:1-4:1

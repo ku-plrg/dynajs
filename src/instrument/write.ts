@@ -835,10 +835,20 @@ export function logException(state: State, program: acorn.Node): void {
 // -----------------------------------------------------------------------------
 // unique id generator
 // -----------------------------------------------------------------------------
-let numId = 0;
-const ID_INC_STEP = 1;
+let numId: number = 0;
+let ID_INC_STEP: 1 | -1 = 1;
 let fileIdToLoc: { [id: number]: [number, number, number, number] } = {};
 let currentLocMode: PosMode = POS_MODE_DEFAULT;
+
+export function initializeIdGenerator(isESM: boolean): void {
+  if (isESM) {
+    numId = -1;
+    ID_INC_STEP = -1;
+  } else {
+    numId = 0;
+    ID_INC_STEP = 1;
+  }
+}
 
 export function beginLocCollection(locMode: PosMode): void {
   currentLocMode = locMode;
@@ -978,7 +988,9 @@ function getLogicalAssignmentOperator(operator: string): string | null {
 }
 
 export function nextTempSlot(node: acorn.Node): string {
-  return `${LOG.TEMP_VAR}${newId(node)}`;
+  let n = newId(node);
+  let str = n < 0 ? `n${-n}` : `p${n}`;
+  return `${LOG.TEMP_VAR}${str}`;
 }
 
 export function writeTempRef(state: State, slot: string): void {
