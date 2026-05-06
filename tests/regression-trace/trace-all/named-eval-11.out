@@ -1,0 +1,17 @@
+Se() @ 1:1-6:1
+  D(obj, <var>, undefined, false) @ 1:1-6:1
+  L(<function>) @ 3:15-29
+  L(<object>) @ 2:11-4:2
+  E(<object>) @ 2:11-4:2
+  W([obj], <object>) @ 2:11-4:2
+  R(obj, <object>) @ 5:1-4
+  L("return") @ 5:5-13
+  G[pre](<object>, "return") @ 5:1-14
+  G(<object>, "return", <function>) @ 5:1-14
+  F[pre](<function>, <object>, [], false, true) @ 5:1-14
+  Fe(null, <object>, []) @ 3:15-29
+    D(arguments, <arguments>, <object>, false) @ 3:15-29
+  Fx(undefined) @ 3:15-29
+  F(<function>, <object>, [], undefined, false, true) @ 5:1-14
+  E(undefined) @ 5:1-16
+Sx() @ 1:1-6:1
