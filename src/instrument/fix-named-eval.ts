@@ -29,8 +29,45 @@ function hasSelfBinding(func: acorn.FunctionExpression | acorn.ArrowFunctionExpr
 // A simple ASCII identifier check.  Names from non-identifier string literals (e.g.
 // "foo bar") cannot be used as function names in generated source.
 const IDENTIFIER_RE = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/;
+const RESERVED_WORDS = new Set([
+  'await',
+  'break',
+  'case',
+  'catch',
+  'class',
+  'const',
+  'continue',
+  'debugger',
+  'default',
+  'delete',
+  'do',
+  'else',
+  'enum',
+  'export',
+  'extends',
+  'finally',
+  'for',
+  'function',
+  'if',
+  'import',
+  'in',
+  'instanceof',
+  'new',
+  'return',
+  'super',
+  'switch',
+  'this',
+  'throw',
+  'try',
+  'typeof',
+  'var',
+  'void',
+  'while',
+  'with',
+  'yield',
+]);
 function isIdentifier(name: string): boolean {
-  return IDENTIFIER_RE.test(name);
+  return IDENTIFIER_RE.test(name) && !RESERVED_WORDS.has(name);
 }
 
 // Pre-pass: mutate all anonymous functions that sit in NamedEvaluation positions
@@ -77,7 +114,8 @@ export function fixNamedEvaluations(ast: acorn.Node): void {
         ) {
           // The property name is NOT a variable binding, so only FunctionExpression is safe.
           if (!hasSelfBinding(func)) return;
-          applyNamedEvaluation(func, ((left as acorn.MemberExpression).property as acorn.Identifier).name);
+          const name = ((left as acorn.MemberExpression).property as acorn.Identifier).name;
+          if (isIdentifier(name)) applyNamedEvaluation(func, name);
         }
       }
     },
