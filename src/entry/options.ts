@@ -10,7 +10,6 @@ export type RuntimeOptions = {
   verbose: boolean;
   partialHook: boolean;
   ignoreNodeModules: boolean;
-  stat: boolean;
   pos: PosMode;
   includeRoots: string[];
 };
@@ -80,7 +79,6 @@ Options:
   --partial             Enable partial instrumentation (only instrument features with hooks)
   --full                Enable full instrumentation (instrument all features)
   --ignore-node-modules Ignore files in node_modules directory
-  --stat                Generate statistics files for each instrumented file
   --pos <mode>          Position tracking mode: ${PosMode.PERSIST} | ${PosMode.MEMORY} | ${PosMode.OFF} (default: ${POS_MODE_DEFAULT})
   --include <path>      Additional directory to instrument (repeatable; cwd is always included).
                         Also configurable via DYNAJS_INCLUDE env var (path-delimited list).
@@ -99,7 +97,6 @@ export function getRuntimeOptions(): RuntimeOptions {
       'partial',
       'full',
       'ignore-node-modules',
-      'stat',
     ],
     string: [
       'analysis',
@@ -128,7 +125,6 @@ export function getRuntimeOptions(): RuntimeOptions {
     verbose: typeof parsed.verbose === 'boolean' ? parsed.verbose : false,
     partialHook: full ? false : partial ?? false,
     ignoreNodeModules: typeof parsed['ignore-node-modules'] === 'boolean' ? parsed['ignore-node-modules'] : false,
-    stat: typeof parsed.stat === 'boolean' ? parsed.stat : false,
     pos: parseLocMode(getStringValue(parsed.pos)),
     includeRoots: collectIncludeRoots(parsed),
   };

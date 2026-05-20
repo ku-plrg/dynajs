@@ -7,7 +7,6 @@ import { setBaseObj } from '../analysis.js';
 import { instrument } from "../instrument/main.js";
 import { checkAnalysisHooks } from "../boot.js";
 import type { CallbackHint } from "../partial.js";
-import { recordStat, writeStatFile } from "../stats/main.js";
 import { getRuntimeOptions, printHelp, type RuntimeOptions } from "./options.js";
 import type { StateOption } from "../instrument/state.js";
 import { registerVmHook } from "./vm.js";
@@ -45,10 +44,6 @@ function writeInstrumentedFile(instrumentedPath: string, content: string): void 
   writeFile(instrumentedPath, content);
 }
 
-function writeStatisticsFile(statPath: string, code: string): void {
-  writeStatFile(statPath, recordStat(code));
-}
-
 function registerCJSloader(mode : CallbackHint | undefined, options: Readonly<RuntimeOptions>): void {
   initializeIdGenerator(false);
 
@@ -62,11 +57,6 @@ function registerCJSloader(mode : CallbackHint | undefined, options: Readonly<Ru
     }
     
     if (options.verbose) log(`Compiling (CJS) ${filename} with custom loader...`);
-
-    if (options.stat) {
-      const statPath = getStatName(filename);
-      writeStatisticsFile(statPath, code);
-    }
 
     const newPath = getInstrumentedName(filename);
 

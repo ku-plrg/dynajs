@@ -5,7 +5,6 @@ import { full } from 'acorn-walk';
 import type { CallbackHint } from '../partial.js';
 import { instrument } from '../instrument/main.js';
 import { getInstrumentedName, getStatName, log, parse, warn, writeFile } from '../utils.js';
-import { recordStat, writeStatFile } from '../stats/main.js';
 import type { RuntimeOptions } from './options.js';
 
 // require is injected by esbuild
@@ -38,10 +37,6 @@ function resolveVmFilename(kind: string, filename: unknown): string {
 
   vmCounter += 1;
   return path.join(vmOutputRoot, `${kind}-${vmCounter}.js`);
-}
-
-function writeStatistics(statPath: string, source: string): void {
-  writeGeneratedFile(statPath, JSON.stringify(recordStat(source), null, 2), 'vm statistics');
 }
 
 function injectRuntime(contextObject: any): any {
@@ -84,11 +79,6 @@ function instrumentVmScript(
 
   if (options.verbose) {
     log(`Instrumenting (${kind}) ${originalPath} from node:vm...`);
-  }
-
-  if (options.stat) {
-    const statPath = getStatName(originalPath);
-    writeStatistics(statPath, code);
   }
 
   const instrumentedCode = instrument(code, {

@@ -2,7 +2,6 @@ import type { InitializeHook, LoadHook, ResolveHook } from "node:module";
 import type { CallbackHint } from "../partial.js";
 import { instrument } from "../instrument/main.js";
 import { getInstrumentedName, getStatName, log, writeFile } from "../utils.js";
-import { recordStat, writeStatFile } from "../stats/main.js";
 import type { RuntimeOptions } from "./options.js";
 import { getFilePathFromUrl, isInstrumentTarget as isInstrumentTargetPath } from "./include.js";
 import { initializeIdGenerator } from "../instrument/write.js";
@@ -22,17 +21,9 @@ function writeInstrumentedFile(instrumentedPath: string, content: string): void 
   writeFile(instrumentedPath, content);
 }
 
-function writeStatisticsFile(statPath: string, source: string): void {
-  writeStatFile(statPath, recordStat(source));
-}
-
 function instrumentSource(source: string, url: string): string {
   const filename = getFilePathFromUrl(url) ?? url;
   const instrumentedPath = getInstrumentedName(filename);
-  if (options.stat) {
-    const statPath = getStatName(filename);
-    writeStatisticsFile(statPath, source);
-  }
   const instrumentedSource = instrument(source, {
     verbose: options.verbose,
     pos: options.pos,
