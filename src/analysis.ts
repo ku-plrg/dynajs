@@ -10,7 +10,9 @@ import * as utils from './utils.js';
 import * as spec from './spec.js';
 import { instrument } from './instrument/main.js';
 import { StateOption } from './instrument/state.js';
-import { SUPPORTED_BUILTINS } from './model/model.js';
+import { Model } from './model/model.js';
+
+declare global { var D$: DynaJSType; };
 
 // sentinel symbol for optional chain short-circuit propagation
 const chainSkip = Symbol('D$.chainSkip');
@@ -222,17 +224,15 @@ function invokeFun(
     skip = pre.skip;
     preferModel = pre.preferModel;
   }
-  console.log('DEBUG', 'dynajs', 'preferModel', preferModel);
   if (!skip) {
     if (f === FUNC_CONSTRUCTOR) {
       result = invokeFunctionConstructor(id, f, args);
     } else if (isConstructor) {
       result = construct(f, args);
-    } else if (preferModel && D$.analysis.spec && SUPPORTED_BUILTINS.has(f)) {
-      const model = SUPPORTED_BUILTINS.get(f)!;
-      console.log('DEBUG', 'dynajs', 'Invoking model for', f.name, { base, args });
-      result = model.call(undefined, D$.analysis.spec.stringOps, base, ...Array.from(args));
-      console.log('DEBUG', 'dynajs', 'Model result for', f.name, JSON.stringify(result).replaceAll('\n', '\\n'));
+    } else if (preferModel && D$.analysis.spec && Model.support(f)) {
+      // TODO use singleton instance of Model
+      const model = new Model(D$.analysis.spec);
+      result = model.of(f)(base, ...Array.from(args));
     } else {
       result = FUNC_CONSTRUCTOR.prototype.apply.call(f, base, args);
     }
@@ -937,11 +937,8 @@ type GENERATED = {
   // on-the-fly instrumentation API
   instrument: (code: string, filename: string | undefined) => string;
 }
-type DynaJSType = typeof BASE & GENERATED & {
-  stats?: unknown;
-}
+type DynaJSType = typeof BASE & GENERATED;
 
-declare global { var D$: DynaJSType; };
 export function setBaseObj(runtimeOpts : RuntimeOptions) {
   let counter = 0;
 

@@ -6,20 +6,24 @@
   "bin": {
     "dynajs": "./dynajs",
     "dynajs-clean": "./dynajs-clean",
-    "dynajs-inject": "./dynajs-inject",
-    "dynajs-stats": "./dynajs-stats"
+    "dynajs-inject": "./dynajs-inject"
   },
   "scripts": {
-    "clean": "rimraf ./dist",
-    "build": "npm run clean && tsc -b && node ./scripts/build-inject.mjs",
-    "build:inject": "node ./scripts/build-inject.mjs",
+    "clean": "npm-run-all clean:analyses clean:dynajs",
+    "clean:analyses": "rimraf ./analyses/dist",
+    "clean:dynajs": "rimraf ./dist",
+    "build": "npm run clean && tsc -b && npm run typecheck:analyses && npm run build:entry && npm run build:analysis",
+    "typecheck:analyses": "tsc -p ./analyses/tsconfig.json",
+    "build:analysis": "node ./scripts/build-analysis.mjs",
+    "build:entry": "node ./scripts/build-entry.mjs",
     "build:watch": "tsc -b -w",
     "start": "ts-node src",
     "start:watch": "nodemon src --watch src --watch samples -e ts,js --exec 'ts-node'",
     "sunspider": "npm run build && ./bench/run-sunspider-benchmark.sh",
     "format": "prettier --write . | grep -v '(unchanged)$'",
     "test": "",
-    "test:watch": ""
+    "test:watch": "",
+    "test:taint": "npm run build && node ./scripts/run-taint-tests.mjs"
   },
   "repository": {
     "type": "git",

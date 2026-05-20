@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------------------
 // analysis callback types
 
-import type { StringOps } from "../model/type.js";
+import type { SpecOps } from "../model/type.js";
 
 // -----------------------------------------------------------------------------
 type FullAnalysis = {
@@ -1018,9 +1018,7 @@ type FullAnalysis = {
     isDirect: boolean
   ) => { result: string | any } | void;
 
-  spec: {
-    stringOps: StringOps<unknown>;
-  },
+  spec: SpecOps;
 
   result: any;
 }

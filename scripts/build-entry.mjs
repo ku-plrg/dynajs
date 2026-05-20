@@ -1,4 +1,5 @@
 import { build } from "esbuild";
+import chalk from "chalk";
 
 const requireBanner = [
   'import { createRequire } from "node:module";',
@@ -28,6 +29,8 @@ for (const { entry, outfile } of entryPoints) {
     banner: {
       js: requireBanner,
     },
-    logLevel: "info",
+    logLevel: "warning",
   });
 }
+
+console.log(chalk.green(`✓ built ${entryPoints.length} entries`));

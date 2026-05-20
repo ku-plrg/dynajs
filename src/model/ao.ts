@@ -1,7 +1,7 @@
-import type { StringOps } from "./type.js";
+import type { SpecOps } from "./type.js";
 
 export class AO<Str> {
-  constructor(public strOps: StringOps<Str>) {
+  constructor(public specOps: SpecOps<Str, unknown, unknown, unknown, unknown>) {
 
   }
 
@@ -42,19 +42,19 @@ export class AO<Str> {
 
   StringIndexOf(string: Str, searchValue: Str, fromIndex: number): number | undefined {
     // 1. Let len be the length of string.
-    let len = this.strOps.length(string);
+    let len = this.specOps.str.length(string);
     // 2. If searchValue is the empty String and fromIndex ≤ len, return fromIndex.
-    if (this.strOps.is(searchValue, this.strOps.empty()) && fromIndex <= len) {
+    if (this.specOps.str.is(searchValue, this.specOps.str.empty()) && fromIndex <= len) {
       return fromIndex;
     }
     // 3. Let searchLen be the length of searchValue.
-    let searchLen = this.strOps.length(searchValue);
+    let searchLen = this.specOps.str.length(searchValue);
     // 4. For each integer i such that fromIndex ≤ i ≤ len - searchLen, in ascending order, do
     for (let i = fromIndex; i <= len - searchLen; i++) {
     //     a. Let candidate be the substring of string from i to i + searchLen.
-        let candidate = this.strOps.substring(string, i, i + searchLen);
+        let candidate = this.specOps.str.substring(string, i, i + searchLen);
     //     b. If candidate is searchValue, return i.
-        if (this.strOps.is(candidate, searchValue)) {
+        if (this.specOps.str.is(candidate, searchValue)) {
           return i;
         }
     }

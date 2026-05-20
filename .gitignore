@@ -29,7 +29,7 @@ lib/
 logs
 *.log
 *.xml
-*.json
+# *.json
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
