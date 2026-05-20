@@ -9,7 +9,7 @@ type Unpartial<T> = {
   [K in keyof T]-?: T[K];
 };
 
-export type CallbacksOnly = Omit<Analysis, 'result'>;
+export type CallbacksOnly = Omit<Analysis, 'result' | 'spec'>;
 
 export type CallbackHint = Record<keyof CallbacksOnly, boolean>;
 

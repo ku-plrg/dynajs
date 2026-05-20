@@ -1,5 +1,8 @@
 // -----------------------------------------------------------------------------
 // analysis callback types
+
+import type { StringOps } from "../model/type.js";
+
 // -----------------------------------------------------------------------------
 type FullAnalysis = {
   // ---------------------------------------------------------------------------
@@ -57,7 +60,7 @@ type FullAnalysis = {
     args: any,
     isConstructor: boolean,
     isMethod: boolean
-  ) => { f: any, base: any, args: any, skip: boolean } | void;
+  ) => { f: any, base: any, args: any, skip: boolean, preferModel: boolean } | void;
 
   /**
    * Called after a function returns (or is skipped via `invokeFunPre`).
@@ -1014,6 +1017,10 @@ type FullAnalysis = {
     code: string | any,
     isDirect: boolean
   ) => { result: string | any } | void;
+
+  spec: {
+    stringOps: StringOps<unknown>;
+  },
 
   result: any;
 }

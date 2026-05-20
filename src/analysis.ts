@@ -10,6 +10,7 @@ import * as utils from './utils.js';
 import * as spec from './spec.js';
 import { instrument } from './instrument/main.js';
 import { StateOption } from './instrument/state.js';
+import { SUPPORTED_BUILTINS } from './model/model.js';
 
 // sentinel symbol for optional chain short-circuit propagation
 const chainSkip = Symbol('D$.chainSkip');
@@ -212,18 +213,26 @@ function invokeFun(
 ) {
   let result: any;
   let skip = false;
+  let preferModel = false;
   const pre = D$.analysis.invokeFunPre?.(id, f, base, args, isConstructor, isMethod);
   if (pre) {
     f = pre.f;
     base = pre.base;
     args = pre.args;
     skip = pre.skip;
+    preferModel = pre.preferModel;
   }
+  console.log('DEBUG', 'dynajs', 'preferModel', preferModel);
   if (!skip) {
     if (f === FUNC_CONSTRUCTOR) {
       result = invokeFunctionConstructor(id, f, args);
     } else if (isConstructor) {
       result = construct(f, args);
+    } else if (preferModel && D$.analysis.spec && SUPPORTED_BUILTINS.has(f)) {
+      const model = SUPPORTED_BUILTINS.get(f)!;
+      console.log('DEBUG', 'dynajs', 'Invoking model for', f.name, { base, args });
+      result = model.call(undefined, D$.analysis.spec.stringOps, base, ...Array.from(args));
+      console.log('DEBUG', 'dynajs', 'Model result for', f.name, JSON.stringify(result).replaceAll('\n', '\\n'));
     } else {
       result = FUNC_CONSTRUCTOR.prototype.apply.call(f, base, args);
     }
