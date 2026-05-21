@@ -11,6 +11,7 @@ import * as spec from './spec.js';
 import { instrument } from './instrument/main.js';
 import { StateOption } from './instrument/state.js';
 import { Model } from './model/model.js';
+import { CAPTURED } from './captured.js';
 
 declare global { var D$: DynaJSType; };
 
@@ -184,9 +185,6 @@ function invokeTT(id: number, base: any, f: any, strings: any, values: any[], is
   return result;
 }
 
-const FUNC_CONSTRUCTOR = globalThis.Function;
-const INDIRECT_EVAL: typeof eval = globalThis.eval;
-
 // Instruments a `Function(...)`/`new Function(...)` call so that its body
 // participates in the analysis. The last argument is treated as the function
 // body and the preceding ones as parameter lists, matching the Function
@@ -201,7 +199,7 @@ function invokeFunctionConstructor(id: number, f: any, args: any): any {
   const wrapped = `(function anonymous(${paramList}) {\n${body}\n})`;
   const processed = Ev(id, wrapped, false);
   if (typeof processed !== 'string') return processed;
-  return INDIRECT_EVAL(processed);
+  return CAPTURED.IndirectEval(processed);
 }
 
 // helper function to invoke a function
@@ -225,7 +223,7 @@ function invokeFun(
     preferModel = pre.preferModel;
   }
   if (!skip) {
-    if (f === FUNC_CONSTRUCTOR) {
+    if (f === CAPTURED.FunctionConstructor) {
       result = invokeFunctionConstructor(id, f, args);
     } else if (isConstructor) {
       result = construct(f, args);
@@ -234,7 +232,7 @@ function invokeFun(
       const model = new Model(D$.analysis.spec);
       result = model.of(f)(base, ...Array.from(args));
     } else {
-      result = FUNC_CONSTRUCTOR.prototype.apply.call(f, base, args);
+      result = CAPTURED.FunctionConstructor.prototype.apply.call(f, base, args);
     }
   }
   const post = D$.analysis.invokeFun?.(id, f, base, args, result, isConstructor, isMethod);
