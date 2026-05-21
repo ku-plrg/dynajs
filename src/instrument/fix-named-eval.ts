@@ -26,6 +26,11 @@ function hasSelfBinding(func: acorn.FunctionExpression | acorn.ArrowFunctionExpr
   return func.type === 'FunctionExpression';
 }
 
+// temporal fix
+const TOP_PRIORITY_TARGETS = new Set([
+  'toString', 'valueOf'
+]);
+
 // A simple ASCII identifier check.  Names from non-identifier string literals (e.g.
 // "foo bar") cannot be used as function names in generated source.
 const IDENTIFIER_RE = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/;
@@ -93,8 +98,10 @@ export function fixNamedEvaluations(ast: acorn.Node): void {
         // an unresolvable free variable inside the body.  Only apply for FunctionExpression.
         if (!hasSelfBinding(value)) return;
         if (key.type === 'Identifier') {
+          if (!TOP_PRIORITY_TARGETS.has(key.name)) return;
           applyNamedEvaluation(value, key.name);
         } else if (key.type === 'Literal' && typeof key.value === 'string' && isIdentifier(key.value)) {
+          if (!TOP_PRIORITY_TARGETS.has(key.value)) return;
           applyNamedEvaluation(value, key.value);
         }
       }
@@ -115,6 +122,7 @@ export function fixNamedEvaluations(ast: acorn.Node): void {
           // The property name is NOT a variable binding, so only FunctionExpression is safe.
           if (!hasSelfBinding(func)) return;
           const name = ((left as acorn.MemberExpression).property as acorn.Identifier).name;
+          if (!TOP_PRIORITY_TARGETS.has(name)) return;
           if (isIdentifier(name)) applyNamedEvaluation(func, name);
         }
       }
