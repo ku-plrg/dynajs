@@ -12,9 +12,10 @@ export class StringModel<Str> {
     at(base: Str, index: any): Str | undefined {
 
         // 1. Let O be ? RequireObjectCoercible(this value).
-        this.ao.RequireObjectCoercible(base);
+        // TODO this should be '.peek'ed before coercion
+        const O = this.ao.RequireObjectCoercible(base);
         // 2. Let S be ? ToString(O).
-        const S = base; // ???
+        const S = O; // ???
         // 3. Let len be the length of S.
         const len = this.specOps.str.length(S);
         // 4. Let relativeIndex be ? ToIntegerOrInfinity(index).

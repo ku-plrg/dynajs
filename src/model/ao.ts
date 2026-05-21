@@ -5,15 +5,27 @@ export class AO<Str> {
 
   }
 
-  RequireObjectCoercible(value: any): void {
+  RequireObjectCoercible<T>(value: T): NonNullable<T> {
     if (value === null || value === undefined) {
       throw new TypeError('Cannot convert undefined or null to object');
     }
+    return value;
   }
 
   ToIntegerOrInfinity(value: unknown): number {
-    // TODO
-    return this.ToNumber(value) as number;
+    // 1. Let number be ? ToNumber(argument).
+    const number = this.ToNumber(value);
+    // 2. If number is one of NaN, +0𝔽, or -0𝔽, return 0.
+    if (number !== number || number === 0) {
+      return 0;
+    }
+    // 3. If number is +∞𝔽, return +∞.
+    // 4. If number is -∞𝔽, return -∞.
+    if (number === Infinity || number === -Infinity) {
+      return number;
+    }
+    // 5. Return truncate(ℝ(number)).
+    return Math.trunc(number);
   }
 
   ToNumber(value: unknown): number {
@@ -22,6 +34,7 @@ export class AO<Str> {
   }
 
   ToString(value: unknown): string {
+    if (typeof value === 'symbol') { throw new TypeError('Cannot convert a Symbol value to a string'); }
     return String(new String(value));
   }
 
