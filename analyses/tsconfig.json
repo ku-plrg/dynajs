@@ -5,8 +5,9 @@
     "noEmit": true,
     "paths": {
       "@/*": ["../src/*"],
-      "@taint/*": ["./taint/*"],
-      "@concolic/*": ["./concolic/*"]
+      "@taint/*": ["./taint/src/*"],
+      "@concolic/*": ["./concolic/src/*"],
+      "@flow/*": ["./flow/src/*"]
     }
   },
   "include": ["."]

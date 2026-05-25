@@ -67,14 +67,6 @@ export function __assert__(v: unknown): void {
   throw new Error("Assertion failed");
 }
 
-export const taintState = {
-  snapshot(): number[] {
-    const out: number[] = [];
-    for (const [id, t] of taintMap) if (t) out.push(id);
-    return out;
-  },
-};
-
 export function installPrelude(): void {
   const g = globalThis as Record<string, unknown>;
   g.__set_taint__ = __set_taint__;
