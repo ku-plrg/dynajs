@@ -60,7 +60,7 @@ type FullAnalysis = {
     args: any,
     isConstructor: boolean,
     isMethod: boolean
-  ) => { f: any, base: any, args: any, skip: boolean, preferModel: boolean } | void;
+  ) => { f: any, base: any, args: any, skip: boolean, preferModel: boolean, frame?: unknown } | void;
 
   /**
    * Called after a function returns (or is skipped via `invokeFunPre`).
@@ -84,7 +84,8 @@ type FullAnalysis = {
     args: any,
     result: any,
     isConstructor: boolean,
-    isMethod: boolean
+    isMethod: boolean,
+    frame?: unknown
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
@@ -110,7 +111,7 @@ type FullAnalysis = {
     strings: any,
     values: any[],
     isMethod: boolean
-  ) => { f: any, base: any, strings: any, values: any[], skip: boolean } | void;
+  ) => { f: any, base: any, strings: any, values: any[], skip: boolean, frame?: unknown } | void;
 
   /**
    * Called after a tagged template literal returns.
@@ -132,7 +133,8 @@ type FullAnalysis = {
     strings: any,
     values: any[],
     result: any,
-    isMethod: boolean
+    isMethod: boolean,
+    frame?: unknown
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
@@ -156,7 +158,7 @@ type FullAnalysis = {
     id: number,
     left: any,
     right: any
-  ) => { left: any, right: any, skip: boolean } | void;
+  ) => { left: any, right: any, skip: boolean, frame?: unknown } | void;
 
   /**
    * Called after each binary concatenation step inside a template literal
@@ -172,7 +174,8 @@ type FullAnalysis = {
     id: number,
     left: any,
     right: any,
-    result: any
+    result: any,
+    frame?: unknown
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
@@ -283,7 +286,7 @@ type FullAnalysis = {
     id: number,
     base: any,
     prop: any
-  ) => { base: any, prop: any, skip: boolean } | void;
+  ) => { base: any, prop: any, skip: boolean, frame?: unknown } | void;
 
   /**
    * Called after a property read completes (or is skipped).
@@ -300,7 +303,8 @@ type FullAnalysis = {
     id: number,
     base: any,
     prop: any,
-    result: any
+    result: any,
+    frame?: unknown
   ) => { result: any } | void;
 
   /**
@@ -318,7 +322,7 @@ type FullAnalysis = {
     base: any,
     prop: any,
     value: any
-  ) => { base: any, prop: any, value: any, skip: boolean } | void;
+  ) => { base: any, prop: any, value: any, skip: boolean, frame?: unknown } | void;
 
   /**
    * Called after a property write completes.
@@ -335,7 +339,8 @@ type FullAnalysis = {
     id: number,
     base: any,
     prop: any,
-    value: any
+    value: any,
+    frame?: unknown
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
@@ -397,7 +402,7 @@ type FullAnalysis = {
     op: string,
     prefix: boolean,
     operand: any
-  ) => { op: string, operand: any, skip: boolean } | void;
+  ) => { op: string, operand: any, skip: boolean, frame?: unknown } | void;
 
   /**
    * Called **after** any unary operation. Fires for every unary operator.
@@ -418,7 +423,8 @@ type FullAnalysis = {
     op: string,
     prefix: boolean,
     operand: any,
-    result: any
+    result: any,
+    frame?: unknown
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
@@ -426,34 +432,34 @@ type FullAnalysis = {
   // ---------------------------------------------------------------------------
 
   /** Pre-callback for arithmetic unary operators (`+`, `-`). Fires after {@link unaryPre}; result takes precedence. */
-  arithmeticUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean } | void;
+  arithmeticUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean, frame?: unknown } | void;
   /** Post-callback for arithmetic unary operators (`+`, `-`). Fires after {@link unary}; result takes precedence. */
-  arithmeticUnary: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
+  arithmeticUnary: (id: number, op: string, prefix: boolean, operand: any, result: any, frame?: unknown) => { result: any } | void;
 
   /** Pre-callback for logical unary operator (`!`). Fires after {@link unaryPre}; result takes precedence. */
-  logicalUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean } | void;
+  logicalUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean, frame?: unknown } | void;
   /** Post-callback for logical unary operator (`!`). Fires after {@link unary}; result takes precedence. */
-  logicalUnary: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
+  logicalUnary: (id: number, op: string, prefix: boolean, operand: any, result: any, frame?: unknown) => { result: any } | void;
 
   /** Pre-callback for bitwise unary operator (`~`). Fires after {@link unaryPre}; result takes precedence. */
-  bitwiseUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean } | void;
+  bitwiseUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean, frame?: unknown } | void;
   /** Post-callback for bitwise unary operator (`~`). Fires after {@link unary}; result takes precedence. */
-  bitwiseUnary: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
+  bitwiseUnary: (id: number, op: string, prefix: boolean, operand: any, result: any, frame?: unknown) => { result: any } | void;
 
   /** Pre-callback for `typeof` operator. Fires after {@link unaryPre}; result takes precedence. */
-  typeofUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean } | void;
+  typeofUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean, frame?: unknown } | void;
   /** Post-callback for `typeof` operator. Fires after {@link unary}; result takes precedence. */
-  typeofUnary: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
+  typeofUnary: (id: number, op: string, prefix: boolean, operand: any, result: any, frame?: unknown) => { result: any } | void;
 
   /** Pre-callback for `void` operator. Fires after {@link unaryPre}; result takes precedence. */
-  voidUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean } | void;
+  voidUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean, frame?: unknown } | void;
   /** Post-callback for `void` operator. Fires after {@link unary}; result takes precedence. */
-  voidUnary: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
+  voidUnary: (id: number, op: string, prefix: boolean, operand: any, result: any, frame?: unknown) => { result: any } | void;
 
   /** Pre-callback for update operators (`++`, `--`). Fires after {@link unaryPre}; result takes precedence. */
-  updateUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean } | void;
+  updateUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean, frame?: unknown } | void;
   /** Post-callback for update operators (`++`, `--`). Fires after {@link unary}; result takes precedence. */
-  updateUnary: (id: number, op: string, prefix: boolean, operand: any, result: any) => { result: any } | void;
+  updateUnary: (id: number, op: string, prefix: boolean, operand: any, result: any, frame?: unknown) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
   // Binary operations — general callback
@@ -482,7 +488,7 @@ type FullAnalysis = {
     op: string,
     left: any,
     right: any
-  ) => { op: string, left: any, right: any, skip: boolean } | void;
+  ) => { op: string, left: any, right: any, skip: boolean, frame?: unknown } | void;
 
   /**
    * Called **after** any binary operation. Fires for every binary operator.
@@ -503,7 +509,8 @@ type FullAnalysis = {
     op: string,
     left: any,
     right: any,
-    result: any
+    result: any,
+    frame?: unknown
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
@@ -519,7 +526,7 @@ type FullAnalysis = {
     op: string,
     left: any,
     right: any
-  ) => { op: string, left: any, right: any, skip: boolean } | void;
+  ) => { op: string, left: any, right: any, skip: boolean, frame?: unknown } | void;
 
   /**
    * Post-callback for arithmetic binary operators (`+`, `-`, `*`, `/`, `%`, `**`).
@@ -530,7 +537,8 @@ type FullAnalysis = {
     op: string,
     left: any,
     right: any,
-    result: any
+    result: any,
+    frame?: unknown
   ) => { result: any } | void;
 
   /**
@@ -542,7 +550,7 @@ type FullAnalysis = {
     op: string,
     left: any,
     right: any
-  ) => { op: string, left: any, right: any, skip: boolean } | void;
+  ) => { op: string, left: any, right: any, skip: boolean, frame?: unknown } | void;
 
   /**
    * Post-callback for comparison operators (`==`, `!=`, `===`, `!==`, `<`, `<=`, `>`, `>=`, `in`, `instanceof`).
@@ -553,7 +561,8 @@ type FullAnalysis = {
     op: string,
     left: any,
     right: any,
-    result: any
+    result: any,
+    frame?: unknown
   ) => { result: any } | void;
 
   /**
@@ -565,7 +574,7 @@ type FullAnalysis = {
     op: string,
     left: any,
     right: any
-  ) => { op: string, left: any, right: any, skip: boolean } | void;
+  ) => { op: string, left: any, right: any, skip: boolean, frame?: unknown } | void;
 
   /**
    * Post-callback for bitwise binary operators (`&`, `|`, `^`, `<<`, `>>`, `>>>`).
@@ -576,7 +585,8 @@ type FullAnalysis = {
     op: string,
     left: any,
     right: any,
-    result: any
+    result: any,
+    frame?: unknown
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------

@@ -146,6 +146,8 @@ function invokeTT(id: number, base: any, f: any, strings: any, values: any[], is
   let result: any;
   let skip = false;
   let args: any[] = [strings, ...values];
+  let generalFrame: unknown;
+  let specificFrame: unknown;
 
   // General hook fires first
   const generalPre = D$.analysis.invokeFunPre?.(id, f, base, args, false, isMethod);
@@ -154,6 +156,7 @@ function invokeTT(id: number, base: any, f: any, strings: any, values: any[], is
     base = generalPre.base;
     args = generalPre.args;
     skip = generalPre.skip;
+    generalFrame = generalPre.frame;
     strings = args[0];
     values = args.slice(1);
   }
@@ -166,6 +169,7 @@ function invokeTT(id: number, base: any, f: any, strings: any, values: any[], is
     strings = specificPre.strings;
     values = specificPre.values;
     skip = specificPre.skip;
+    specificFrame = specificPre.frame;
   }
 
   if (!skip) {
@@ -175,11 +179,11 @@ function invokeTT(id: number, base: any, f: any, strings: any, values: any[], is
   args = [strings, ...values];
 
   // General post-hook fires first
-  const generalPost = D$.analysis.invokeFun?.(id, f, base, args, result, false, isMethod);
+  const generalPost = D$.analysis.invokeFun?.(id, f, base, args, result, false, isMethod, generalFrame);
   if (generalPost) result = generalPost.result;
 
   // Specific post-hook fires second and wins
-  const specificPost = D$.analysis.taggedTemplate?.(id, f, base, strings, values, result, isMethod);
+  const specificPost = D$.analysis.taggedTemplate?.(id, f, base, strings, values, result, isMethod, specificFrame);
   if (specificPost) result = specificPost.result;
 
   return result;
@@ -214,6 +218,7 @@ function invokeFun(
   let result: any;
   let skip = false;
   let preferModel = false;
+  let frame: unknown;
   const pre = D$.analysis.invokeFunPre?.(id, f, base, args, isConstructor, isMethod);
   if (pre) {
     f = pre.f;
@@ -221,6 +226,7 @@ function invokeFun(
     args = pre.args;
     skip = pre.skip;
     preferModel = pre.preferModel;
+    frame = pre.frame;
   }
   if (!skip) {
     if (f === CAPTURED.FunctionConstructor) {
@@ -235,7 +241,7 @@ function invokeFun(
       result = CAPTURED.FunctionConstructor.prototype.apply.call(f, base, args);
     }
   }
-  const post = D$.analysis.invokeFun?.(id, f, base, args, result, isConstructor, isMethod);
+  const post = D$.analysis.invokeFun?.(id, f, base, args, result, isConstructor, isMethod, frame);
   if (post) result = post.result;
   return result;
 }
@@ -315,11 +321,13 @@ function G(id: number, base: any, prop: any, optional: boolean = false): any {
   }
   let skip = false;
   let value;
+  let frame: unknown;
   const pre = D$.analysis.getFieldPre?.(id, base, prop);
   if (pre) {
     base = pre.base;
     prop = pre.prop;
     skip = pre.skip;
+    frame = pre.frame;
   }
   if (!skip) {
     value = base[prop];
@@ -328,7 +336,7 @@ function G(id: number, base: any, prop: any, optional: boolean = false): any {
   const generalPost = D$.analysis.memoryAccess?.(id, value);
   if (generalPost) value = generalPost.result;
   // specific getField fires second and wins
-  const post = D$.analysis.getField?.(id, base, prop, value);
+  const post = D$.analysis.getField?.(id, base, prop, value, frame);
   if (post) {
     value = post.result;
   }
@@ -349,18 +357,20 @@ function Gp(
   }
   let skip = false;
   let value;
+  let frame: unknown;
   const pre = D$.analysis.getFieldPre?.(id, base, prop);
   if (pre) {
     base = pre.base;
     prop = pre.prop;
     skip = pre.skip;
+    frame = pre.frame;
   }
   if (!skip) {
     value = getter(base);
   }
   const generalPost = D$.analysis.memoryAccess?.(id, value);
   if (generalPost) value = generalPost.result;
-  const post = D$.analysis.getField?.(id, base, prop, value);
+  const post = D$.analysis.getField?.(id, base, prop, value, frame);
   if (post) {
     value = post.result;
   }
@@ -370,12 +380,14 @@ function Gp(
 // hook for property writes (set-field)
 function P(id: number, base: any, prop: any, value: any, strict: boolean = false): any {
   let skip = false;
+  let frame: unknown;
   const pre = D$.analysis.putFieldPre?.(id, base, prop, value);
   if (pre) {
     base = pre.base;
     prop = pre.prop;
     value = pre.value;
     skip = pre.skip;
+    frame = pre.frame;
   }
   if (!skip) {
     if (strict || base === null || base === undefined) {
@@ -390,7 +402,7 @@ function P(id: number, base: any, prop: any, value: any, strict: boolean = false
   const generalPost = D$.analysis.memoryWrite?.(id, value);
   if (generalPost) value = generalPost.result;
   // specific putField fires second and wins
-  const post = D$.analysis.putField?.(id, base, prop, value);
+  const post = D$.analysis.putField?.(id, base, prop, value, frame);
   if (post) {
     value = post.result;
   }
@@ -405,19 +417,21 @@ function Pp(
   writer: (base: any, value: any) => any,
 ): any {
   let skip = false;
+  let frame: unknown;
   const pre = D$.analysis.putFieldPre?.(id, base, prop, value);
   if (pre) {
     base = pre.base;
     prop = pre.prop;
     value = pre.value;
     skip = pre.skip;
+    frame = pre.frame;
   }
   if (!skip) {
     writer(base, value);
   }
   const generalPost = D$.analysis.memoryWrite?.(id, value);
   if (generalPost) value = generalPost.result;
-  const post = D$.analysis.putField?.(id, base, prop, value);
+  const post = D$.analysis.putField?.(id, base, prop, value, frame);
   if (post) {
     value = post.result;
   }
@@ -466,12 +480,15 @@ function De(id: number, base: any, prop: any, optional: boolean = false): any {
 function U(id: number, op: string, operand: any): any {
   let value;
   let skip = false;
+  let frame: unknown;
+  let specificFrame: unknown;
   // general pre fires first
   const pre = D$.analysis.unaryPre?.(id, op, true, operand);
   if (pre) {
     op = pre.op;
     operand = pre.operand;
     skip = pre.skip;
+    frame = pre.frame;
   }
   // specific pre fires second and wins
   const specificPre = fireSpecificUnaryPre(id, op, true, operand);
@@ -479,6 +496,7 @@ function U(id: number, op: string, operand: any): any {
     op = specificPre.op;
     operand = specificPre.operand;
     skip = specificPre.skip;
+    specificFrame = specificPre.frame;
   }
   const f = UNARY_OPS[op];
   if (!f) {
@@ -488,12 +506,12 @@ function U(id: number, op: string, operand: any): any {
     value = f(operand)
   }
   // general post fires first
-  const post = D$.analysis.unary?.(id, op, true, operand, value);
+  const post = D$.analysis.unary?.(id, op, true, operand, value, frame);
   if (post) {
     value = post.result;
   }
   // specific post fires second and wins
-  const specificPost = fireSpecificUnary(id, op, true, operand, value);
+  const specificPost = fireSpecificUnary(id, op, true, operand, value, specificFrame);
   if (specificPost) {
     value = specificPost.result;
   }
@@ -509,7 +527,7 @@ const UNARY_OPS: { [op: string]: (a: any) => any } = {
 }
 
 // helpers to fire specific binary pre/post callbacks based on op
-function fireSpecificBinaryPre(id: number, op: string, left: any, right: any): { op: string, left: any, right: any, skip: boolean } | undefined {
+function fireSpecificBinaryPre(id: number, op: string, left: any, right: any): { op: string, left: any, right: any, skip: boolean, frame?: unknown } | undefined {
   let cb: keyof Analysis | undefined;
   if (ARITHMETIC_BINARY_OPS.has(op)) cb = 'arithmeticBinaryPre';
   else if (COMPARISON_BINARY_OPS.has(op)) cb = 'comparisonBinaryPre';
@@ -517,16 +535,16 @@ function fireSpecificBinaryPre(id: number, op: string, left: any, right: any): {
   if (!cb) return undefined;
   return (D$.analysis[cb] as any)?.(id, op, left, right);
 }
-function fireSpecificBinary(id: number, op: string, left: any, right: any, value: any): { result: any } | undefined {
+function fireSpecificBinary(id: number, op: string, left: any, right: any, value: any, frame?: unknown): { result: any } | undefined {
   let cb: keyof Analysis | undefined;
   if (ARITHMETIC_BINARY_OPS.has(op)) cb = 'arithmeticBinary';
   else if (COMPARISON_BINARY_OPS.has(op)) cb = 'comparisonBinary';
   else if (BITWISE_BINARY_OPS.has(op)) cb = 'bitwiseBinary';
   if (!cb) return undefined;
-  return (D$.analysis[cb] as any)?.(id, op, left, right, value);
+  return (D$.analysis[cb] as any)?.(id, op, left, right, value, frame);
 }
 // helpers to fire specific unary pre/post callbacks based on op
-function fireSpecificUnaryPre(id: number, op: string, prefix: boolean, operand: any): { op: string, operand: any, skip: boolean } | undefined {
+function fireSpecificUnaryPre(id: number, op: string, prefix: boolean, operand: any): { op: string, operand: any, skip: boolean, frame?: unknown } | undefined {
   let cb: keyof Analysis | undefined;
   if (ARITHMETIC_UNARY_OPS.has(op)) cb = 'arithmeticUnaryPre';
   else if (op === '!') cb = 'logicalUnaryPre';
@@ -537,7 +555,7 @@ function fireSpecificUnaryPre(id: number, op: string, prefix: boolean, operand: 
   if (!cb) return undefined;
   return (D$.analysis[cb] as any)?.(id, op, prefix, operand);
 }
-function fireSpecificUnary(id: number, op: string, prefix: boolean, operand: any, value: any): { result: any } | undefined {
+function fireSpecificUnary(id: number, op: string, prefix: boolean, operand: any, value: any, frame?: unknown): { result: any } | undefined {
   let cb: keyof Analysis | undefined;
   if (ARITHMETIC_UNARY_OPS.has(op)) cb = 'arithmeticUnary';
   else if (op === '!') cb = 'logicalUnary';
@@ -546,13 +564,15 @@ function fireSpecificUnary(id: number, op: string, prefix: boolean, operand: any
   else if (op === 'void') cb = 'voidUnary';
   else if (UPDATE_UNARY_OPS.has(op)) cb = 'updateUnary';
   if (!cb) return undefined;
-  return (D$.analysis[cb] as any)?.(id, op, prefix, operand, value);
+  return (D$.analysis[cb] as any)?.(id, op, prefix, operand, value, frame);
 }
 
 // hook for the end of an expression
 function B(id: number, op: string, left: any, right: any): any {
   let value;
   let skip = false;
+  let frame: unknown;
+  let specificFrame: unknown;
   // general pre fires first
   const pre = D$.analysis.binaryPre?.(id, op, left, right);
   if (pre) {
@@ -560,6 +580,7 @@ function B(id: number, op: string, left: any, right: any): any {
     left = pre.left;
     right = pre.right;
     skip = pre.skip;
+    frame = pre.frame;
   }
   // specific pre fires second and wins
   const specificPre = fireSpecificBinaryPre(id, op, left, right);
@@ -568,6 +589,7 @@ function B(id: number, op: string, left: any, right: any): any {
     left = specificPre.left;
     right = specificPre.right;
     skip = specificPre.skip;
+    specificFrame = specificPre.frame;
   }
   const f = BINARY_OPS[op];
   if (!f) {
@@ -577,10 +599,10 @@ function B(id: number, op: string, left: any, right: any): any {
     value = f(left, right)
   }
   // general post fires first
-  const post = D$.analysis.binary?.(id, op, left, right, value);
+  const post = D$.analysis.binary?.(id, op, left, right, value, frame);
   if (post) value = post.result;
   // specific post fires second and wins
-  const specificPost = fireSpecificBinary(id, op, left, right, value);
+  const specificPost = fireSpecificBinary(id, op, left, right, value, specificFrame);
   if (specificPost) value = specificPost.result;
   return value;
 }
@@ -735,17 +757,19 @@ function TL(id: number, base: any, expr: any, quasi: string): any {
 
 function templateConcatStep(id: number, left: any, right: any): any {
   let skip = false;
+  let frame: unknown;
   const pre = D$.analysis.templateConcatPre?.(id, left, right);
   if (pre) {
     left = pre.left;
     right = pre.right;
     skip = pre.skip;
+    frame = pre.frame;
   }
   let result: any;
   if (!skip) {
     result = left + spec.ToString(right);
   }
-  const post = D$.analysis.templateConcat?.(id, left, right, result);
+  const post = D$.analysis.templateConcat?.(id, left, right, result, frame);
   if (post) result = post.result;
   return result;
 }

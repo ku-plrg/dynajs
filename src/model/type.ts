@@ -3,6 +3,8 @@ interface WrapperOps<W, T> {
 }
 
 export interface SpecOps<Str = unknown, Num = unknown, Bool = unknown, Arr = unknown, Elem = unknown> {
+  base: (v: any, parent: any[]) => any;
+  peek: (wrapped: any) => any;
   str: StringOps<Str>;
 }
 
