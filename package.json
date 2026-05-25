@@ -12,7 +12,7 @@
     "clean": "npm-run-all clean:analyses clean:dynajs",
     "clean:analyses": "rimraf ./analyses/dist",
     "clean:dynajs": "rimraf ./dist",
-    "build": "npm run clean && tsc -b && npm run typecheck:analyses && npm run build:entry && npm run build:analysis",
+    "build": "tsc -b && npm run typecheck:analyses && npm run build:entry && npm run build:analysis",
     "typecheck:analyses": "tsc -p ./analyses/tsconfig.json",
     "build:analysis": "node ./scripts/build-analysis.mjs",
     "build:entry": "node ./scripts/build-entry.mjs",

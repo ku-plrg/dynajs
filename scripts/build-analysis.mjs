@@ -1,6 +1,11 @@
 import { build } from "esbuild";
 import chalk from "chalk";
 
+const requireBanner = [
+  'import { createRequire } from "node:module";',
+  "const require = createRequire(import.meta.url);",
+].join("\n");
+
 const entryPoints = [
   {
     entry: "analyses/taint/src/index.ts",
@@ -21,6 +26,9 @@ for (const { entry, outfile } of entryPoints) {
     platform: "node",
     target: "node20",
     packages: "bundle",
+    banner: {
+      js: requireBanner,
+    },
     tsconfig: "./analyses/tsconfig.json",
     logLevel: "warning",
   });
