@@ -12,8 +12,7 @@ Se() @ 1:1-5:1
   G[pre](<object>, "foo") @ 4:1-8
   G(<object>, "foo", <function>) @ 4:1-8
   F[pre](<function>, <object>, [], false, true) @ 4:1-8
-  Fe(<function>, <object>, []) @ 3:11-25
-    D(foo, <function>, <function>, false) @ 3:11-25
+  Fe(null, <object>, []) @ 3:11-25
     D(arguments, <arguments>, <object>, false) @ 3:11-25
   Fx(undefined) @ 3:11-25
   F(<function>, <object>, [], undefined, false, true) @ 4:1-8
