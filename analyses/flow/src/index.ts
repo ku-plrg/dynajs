@@ -1,7 +1,7 @@
 import type { Analysis } from "@/types/analysis.js";
 import type { SpecOps } from "@/model/type.js";
 
-type Frame = BinFrame | UnFrame | OpaqueCall;
+type Frame = BinFrame | UnFrame | CallFrame;
 export type BinFrame = { ty: 'bin'; op: string; left: unknown; right: unknown };
 export type UnFrame  = { ty: 'un'; op: string; operand: unknown };
 
@@ -20,6 +20,15 @@ export abstract class FlowAnalysis implements Analysis {
       }
       case 'un': {
         const parents = [frame.operand];
+        return this.spec.base(result, parents);
+      }
+      case 'opaque': {
+        const parents = frame.entries;
+        return this.spec.base(result, parents);
+      }
+      case 'transparent': {
+        // CHECK isn't this already handled by the callee?
+        const parents = frame.entries;
         return this.spec.base(result, parents);
       }
     }
@@ -59,10 +68,10 @@ export abstract class FlowAnalysis implements Analysis {
       // TODO : use model
       return { skip: false, f: _f, base: _base, args: unwrappedArgs, preferModel: false, frame: { ty: 'opaque', entries: args } };
     }
-    return { skip: false, f: _f, base: _base, args, preferModel: false, frame: undefined };
+    return { skip: false, f: _f, base: _base, args, preferModel: false, frame: { ty: 'transparent', entries: args } };
   }
 
   invokeFun(_id: number, _f: any, _base: any, _args: any, result: any, _isConstructor: boolean, _isMethod: boolean, frame?: unknown) {
-    return { result: this.propagate(frame as OpaqueCall, result) };
+    return { result: this.propagate(frame as CallFrame, result) };
   }
 }
