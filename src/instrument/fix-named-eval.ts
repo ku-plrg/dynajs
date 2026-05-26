@@ -26,6 +26,18 @@ function hasSelfBinding(func: acorn.FunctionExpression | acorn.ArrowFunctionExpr
   return func.type === 'FunctionExpression';
 }
 
+function referencesName(node: acorn.Node, name: string): boolean {
+  let found = false;
+  simple(node, {
+    Identifier(identifier) {
+      if ((identifier as acorn.Identifier).name === name) {
+        found = true;
+      }
+    },
+  });
+  return found;
+}
+
 // temporal fix
 const TOP_PRIORITY_TARGETS = new Set([
   'toString', 'valueOf'
@@ -87,6 +99,7 @@ export function fixNamedEvaluations(ast: acorn.Node): void {
     VariableDeclarator(node) {
       const { id, init } = node as acorn.VariableDeclarator;
       if (init != null && id.type === 'Identifier' && isFuncExpr(init)) {
+        if (hasSelfBinding(init) && referencesName(init.body as acorn.Node, id.name)) return;
         applyNamedEvaluation(init, id.name);
       }
     },
