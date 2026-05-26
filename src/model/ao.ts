@@ -1,7 +1,7 @@
-import type { SpecOps } from "./type.js";
+import type { SpecOps, Wrapped, Unwrapped } from "./type.js";
 
-export class AO<Str> {
-  constructor(public specOps: SpecOps<Str, unknown, unknown, unknown, unknown>) {
+export class AO {
+  constructor(public specOps: SpecOps) {
 
   }
 
@@ -35,7 +35,7 @@ export class AO<Str> {
 
   ToString(value: unknown): string {
     if (typeof value === 'symbol') { throw new TypeError('Cannot convert a Symbol value to a string'); }
-    return String(new String(value));
+    return String(value);
   }
 
   ToUint32(value: unknown): number {
@@ -53,21 +53,26 @@ export class AO<Str> {
     return int32bit;
   }
 
-  StringIndexOf(string: Str, searchValue: Str, fromIndex: number): number | undefined {
+  StringIndexOf(string: Wrapped<string>, searchValue: Wrapped<string>, fromIndex: number): number | undefined {
     // 1. Let len be the length of string.
-    let len = this.specOps.str.length(string);
+    let len = this.specOps.peek(string).length; // ???
     // 2. If searchValue is the empty String and fromIndex ≤ len, return fromIndex.
-    if (this.specOps.str.is(searchValue, this.specOps.str.empty()) && fromIndex <= len) {
+    const empty = this.specOps.base('', []);
+    const searchValueStr = this.specOps.peek(searchValue);
+    if (searchValueStr === '' && fromIndex <= len) {
       return fromIndex;
     }
     // 3. Let searchLen be the length of searchValue.
-    let searchLen = this.specOps.str.length(searchValue);
+    let searchLen = this.specOps.peek(searchValue).length; // ???
     // 4. For each integer i such that fromIndex ≤ i ≤ len - searchLen, in ascending order, do
     for (let i = fromIndex; i <= len - searchLen; i++) {
     //     a. Let candidate be the substring of string from i to i + searchLen.
-        let candidate = this.specOps.str.substring(string, i, i + searchLen);
+        let candidate = this.specOps.substring(string, this.specOps.base(i, []), this.specOps.base(i + searchLen, []));
     //     b. If candidate is searchValue, return i.
-        if (this.specOps.str.is(candidate, searchValue)) {
+        const left = this.specOps.peek(candidate);
+        const right = this.specOps.peek(searchValue);
+        // TODO this should be .is instead of ===?
+        if (left === right) {
           return i;
         }
     }

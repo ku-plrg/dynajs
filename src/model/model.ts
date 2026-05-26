@@ -1,7 +1,7 @@
 import type { SpecOps } from './type.js';
 import { StringModel } from './string.js';
 
-export class Model<Str>{
+export class Model {
 
   // --- static properties and methods ---
   static SUPPORTED_BUILTINS = new Set<Function>([
@@ -14,12 +14,10 @@ export class Model<Str>{
 
   // --- instance properties and methods ---
   
-  String: StringModel<Str>;
+  String: StringModel;
 
-  constructor(
-    specOps: SpecOps<Str, unknown, unknown, unknown, unknown>
-  ) {
-    this.String = new StringModel<Str>(specOps);
+  constructor(specOps: SpecOps) {
+    this.String = new StringModel(specOps);
   }
 
   of(f: Function): Function {

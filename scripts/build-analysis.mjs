@@ -9,11 +9,11 @@ const requireBanner = [
 const entryPoints = [
   {
     entry: "analyses/taint/src/index.ts",
-    outfile: "analyses/dist/Taint.js",
+    outfile: "analyses/dist/Taint.mjs",
   },
   {
     entry: "analyses/concolic/src/index.ts",
-    outfile: "analyses/dist/Concolic.js",
+    outfile: "analyses/dist/Concolic.mjs",
   },
 ];
 
@@ -22,7 +22,7 @@ for (const { entry, outfile } of entryPoints) {
     entryPoints: [entry],
     outfile,
     bundle: true,
-    format: "cjs",
+    format: "esm",
     platform: "node",
     target: "node20",
     packages: "bundle",

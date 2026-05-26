@@ -16,9 +16,13 @@ export function checkAnalysisHooks(fullOpt: boolean): CallbackHint | undefined {
       live.add(k);
     }
   }
+  const unknown: string[] = [];
   for (const maybeCallbackName of live) {
     if (validKeys.includes(maybeCallbackName as keyof CallbackHint)) { tags[maybeCallbackName as keyof CallbackHint] = true; }
-    else { warn(`unknown analysis callback name \`${maybeCallbackName}\` detected. Is this a typo?`); }
+    else { unknown.push(maybeCallbackName); }
+  }
+  if (unknown.length > 0) {
+    warn(`unknown analysis callback name(s) detected: ${unknown.map((n) => `\`${n}\``).join(", ")}. Typo?`);
   }
   return tags;
 }

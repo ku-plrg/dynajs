@@ -8,7 +8,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, "..");
 const testRoot = path.join(repoRoot, "analyses", "taint", "test");
 const dynajs = path.join(repoRoot, "dynajs");
-const analysis = path.join(repoRoot, "analyses", "dist", "Taint.js");
+const analysis = path.join(repoRoot, "analyses", "dist", "Taint.mjs");
 
 if (!fs.existsSync(analysis)) {
   console.error(chalk.red(`missing built analysis at ${analysis}. Run \`npm run build\` first.`));

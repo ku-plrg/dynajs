@@ -1,24 +1,22 @@
-interface WrapperOps<W, T> {
-  peek: <W, T>(wrapper: W) => T;
+declare const WrappedValueBrand: unique symbol;
+
+export type Wrapped<T = unknown> = T & { readonly [WrappedValueBrand]: true; };
+
+export type Unwrapped<T = unknown> = T & { readonly [WrappedValueBrand]: false; };
+
+// Primitives are (implicit) subtype of unwrapped, but unwrapped is not necessarily primitive (e.g. it can be an object that has been unwrapped)
+export type Primitive = string | number | boolean | bigint | symbol | null | undefined;
+
+type Entry<Info> = { value: unknown; info: Info };
+
+export interface SpecOps extends StringOps {
+  // default propagation: unwrapped -> wrapped
+  base: <T extends Unwrapped | Primitive>(v: T, parent: Wrapped[]) => Wrapped<T>;
+  // wrapped -> unwrapped
+  peek: <T>(wrapped: Wrapped<T>) => Unwrapped<T>;
 }
 
-export interface SpecOps<Str = unknown, Num = unknown, Bool = unknown, Arr = unknown, Elem = unknown> {
-  base: (v: any, parent: any[]) => any;
-  peek: (wrapped: any) => any;
-  str: StringOps<Str>;
-}
-
-interface StringOps<Str> {
-  length: (s: Str) => number;
-  substring: (s: Str, start: number, end: number) => Str;
-  concatenate: (s1: Str, s2: Str) => Str;
-  is: (l: Str, r: Str) => boolean;
-  empty: () => Str;
-};
-
-interface ArrayOps<Arr, Elem> {
-  createEmpty: () => Arr;
-  append: (arr: Arr, element: Elem) => void;
-  length: (arr: Arr) => number;
-  get: (arr: Arr, index: number) => Elem;
+interface StringOps {
+  substring: (s: Wrapped<string>, start: Wrapped<number>, end: Wrapped<number>) => Wrapped<string>;
+  concatenate: (s1: Wrapped<string>, s2: Wrapped<string>) => Wrapped<string>;
 };
