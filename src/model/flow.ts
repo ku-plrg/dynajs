@@ -1,6 +1,8 @@
+import util from "node:util";
 import type { Analysis } from "@/types/analysis.js";
-import type { SpecOps, Wrapped, Unwrapped } from "./type.js";
-import { Wrapper } from "./wrap.js";
+import type { SpecOps, Wrapped, Unwrapped, Primitive } from "./type.js";
+
+type Entry = { id: symbol; value: unknown };
 
 type Frame = BinFrame | UnFrame | CallFrame;
 export type BinFrame = { ty: 'bin'; op: string; left: Wrapped; right: Wrapped };
@@ -11,9 +13,71 @@ export type OpaqueCall = { ty: 'opaque'; entries: unknown[] };
 export type TransparentCall = { ty: 'transparent', entries: unknown[] };
 
 export abstract class FlowAnalysis<Info> implements Analysis {
-  wrapper: Wrapper<Info> = new Wrapper();
 
-  abstract spec: SpecOps;
+  private primitiveWrapper = new WeakSet<object>();
+  private valueMap = new WeakMap<object, Entry>();
+  private infoMap = new Map<symbol, Info>();
+
+  // ---- Info hooks (subclasses implement only these) ----
+
+  protected abstract baseInfo(value: unknown, parents: (Info | undefined)[]): Info | undefined;
+  protected abstract substringInfo(src: Info | undefined, start: number, resultLength: number): Info | undefined;
+  protected abstract concatenateInfo(left: Info | undefined, leftLength: number, right: Info | undefined, rightLength: number): Info | undefined;
+
+  // ---- Info storage helpers ----
+
+  protected getInfo(value: unknown): Info | undefined {
+    const e = this.getEntry(value);
+    return e === undefined ? undefined : this.infoMap.get(e.id);
+  }
+
+  protected setInfo(value: unknown, info: Info): void {
+    const e = this.getEntry(value);
+    if (e === undefined) return;
+    this.infoMap.set(e.id, info);
+  }
+
+  protected getOrCreateInfo(value: unknown, makeEmpty: () => Info): Info | undefined {
+    const e = this.getEntry(value);
+    if (e === undefined) return undefined;
+    let info = this.infoMap.get(e.id);
+    if (info === undefined) {
+      info = makeEmpty();
+      this.infoMap.set(e.id, info);
+    }
+    return info;
+  }
+
+  // ---- SpecOps: wrap/unwrap plumbing; Info computation delegated to hooks ----
+
+  spec: SpecOps = {
+    base: <T extends Unwrapped<unknown> | Primitive>(v: T, parents: Wrapped<unknown>[]): Wrapped<T> => {
+      const w = this.wrap(v);
+      const info = this.baseInfo(v, parents.map((p) => this.getInfo(p)));
+      if (info !== undefined) this.setInfo(w, info);
+      return w;
+    },
+    peek: <T>(wrapped: Wrapped<T>) => this.unwrap(wrapped),
+    substring: (s: Wrapped<string>, start: Wrapped<number>, end: Wrapped<number>): Wrapped<string> => {
+      const raw = this.unwrap(s);
+      const startN = this.unwrap(start) as number;
+      const endN = this.unwrap(end) as number;
+      const r = raw.substring(startN, endN);
+      const w = this.wrap(r);
+      const info = this.substringInfo(this.getInfo(s), startN, r.length);
+      if (info !== undefined) this.setInfo(w, info);
+      return w;
+    },
+    concatenate: (s1: Wrapped<string>, s2: Wrapped<string>): Wrapped<string> => {
+      const r1 = this.unwrap(s1);
+      const r2 = this.unwrap(s2);
+      const r = r1 + r2;
+      const w = this.wrap(r);
+      const info = this.concatenateInfo(this.getInfo(s1), r1.length, this.getInfo(s2), r2.length);
+      if (info !== undefined) this.setInfo(w, info);
+      return w;
+    },
+  };
 
   protected propagate(frame: Frame, result: Unwrapped<unknown>): Wrapped<unknown> {
     switch (frame.ty) {
@@ -84,4 +148,45 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   invokeFun(_id: number, _f: any, _base: any, _args: any, result: any, _isConstructor: boolean, _isMethod: boolean, frame?: unknown) {
     return { result: this.propagate(frame as CallFrame, result) };
   }
+
+  // wrappers
+
+   private id = 0;
+  freshId() { return Symbol(this.id++); }
+
+  isObjectish(v: unknown): v is object | Function {
+    return v !== null && (typeof v === "object" || typeof v === "function");
+  }
+
+  isPrimitive(v: unknown): v is string | number | boolean | bigint | symbol | null | undefined {
+    return !this.isObjectish(v);
+  }
+
+  isWrapped(v: unknown): v is Wrapped<unknown> {
+    return this.isObjectish(v) && this.valueMap.has(v);
+  }
+
+  wrap<T>(value: T): Wrapped<T> {
+    if (this.isObjectish(value)) return value as Wrapped<T>;
+    const proxy = ({ [util.inspect.custom]() { return "<wrapped-primitive>"; } });
+    this.primitiveWrapper.add(proxy);
+    this.valueMap.set(proxy, { id: this.freshId(), value });
+    return proxy as T as Wrapped<T>;
+  }
+
+  unwrap<T = unknown>(value: Wrapped<T>): Unwrapped<T> {
+    if (!this.isObjectish(value)) return value as T as Unwrapped<T>; // should not happen;
+    const entry = this.valueMap.get(value);
+    return entry === undefined ? value as T as Unwrapped<T> : entry.value as T as Unwrapped<T>;
+  }
+
+  forcedUnwrap(value: unknown): Entry {
+    return this.valueMap.get(this.wrap(value)) as Entry; // should not fail
+  }
+
+  getEntry<E>(value: unknown): Entry | undefined {
+    if (!this.isObjectish(value)) return undefined;
+    return this.valueMap.get(value);
+  }
+
 }

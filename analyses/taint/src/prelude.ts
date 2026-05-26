@@ -1,24 +1,24 @@
 import type { TaintAnalysis } from "./index.js";
-import type { Wrapped, Unwrapped } from "@/model/type.js";
+import type { Wrapped } from "@/model/type.js";
 
 declare const D$: { analysis: TaintAnalysis } & Record<string, any>;
 
 function __set_taint__(v: unknown): void {
-  D$.analysis.taint.setTaint(v, true);
+  D$.analysis.setTaint(v, true);
 }
 
 function __is_tainted__(v: unknown): boolean {
-  return D$.analysis.taint.isTainted(v);
+  return D$.analysis.isTainted(v);
 }
 
 function __is_tainted_at__(v: unknown, index: unknown): boolean {
-  const raw = D$.analysis.wrapper.unwrap(index as Wrapped<unknown>);
+  const raw = D$.analysis.unwrap(index as Wrapped<unknown>);
   const idx = typeof raw === "number" ? raw : Number(raw);
-  return D$.analysis.taint.isTaintedAt(v, idx);
+  return D$.analysis.isTaintedAt(v, idx);
 }
 
 function __assert__(v: unknown): void {
-  if (D$.analysis.wrapper.unwrap(v as Wrapped<unknown>)) return;
+  if (D$.analysis.unwrap(v as Wrapped<unknown>)) return;
   throw new Error("Assertion failed");
 }
 
