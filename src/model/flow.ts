@@ -1,16 +1,31 @@
 import util from "node:util";
 import type { Analysis } from "@/types/analysis.js";
 import type { SpecOps, Wrapped, Unwrapped, Primitive } from "./type.js";
+import { Model } from "./model.js";
 
 type Entry = { id: symbol; value: unknown };
 
-type Frame = BinFrame | UnFrame | CallFrame;
+type Frame = BinFrame | UnFrame | CallFrame | GetFieldFrame;
 export type BinFrame = { ty: 'bin'; op: string; left: Wrapped; right: Wrapped };
 export type UnFrame  = { ty: 'un'; op: string; operand: Wrapped };
+export type GetFieldFrame = { ty: 'getField'; base: Wrapped; prop: Wrapped };
 
 type CallFrame = OpaqueCall | TransparentCall;
-export type OpaqueCall = { ty: 'opaque'; entries: unknown[] };
+export type OpaqueCall = { ty: 'opaque'; f: unknown; modeled: boolean; entries: unknown[] };
 export type TransparentCall = { ty: 'transparent', entries: unknown[] };
+
+// Returns the canonical char-access index when `p` is a property key that JS would
+// resolve to `s[i]` (i.e. a non-negative integer in range whose string form matches).
+function asStringIndex(p: unknown, len: number): number | undefined {
+  let n: number;
+  if (typeof p === 'number') n = p;
+  else if (typeof p === 'string') {
+    n = Number(p);
+    if (String(n) !== p) return undefined;
+  } else return undefined;
+  if (!Number.isInteger(n) || n < 0 || n >= len) return undefined;
+  return n;
+}
 
 export abstract class FlowAnalysis<Info> implements Analysis {
 
@@ -94,8 +109,24 @@ export abstract class FlowAnalysis<Info> implements Analysis {
         const parents = [frame.operand];
         return this.spec.base(result, parents);
       }
+      case 'getField': {
+        const b: unknown = this.spec.peek(frame.base);
+        const p: unknown = this.spec.peek(frame.prop);
+        if (typeof b === 'string') {
+          const i = asStringIndex(p, b.length);
+          if (i !== undefined) {
+            return this.spec.substring(
+              frame.base as Wrapped<string>,
+              this.spec.base(i, []),
+              this.spec.base(i + 1, []),
+            );
+          }
+        }
+        return this.spec.base(result, [frame.base, frame.prop]);
+      }
       case 'opaque': {
-        // built-in function model
+        // when modeled, the runtime invoked Model.of(f) which already returned a Wrapped value
+        if (frame.modeled) return result as unknown as Wrapped<unknown>;
         const parents = Array.from(frame.entries) as Wrapped[]; // can we do this without `as`?
         return this.spec.base(result, parents);
       }
@@ -135,17 +166,37 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     return { result: this.propagate(frame as UnFrame, result) };
   }
 
+  getFieldPre(_id: number, base: any, prop: any) {
+    // primitives are wrapped in plain objects with no prototype chain to String/Number/etc.,
+    // so x.at would resolve to undefined. unwrap the base for the lookup; the call site still
+    // sees the original wrapped base, so the model receives the wrapped `this`.
+    const frame: GetFieldFrame = { ty: 'getField', base: base as Wrapped, prop: prop as Wrapped };
+    return { base: this.spec.peek(base as Wrapped), prop, skip: false, frame };
+  }
+
+  getField(_id: number, _base: any, _prop: any, result: any, frame?: unknown) {
+    return { result: this.propagate(frame as GetFieldFrame, result) };
+  }
+
   invokeFunPre(_id: number, _f: any, _base: any, args: any, _isConstructor: boolean, _isMethod: boolean) {
     const argArr = Array.from(args) as Wrapped[]; // can we do this without `as`?
+    if (Model.support(_f)) {
+      // model takes wrapped args and returns a wrapped result; runtime will dispatch via Model.of(f)
+      return { skip: true, f: _f, base: _base, args: argArr, frame: { ty: 'opaque', f: _f, modeled: true, entries: argArr } };
+    }
+
+    
     if (this.isOpaqueFunction(_f)) {
       const unwrappedArgs = argArr.map(this.spec.peek);
-      // TODO : use model
-      return { skip: false, f: _f, base: _base, args: unwrappedArgs, preferModel: false, frame: { ty: 'opaque', entries: argArr } };
+      return { skip: false, f: _f, base: _base, args: unwrappedArgs, frame: { ty: 'opaque', f: _f, modeled: false, entries: argArr } };
     }
-    return { skip: false, f: _f, base: _base, args, preferModel: false, frame: { ty: 'transparent', entries: argArr } };
+    return { skip: false, f: _f, base: _base, args, frame: { ty: 'transparent', entries: argArr } };
   }
 
   invokeFun(_id: number, _f: any, _base: any, _args: any, result: any, _isConstructor: boolean, _isMethod: boolean, frame?: unknown) {
+    if (Model.support(_f)) {
+      result = new Model(this.spec).of(_f)(_base, ..._args);
+    }
     return { result: this.propagate(frame as CallFrame, result) };
   }
 

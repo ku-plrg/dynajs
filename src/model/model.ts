@@ -21,8 +21,8 @@ export class Model {
   }
 
   of(f: Function): Function {
-    if (f === String.prototype.at) {
-      return this.String.at
+    switch (f) {
+      case String.prototype.at: return this.String.at.bind(this.String);
     }
     throw new Error(`Unsupported built-in function: ${f.name}`);
   }

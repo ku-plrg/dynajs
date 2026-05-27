@@ -10,7 +10,6 @@ import * as utils from './utils.js';
 import * as spec from './spec.js';
 import { instrument } from './instrument/main.js';
 import { StateOption } from './instrument/state.js';
-import { Model } from './model/model.js';
 import { CAPTURED } from './captured.js';
 
 declare global { var D$: DynaJSType; };
@@ -217,7 +216,6 @@ function invokeFun(
 ) {
   let result: any;
   let skip = false;
-  let preferModel = false;
   let frame: unknown;
   const pre = D$.analysis.invokeFunPre?.(id, f, base, args, isConstructor, isMethod);
   if (pre) {
@@ -225,7 +223,6 @@ function invokeFun(
     base = pre.base;
     args = pre.args;
     skip = pre.skip;
-    preferModel = pre.preferModel;
     frame = pre.frame;
   }
   if (!skip) {
@@ -233,10 +230,6 @@ function invokeFun(
       result = invokeFunctionConstructor(id, f, args);
     } else if (isConstructor) {
       result = construct(f, args);
-    } else if (preferModel && D$.analysis.spec && Model.support(f)) {
-      // TODO use singleton instance of Model
-      const model = new Model(D$.analysis.spec);
-      result = model.of(f)(base, ...Array.from(args));
     } else {
       result = CAPTURED.FunctionConstructor.prototype.apply.call(f, base, args);
     }

@@ -60,7 +60,7 @@ interface FullAnalysis {
     args: any,
     isConstructor: boolean,
     isMethod: boolean
-  ) => { f: any, base: any, args: any, skip: boolean, preferModel: boolean, frame?: unknown } | void;
+  ) => { f: any, base: any, args: any, skip: boolean, frame?: unknown } | void;
 
   /**
    * Called after a function returns (or is skipped via `invokeFunPre`).
