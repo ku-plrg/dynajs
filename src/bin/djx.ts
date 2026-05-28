@@ -139,9 +139,9 @@ function cmdInstrument(file: string, verbose: boolean): number {
 }
 
 function cmdClean(args: string[]): number {
-  const cleanBin = path.join(DYNAJS_HOME, 'dynajs-clean');
+  const cleanBin = path.join(DYNAJS_HOME, 'djx-clean');
   if (!existsSync(cleanBin)) {
-    throw new Error(`dynajs-clean script not found at ${cleanBin}`);
+    throw new Error(`djx-clean script not found at ${cleanBin}`);
   }
   const result = spawnSync(cleanBin, args, { stdio: 'inherit' });
   return result.status ?? 1;
