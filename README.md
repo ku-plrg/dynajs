@@ -1,4 +1,4 @@
-# dynajs - Dynamic Analysis Framework for JavaScript
+# DynaJS - Dynamic Analysis Framework for JavaScript
 
 ## Installation
 
@@ -25,31 +25,32 @@ DYNAJS_OPTIONS='--analysis ./samples/TraceAll.js --partial' dynajs node target.j
 ```
 
 
-## Legacy CLI
+## `djx` — convenience CLI
 
-`./dynajs-legacy` keeps the previous CLI for direct `instrument` / `analyze`
-commands:
+`./djx` bundles the most common workflows into one command:
 
 ```shell
-./dynajs-legacy instrument input.js
-./dynajs-legacy analyze -a samples/TraceAll.js input.js
+./djx run (-p <preset> | -a <path> | --no-analysis) [opts] -- <cmd...>
+                                   # wraps dynajs; target command goes after `--`
+./djx instrument [--verbose] <file># static instrumentation (writes a *__dynajs__.js sibling)
+./djx clean [dir]                  # removes generated *__dynajs__.js files
+./djx list                         # lists built presets and bundled samples
+./djx completion [zsh|bash]        # print a shell completion script (eval to enable)
+./djx help
 ```
 
-Standalone `instrument` mode is not currently supported through the new
-`./dynajs` entrypoint.
+`djx run` picks the analysis via `-p/--preset <name>` (a built preset like
+`taint`/`concolic` or a bundled `samples/<Name>.js`), `-a/--analysis <path>`
+(custom file), or `--no-analysis`. Forwarded dynajs flags: `--verbose`,
+`--partial`, `--full`, `--ignore-node-modules`, `--pos`, `--home`, `--include`.
+Run `./djx run --help` for the full list.
 
 ## For Developers
 
-Use the watch command below while developing the legacy CLI implementation:
-
-```shell
-npm run start:watch -- instrument --verbose <js file>
-```
-
 > [!WARNING]
 >
-> The watch mode does not update `dist/` directory. Run `npm run build` before
-> using `./dynajs` or `./dynajs-legacy` after modifying the source code.
+> The watch mode only typechecks. Run `npm run build` before using `./dynajs`
+> or `./djx` after modifying the source code.
 
 ### Testing
 
