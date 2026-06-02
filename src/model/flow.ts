@@ -184,8 +184,12 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     // primitives are wrapped in plain objects with no prototype chain to String/Number/etc.,
     // so x.at would resolve to undefined. unwrap the base for the lookup; the call site still
     // sees the original wrapped base, so the model receives the wrapped `this`.
+    // The key must be unwrapped too: a wrapped prop is a plain proxy object, so a
+    // computed read `base[prop]` would coerce it to "[object Object]" and resolve to
+    // undefined (e.g. arr[i], split's result[k]). The frame keeps the wrapped prop so
+    // propagate still sees its info / can recover the s[i] char-access case.
     const frame: GetFieldFrame = { ty: 'getField', base: base as Wrapped, prop: prop as Wrapped };
-    return { base: this.spec.peek(base as Wrapped), prop, skip: false, frame };
+    return { base: this.spec.peek(base as Wrapped), prop: this.spec.peek(prop as Wrapped), skip: false, frame };
   }
 
   getField(_id: number, _base: any, _prop: any, result: any, frame?: unknown) {

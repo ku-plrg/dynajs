@@ -13,6 +13,7 @@ export class Model {
     String.prototype.concat,
     String.prototype.repeat,
     String.prototype.replace,
+    String.prototype.split,
   ]);
 
   static support(f: Function): boolean {
@@ -37,6 +38,7 @@ export class Model {
       case String.prototype.concat: return this.String.concat.bind(this.String);
       case String.prototype.repeat: return this.String.repeat.bind(this.String);
       case String.prototype.replace: return this.String.replace.bind(this.String);
+      case String.prototype.split: return this.String.split.bind(this.String);
     }
     throw new Error(`Unsupported built-in function: ${f.name}`);
   }

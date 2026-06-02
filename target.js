@@ -1,1 +1,3 @@
-__set_taint__(1);
+var x = 1;
+__set_taint__(x);
+__print_if_tainted__(x);

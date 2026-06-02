@@ -19,6 +19,7 @@
     "build:watch": "tsc -b -w",
     "sunspider": "npm run build && ./bench/run-sunspider-benchmark.sh",
     "microbench": "npm run build && node ./bench/run-micro-benchmark.mjs",
+    "microbench:stat": "node ./bench/micro-composition.mjs",
     "format": "prettier --write . | grep -v '(unchanged)$'",
     "test": "",
     "test:watch": "",
