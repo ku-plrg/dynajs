@@ -18,7 +18,7 @@
     "build:entry": "node ./scripts/build-entry.mjs",
     "build:watch": "tsc -b -w",
     "sunspider": "npm run build && ./bench/run-sunspider-benchmark.sh",
-    "micro": "npm run build && node ./bench/run-micro-benchmark.mjs",
+    "microbench": "npm run build && node ./bench/run-micro-benchmark.mjs",
     "format": "prettier --write . | grep -v '(unchanged)$'",
     "test": "",
     "test:watch": "",
