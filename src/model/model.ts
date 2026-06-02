@@ -1,8 +1,7 @@
 import type { SpecOps, BootStrap, Wrapped, Unwrapped } from './type.js';
 import { StringModel } from './string.js';
 import { AO } from './ao.js';
-import { INTRINSICS_String_prototype_at } from './spec/INTRINSICS.String.prototype.at.js';
-import { INTRINSICS_String_prototype_charAt } from './spec/INTRINSICS.String.prototype.charAt.js';
+import * as generated from './spec/index.js';
 
 export class Model {
 
@@ -34,8 +33,8 @@ export class Model {
   of(f: Function): [Function, 'spec' | 'legacy'] {
     switch (f) {
       // generated polyfill (spec/INTRINSICS.String.prototype.at.ts), threaded with __runtime__
-      case String.prototype.at: return [INTRINSICS_String_prototype_at, 'spec'];
-      case String.prototype.charAt: return [INTRINSICS_String_prototype_charAt, 'spec'];
+      case String.prototype.at: return [generated.INTRINSICS_String_prototype_at, 'spec'];
+      case String.prototype.charAt: return [generated.INTRINSICS_String_prototype_charAt, 'spec'];
       case String.prototype.slice: return [this.String.slice.bind(this.String), 'legacy'];
       case String.prototype.substring: return [this.String.substring.bind(this.String), 'legacy'];
       case String.prototype.concat: return [this.String.concat.bind(this.String), 'legacy'];

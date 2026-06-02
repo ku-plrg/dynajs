@@ -6,6 +6,7 @@ import {
   readFileSync,
   readdirSync,
   rmSync,
+  writeFileSync,
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -68,9 +69,10 @@ for (const entry of readdirSync(destDir)) {
 }
 
 const missing = [];
-let copied = 0;
+const copiedNames = [];
 for (const name of FILES) {
-  const file = name.endsWith(".ts") ? name : `${name}.ts`;
+  const base = name.endsWith(".ts") ? name.slice(0, -3) : name;
+  const file = `${base}.ts`;
   const from = join(srcDir, file);
   if (!existsSync(from)) {
     missing.push(file);
@@ -84,7 +86,7 @@ for (const name of FILES) {
     );
   }
   cpSync(from, to);
-  copied++;
+  copiedNames.push(base);
 }
 
 if (missing.length > 0) {
@@ -94,7 +96,19 @@ if (missing.length > 0) {
   );
 }
 
+// Generate a barrel that re-exports every copied builtin, so consumers import
+// from a single place instead of one path per builtin. @manual AO shims are
+// imported directly by the builtin files and are intentionally not re-exported.
+// The export name mirrors the generated function name: dots/dashes -> underscores.
+const exportLines = copiedNames.map((base) => {
+  const symbol = base.replace(/[^A-Za-z0-9]/g, "_");
+  return `export { ${symbol} } from "./${base}.js";`;
+});
+const barrel = `// THIS FILE IS AUTO-GENERATED, DO NOT EDIT\n${exportLines.join("\n")}\n`;
+writeFileSync(join(destDir, "index.ts"), barrel);
+
 console.log(
-  chalk.green(`✓ Copied ${copied} polyfill file(s) → src/model/polyfill/`),
+  chalk.green(`✓ Copied ${copiedNames.length} polyfill file(s) → src/model/spec/`),
 );
+console.log(chalk.green(`✓ Wrote barrel → src/model/spec/index.ts`));
 if (missing.length > 0) process.exit(1);
