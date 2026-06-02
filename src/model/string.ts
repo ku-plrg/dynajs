@@ -120,11 +120,11 @@ export class StringModel {
     }
 
     // done by human
-    repeat(base: Wrapped<string>, count: Wrapped<number>): Wrapped<string> {
+    repeat(base: Wrapped<unknown>, count: Wrapped<unknown>): Wrapped<string> {
         // 1. Let O be ? RequireObjectCoercible(this value).
         const O = this.ao.RequireObjectCoercible(base);
         // 2. Let S be ? ToString(O).
-        const S = O; // ???
+        const S = this.ao.ToString(O); // ???
         // 3. Let n be ? ToIntegerOrInfinity(count).
         const n = this.ao.ToIntegerOrInfinity(count);
         // 4. If n < 0 or n = +∞, throw a RangeError exception.
