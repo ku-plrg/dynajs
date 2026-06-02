@@ -35,10 +35,19 @@ import {
   writeFileSync, appendFileSync, accessSync, constants,
 } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BENCH_DIR = path.join(REPO_ROOT, "bench/micro");
+
+// Preloaded by the `baseline` runner: stubs the taint prelude globals
+// (`__set_taint__`/`__print_if_tainted__`) to no-ops so a bench runs as plain
+// JS under stock node. Without it the bench throws `__set_taint__ is not
+// defined` on the first line, and baseline would clock crash time instead of
+// the program's actual execution time.
+const BASELINE_IMPORT = pathToFileURL(
+  path.join(REPO_ROOT, "bench/microbench-import-helper.mjs"),
+).href;
 
 // Marker the analyzer must print so we can tell detected from clean.
 const VERDICT_RE = /@@DJX_VERDICT\s+(detected|clean)\b/g;
@@ -49,7 +58,7 @@ const VERDICT_RE = /@@DJX_VERDICT\s+(detected|clean)\b/g;
 // `--analysis` / `--dynajs-flags` on the CLI override this for every bench.
 const TYPE_CONFIG = {
   taint: { analysis: "analyses/dist/Taint.mjs", flags: "--partial --pos persist" },
-  // concolic: { analysis: "analyses/dist/Concolic.mjs", flags: "..." },
+  concolic: { analysis: "analyses/dist/Concolic.mjs", flags: "--partial" },
 };
 
 // ---------------------------------------------------------------------------
@@ -144,6 +153,16 @@ function classify(oracle, verdict) {
 const ratio = (num, den) => (den === 0 ? null : num / den);
 const fmtRatio = (x) => (x === null ? "  n/a" : x.toFixed(3));
 
+// ANSI coloring, disabled when not a TTY or under NO_COLOR so piped output and
+// the CSV stay clean. TP/TN read as "got it right" -> green; FP/FN as "got it
+// wrong" -> red.
+const useColor = process.stdout.isTTY && !process.env.NO_COLOR;
+const color = (code, s) => (useColor ? `\x1b[${code}m${s}\x1b[0m` : s);
+const green = (s) => color("32", s);
+const red = (s) => color("31", s);
+const colorResult = (result, text) =>
+  result === "TP" || result === "TN" ? green(text) : red(text);
+
 // Confusion matrix over a list of per-bench records ({ result, verdict,
 // anyTimeout, mean }). Used for the overall table and each grouped slice.
 function buildMatrix(recs) {
@@ -159,22 +178,31 @@ function buildMatrix(recs) {
 }
 
 // One confusion-matrix row: `label` then TP/FP/FN/TN/err/t-o, precision,
-// recall, mean_ms. Shared by the overall table and the grouped breakdowns.
+// recall, F1, mean_ms. Shared by the overall table and the grouped breakdowns.
 function matrixRow(label, m) {
   const precision = ratio(m.TP, m.TP + m.FP);
   const recall = ratio(m.TP, m.TP + m.FN);
+  const f1 =
+    precision === null || recall === null || precision + recall === 0
+      ? null
+      : (2 * precision * recall) / (precision + recall);
   return (
     label.padEnd(22) +
-    [m.TP, m.FP, m.FN, m.TN, m.err, m.timeout].map((x) => String(x).padStart(5)).join("") +
+    green(String(m.TP).padStart(5)) + red(String(m.FP).padStart(5)) +
+    red(String(m.FN).padStart(5)) + green(String(m.TN).padStart(5)) +
+    [m.err, m.timeout].map((x) => String(x).padStart(5)).join("") +
     fmtRatio(precision).padStart(11) + fmtRatio(recall).padStart(9) +
+    fmtRatio(f1).padStart(8) +
     (m.n ? (m.meanSum / m.n).toFixed(1) : "0").padStart(10)
   );
 }
 
 const matrixHeader = (lead) =>
   lead.padEnd(22) +
-  ["TP", "FP", "FN", "TN", "err", "t/o"].map((h) => h.padStart(5)).join("") +
-  "precision".padStart(11) + "recall".padStart(9) + "mean_ms".padStart(10);
+  green("TP".padStart(5)) + red("FP".padStart(5)) +
+  red("FN".padStart(5)) + green("TN".padStart(5)) +
+  ["err", "t/o"].map((h) => h.padStart(5)).join("") +
+  "precision".padStart(11) + "recall".padStart(9) + "F1".padStart(8) + "mean_ms".padStart(10);
 
 // Resolve dynajs analysis + flags for a bench: a CLI override wins, otherwise
 // the bench's `@type` selects a row from TYPE_CONFIG. Returns null if neither.
@@ -201,11 +229,15 @@ function resolveDynajs(bench, opts) {
 function makeRunners(opts) {
   return [
     {
-      // plain Node, no instrumentation. Never emits a verdict marker, so it
-      // always lands in `error` -> a useful sanity floor for the matrix.
+      // plain Node, no instrumentation: a pure-execution-time reference. The
+      // taint prelude globals are stubbed to no-ops via BASELINE_IMPORT so the
+      // bench runs as plain JS instead of crashing on the first `__set_taint__`
+      // call. It never emits a verdict marker, so it always lands in `error` ->
+      // a useful sanity floor for the matrix; only its mean_ms is meaningful.
       name: "baseline",
       available: () => onPath("node"),
-      exec: (b, out, err, t) => timeRun(["node", b.file], {}, out, err, t),
+      exec: (b, out, err, t) =>
+        timeRun(["node", "--import", BASELINE_IMPORT, b.file], {}, out, err, t),
     },
     {
       // this project's analyzer. Analysis + flags are picked per bench from its
@@ -407,7 +439,7 @@ function main() {
       console.log(
         r.name.padEnd(12) + b.name.padEnd(24) +
           (b.oracle ? "pos" : "neg").padEnd(8) + verdict.padEnd(10) +
-          result.padStart(7) + mean.toFixed(1).padStart(10),
+          colorResult(result, result.padStart(7)) + mean.toFixed(1).padStart(10),
       );
     }
   }
