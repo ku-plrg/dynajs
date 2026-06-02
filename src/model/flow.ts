@@ -94,16 +94,12 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     },
   };
 
+  private model = new Model(this.spec);
+
   protected propagate(frame: Frame, result: Unwrapped<unknown>): Wrapped<unknown> {
     switch (frame.ty) {
       case 'bin': {
-        const lstr /* : fleft is Wrapped<string> */ = typeof this.spec.peek(frame.left) === 'string';
-        const rstr /* : fright is Wrapped<string> */ = typeof this.spec.peek(frame.right) === 'string';
-        if (frame.op === '+' && lstr && rstr && this.spec.concatenate) {
-          return this.spec.concatenate(frame.left as Wrapped<string>, frame.right as Wrapped<string>);
-        }
-        const parents = [frame.left, frame.right];
-        return this.spec.base(result, parents);
+        return this.model.applyBinary(frame.left, frame.op, frame.right, result);
       }
       case 'un': {
         const parents = [frame.operand];
@@ -131,7 +127,14 @@ export abstract class FlowAnalysis<Info> implements Analysis {
         return this.spec.base(result, parents);
       }
       case 'transparent': {
-        // CHECK isn't this already handled by the callee?
+        // Operations inside the callee already propagated info to `result`.
+        // If we re-run baseInfo here we'd overwrite char-level info with a
+        // coarser bit-only info derived from the args. Preserve any info the
+        // callee attached; only fall back to base propagation when the callee
+        // produced a value with no info (e.g. a literal return).
+        if (this.isWrapped(result) && this.getInfo(result) !== undefined) {
+          return result as Wrapped<unknown>;
+        }
         const parents = Array.from(frame.entries) as Wrapped[];
         return this.spec.base(result, parents);
       }
@@ -153,6 +156,17 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   }
 
   binary(_id: number, _op: string, _l: Wrapped, _r: Wrapped, result: Unwrapped<unknown>, frame?: unknown) {
+    return { result: this.propagate(frame as BinFrame, result) };
+  }
+
+  templateConcatPre(_id: number, left: Wrapped, right: Wrapped) {
+    const l = this.spec.peek(left);
+    const r = this.spec.peek(right);
+    const frame: BinFrame = { ty: 'bin', op: '+', left, right };
+    return { left: l, right: r, skip: false, frame };
+  }
+
+  templateConcat(_id: number, _left: Wrapped, _right: Wrapped, result: Unwrapped<unknown>, frame?: unknown) {
     return { result: this.propagate(frame as BinFrame, result) };
   }
 
@@ -180,17 +194,20 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
   invokeFunPre(_id: number, _f: any, _base: any, args: any, _isConstructor: boolean, _isMethod: boolean) {
     const argArr = Array.from(args) as Wrapped[]; // can we do this without `as`?
+    // For method calls (`o.m(...)`), the receiver `o` is also a data
+    // dependency of the result — include it so baseInfo sees its taint.
+    const entries: Wrapped[] = _isMethod ? [_base as Wrapped, ...argArr] : argArr;
     if (Model.support(_f)) {
       // model takes wrapped args and returns a wrapped result; runtime will dispatch via Model.of(f)
-      return { skip: true, f: _f, base: _base, args: argArr, frame: { ty: 'opaque', f: _f, modeled: true, entries: argArr } };
+      return { skip: true, f: _f, base: _base, args: argArr, frame: { ty: 'opaque', f: _f, modeled: true, entries } };
     }
 
-    
+
     if (this.isOpaqueFunction(_f)) {
       const unwrappedArgs = argArr.map(this.spec.peek);
-      return { skip: false, f: _f, base: _base, args: unwrappedArgs, frame: { ty: 'opaque', f: _f, modeled: false, entries: argArr } };
+      return { skip: false, f: _f, base: _base, args: unwrappedArgs, frame: { ty: 'opaque', f: _f, modeled: false, entries } };
     }
-    return { skip: false, f: _f, base: _base, args, frame: { ty: 'transparent', entries: argArr } };
+    return { skip: false, f: _f, base: _base, args, frame: { ty: 'transparent', entries } };
   }
 
   invokeFun(_id: number, _f: any, _base: any, _args: any, result: any, _isConstructor: boolean, _isMethod: boolean, frame?: unknown) {
@@ -218,7 +235,15 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   }
 
   wrap<T>(value: T): Wrapped<T> {
-    if (this.isObjectish(value)) return value as Wrapped<T>;
+    if (this.isObjectish(value)) {
+      // Track objects/arrays/functions by identity so info can be attached.
+      // Without this, spec.base on an object is silently info-less and taint
+      // dies at any object boundary (e.g. split's result array → join).
+      if (!this.valueMap.has(value as object)) {
+        this.valueMap.set(value as object, { id: this.freshId(), value });
+      }
+      return value as Wrapped<T>;
+    }
     const proxy = ({ [util.inspect.custom]() { return "<wrapped-primitive>"; } });
     this.primitiveWrapper.add(proxy);
     this.valueMap.set(proxy, { id: this.freshId(), value });

@@ -9,6 +9,7 @@ export class StringModel {
     }
 
     // String.prototype.at(index)
+    // done by human
     at(base: Wrapped<string>, index: Wrapped<number>): Wrapped<string> {
 
         // 1. Let O be ? RequireObjectCoercible(this value).
@@ -42,6 +43,127 @@ export class StringModel {
         return this.specOps.substring(S, this.specOps.base(k, []), this.specOps.base(k + 1, []));
     }
 
+    // done by ai
+    charAt(base: Wrapped<string>, index: Wrapped<number>): Wrapped<string> {
+        // 1. Let O be ? RequireObjectCoercible(this value).
+        const O = this.ao.RequireObjectCoercible(base);
+        // 2. Let S be ? ToString(O).
+        const S = O;
+        // 3. Let position be ? ToIntegerOrInfinity(pos).
+        const position = this.ao.ToIntegerOrInfinity(index);
+        // 4. Let size be the length of S.
+        const size = this.specOps.peek(S).length;
+        // 5. If position < 0 or position ≥ size, return the empty String.
+        if (position < 0 || position >= size) {
+            return this.specOps.base('', []);
+        }
+        // 6. Return the substring of S from position to position+1.
+        return this.specOps.substring(S, this.specOps.base(position, []), this.specOps.base(position + 1, []));
+    }
+
+    // done by ai
+    slice(base: Wrapped<string>, start: Wrapped<number>, end?: Wrapped<number>): Wrapped<string> {
+        // 1. Let O be ? RequireObjectCoercible(this value).
+        const O = this.ao.RequireObjectCoercible(base);
+        // 2. Let S be ? ToString(O).
+        const S = O;
+        // 3. Let len be the length of S.
+        const len = this.specOps.peek(S).length;
+        // 4. Let intStart be ? ToIntegerOrInfinity(start).
+        const intStart = this.ao.ToIntegerOrInfinity(start);
+        // 5-7. Compute from.
+        let from: number;
+        if (intStart === -Infinity) from = 0;
+        else if (intStart < 0) from = Math.max(len + intStart, 0);
+        else from = Math.min(intStart, len);
+        // 8. If end is undefined, let intEnd be len; else let intEnd be ? ToIntegerOrInfinity(end).
+        const intEnd = (end === undefined || this.specOps.peek(end) === undefined) ? len : this.ao.ToIntegerOrInfinity(end);
+        // 9-11. Compute to.
+        let to: number;
+        if (intEnd === -Infinity) to = 0;
+        else if (intEnd < 0) to = Math.max(len + intEnd, 0);
+        else to = Math.min(intEnd, len);
+        // 12. If from ≥ to, return the empty String.
+        if (from >= to) return this.specOps.base('', []);
+        // 13. Return the substring of S from from to to.
+        return this.specOps.substring(S, this.specOps.base(from, []), this.specOps.base(to, []));
+    }
+
+    // done by ai
+    substring(base: Wrapped<string>, start: Wrapped<number>, end?: Wrapped<number>): Wrapped<string> {
+        // 1. Let O be ? RequireObjectCoercible(this value).
+        const O = this.ao.RequireObjectCoercible(base);
+        // 2. Let S be ? ToString(O).
+        const S = O;
+        // 3. Let len be the length of S.
+        const len = this.specOps.peek(S).length;
+        // 4. Let intStart be ? ToIntegerOrInfinity(start).
+        const intStart = this.ao.ToIntegerOrInfinity(start);
+        // 5. If end is undefined, let intEnd be len; else let intEnd be ? ToIntegerOrInfinity(end).
+        const intEnd = (end === undefined || this.specOps.peek(end) === undefined) ? len : this.ao.ToIntegerOrInfinity(end);
+        // 6. Let finalStart be the result of clamping intStart between 0 and len.
+        const finalStart = Math.max(0, Math.min(intStart, len));
+        // 7. Let finalEnd be the result of clamping intEnd between 0 and len.
+        const finalEnd = Math.max(0, Math.min(intEnd, len));
+        // 8-9. from = min, to = max.
+        const from = Math.min(finalStart, finalEnd);
+        const to = Math.max(finalStart, finalEnd);
+        // 10. Return the substring of S from from to to.
+        return this.specOps.substring(S, this.specOps.base(from, []), this.specOps.base(to, []));
+    }
+
+    // done by ai
+    repeat(base: Wrapped<string>, count: Wrapped<number>): Wrapped<string> {
+        // 1. Let O be ? RequireObjectCoercible(this value).
+        const O = this.ao.RequireObjectCoercible(base);
+        // 2. Let S be ? ToString(O).
+        const S = O;
+        // 3. Let n be ? ToIntegerOrInfinity(count).
+        const n = this.ao.ToIntegerOrInfinity(count);
+        // 4. If n < 0 or n is +∞, throw RangeError.
+        if (n < 0 || n === Infinity) throw new RangeError('Invalid count value');
+        // 5. If n = 0, return the empty String.
+        if (n === 0) return this.specOps.base('', []);
+        // 6. Return the string-concatenation of n copies of S.
+        let R = S;
+        for (let i = 1; i < n; i++) {
+            R = this.specOps.concatenate(R, S);
+        }
+        return R;
+    }
+
+    // done by ai
+    replace(base: Wrapped<string>, searchValue: Wrapped<unknown>, replaceValue: Wrapped<unknown>): Wrapped<string> {
+        // Minimal model: handles literal-string search + literal-string replacement.
+        // Skips RegExp dispatch (Symbol.replace), functional replacers, and the
+        // GetSubstitution patterns ($&, $1, ...). Sufficient for char-level
+        // taint propagation on simple s.replace(lit, lit) sites.
+        // 1. Let O be ? RequireObjectCoercible(this value).
+        const O = this.ao.RequireObjectCoercible(base);
+        // 3. Let string be ? ToString(O).
+        const S = O;
+        const string = this.specOps.peek(S);
+        // 4. Let searchString be ? ToString(searchValue).
+        const searchStr = String(this.specOps.peek(searchValue));
+        // 6. replaceValue → ToString.
+        const replaceStr = String(this.specOps.peek(replaceValue));
+        // 7. Let searchLength be the length of searchString.
+        const searchLength = searchStr.length;
+        // 8. Let position be StringIndexOf(string, searchString, 0).
+        const position = string.indexOf(searchStr);
+        // 9. If position = not-found, return string.
+        if (position === -1) return S;
+        // 10. preceding = substring(0, position).
+        const preceding = this.specOps.substring(S, this.specOps.base(0, []), this.specOps.base(position, []));
+        // 11. following = substring(position + searchLength, len).
+        const following = this.specOps.substring(S, this.specOps.base(position + searchLength, []), this.specOps.base(string.length, []));
+        // 12. replacement is derived from replaceValue (no $-substitution).
+        const replacement = this.specOps.base(replaceStr, [replaceValue]);
+        // 13. Return preceding + replacement + following.
+        return this.specOps.concatenate(this.specOps.concatenate(preceding, replacement), following);
+    }
+
+    // done by ai
     concat(base: Wrapped<string>, ...args: Wrapped<string>[]): Wrapped<string> {
         // 1. Let O be ? RequireObjectCoercible(this value).
         const O = base; // ???

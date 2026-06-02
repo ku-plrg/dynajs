@@ -10,5 +10,5 @@
       "@flow/*": ["./flow/src/*"]
     }
   },
-  "include": ["."]
+  "include": [".", "../src/global.d.ts"]
 }

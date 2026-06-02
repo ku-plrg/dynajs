@@ -24,6 +24,19 @@ DYNAJS_OPTIONS='--analysis ./samples/TraceAll.js' dynajs npm run test
 DYNAJS_OPTIONS='--analysis ./samples/TraceAll.js --partial' dynajs node target.js
 ```
 
+> [!IMPORTANT]
+>
+> **Only files under an _include root_ are instrumented.** The include roots are
+> the current working directory plus any `--include <path>` (or `DYNAJS_INCLUDE`,
+> a path-delimited list). A target file outside every include root runs
+> **uninstrumented** — no hooks fire, so the analysis silently sees nothing and
+> the program behaves as plain Node. This is independent of `--partial`, which
+> only selects *which hooks* are enabled, not *which files* are instrumented.
+>
+> Common gotcha: running a script that lives outside the repo (e.g. in `/tmp`)
+> while `cwd` is the repo will leave it uninstrumented and can produce a
+> misleading "pass". Pass `--include <dir>` for any target outside the cwd.
+
 
 ## `djx` — convenience CLI
 

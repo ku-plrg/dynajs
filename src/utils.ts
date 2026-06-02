@@ -289,10 +289,3 @@ export const getLocFromNode = (node: Node): [number, number, number, number] => 
     node.loc.end.column + 1,
   ];
 }
-
-export type AssertType<T extends true> = T;
-export type IsEqual<A, B> =
-  (<T>() => T extends A ? 1 : 2) extends
-  (<T>() => T extends B ? 1 : 2)
-    ? true
-    : false;

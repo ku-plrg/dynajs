@@ -25,8 +25,8 @@ function collect(dir) {
 }
 
 const buckets = [
-  { label: "positive", dir: path.join(testRoot, "positive") },
-  { label: "negative", dir: path.join(testRoot, "negative") },
+  { label: "unit",  dir: path.join(testRoot, "unit"),  required: true },
+  { label: "goals", dir: path.join(testRoot, "goals"), required: false },
 ];
 
 const env = {
@@ -35,30 +35,42 @@ const env = {
   DYNAJS_OPTIONS: `--analysis=${analysis} --partial --pos persist`,
 };
 
-let pass = 0;
-let fail = 0;
-const failures = [];
+let unitPass = 0;
+let unitFail = 0;
+let goalAchieved = 0;
+let goalPending = 0;
+const unitFailures = [];
 
-for (const { label, dir } of buckets) {
+for (const { label, dir, required } of buckets) {
   const files = collect(dir);
   for (const file of files) {
     const rel = path.relative(repoRoot, file);
     const r = spawnSync(dynajs, ["node", file], { env, encoding: "utf8" });
     const ok = r.status === 0;
-    if (ok) {
-      pass++;
-      console.log(`${chalk.green("PASS")} [${label}] ${rel}`);
+    if (required) {
+      if (ok) {
+        unitPass++;
+        console.log(`${chalk.green("PASS")} [${label}] ${rel}`);
+      } else {
+        unitFail++;
+        unitFailures.push({ rel, label, status: r.status, stdout: r.stdout, stderr: r.stderr });
+        console.log(`${chalk.red("FAIL")} [${label}] ${rel} (exit ${r.status})`);
+      }
     } else {
-      fail++;
-      failures.push({ rel, label, status: r.status, stdout: r.stdout, stderr: r.stderr });
-      console.log(`${chalk.red("FAIL")} [${label}] ${rel} (exit ${r.status})`);
+      if (ok) {
+        goalAchieved++;
+        console.log(`${chalk.cyan("ACHIEVED")} [${label}] ${rel}  ${chalk.gray("(consider moving to test/unit)")}`);
+      } else {
+        goalPending++;
+        console.log(`${chalk.gray("PENDING")}  [${label}] ${rel}`);
+      }
     }
   }
 }
 
-if (failures.length > 0) {
+if (unitFailures.length > 0) {
   console.log();
-  for (const f of failures) {
+  for (const f of unitFailures) {
     console.log(chalk.red(`--- ${f.label} ${f.rel} ---`));
     if (f.stdout) console.log(f.stdout.trimEnd());
     if (f.stderr) console.error(f.stderr.trimEnd());
@@ -66,5 +78,6 @@ if (failures.length > 0) {
 }
 
 console.log();
-console.log(`${pass} passed, ${fail} failed`);
-process.exit(fail === 0 ? 0 : 1);
+console.log(`unit:  ${unitPass} passed, ${unitFail} failed`);
+console.log(`goals: ${goalAchieved} achieved, ${goalPending} pending`);
+process.exit(unitFail === 0 ? 0 : 1);

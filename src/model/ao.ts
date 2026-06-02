@@ -12,7 +12,7 @@ export class AO {
     return value;
   }
 
-  ToIntegerOrInfinity(value: unknown): number {
+  ToIntegerOrInfinity(value: Wrapped<unknown>): number {
     // 1. Let number be ? ToNumber(argument).
     const number = this.ToNumber(value);
     // 2. If number is one of NaN, +0𝔽, or -0𝔽, return 0.
@@ -28,17 +28,32 @@ export class AO {
     return Math.trunc(number);
   }
 
-  ToNumber(value: unknown): number {
-    // @ts-expect-error ToNumber(unknown)
-    return +value;
+  // Numeric coercions return RAW values: they feed the models' index/length
+  // arithmetic and loop bounds (decision values), which must be concrete. A
+  // wrapped primitive is a proxy whose `+proxy` is NaN, so wrapping these would
+  // silently break every `>= 0` / `< len` / `len + i` (Wrapped<number> is
+  // assignable to number, so TS won't catch it). _AO_Contract pins this policy.
+  ToNumber(value: Wrapped<unknown>): number {
+    // Coerce the underlying value, not the wrapper: wrapped primitives are plain
+    // proxy objects, so `+wrapped` is always NaN. Peek first, then ToNumber.
+    const raw = this.specOps.peek(value);
+    // @ts-ignore unary plus on unknown is the spec's ToNumber coercion.
+    return +raw;
   }
 
-  ToString(value: unknown): string {
-    if (typeof value === 'symbol') { throw new TypeError('Cannot convert a Symbol value to a string'); }
-    return String(value);
+  // ToString returns a WRAPPED string: its result flows back into the program
+  // (the coerced side of a `+` concatenation), so it must carry info.
+  ToString(value: Wrapped<unknown>): Wrapped<string> {
+    const raw = this.specOps.peek(value);
+    if (typeof raw === 'symbol') { throw new TypeError('Cannot convert a Symbol value to a string'); }
+    // Already a String: ToString is the identity. Return the original wrapped
+    // value so char-level info survives — re-basing via `base` would collapse it
+    // to all-or-nothing (baseInfo doesn't copy the per-char array).
+    if (typeof raw === 'string') return value as Wrapped<string>;
+    return this.specOps.base(String(raw), [value]);
   }
 
-  ToUint32(value: unknown): number {
+  ToUint32(value: Wrapped<unknown>): number {
     // 1. Let number be ? ToNumber(argument).
     let number = this.ToNumber(value);
     // 2. If number is not finite or number is either +0𝔽 or -0𝔽, return +0𝔽.
@@ -78,5 +93,11 @@ export class AO {
     }
     // 5. Return not-found.
     return undefined;
+  }
+
+  SameType(x: Wrapped<unknown>, y: Wrapped<unknown>): boolean {
+    const xType = typeof this.specOps.peek(x);
+    const yType = typeof this.specOps.peek(y);
+    return xType === yType;
   }
 }
