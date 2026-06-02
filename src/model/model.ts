@@ -1,6 +1,8 @@
-import type { SpecOps, Wrapped, Unwrapped } from './type.js';
+import type { SpecOps, BootStrap, Wrapped, Unwrapped } from './type.js';
 import { StringModel } from './string.js';
 import { AO } from './ao.js';
+import { INTRINSICS_String_prototype_at } from './spec/INTRINSICS.String.prototype.at.js';
+import { INTRINSICS_String_prototype_charAt } from './spec/INTRINSICS.String.prototype.charAt.js';
 
 export class Model {
 
@@ -24,21 +26,22 @@ export class Model {
   ao: AO;
   String: StringModel;
 
-  constructor(public specOps: SpecOps) {
+  constructor(public specOps: SpecOps, public runtime: BootStrap) {
     this.ao = new AO(specOps);
     this.String = new StringModel(specOps);
   }
 
-  of(f: Function): Function {
+  of(f: Function): [Function, 'spec' | 'legacy'] {
     switch (f) {
-      case String.prototype.at: return this.String.at.bind(this.String);
-      case String.prototype.charAt: return this.String.charAt.bind(this.String);
-      case String.prototype.slice: return this.String.slice.bind(this.String);
-      case String.prototype.substring: return this.String.substring.bind(this.String);
-      case String.prototype.concat: return this.String.concat.bind(this.String);
-      case String.prototype.repeat: return this.String.repeat.bind(this.String);
-      case String.prototype.replace: return this.String.replace.bind(this.String);
-      case String.prototype.split: return this.String.split.bind(this.String);
+      // generated polyfill (spec/INTRINSICS.String.prototype.at.ts), threaded with __runtime__
+      case String.prototype.at: return [INTRINSICS_String_prototype_at, 'spec'];
+      case String.prototype.charAt: return [INTRINSICS_String_prototype_charAt, 'spec'];
+      case String.prototype.slice: return [this.String.slice.bind(this.String), 'legacy'];
+      case String.prototype.substring: return [this.String.substring.bind(this.String), 'legacy'];
+      case String.prototype.concat: return [this.String.concat.bind(this.String), 'legacy'];
+      case String.prototype.repeat: return [this.String.repeat.bind(this.String), 'legacy'];
+      case String.prototype.replace: return [this.String.replace.bind(this.String), 'legacy'];
+      case String.prototype.split: return [this.String.split.bind(this.String), 'legacy'];
     }
     throw new Error(`Unsupported built-in function: ${f.name}`);
   }

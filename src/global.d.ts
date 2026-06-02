@@ -1,5 +1,6 @@
 // global.d.ts
 export {};
+import type * as model from "@/model/type.js";
 
 declare global {
   type AssertType<T extends true> = T;
@@ -8,4 +9,6 @@ declare global {
   (<T>() => T extends B ? 1 : 2)
     ? true
     : false;
+  type Wrapped<T> = model.Wrapped<T>;
+  type Unwrapped<T> = model.Unwrapped<T>;
 }

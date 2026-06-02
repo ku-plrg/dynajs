@@ -1,6 +1,6 @@
 import util from "node:util";
 import type { Analysis } from "@/types/analysis.js";
-import type { SpecOps, Wrapped, Unwrapped, Primitive } from "./type.js";
+import type { SpecOps, BootStrap, Wrapped, Unwrapped, Primitive } from "./type.js";
 import { Model } from "./model.js";
 
 type Entry = { id: symbol; value: unknown };
@@ -94,7 +94,43 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     },
   };
 
-  private model = new Model(this.spec);
+  // The runtime threaded into generated polyfills. Same wrap/unwrap + Info-hook
+  // machinery as `spec`, but in the raw/wrapped contract the generated code
+  // speaks: result values carried, decision values (indices/lengths) raw.
+  runtime: BootStrap = {
+    length: (s: Wrapped<string>): number => (this.unwrap(s) as string).length,
+    substring: (s: Wrapped<string>, from: number, to: number): Wrapped<string> => {
+      const r = (this.unwrap(s) as string).substring(from, to);
+      const w = this.wrap(r);
+      const info = this.substringInfo(this.getInfo(s), from, r.length);
+      if (info !== undefined) this.setInfo(w, info);
+      return w;
+    },
+    concatenate: (l: Wrapped<string>, r: Wrapped<string>): Wrapped<string> => {
+      const r1 = this.unwrap(l);
+      const r2 = this.unwrap(r);
+      const w = this.wrap(r1 + r2);
+      const info = this.concatenateInfo(this.getInfo(l), r1.length, this.getInfo(r), r2.length);
+      if (info !== undefined) this.setInfo(w, info);
+      return w;
+    },
+    IN__truncate: Math.trunc,
+    IN__clamp: (x: number, lower: number, upper: number): number => Math.max(lower, Math.min(x, upper)),
+    IN__min: Math.min,
+    IN__max: Math.max,
+    IN__pow: Math.pow,
+    IN__Append: <T>(list: T[], x: T): T[] => { list.push(x); return list; },
+    IN__Contains: <T>(list: T[], x: T): boolean => list.includes(x),
+    base: <T extends Unwrapped<unknown> | Primitive>(v: T, parents: Wrapped<unknown>[]): Wrapped<T> => {
+      const w = this.wrap(v);
+      const info = this.baseInfo(v, parents.map((p) => this.getInfo(p)));
+      if (info !== undefined) this.setInfo(w, info);
+      return w;
+    },
+    peek: <T>(wrapped: Wrapped<T>) => this.unwrap(wrapped),
+  };
+
+  private model = new Model(this.spec, this.runtime);
 
   protected propagate(frame: Frame, result: Unwrapped<unknown>): Wrapped<unknown> {
     switch (frame.ty) {
@@ -216,7 +252,11 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
   invokeFun(_id: number, _f: any, _base: any, _args: any, result: any, _isConstructor: boolean, _isMethod: boolean, frame?: unknown) {
     if (Model.support(_f)) {
-      result = new Model(this.spec).of(_f)(_base, ..._args);
+      let f : Function;
+      let supportType: 'spec' | 'legacy';
+      [f, supportType] = new Model(this.spec, this.runtime).of(_f);
+      if (supportType === 'spec') { result = f(this.runtime, _base as Wrapped, ...(_args as Wrapped[])); }
+      else /* supportType === 'legacy' */ { result = f(_base as Wrapped, ...(_args as Wrapped[])); }
     }
     return { result: this.propagate(frame as CallFrame, result) };
   }

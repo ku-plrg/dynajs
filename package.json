@@ -8,6 +8,7 @@
     "djx": "./djx"
   },
   "scripts": {
+    "copy": "node ./scripts/copy-polyfill.mjs",
     "clean": "npm-run-all clean:analyses clean:dynajs",
     "clean:analyses": "rimraf ./analyses/dist",
     "clean:dynajs": "rimraf ./dist ./tsconfig.tsbuildinfo",
