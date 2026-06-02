@@ -1,5 +1,7 @@
 // @type taint
 // @oracle false
+// @target es6+ String.prototype.at
+// @feature builtin at-before-taint
 // ported from unit/before_taint.js
 
 var x = "asdf";

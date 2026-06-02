@@ -1,5 +1,7 @@
 // @type taint
 // @oracle true
+// @target es6+ String.prototype.at
+// @feature builtin interprocedural-at
 // ported from unit/transparent_preserves_chars.js
 
 function f(s) { return "pre" + s.at(0); }

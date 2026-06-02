@@ -1,5 +1,7 @@
 // @type taint
 // @oracle false
+// @target es6+ String.prototype.at
+// @feature builtin at-untainted
 // ported from unit/clean_at.js
 
 var x = "asdf";

@@ -1,5 +1,7 @@
 // @type taint
 // @oracle true
+// @target es6+ String.prototype.repeat
+// @feature builtin repeat
 // ported from unit/repeat.js
 
 var x = "ab";

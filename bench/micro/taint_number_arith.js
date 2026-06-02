@@ -1,5 +1,7 @@
 // @type taint
 // @oracle true
+// @target es5 binary-plus
+// @feature syntax number-arith
 // ported from unit/number_taint.js
 
 var n = 5;

@@ -1,5 +1,7 @@
 // @type taint
 // @oracle true
+// @target es5 var-assignment
+// @feature syntax identifier-copy
 
 function __print_if_tainted__(x) {
   if (__is_tainted__(x)) {

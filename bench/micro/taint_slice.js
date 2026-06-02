@@ -1,5 +1,7 @@
 // @type taint
 // @oracle true
+// @target es5 String.prototype.slice
+// @feature builtin slice
 // ported from unit/slice.js
 
 var x = "abcdef";

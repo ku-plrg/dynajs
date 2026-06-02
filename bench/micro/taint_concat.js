@@ -1,5 +1,7 @@
 // @type taint
 // @oracle true
+// @target es5 binary-plus
+// @feature syntax string-concat
 // ported from unit/binary.js
 
 var x = "asdf";

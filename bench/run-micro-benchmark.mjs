@@ -76,12 +76,26 @@ function onPath(cmd) {
 }
 
 // Ground truth + kind from the file header. Returns null if no @oracle.
+//   @oracle  true|false   ground truth (required)
+//   @type    NAME         dynajs config kind, e.g. taint (see TYPE_CONFIG)
+//   @target  es5|es6+ ...     language level the bench exercises
+//   @feature syntax|builtin ...   syntactic construct vs. builtin/library behavior
+// @target/@feature classify by their FIRST token only; any further
+// space-separated tokens are free-form notes (e.g. `@feature syntax binary-add`)
+// and are ignored for grouping. Missing tags fall into the "(none)" group.
 function parseOracle(file) {
   const head = readFileSync(file, "utf8").slice(0, 2048);
   const o = head.match(/@oracle\s+(true|false)\b/i);
   if (!o) return null;
   const t = head.match(/@type\s+([A-Za-z0-9_-]+)/);
-  return { oracle: o[1].toLowerCase() === "true", type: t ? t[1] : "" };
+  const tg = head.match(/@target\s+([A-Za-z0-9_+.-]+)/i);
+  const ft = head.match(/@feature\s+([A-Za-z0-9_-]+)/i);
+  return {
+    oracle: o[1].toLowerCase() === "true",
+    type: t ? t[1] : "",
+    target: tg ? tg[1].toLowerCase() : "", // first token only; rest are notes
+    feature: ft ? ft[1].toLowerCase() : "", // first token only; rest are notes
+  };
 }
 
 // Run one iteration. Returns { code, ms, timedOut, stdout, stderr }, also
@@ -129,6 +143,38 @@ function classify(oracle, verdict) {
 
 const ratio = (num, den) => (den === 0 ? null : num / den);
 const fmtRatio = (x) => (x === null ? "  n/a" : x.toFixed(3));
+
+// Confusion matrix over a list of per-bench records ({ result, verdict,
+// anyTimeout, mean }). Used for the overall table and each grouped slice.
+function buildMatrix(recs) {
+  const m = { TP: 0, FP: 0, FN: 0, TN: 0, err: 0, timeout: 0, meanSum: 0, n: 0 };
+  for (const rec of recs) {
+    m[rec.result]++;
+    if (rec.verdict === "error") m.err++;
+    if (rec.anyTimeout) m.timeout++;
+    m.meanSum += rec.mean;
+    m.n++;
+  }
+  return m;
+}
+
+// One confusion-matrix row: `label` then TP/FP/FN/TN/err/t-o, precision,
+// recall, mean_ms. Shared by the overall table and the grouped breakdowns.
+function matrixRow(label, m) {
+  const precision = ratio(m.TP, m.TP + m.FP);
+  const recall = ratio(m.TP, m.TP + m.FN);
+  return (
+    label.padEnd(22) +
+    [m.TP, m.FP, m.FN, m.TN, m.err, m.timeout].map((x) => String(x).padStart(5)).join("") +
+    fmtRatio(precision).padStart(11) + fmtRatio(recall).padStart(9) +
+    (m.n ? (m.meanSum / m.n).toFixed(1) : "0").padStart(10)
+  );
+}
+
+const matrixHeader = (lead) =>
+  lead.padEnd(22) +
+  ["TP", "FP", "FN", "TN", "err", "t/o"].map((h) => h.padStart(5)).join("") +
+  "precision".padStart(11) + "recall".padStart(9) + "mean_ms".padStart(10);
 
 // Resolve dynajs analysis + flags for a bench: a CLI override wins, otherwise
 // the bench's `@type` selects a row from TYPE_CONFIG. Returns null if neither.
@@ -299,7 +345,7 @@ function main() {
   const logsDir = path.join(outputDir, "logs");
   mkdirSync(logsDir, { recursive: true });
   const csvFile = path.join(outputDir, "results.csv");
-  writeFileSync(csvFile, "runner,benchmark,type,oracle,rep,verdict,result,exit_code,timed_out,elapsed_ms\n");
+  writeFileSync(csvFile, "runner,benchmark,type,target,feature,oracle,rep,verdict,result,exit_code,timed_out,elapsed_ms\n");
 
   const nPos = benches.filter((b) => b.oracle).length;
   console.log(`Output directory: ${outputDir}`);
@@ -313,9 +359,11 @@ function main() {
       "verdict".padEnd(10) + "result".padStart(7) + "mean_ms".padStart(10),
   );
 
-  // matrix[runner] = { TP, FP, FN, TN, err, timeout, meanSum, n }
-  const matrix = {};
-  for (const r of active) matrix[r.name] = { TP: 0, FP: 0, FN: 0, TN: 0, err: 0, timeout: 0, meanSum: 0, n: 0 };
+  // Per-bench outcomes, kept so the report can slice them any number of ways
+  // (overall, by @target, by @feature). records[runner] = [{ bench, result,
+  // verdict, anyTimeout, mean }, ...].
+  const records = {};
+  for (const r of active) records[r.name] = [];
 
   for (const r of active) {
     const verdictOf = r.verdict ?? parseVerdict;
@@ -343,7 +391,7 @@ function main() {
         if (run.timedOut) anyTimeout = true;
         appendFileSync(
           csvFile,
-          `${r.name},${b.name},${b.type},${b.oracle},${rep},${v},,${run.code},${run.timedOut},${run.ms.toFixed(1)}\n`,
+          `${r.name},${b.name},${b.type},${b.target},${b.feature},${b.oracle},${rep},${v},,${run.code},${run.timedOut},${run.ms.toFixed(1)}\n`,
         );
       }
 
@@ -354,12 +402,7 @@ function main() {
 
       const result = classify(b.oracle, verdict);
       const mean = samples.reduce((a, c) => a + c, 0) / samples.length;
-      const m = matrix[r.name];
-      m[result]++;
-      if (verdict === "error") m.err++;
-      if (anyTimeout) m.timeout++;
-      m.meanSum += mean;
-      m.n++;
+      records[r.name].push({ bench: b, result, verdict, anyTimeout, mean });
 
       console.log(
         r.name.padEnd(12) + b.name.padEnd(24) +
@@ -370,22 +413,26 @@ function main() {
   }
 
   console.log("\nConfusion matrix & precision/recall (errors counted as FN/FP):");
-  console.log(
-    "runner".padEnd(12) +
-      ["TP", "FP", "FN", "TN", "err", "t/o"].map((h) => h.padStart(5)).join("") +
-      "precision".padStart(11) + "recall".padStart(9) + "mean_ms".padStart(10),
-  );
-  for (const r of active) {
-    const m = matrix[r.name];
-    const precision = ratio(m.TP, m.TP + m.FP);
-    const recall = ratio(m.TP, m.TP + m.FN);
-    console.log(
-      r.name.padEnd(12) +
-        [m.TP, m.FP, m.FN, m.TN, m.err, m.timeout].map((x) => String(x).padStart(5)).join("") +
-        fmtRatio(precision).padStart(11) + fmtRatio(recall).padStart(9) +
-        (m.n ? (m.meanSum / m.n).toFixed(1) : "0").padStart(10),
-    );
+  console.log(matrixHeader("runner"));
+  for (const r of active) console.log(matrixRow(r.name, buildMatrix(records[r.name])));
+
+  // Same matrix sliced by classification dimension. For each runner we group
+  // its records by @target (then @feature) and print a sub-row per value, so
+  // you can read off detection quality on, e.g., es5 vs es6+ benches.
+  for (const [dim, label] of [["target", "@target"], ["feature", "@feature"]]) {
+    console.log(`\nBy ${label}:`);
+    console.log(matrixHeader("runner / " + label));
+    for (const r of active) {
+      const groups = new Map();
+      for (const rec of records[r.name]) {
+        const key = rec.bench[dim] || "(none)";
+        (groups.get(key) ?? groups.set(key, []).get(key)).push(rec);
+      }
+      for (const key of [...groups.keys()].sort())
+        console.log(matrixRow(`  ${r.name} / ${key}`, buildMatrix(groups.get(key))));
+    }
   }
+
   console.log(`\nCSV: ${csvFile}`);
 }
 

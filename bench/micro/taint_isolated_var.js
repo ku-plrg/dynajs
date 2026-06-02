@@ -1,5 +1,7 @@
 // @type taint
 // @oracle false
+// @target es5 var-assignment
+// @feature syntax isolated-var
 // ported from unit/isolated_var.js
 
 var x = "asdf";

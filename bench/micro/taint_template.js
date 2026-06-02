@@ -1,5 +1,7 @@
 // @type taint
 // @oracle true
+// @target es6+ template-literal
+// @feature syntax template-literal
 // ported from unit/template_literal.js
 
 var x = "abc";
