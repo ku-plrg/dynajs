@@ -1,5 +1,10 @@
 import { execFileSync } from 'node:child_process';
-import { FlowAnalysis, type BinFrame, type UnFrame } from '@/model/flow.js';
+import {
+  FlowAnalysis,
+  type BinFrame,
+  type UnFrame,
+  type GetFieldFrame,
+} from '@/model/flow.js';
 import type { Wrapped } from '@/model/type.js';
 import { installPrelude } from './prelude.js';
 
@@ -7,11 +12,20 @@ declare const D$: { analysis: ConcolicAnalysis } & Record<string, any>;
 
 installPrelude();
 
+// SMT sort a symbolic variable is declared with — inferred from its seed's
+// concrete type (string -> String, otherwise Int).
+type Sort = 'Int' | 'String';
+
 type Sym =
   | { kind: 'const'; value: unknown }
-  | { kind: 'var'; name: string }
+  | { kind: 'var'; name: string; sort: Sort }
   | { kind: 'unary'; op: string; operand: Sym }
-  | { kind: 'binary'; op: string; left: Sym; right: Sym };
+  | { kind: 'binary'; op: string; left: Sym; right: Sym }
+  // string structure (z3 String theory): concatenation, fixed-window
+  // substring/char-access, and length.
+  | { kind: 'concat'; left: Sym; right: Sym }
+  | { kind: 'substr'; src: Sym; start: number; length: number }
+  | { kind: 'strlen'; src: Sym };
 
 // A branch actually taken during concrete execution: `constraint` is the
 // symbolic form of the condition, `taken` whether it was truthy. Together these
@@ -21,10 +35,12 @@ type PathConstraint = { id: number; constraint: Sym; taken: boolean };
 // ---------------------------------------------------------------------------
 // SMT-LIB translation
 //
-// Scope: integer arithmetic, comparisons, and boolean logic — enough for the
-// concolic microbenches. Unsupported operators (bitwise, **, string ops, ...)
-// throw `UnsupportedSym`; symbolicAssert turns that into an `error` verdict
-// rather than silently mis-translating.
+// Scope: integer arithmetic, comparisons, boolean logic, and a slice of the z3
+// String theory — string equality, concatenation (`str.++`), fixed-window
+// substring/char-access (`str.substr`), and length (`str.len`) — enough for the
+// concolic microbenches. Operators outside this set (bitwise, **, string
+// ordering `< > <= >=`, ...) throw `UnsupportedSym`; symbolicAssert turns that
+// into an `error` verdict rather than silently mis-translating.
 // ---------------------------------------------------------------------------
 
 class UnsupportedSym extends Error {}
@@ -49,20 +65,26 @@ const SMT_BINARY: Record<string, (a: string, b: string) => string> = {
   '||': (a, b) => `(or ${a} ${b})`,
 };
 
+// SMT-LIB string literal: double quotes, with an embedded `"` escaped as `""`.
+function smtString(v: string): string {
+  return `"${v.replace(/"/g, '""')}"`;
+}
+
 function constToSmt(value: unknown): string {
   if (typeof value === 'boolean') return value ? 'true' : 'false';
   if (typeof value === 'number' && Number.isInteger(value)) {
     return value < 0 ? `(- ${-value})` : `${value}`;
   }
+  if (typeof value === 'string') return smtString(value);
   throw new UnsupportedSym(`unsupported constant: ${JSON.stringify(value)}`);
 }
 
-function symToSmt(s: Sym, vars: Set<string>): string {
+function symToSmt(s: Sym, vars: Map<string, Sort>): string {
   switch (s.kind) {
     case 'const':
       return constToSmt(s.value);
     case 'var':
-      vars.add(s.name);
+      vars.set(s.name, s.sort);
       return s.name;
     case 'unary': {
       const x = symToSmt(s.operand, vars);
@@ -76,6 +98,12 @@ function symToSmt(s: Sym, vars: Set<string>): string {
       if (!build) throw new UnsupportedSym(`unsupported binary op: ${s.op}`);
       return build(symToSmt(s.left, vars), symToSmt(s.right, vars));
     }
+    case 'concat':
+      return `(str.++ ${symToSmt(s.left, vars)} ${symToSmt(s.right, vars)})`;
+    case 'substr':
+      return `(str.substr ${symToSmt(s.src, vars)} ${s.start} ${s.length})`;
+    case 'strlen':
+      return `(str.len ${symToSmt(s.src, vars)})`;
   }
 }
 
@@ -89,6 +117,12 @@ function symToString(s: Sym): string {
       return `(${s.op} ${symToString(s.operand)})`;
     case 'binary':
       return `(${symToString(s.left)} ${s.op} ${symToString(s.right)})`;
+    case 'concat':
+      return `(${symToString(s.left)} ++ ${symToString(s.right)})`;
+    case 'substr':
+      return `${symToString(s.src)}[${s.start}..${s.start + s.length}]`;
+    case 'strlen':
+      return `len(${symToString(s.src)})`;
   }
 }
 
@@ -101,7 +135,7 @@ function solveValidity(
   pc: PathConstraint[],
   assertSym: Sym,
 ): 'valid' | 'invalid' | 'unknown' {
-  const vars = new Set<string>();
+  const vars = new Map<string, Sort>();
   const lines: string[] = [];
   for (const p of pc) {
     const c = symToSmt(p.constraint, vars);
@@ -109,8 +143,12 @@ function solveValidity(
   }
   lines.push(`(assert (not ${symToSmt(assertSym, vars)}))`);
 
+  // The String theory needs an explicit logic; the all-Int path stays bare so
+  // existing integer benches translate byte-for-byte as before.
+  const hasString = [...vars.values()].includes('String');
   const smt =
-    [...vars].map((v) => `(declare-const ${v} Int)`).join('\n') +
+    (hasString ? '(set-logic ALL)\n' : '') +
+    [...vars].map(([v, sort]) => `(declare-const ${v} ${sort})`).join('\n') +
     '\n' +
     lines.join('\n') +
     '\n(check-sat)\n';
@@ -147,16 +185,37 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym> {
     return ConcolicAnalysis.OPAQUE_CALLS.has(f);
   }
 
-  // Symbolic info propagates only through the operator overrides below; base /
-  // string paths carry no symbolic meaning, so the abstract hooks are inert.
+  // baseInfo is operator-unaware, so it can't tell e.g. `.length` from any other
+  // field read — that case is recovered in the `getField` override below. Plain
+  // base propagation therefore carries no symbolic meaning and stays inert.
   protected baseInfo(): Sym | undefined {
     return undefined;
   }
-  protected substringInfo(): Sym | undefined {
-    return undefined;
+
+  // The model routes string-builtin results (charAt/slice/substring/...) and the
+  // `s[i]` char-access through these hooks, so they DO carry symbolic structure.
+  protected substringInfo(
+    src: Sym | undefined,
+    start: number,
+    resultLength: number,
+  ): Sym | undefined {
+    // Non-symbolic source -> result has no symbolic dependency.
+    if (src === undefined) return undefined;
+    return { kind: 'substr', src, start, length: resultLength };
   }
-  protected concatenateInfo(): Sym | undefined {
-    return undefined;
+
+  protected concatenateInfo(
+    left: Sym | undefined,
+    _leftLength: number,
+    right: Sym | undefined,
+    _rightLength: number,
+  ): Sym | undefined {
+    // This hook gets only each side's Info, not its concrete value, so a
+    // non-symbolic side can't be reconstructed as a string constant — track only
+    // when both sides are symbolic. The common `sym + "literal"` shape is the `+`
+    // operator, which `binary` handles below (it has the wrapped operands).
+    if (left === undefined || right === undefined) return undefined;
+    return { kind: 'concat', left, right };
   }
 
   // The symbolic expression for a wrapped value: its attached Info, else a
@@ -172,9 +231,13 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym> {
   // seed's value never aliases an unrelated literal of the same value.
   makeSymbolic(name: unknown, seed: unknown): unknown {
     const w = seed as Wrapped<unknown>;
+    // The seed's concrete type fixes the variable's SMT sort: a string seed is a
+    // String variable, anything else an Int (the only two sorts we translate).
+    const sort: Sort = typeof this.unwrap(w) === 'string' ? 'String' : 'Int';
     this.setInfo(w, {
       kind: 'var',
       name: String(this.unwrap(name as Wrapped<unknown>)),
+      sort,
     });
     return w;
   }
@@ -225,7 +288,19 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym> {
     const left = this.symOf(f.left);
     const right = this.symOf(f.right);
     if (left.kind !== 'const' || right.kind !== 'const') {
-      this.setInfo(w, { kind: 'binary', op, left, right });
+      // `+` with a string operand is concatenation, not numeric addition — emit a
+      // string-concat node (str.++) rather than an arithmetic (+ ...). The wrapped
+      // operands are in scope here, so a non-symbolic side keeps its string const.
+      const isStringPlus =
+        op === '+' &&
+        (typeof this.unwrap(f.left) === 'string' ||
+          typeof this.unwrap(f.right) === 'string');
+      this.setInfo(
+        w,
+        isStringPlus
+          ? { kind: 'concat', left, right }
+          : { kind: 'binary', op, left, right },
+      );
     }
     return { result: w };
   }
@@ -258,6 +333,23 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym> {
       this.pathConstraints.push({ id, constraint: sym, taken: Boolean(raw) });
     }
     return { result: raw };
+  }
+
+  // `s.length` on a symbolic string is the one field read with symbolic meaning;
+  // baseInfo can't recover it (operator-unaware), so we special-case it to a
+  // str.len node and delegate every other read (incl. the `s[i]` char-access,
+  // which the base path routes through substringInfo) to FlowAnalysis.
+  getField(id: number, base: any, prop: any, result: any, frame?: unknown) {
+    const f = frame as GetFieldFrame;
+    const b: unknown = this.unwrap(f.base);
+    const p: unknown = this.unwrap(f.prop);
+    if (typeof b === 'string' && p === 'length') {
+      const src = this.symOf(f.base);
+      const w = this.wrap(result);
+      if (src.kind !== 'const') this.setInfo(w, { kind: 'strlen', src });
+      return { result: w };
+    }
+    return super.getField(id, base, prop, result, frame);
   }
 
   endExecution() {

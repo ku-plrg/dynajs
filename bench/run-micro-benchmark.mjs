@@ -449,9 +449,9 @@ function main() {
   for (const r of active) console.log(matrixRow(r.name, buildMatrix(records[r.name])));
 
   // Same matrix sliced by classification dimension. For each runner we group
-  // its records by @target (then @feature) and print a sub-row per value, so
-  // you can read off detection quality on, e.g., es5 vs es6+ benches.
-  for (const [dim, label] of [["target", "@target"], ["feature", "@feature"]]) {
+  // its records by @target (then @feature, then @type) and print a sub-row per
+  // value, so you can read off detection quality on, e.g., es5 vs es6+ benches.
+  for (const [dim, label] of [["target", "@target"], ["feature", "@feature"], ["type", "@type"]]) {
     console.log(`\nBy ${label}:`);
     console.log(matrixHeader("runner / " + label));
     for (const r of active) {
