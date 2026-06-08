@@ -203,6 +203,12 @@ export abstract class FlowAnalysis<Info> implements Analysis {
             );
           }
         }
+        // Object/array elements are stored as Wrapped values that already carry
+        // their own info (e.g. split's substrings). Preserve it on read-back
+        // instead of re-deriving from [base, prop] (which would drop it).
+        if (this.isWrapped(result) && this.getInfo(result) !== undefined) {
+          return result as Wrapped<unknown>;
+        }
         return this.spec.base(result, [frame.base, frame.prop]);
       }
       case 'opaque': {

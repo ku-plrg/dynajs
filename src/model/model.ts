@@ -36,11 +36,11 @@ export class Model {
       case String.prototype.at: return generated.INTRINSICS_String_prototype_at;
       case String.prototype.charAt: return generated.INTRINSICS_String_prototype_charAt;
       case String.prototype.slice: return generated.INTRINSICS_String_prototype_slice;
-      // case String.prototype.substring: return [this.String.substring.bind(this.String), 'legacy'];
+      case String.prototype.substring: return generated.INTRINSICS_String_prototype_substring;
       case String.prototype.concat: return generated.INTRINSICS_String_prototype_concat;
-      // case String.prototype.repeat: return [this.String.repeat.bind(this.String), 'legacy'];
-      // case String.prototype.replace: return [this.String.replace.bind(this.String), 'legacy'];
-      // case String.prototype.split: return [this.String.split.bind(this.String), 'legacy'];
+      case String.prototype.repeat: return generated.INTRINSICS_String_prototype_repeat;
+      case String.prototype.replace: return generated.INTRINSICS_String_prototype_replace;
+      case String.prototype.split: return generated.INTRINSICS_String_prototype_split;
     }
     throw new Error(`Unsupported built-in function: ${f.name}`);
   }
