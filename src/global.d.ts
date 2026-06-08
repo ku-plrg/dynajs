@@ -11,4 +11,5 @@ declare global {
     : false;
   type Wrapped<T> = model.Wrapped<T>;
   type Unwrapped<T> = model.Unwrapped<T>;
+  type BootStrap = model.BootStrap;
 }

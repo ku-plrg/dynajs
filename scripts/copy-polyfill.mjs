@@ -19,6 +19,14 @@ const FILES = [
   // "GetSubstitution",
   "INTRINSICS.String.prototype.at",
   "INTRINSICS.String.prototype.charAt",
+  // "INTRINSICS.String.prototype.charCodeAt",
+  "INTRINSICS.String.prototype.slice",
+  "INTRINSICS.String.prototype.concat",
+  "INTRINSICS.String.prototype.repeat",
+
+  "INTRINSICS.String.prototype.replace",
+  "INTRINSICS.String.prototype.split",
+  "INTRINSICS.String.prototype.substring",
 ];
 
 const ESMETA_HOME = process.env.ESMETA_HOME;
@@ -61,32 +69,59 @@ mkdirSync(destDir, { recursive: true });
 // Before copying, clear existing .ts files in the destination (keep .gitkeep, etc.).
 // However, files with comments starting with @manual are considered manually written and are not deleted.
 const MANUAL_MARKER = /(?:\/\/|\/\*)\s*@manual\b/;
+const manualFiles = new Set();
 for (const entry of readdirSync(destDir)) {
   if (!entry.endsWith(".ts")) continue;
   const path = join(destDir, entry);
-  if (MANUAL_MARKER.test(readFileSync(path, "utf8"))) continue;
+  if (MANUAL_MARKER.test(readFileSync(path, "utf8"))) {
+    manualFiles.add(entry);
+    continue;
+  }
   rmSync(path);
+}
+
+// Match relative imports like `from "./AO__StringIndexOf.js"` so we can follow
+// each builtin's dependency graph. `@/...` and bare imports are intentionally
+// not matched — only sibling spec files need to be copied alongside.
+const REL_IMPORT_RE = /\bfrom\s+["']\.\/([^"']+?)\.js["']/g;
+function depsOf(content) {
+  const out = [];
+  for (const m of content.matchAll(REL_IMPORT_RE)) out.push(m[1]);
+  return out;
 }
 
 const missing = [];
 const copiedNames = [];
-for (const name of FILES) {
-  const base = name.endsWith(".ts") ? name.slice(0, -3) : name;
+const visited = new Set();
+// Seed the worklist with the requested builtins; transitive AO dependencies are
+// discovered and copied below. @manual shims are kept as-is (never overwritten),
+// but we still follow their imports to find any generated AOs they pull in.
+const queue = FILES.map((name) => (name.endsWith(".ts") ? name.slice(0, -3) : name));
+const roots = new Set(queue);
+while (queue.length > 0) {
+  const base = queue.shift();
+  if (visited.has(base)) continue;
+  visited.add(base);
   const file = `${base}.ts`;
-  const from = join(srcDir, file);
-  if (!existsSync(from)) {
-    missing.push(file);
-    continue;
+
+  let content;
+  if (manualFiles.has(file)) {
+    // Hand-authored shim already present locally — read it for its deps only.
+    content = readFileSync(join(destDir, file), "utf8");
+  } else {
+    const from = join(srcDir, file);
+    if (!existsSync(from)) {
+      missing.push(file);
+      continue;
+    }
+    content = readFileSync(from, "utf8");
+    cpSync(from, join(destDir, file));
+    if (roots.has(base)) copiedNames.push(base);
   }
-  const to = join(destDir, file);
-  // Warn if overwriting a `@manual` file, which is considered a manually written file.
-  if (existsSync(to) && MANUAL_MARKER.test(readFileSync(to, "utf8"))) {
-    console.error(
-      chalk.red(`✗ Overwriting @manual file: ${file}`),
-    );
+
+  for (const dep of depsOf(content)) {
+    if (!visited.has(dep)) queue.push(dep);
   }
-  cpSync(from, to);
-  copiedNames.push(base);
 }
 
 if (missing.length > 0) {

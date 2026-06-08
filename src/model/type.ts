@@ -22,27 +22,58 @@ interface StringOps {
   lengthOfString?: (s: Wrapped<string>) => Wrapped<number>;
 };
 
-// The runtime threaded into every generated polyfill as `__runtime__`.
-// Generated code calls these as `__runtime__.<op>(...)`. Unlike SpecOps, the
-// vocabulary here follows the raw/wrapped contract directly: result values are
-// carried (Wrapped), decision values (indices, lengths) are raw `number`.
-// `peek`/`base` are intentionally NOT exposed — generated code never names them.
+// The runtime threaded into every generated polyfill as the `$` parameter.
+// Generated code routes EVERY operation on a value through these ops so an
+// analysis can observe it. To support concolic execution (not just taint),
+// even "decision values" (indices, lengths) are carried as Wrapped — they need
+// a tracked identity. Control flow is preserved because the comparison/equality
+// ops return a concrete `boolean` (so native `if`/`while`/`for`/`&&`/`||` work),
+// while arithmetic ops return Wrapped to keep the symbolic value flowing.
 export interface BootStrap {
-  // SpecOps vocabulary — carry the result value, propagate Info via flow hooks.
-  length: (s: Wrapped<string>) => number;                                       // raw (decision value)
-  substring: (s: Wrapped<string>, from: number, to: number) => Wrapped<string>; // raw indices
+  // String ops — indices are Wrapped too.
+  length: (s: Wrapped<string>) => Wrapped<number>;
+  substring: (s: Wrapped<string>, from: Wrapped<number>, to: Wrapped<number>) => Wrapped<string>;
   concatenate: (l: Wrapped<string>, r: Wrapped<string>) => Wrapped<string>;
+  codeUnitAt: (s: Wrapped<string>, i: Wrapped<number>) => Wrapped<string>;
 
-  // Internal notations with no SpecOps name — pure on raw numbers.
-  IN__truncate: (x: number) => number;
-  IN__clamp: (x: number, lower: number, upper: number) => number;
-  IN__min: (...xs: number[]) => number;
-  IN__max: (...xs: number[]) => number;
-  IN__pow: (base: number, exponent: number) => number;
+  // Arithmetic / bitwise — carry the result value (Wrapped).
+  add: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<number>;
+  subtract: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<number>;
+  multiply: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<number>;
+  divide: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<number>;
+  remainder: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<number>;
+  negate: (x: Wrapped<number>) => Wrapped<number>;
+  exponentiate: (b: Wrapped<number>, e: Wrapped<number>) => Wrapped<number>;
+  bitwiseAND: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<number>;
+  bitwiseOR: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<number>;
+  bitwiseXOR: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<number>;
+
+  // Comparison / equality / predicates — concrete `boolean` so control flow
+  // and short-circuiting work natively. (PC recording for concolic: later.)
+  lessThan: (l: Wrapped<number>, r: Wrapped<number>) => boolean;
+  lessThanEqual: (l: Wrapped<number>, r: Wrapped<number>) => boolean;
+  greaterThan: (l: Wrapped<number>, r: Wrapped<number>) => boolean;
+  greaterThanEqual: (l: Wrapped<number>, r: Wrapped<number>) => boolean;
+  // Type predicates so a `not-found`-style guard narrows a mixed return
+  // (e.g. StringIndexOf's `Wrapped<string> | Wrapped<number>`): after
+  // `if ($.is(pos, $.base("not-found"))) ...`, the else branch sees Wrapped<number>.
+  is: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(l: L, r: R) => l is Extract<L, R>;
+  isNot: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(l: L, r: R) => l is Exclude<L, R>;
+  isNaN: (x: Wrapped<number>) => boolean;
+  isFinite: (x: Wrapped<number>) => boolean;
+  typeOf: (x: Wrapped<unknown>) => string;
+
+  // Math notations — Wrapped, like the arithmetic ops.
+  min: (...xs: Wrapped<number>[]) => Wrapped<number>;
+  max: (...xs: Wrapped<number>[]) => Wrapped<number>;
+  abs: (x: Wrapped<number>) => Wrapped<number>;
+  floor: (x: Wrapped<number>) => Wrapped<number>;
+  truncate: (x: Wrapped<number>) => Wrapped<number>;
+  clamp: (x: Wrapped<number>, lower: Wrapped<number>, upper: Wrapped<number>) => Wrapped<number>;
 
   // List notations.
-  IN__Append: <T>(list: T[], x: T) => T[];
-  IN__Contains: <T>(list: T[], x: T) => boolean;
+  append: <T>(list: T[], x: T) => T[];
+  contains: <T>(list: T[], x: T) => boolean;
 
   // Basic operations.
   base: <T extends Unwrapped | Primitive>(v: T, parent: Wrapped[]) => Wrapped<T>;

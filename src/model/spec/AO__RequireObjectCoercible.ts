@@ -1,7 +1,5 @@
 // @manual
 
-import type { Wrapped, BootStrap } from "@/model/type.js";
-
 export function AO__RequireObjectCoercible(__runtime__: BootStrap, argument: Wrapped<unknown>): Wrapped<unknown> {
   "use strict";
 

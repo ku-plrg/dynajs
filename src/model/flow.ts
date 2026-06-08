@@ -94,19 +94,30 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     },
   };
 
-  // The runtime threaded into generated polyfills. Same wrap/unwrap + Info-hook
-  // machinery as `spec`, but in the raw/wrapped contract the generated code
-  // speaks: result values carried, decision values (indices/lengths) raw.
+  // Wrap a freshly-computed numeric result, propagating Info from its operands
+  // exactly like base() does. Used by every arithmetic/math runtime op.
+  private numOp(v: number, parents: Wrapped<unknown>[]): Wrapped<number> {
+    const w = this.wrap(v);
+    const info = this.baseInfo(v, parents.map((p) => this.getInfo(p)));
+    if (info !== undefined) this.setInfo(w, info);
+    return w;
+  }
+
+  // The runtime threaded into generated polyfills as `$`. Every operation on a
+  // value goes through here. Arithmetic carries the result (Wrapped); the
+  // comparison/equality/predicate ops return a concrete boolean so native
+  // control flow and short-circuiting still work.
   runtime: BootStrap = {
-    length: (s: Wrapped<string>): number => (this.unwrap(s) as string).length,
-    substring: (s: Wrapped<string>, from: number, to: number): Wrapped<string> => {
-      const r = (this.unwrap(s) as string).substring(from, to);
+    length: (s) => this.numOp((this.unwrap(s) as string).length, [s]),
+    substring: (s, from, to) => {
+      const startN = this.unwrap(from) as number;
+      const r = (this.unwrap(s) as string).substring(startN, this.unwrap(to) as number);
       const w = this.wrap(r);
-      const info = this.substringInfo(this.getInfo(s), from, r.length);
+      const info = this.substringInfo(this.getInfo(s), startN, r.length);
       if (info !== undefined) this.setInfo(w, info);
       return w;
     },
-    concatenate: (l: Wrapped<string>, r: Wrapped<string>): Wrapped<string> => {
+    concatenate: (l, r) => {
       const r1 = this.unwrap(l);
       const r2 = this.unwrap(r);
       const w = this.wrap(r1 + r2);
@@ -114,13 +125,51 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       if (info !== undefined) this.setInfo(w, info);
       return w;
     },
-    IN__truncate: Math.trunc,
-    IN__clamp: (x: number, lower: number, upper: number): number => Math.max(lower, Math.min(x, upper)),
-    IN__min: Math.min,
-    IN__max: Math.max,
-    IN__pow: Math.pow,
-    IN__Append: <T>(list: T[], x: T): T[] => { list.push(x); return list; },
-    IN__Contains: <T>(list: T[], x: T): boolean => list.includes(x),
+    codeUnitAt: (s, i) => {
+      const idx = this.unwrap(i) as number;
+      const r = (this.unwrap(s) as string).charAt(idx);
+      const w = this.wrap(r);
+      const info = this.substringInfo(this.getInfo(s), idx, r.length);
+      if (info !== undefined) this.setInfo(w, info);
+      return w;
+    },
+
+    add: (l, r) => this.numOp((this.unwrap(l) as number) + (this.unwrap(r) as number), [l, r]),
+    subtract: (l, r) => this.numOp((this.unwrap(l) as number) - (this.unwrap(r) as number), [l, r]),
+    multiply: (l, r) => this.numOp((this.unwrap(l) as number) * (this.unwrap(r) as number), [l, r]),
+    divide: (l, r) => this.numOp((this.unwrap(l) as number) / (this.unwrap(r) as number), [l, r]),
+    remainder: (l, r) => this.numOp((this.unwrap(l) as number) % (this.unwrap(r) as number), [l, r]),
+    negate: (x) => this.numOp(-(this.unwrap(x) as number), [x]),
+    exponentiate: (b, e) => this.numOp((this.unwrap(b) as number) ** (this.unwrap(e) as number), [b, e]),
+    bitwiseAND: (l, r) => this.numOp((this.unwrap(l) as number) & (this.unwrap(r) as number), [l, r]),
+    bitwiseOR: (l, r) => this.numOp((this.unwrap(l) as number) | (this.unwrap(r) as number), [l, r]),
+    bitwiseXOR: (l, r) => this.numOp((this.unwrap(l) as number) ^ (this.unwrap(r) as number), [l, r]),
+
+    lessThan: (l, r) => (this.unwrap(l) as number) < (this.unwrap(r) as number),
+    lessThanEqual: (l, r) => (this.unwrap(l) as number) <= (this.unwrap(r) as number),
+    greaterThan: (l, r) => (this.unwrap(l) as number) > (this.unwrap(r) as number),
+    greaterThanEqual: (l, r) => (this.unwrap(l) as number) >= (this.unwrap(r) as number),
+    is: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(l: L, r: R): l is Extract<L, R> =>
+      this.unwrap(l) === this.unwrap(r),
+    isNot: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(l: L, r: R): l is Exclude<L, R> =>
+      this.unwrap(l) !== this.unwrap(r),
+    isNaN: (x) => Number.isNaN(this.unwrap(x) as number),
+    isFinite: (x) => Number.isFinite(this.unwrap(x) as number),
+    typeOf: (x) => typeof this.unwrap(x),
+
+    min: (...xs) => this.numOp(Math.min(...xs.map((x) => this.unwrap(x) as number)), xs),
+    max: (...xs) => this.numOp(Math.max(...xs.map((x) => this.unwrap(x) as number)), xs),
+    abs: (x) => this.numOp(Math.abs(this.unwrap(x) as number), [x]),
+    floor: (x) => this.numOp(Math.floor(this.unwrap(x) as number), [x]),
+    truncate: (x) => this.numOp(Math.trunc(this.unwrap(x) as number), [x]),
+    clamp: (x, lower, upper) =>
+      this.numOp(
+        Math.max(this.unwrap(lower) as number, Math.min(this.unwrap(x) as number, this.unwrap(upper) as number)),
+        [x, lower, upper],
+      ),
+
+    append: <T>(list: T[], x: T): T[] => { list.push(x); return list; },
+    contains: <T>(list: T[], x: T): boolean => list.includes(x),
     base: <T extends Unwrapped<unknown> | Primitive>(v: T, parents: Wrapped<unknown>[]): Wrapped<T> => {
       const w = this.wrap(v);
       const info = this.baseInfo(v, parents.map((p) => this.getInfo(p)));
@@ -252,11 +301,8 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
   invokeFun(_id: number, _f: any, _base: any, _args: any, result: any, _isConstructor: boolean, _isMethod: boolean, frame?: unknown) {
     if (Model.support(_f)) {
-      let f : Function;
-      let supportType: 'spec' | 'legacy';
-      [f, supportType] = new Model(this.spec, this.runtime).of(_f);
-      if (supportType === 'spec') { result = f(this.runtime, _base as Wrapped, ...(_args as Wrapped[])); }
-      else /* supportType === 'legacy' */ { result = f(_base as Wrapped, ...(_args as Wrapped[])); }
+      let f : Function = new Model(this.spec, this.runtime).of(_f);
+      result = f(this.runtime, _base as Wrapped, ...(_args as Wrapped[]));
     }
     return { result: this.propagate(frame as CallFrame, result) };
   }

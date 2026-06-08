@@ -1,0 +1,20 @@
+// @manual
+
+import { AO__ToNumber } from "./AO__ToNumber.js";
+
+export function AO__ToUint32($: BootStrap, arg: Wrapped<unknown>): Wrapped<number> {
+  // 1. Let _number_ be ? ToNumber(_argument_).
+  let number = AO__ToNumber($, arg);
+  let numberUnwrapped = $.peek(number);
+  // 1. If _number_ is not finite or _number_ is either *+0*<sub>𝔽</sub> or *-0*<sub>𝔽</sub>, return *+0*<sub>𝔽</sub>.
+  if (!Number.isFinite(numberUnwrapped) || numberUnwrapped === 0) {
+    return $.base(0, [arg]);
+  }
+  // 1. Let _int_ be truncate(ℝ(_number_)).
+  let int_ = Math.trunc(numberUnwrapped);
+  // 1. Let _int32bit_ be _int_ modulo 2<sup>32</sup>.
+  var MOD = 4294967296; // 2^32
+  let int32bit = ((int_ % MOD) + MOD) % MOD;
+  // 1. [id="step-touint32-return"] Return 𝔽(_int32bit_).
+  return $.base(int32bit, [arg]);
+}

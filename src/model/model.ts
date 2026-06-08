@@ -30,17 +30,17 @@ export class Model {
     this.String = new StringModel(specOps);
   }
 
-  of(f: Function): [Function, 'spec' | 'legacy'] {
+  of(f: Function): Function {
     switch (f) {
       // generated polyfill (spec/INTRINSICS.String.prototype.at.ts), threaded with __runtime__
-      case String.prototype.at: return [generated.INTRINSICS_String_prototype_at, 'spec'];
-      case String.prototype.charAt: return [generated.INTRINSICS_String_prototype_charAt, 'spec'];
-      case String.prototype.slice: return [this.String.slice.bind(this.String), 'legacy'];
-      case String.prototype.substring: return [this.String.substring.bind(this.String), 'legacy'];
-      case String.prototype.concat: return [this.String.concat.bind(this.String), 'legacy'];
-      case String.prototype.repeat: return [this.String.repeat.bind(this.String), 'legacy'];
-      case String.prototype.replace: return [this.String.replace.bind(this.String), 'legacy'];
-      case String.prototype.split: return [this.String.split.bind(this.String), 'legacy'];
+      case String.prototype.at: return generated.INTRINSICS_String_prototype_at;
+      case String.prototype.charAt: return generated.INTRINSICS_String_prototype_charAt;
+      case String.prototype.slice: return generated.INTRINSICS_String_prototype_slice;
+      // case String.prototype.substring: return [this.String.substring.bind(this.String), 'legacy'];
+      case String.prototype.concat: return generated.INTRINSICS_String_prototype_concat;
+      // case String.prototype.repeat: return [this.String.repeat.bind(this.String), 'legacy'];
+      // case String.prototype.replace: return [this.String.replace.bind(this.String), 'legacy'];
+      // case String.prototype.split: return [this.String.split.bind(this.String), 'legacy'];
     }
     throw new Error(`Unsupported built-in function: ${f.name}`);
   }
