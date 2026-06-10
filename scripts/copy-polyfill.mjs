@@ -66,18 +66,33 @@ const destDir = resolve(
 );
 mkdirSync(destDir, { recursive: true });
 
-// Before copying, clear existing .ts files in the destination (keep .gitkeep, etc.).
-// However, files with comments starting with @manual are considered manually written and are not deleted.
-const MANUAL_MARKER = /(?:\/\/|\/\*)\s*@manual\b/;
-const manualFiles = new Set();
+// Hand-authored implementations are named `<base>.manual.ts` and tracked in git.
+// Map each base to its manual file so the dependency walk knows which builtins
+// are provided locally (and must not be fetched from ESMETA).
+const MANUAL_SUFFIX = ".manual.ts";
+const manualBases = new Map();
 for (const entry of readdirSync(destDir)) {
-  if (!entry.endsWith(".ts")) continue;
-  const path = join(destDir, entry);
-  if (MANUAL_MARKER.test(readFileSync(path, "utf8"))) {
-    manualFiles.add(entry);
-    continue;
-  }
-  rmSync(path);
+  if (!entry.endsWith(MANUAL_SUFFIX)) continue;
+  manualBases.set(entry.slice(0, -MANUAL_SUFFIX.length), entry);
+}
+
+// Before copying, clear the generated `.ts` files (shims, copied AOs, barrel) so
+// stale output never lingers. Hand-authored `*.manual.ts` and non-.ts files
+// (.gitignore, .gitkeep) are left untouched.
+for (const entry of readdirSync(destDir)) {
+  if (!entry.endsWith(".ts") || entry.endsWith(MANUAL_SUFFIX)) continue;
+  rmSync(join(destDir, entry));
+}
+
+// Emit a thin re-export shim next to every manual file so the rest of the spec
+// can keep importing `./AO__Foo.js` without caring whether AO__Foo is generated
+// or hand-authored. The shim is regenerated each run; edit the .manual.ts file.
+for (const [base, file] of manualBases) {
+  const shim =
+    `// THIS FILE IS AUTO-GENERATED, DO NOT EDIT\n` +
+    `// Re-exports the hand-authored implementation in ${file}.\n` +
+    `export * from "./${base}.manual.js";\n`;
+  writeFileSync(join(destDir, `${base}.ts`), shim);
 }
 
 // Match relative imports like `from "./AO__StringIndexOf.js"` so we can follow
@@ -93,22 +108,26 @@ function depsOf(content) {
 const missing = [];
 const copiedNames = [];
 const visited = new Set();
-// Seed the worklist with the requested builtins; transitive AO dependencies are
-// discovered and copied below. @manual shims are kept as-is (never overwritten),
-// but we still follow their imports to find any generated AOs they pull in.
+// Seed the worklist with the requested builtins and every manual file; transitive
+// AO dependencies are discovered and copied below. Manual files resolve to their
+// shim (already written), but we still follow their imports to pull in any
+// generated AOs they depend on. Only the requested builtins (roots) are barreled.
 const queue = FILES.map((name) => (name.endsWith(".ts") ? name.slice(0, -3) : name));
 const roots = new Set(queue);
+queue.push(...manualBases.keys());
 while (queue.length > 0) {
   const base = queue.shift();
   if (visited.has(base)) continue;
   visited.add(base);
-  const file = `${base}.ts`;
 
   let content;
-  if (manualFiles.has(file)) {
-    // Hand-authored shim already present locally — read it for its deps only.
-    content = readFileSync(join(destDir, file), "utf8");
+  const manualFile = manualBases.get(base);
+  if (manualFile !== undefined) {
+    // Provided locally — shim is already written; read the impl for its deps.
+    content = readFileSync(join(destDir, manualFile), "utf8");
+    if (roots.has(base)) copiedNames.push(base);
   } else {
+    const file = `${base}.ts`;
     const from = join(srcDir, file);
     if (!existsSync(from)) {
       missing.push(file);
@@ -131,9 +150,9 @@ if (missing.length > 0) {
   );
 }
 
-// Generate a barrel that re-exports every copied builtin, so consumers import
-// from a single place instead of one path per builtin. @manual AO shims are
-// imported directly by the builtin files and are intentionally not re-exported.
+// Generate a barrel that re-exports every requested builtin, so consumers import
+// from a single place instead of one path per builtin. Support AOs (generated or
+// hand-authored) are imported directly by the builtin files and not re-exported.
 // The export name mirrors the generated function name: dots/dashes -> underscores.
 const exportLines = copiedNames.map((base) => {
   const symbol = base.replace(/[^A-Za-z0-9]/g, "_");

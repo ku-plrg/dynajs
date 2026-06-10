@@ -1,5 +1,3 @@
-// @manual
-
 import { AO__ToNumber } from "./AO__ToNumber.js";
 
 export function AO__ToUint32($: BootStrap, arg: Wrapped<unknown>): Wrapped<number> {

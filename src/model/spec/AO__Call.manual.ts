@@ -1,5 +1,3 @@
-// @manual
-
 import { AO__IsCallable } from "./AO__IsCallable.js";
 
 export function AO__Call($ : BootStrap, F : Wrapped<unknown>, V : Wrapped<unknown>, argumentsList ?: Wrapped<unknown>[]) {

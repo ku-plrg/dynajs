@@ -1,5 +1,3 @@
-// @manual
-
 export function AO__RequireObjectCoercible(__runtime__: BootStrap, argument: Wrapped<unknown>): Wrapped<unknown> {
   "use strict";
 

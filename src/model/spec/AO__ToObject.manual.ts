@@ -1,5 +1,3 @@
-// @manual
-
 export function AO__ToObject($: BootStrap, argument: Wrapped<unknown>): Unwrapped<object> {
   "use strict";
 

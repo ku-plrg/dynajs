@@ -1,5 +1,3 @@
-// @manual
-
 import { AO__GetV } from "./AO__GetV.js";
 import { AO__IsCallable } from "./AO__IsCallable.js";
 

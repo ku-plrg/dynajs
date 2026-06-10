@@ -1,5 +1,3 @@
-// @manual
-
 import type { Wrapped, BootStrap } from "@/model/type.js";
 
 export function AO__ToString($: BootStrap, argument: Wrapped<unknown>): Wrapped<string> {

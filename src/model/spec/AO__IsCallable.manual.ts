@@ -1,5 +1,3 @@
-// @manual
-
 export function AO__IsCallable($: BootStrap, argument : Wrapped<unknown>) : Wrapped<boolean> {
   "use strict";
 

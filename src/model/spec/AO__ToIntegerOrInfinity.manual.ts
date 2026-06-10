@@ -1,5 +1,3 @@
-// @manual
-
 import { AO__ToNumber } from './AO__ToNumber.js'
 
 export function AO__ToIntegerOrInfinity($: BootStrap, argument: Wrapped<unknown>): Wrapped<number> {
