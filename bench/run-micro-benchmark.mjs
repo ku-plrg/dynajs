@@ -35,6 +35,7 @@ import {
   writeFileSync, appendFileSync, accessSync, constants,
 } from "node:fs";
 import path from "node:path";
+import { homedir, tmpdir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -60,6 +61,95 @@ const TYPE_CONFIG = {
   taint: { analysis: "analyses/dist/Taint.mjs", flags: "--partial --pos persist" },
   concolic: { analysis: "analyses/dist/Concolic.mjs", flags: "--partial" },
 };
+
+// --- NodeMedic (Jalangi instrumentation mode) -------------------------------
+// The `nodemedic-jalangi` runner drives NodeMedic's taint engine under its
+// Jalangi2-babel instrumentation, on the SAME bench files. NodeMedic's
+// src/GhostFunction.ts registers `__set_taint__`/`__print_if_tainted__` (the
+// dynajs taint prelude names), so each bench marks taint and emits the
+// `@@DJX_VERDICT` marker identically — no bench rewriting needed.
+//
+// Two gotchas the runner handles:
+//   1. Jalangi instruments via the CommonJS loader (Module._extensions['.js']),
+//      but bench/micro/*.js are ESM (dynajs package.json is "type":"module"),
+//      so Jalangi would run them uninstrumented. We copy each bench into a
+//      CommonJS-scoped temp dir before instrumenting.
+//   2. NodeMedic resolves its deps (@babel/preset-env, immutable, ...) from its
+//      own node_modules, so the run's cwd must be NODEMEDIC_HOME.
+const NODEMEDIC_HOME =
+  process.env.NODEMEDIC_HOME ?? path.join(homedir(), "NodeMedic-wip");
+const NODEMEDIC_JALANGI_CMD = path.join(
+  NODEMEDIC_HOME, "lib/jalangi2-babel/src/js/commands/jalangi.js",
+);
+const NODEMEDIC_REWRITE = path.join(NODEMEDIC_HOME, "src/rewrite.js");
+// NodeMedic reads analysis args as positional argv after the script (Jalangi
+// mode: config.setFromArgs(process.argv)), not from an env var.
+const NODEMEDIC_ANALYSIS_ARGS = [
+  "log_level=error",
+  "policies=string:precise,array:precise,object:precise",
+];
+
+// A CommonJS-scoped scratch dir so Jalangi's `.js` loader hook instruments the
+// bench copy. Created once; benches are copied in per run (see the runner).
+let nmCjsDir = null;
+function nodemedicCjsDir() {
+  if (nmCjsDir) return nmCjsDir;
+  nmCjsDir = path.join(tmpdir(), "dynajs-nodemedic-jalangi");
+  mkdirSync(nmCjsDir, { recursive: true });
+  writeFileSync(path.join(nmCjsDir, "package.json"), '{"type":"commonjs"}');
+  return nmCjsDir;
+}
+
+// --- ExpoSE (dynamic symbolic execution) -----------------------------------
+// The `expose` runner drives ExpoSE's symbolic execution engine on the SAME
+// concolic bench files. ExpoSE exposes its symbolic API as `S$.symbol(name,
+// seed)` / `S$.assert(cond)` (require("S$")), whereas the benches call the
+// engine-neutral prelude names `__symbolic__` / `__symbolic_assert__`. We
+// bridge by prepending a small prelude that requires S$ and registers those
+// two names as globals -- mirroring how `nodemedic-jalangi` reuses the taint
+// prelude names as ghost functions. No bench rewriting needed.
+//
+// Single-path comparison: `__symbolic_assert__` does NOT route to ExpoSE's
+// concrete `S$.assert` (which only throws on the running path, leaving
+// detection to the multi-path Distributor). It calls our added
+// `Object._expose.assertSymbolic` (ExpoSE Analyser/src/SymbolicState.js), which
+// solves `PC_seed ∧ ¬cond` ONCE and self-activates single-run mode (no
+// branch-flipping) -- the exact single-path validity check dynajs concolic
+// does. So this measures the two engines' modeling/solving on the same path,
+// not their search. `__symbolic__` still uses S$.symbol (it handles symbol
+// renaming and seeding through Object._expose.makeSymbolic).
+//
+// Polarity: assertSymbolic records one `error` (counterexample) iff `¬cond` is
+// SAT under the seed PC, i.e. the assert is violable. So errors>=1 -> `clean`
+// (violable); 0 errors -> `detected` (assert provably holds on this path) --
+// the same polarity as dynajs concolic's `PC ∧ ¬assert` UNSAT -> detected.
+//
+// ExpoSE must be invoked through its own `scripts/analyse` entry point (which
+// sources scripts/env and spawns Tester workers with the right NODE_PATH/cwd);
+// calling Distributor.js directly leaves workers unable to emit their result
+// JSON. So the run's cwd is EXPOSE_HOME and argv[0] is bash scripts/analyse.
+const EXPOSE_HOME = process.env.EXPOSE_HOME ?? path.join(homedir(), "ExpoSE");
+const EXPOSE_ANALYSE = path.join(EXPOSE_HOME, "scripts/analyse");
+// Prepended to each bench copy: bridge the engine-neutral prelude names. The
+// assert bridges to our single-path Object._expose.assertSymbolic (defined once
+// ExpoSE's analysis initialises, before the bench body runs).
+const EXPOSE_PRELUDE =
+  'var S$ = require("S$");\n' +
+  "globalThis.__symbolic__ = function (name, seed) { return S$.symbol(name, seed); };\n" +
+  "globalThis.__symbolic_assert__ = function (cond) { return Object._expose.assertSymbolic(cond); };\n";
+// ExpoSE prints this summary line once a target finishes; the error count is
+// our verdict signal (see the polarity note above).
+const EXPOSE_DONE_RE = /ExpoSE Finished\.\s+\d+ paths,\s+(\d+) errors/;
+
+// A scratch dir for the prelude-prepended bench copies ExpoSE analyses.
+let exposeDir = null;
+function exposeScratchDir() {
+  if (exposeDir) return exposeDir;
+  exposeDir = path.join(tmpdir(), "dynajs-expose");
+  mkdirSync(exposeDir, { recursive: true });
+  writeFileSync(path.join(exposeDir, "package.json"), '{"type":"commonjs"}');
+  return exposeDir;
+}
 
 // ---------------------------------------------------------------------------
 // helpers
@@ -109,10 +199,12 @@ function parseOracle(file) {
 
 // Run one iteration. Returns { code, ms, timedOut, stdout, stderr }, also
 // writing stdout/stderr to the given files (null = discard).
-function timeRun(argv, env, stdoutFile, stderrFile, timeoutMs) {
+// `cwd` defaults to the repo root; an external analyzer that resolves its deps
+// from its own node_modules (e.g. NodeMedic) passes its home directory instead.
+function timeRun(argv, env, stdoutFile, stderrFile, timeoutMs, cwd = REPO_ROOT) {
   const start = process.hrtime.bigint();
   const r = spawnSync(argv[0], argv.slice(1), {
-    cwd: REPO_ROOT,
+    cwd,
     env: { ...process.env, ...env },
     encoding: "utf8",
     timeout: timeoutMs,
@@ -260,26 +352,65 @@ function makeRunners(opts) {
       },
     },
 
-    // --- external analyzers: fill these in ---------------------------------
+    // --- external analyzers ------------------------------------------------
     {
-      // TODO(you): set the binary name and complete the invocation. Make the
-      // tool (or a thin adapter) print `@@DJX_VERDICT detected|clean`; if you
-      // can't, add a `verdict(run)` here that maps its native output instead.
-      // Use applies:(b)=>b.type==="taint" to restrict it to a kind of bench.
-      name: "analyzerA",
-      available: () => onPath("analyzerA"),
+      // NodeMedic's taint engine under Jalangi2-babel instrumentation. Runs the
+      // same bench files via the __set_taint__/__print_if_tainted__ ghost
+      // functions registered in NodeMedic's src/GhostFunction.ts, so the default
+      // @@DJX_VERDICT parser works. Only taint benches apply (NodeMedic is a
+      // taint engine). See the NODEMEDIC_* config block above.
+      name: "nodemedic-jalangi",
+      applies: (b) => b.type === "taint",
+      available: () =>
+        existsSync(NODEMEDIC_JALANGI_CMD) && existsSync(NODEMEDIC_REWRITE),
       exec: (b, out, err, t) => {
-        // return timeRun(["analyzerA", "--flags", b.file], {}, out, err, t);
-        die("analyzerA runner not implemented");
+        // Copy the bench into the CommonJS-scoped dir so Jalangi instruments it.
+        // Key the copy on b.name (flattened relative path) so nested benches
+        // sharing a basename don't clobber each other.
+        const dest = path.join(nodemedicCjsDir(), `${b.name}.js`);
+        writeFileSync(dest, readFileSync(b.file));
+        return timeRun(
+          [
+            "node",
+            NODEMEDIC_JALANGI_CMD,
+            "--inlineIID", "--inlineSource",
+            "--analysis", NODEMEDIC_REWRITE,
+            dest,
+            ...NODEMEDIC_ANALYSIS_ARGS,
+          ],
+          {}, out, err, t,
+          NODEMEDIC_HOME, // cwd: resolve NodeMedic's own node_modules
+        );
       },
-      // verdict: (run) => /VULNERABLE/.test(run.stdout) ? "detected" : "clean",
     },
     {
-      // TODO(you): second external analyzer.
-      name: "analyzerB",
-      available: () => onPath("analyzerB"),
+      // ExpoSE's dynamic symbolic execution engine, on the same concolic
+      // benches via the __symbolic__/__symbolic_assert__ -> S$ bridge prelude.
+      // Only concolic benches apply. See the EXPOSE_* config block above for
+      // the invocation (scripts/analyse) and the verdict polarity (errors>0 ->
+      // a counterexample -> `clean`; 0 errors -> assert held -> `detected`).
+      name: "expose",
+      applies: (b) => b.type === "concolic",
+      available: () => existsSync(EXPOSE_ANALYSE),
       exec: (b, out, err, t) => {
-        die("analyzerB runner not implemented");
+        // Copy the bench with the S$ bridge prelude prepended. Key on b.name
+        // (flattened relative path) so nested same-basename benches don't collide.
+        const dest = path.join(exposeScratchDir(), `${b.name}.js`);
+        writeFileSync(dest, EXPOSE_PRELUDE + readFileSync(b.file, "utf8"));
+        return timeRun(
+          ["bash", EXPOSE_ANALYSE, dest],
+          // Cap ExpoSE's own budget under our per-run timeout so it self-stops
+          // before the SIGKILL, leaving a parseable summary line.
+          { EXPOSE_MAX_TIME: String(Math.max(1000, t - 2000)) },
+          out, err, t,
+          EXPOSE_HOME, // cwd: scripts/analyse sources ./scripts/env relatively
+        );
+      },
+      verdict: (run) => {
+        if (run.timedOut) return "error";
+        const m = EXPOSE_DONE_RE.exec(`${run.stdout}\n${run.stderr}`);
+        if (!m) return "error"; // no summary line: ExpoSE crashed/never finished
+        return Number(m[1]) > 0 ? "clean" : "detected";
       },
     },
     // -----------------------------------------------------------------------
@@ -342,19 +473,23 @@ function main() {
 
   if (!existsSync(BENCH_DIR)) die(`no benchmark dir: ${BENCH_DIR}`);
 
-  // Collect benches with a parseable @oracle; warn and skip the rest.
+  // Collect benches with a parseable @oracle; warn and skip the rest. Walked
+  // recursively, so benches can be grouped into subfolders under bench/micro.
+  // The path relative to BENCH_DIR (separators flattened to `__`) becomes the
+  // bench name, so nested benches sharing a basename don't collide in the log
+  // and temp-copy filenames keyed off it.
   let benches = [];
-  const benchFiles = readdirSync(BENCH_DIR)
+  const benchFiles = readdirSync(BENCH_DIR, { recursive: true })
     .filter((f) => f.endsWith(".js") && !f.endsWith("__dynajs__.js"))
     .sort();
-  for (const f of benchFiles) {
-    const file = path.join(BENCH_DIR, f);
+  for (const rel of benchFiles) {
+    const file = path.join(BENCH_DIR, rel);
     const meta = parseOracle(file);
     if (!meta) {
-      console.error(`skip ${f} (no \`// @oracle true|false\` header)`);
+      console.error(`skip ${rel} (no \`// @oracle true|false\` header)`);
       continue;
     }
-    benches.push({ file, name: stripExt(f), ...meta });
+    benches.push({ file, name: stripExt(rel).replace(/[\\/]/g, "__"), ...meta });
   }
   if (opts.benchFilters.length)
     benches = benches.filter((b) => matchesAny(path.basename(b.file), opts.benchFilters));
