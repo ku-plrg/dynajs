@@ -1,5 +1,5 @@
 import type { Analysis } from "@/types/analysis.js";
-import { FlowAnalysis } from "@/model/flow.js";
+import { FlowAnalysis, type Valued } from "@/model/flow.js";
 import { installPrelude } from "./prelude.js";
 
 declare const D$: { analysis: Analysis } & Record<string, any>;
@@ -22,35 +22,35 @@ export class TaintAnalysis extends FlowAnalysis<TaintInfo> {
     return TaintAnalysis.OPAQUE_CALLS.has(f);
   }
 
-  protected baseInfo(value: unknown, parents: (TaintInfo | undefined)[]): TaintInfo | undefined {
-    if (!parents.some(infoTainted)) return undefined;
+  protected baseInfo(value: unknown, parents: Valued<TaintInfo>[]): TaintInfo | undefined {
+    if (!parents.some((p) => infoTainted(p.info))) return undefined;
     if (typeof value === "string") {
       return { bit: true, chars: Array.from({ length: value.length }, () => true) };
     }
     return { bit: true };
   }
 
-  protected substringInfo(src: TaintInfo | undefined, start: number, resultLength: number): TaintInfo | undefined {
+  protected substringInfo(src: Valued<TaintInfo>, start: number, resultLength: number): TaintInfo | undefined {
     const chars: boolean[] = [];
     for (let i = 0; i < resultLength; i++) {
-      if (src?.chars !== undefined) {
-        chars.push(src.chars[start + i] === true);
+      if (src.info?.chars !== undefined) {
+        chars.push(src.info.chars[start + i] === true);
       } else {
-        chars.push(src?.bit ?? false);
+        chars.push(src.info?.bit ?? false);
       }
     }
     return { bit: chars.some((c) => c), chars };
   }
 
-  protected concatenateInfo(left: TaintInfo | undefined, leftLength: number, right: TaintInfo | undefined, rightLength: number): TaintInfo | undefined {
+  protected concatenateInfo(left: Valued<TaintInfo>, leftLength: number, right: Valued<TaintInfo>, rightLength: number): TaintInfo | undefined {
     const chars: boolean[] = [];
     const push = (n: number, t: TaintInfo | undefined) => {
       for (let i = 0; i < n; i++) {
         chars.push(t?.chars !== undefined ? t.chars[i] === true : (t?.bit ?? false));
       }
     };
-    push(leftLength, left);
-    push(rightLength, right);
+    push(leftLength, left.info);
+    push(rightLength, right.info);
     return { bit: chars.some((c) => c), chars };
   }
 
@@ -71,9 +71,9 @@ export class TaintAnalysis extends FlowAnalysis<TaintInfo> {
     const info = this.getOrCreateInfo(value, () => ({ bit: false }));
     if (info === undefined) return;
     info.bit = tainted;
-    const e = this.getEntry(value);
-    if (typeof e?.value === "string") {
-      info.chars = Array.from({ length: (e.value as string).length }, () => tainted);
+    const concrete = this.valued(value).value;
+    if (typeof concrete === "string") {
+      info.chars = Array.from({ length: concrete.length }, () => tainted);
     }
   }
 

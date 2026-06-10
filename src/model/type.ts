@@ -12,6 +12,11 @@ type Entry<Info> = { value: unknown; info: Info };
 export interface SpecOps extends StringOps {
   // default propagation: unwrapped -> wrapped
   base: <T extends Unwrapped | Primitive>(v: T, parent: Wrapped[]) => Wrapped<T>;
+  // Op-aware annotation of an already-computed binary result (post-hoc): routes
+  // through the analysis's `binaryInfo` hook, else `base` flow-through. Lets the
+  // spec AO `ApplyStringOrNumericBinaryOperator` annotate its numeric result
+  // with the operator (e.g. `x - 2` vs `x + 2`) instead of an op-blind `base`.
+  binary: (op: string, left: Wrapped, right: Wrapped, result: Unwrapped) => Wrapped;
   // wrapped -> unwrapped
   peek: <T>(wrapped: Wrapped<T>) => Unwrapped<T>;
 }
@@ -48,12 +53,21 @@ export interface BootStrap {
   bitwiseOR: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<number>;
   bitwiseXOR: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<number>;
 
-  // Comparison / equality / predicates — concrete `boolean` so control flow
-  // and short-circuiting work natively. (PC recording for concolic: later.)
-  lessThan: (l: Wrapped<number>, r: Wrapped<number>) => boolean;
-  lessThanEqual: (l: Wrapped<number>, r: Wrapped<number>) => boolean;
-  greaterThan: (l: Wrapped<number>, r: Wrapped<number>) => boolean;
-  greaterThanEqual: (l: Wrapped<number>, r: Wrapped<number>) => boolean;
+  // Ordering comparisons carry the decision symbolically: they return a
+  // Wrapped<boolean> (so an analysis like concolic can attach the comparison's Sym), which
+  // codegen immediately funnels through `condition` to recover a raw boolean for
+  // native control flow. A Wrapped boolean is a truthy proxy, so it must NOT be
+  // used directly in `if`/`&&`/`||` — generated code always wraps each ordering
+  // comparison in `condition(...)` at the branch site.
+  lessThan: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<boolean>;
+  lessThanEqual: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<boolean>;
+  greaterThan: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<boolean>;
+  greaterThanEqual: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<boolean>;
+  // A branch point: record `cond`'s symbolic form as a (flippable) path
+  // constraint keyed by the codegen-assigned branch id `bid`, then return the
+  // raw boolean so native `if`/`while`/`&&`/`||` and short-circuiting work. The
+  // model-side mirror of the instrumenter's `D$.C(id, op, value)` on user code.
+  condition: (bid: number, cond: Wrapped<boolean>) => boolean;
   // Type predicates so a `not-found`-style guard narrows a mixed return
   // (e.g. StringIndexOf's `Wrapped<string> | Wrapped<number>`): after
   // `if ($.is(pos, $.base("not-found"))) ...`, the else branch sees Wrapped<number>.

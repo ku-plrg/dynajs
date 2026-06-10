@@ -115,7 +115,7 @@ export class Model {
     //       ^	Number::bitwiseXOR
     //       |	Number::bitwiseOR
     // 8. Return operation(lNum, rNum).
-    return spec.base(result, [left, right]);
+    return spec.binary(opText, left, right, result);
   }
 
 }

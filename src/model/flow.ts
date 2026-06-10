@@ -3,7 +3,7 @@ import type { Analysis } from "@/types/analysis.js";
 import type { SpecOps, BootStrap, Wrapped, Unwrapped, Primitive } from "./type.js";
 import { Model } from "./model.js";
 
-type Entry = { id: symbol; value: unknown };
+type IdValuePair = { id: symbol; value: unknown };
 
 type Frame = BinFrame | UnFrame | CallFrame | GetFieldFrame;
 export type BinFrame = { ty: 'bin'; op: string; left: Wrapped; right: Wrapped };
@@ -13,6 +13,13 @@ export type GetFieldFrame = { ty: 'getField'; base: Wrapped; prop: Wrapped };
 type CallFrame = OpaqueCall | TransparentCall;
 export type OpaqueCall = { ty: 'opaque'; f: unknown; modeled: boolean; entries: unknown[] };
 export type TransparentCall = { ty: 'transparent', entries: unknown[] };
+
+// The user-facing view of a value: its concrete `value` plus the analysis `info`
+// attached to it (`info` is undefined when nothing has been attached yet). This
+// is the only currency the Info hooks speak — the framework projects each
+// internal `Wrapped` into a `Valued` before calling a hook, so a user analysis
+// never has to touch `Wrapped`/`Unwrapped`.
+export type Valued<Info> = { info: Info | undefined; value: unknown };
 
 // Returns the canonical char-access index when `p` is a property key that JS would
 // resolve to `s[i]` (i.e. a non-negative integer in range whose string form matches).
@@ -30,14 +37,43 @@ function asStringIndex(p: unknown, len: number): number | undefined {
 export abstract class FlowAnalysis<Info> implements Analysis {
 
   private primitiveWrapper = new WeakSet<object>();
-  private valueMap = new WeakMap<object, Entry>();
+  private valueMap = new WeakMap<object, IdValuePair>();
   private infoMap = new Map<symbol, Info>();
 
-  // ---- Info hooks (subclasses implement only these) ----
+  // ---- Info hooks ----
+  //
+  // `baseInfo` is the ONE primitive every analysis must define: the flow-through
+  // info for a result, derived from its operands' info (taint = OR of taint bits;
+  // concolic = none — it builds structure via the hooks below instead).
+  //
+  // Every other hook is an OPTIONAL precision refinement. Each caller tries the
+  // specific hook, then falls back to `baseInfo` flow-through (`hook(...) ??
+  // baseInfo(result, parents)`). So an analysis that overrides nothing still gets
+  // sound propagation through every op — overriding a hook only buys
+  // precision/structure (taint's char-level substring/concat ranges, concolic's
+  // operator/substr Sym nodes). Recall is preserved by the fallback; precision is
+  // opt-in.
+  //
+  // Every operand a hook receives is a `Valued` (its concrete value + attached
+  // info) — never a `Wrapped`. `baseInfo` is the exception: its `value` is the
+  // freshly-produced result (no info yet), and its `parents` are the operands.
+  protected abstract baseInfo(value: unknown, parents: Valued<Info>[]): Info | undefined;
 
-  protected abstract baseInfo(value: unknown, parents: (Info | undefined)[]): Info | undefined;
-  protected abstract substringInfo(src: Info | undefined, start: number, resultLength: number): Info | undefined;
-  protected abstract concatenateInfo(left: Info | undefined, leftLength: number, right: Info | undefined, rightLength: number): Info | undefined;
+  // String structure.
+  protected substringInfo(_src: Valued<Info>, _start: number, _resultLength: number): Info | undefined { return undefined; }
+  protected concatenateInfo(_left: Valued<Info>, _leftLength: number, _right: Valued<Info>, _rightLength: number): Info | undefined { return undefined; }
+  // Arithmetic (`+ - * / …`) and ordering comparisons (`< <= > >=`).
+  protected binaryInfo(_op: string, _left: Valued<Info>, _right: Valued<Info>): Info | undefined { return undefined; }
+  protected unaryInfo(_op: string, _operand: Valued<Info>): Info | undefined { return undefined; }
+  protected lengthInfo(_src: Valued<Info>): Info | undefined { return undefined; }
+  // ToIntegerOrInfinity's truncate-toward-zero, so a symbolic numeric operand
+  // keeps its Sym across the integer coercion (e.g. a symbolic index).
+  protected truncateInfo(_src: Valued<Info>): Info | undefined { return undefined; }
+  // A branch was taken on `cond` (concrete direction `taken`), keyed by the
+  // branch's source `id`. Unlike the hooks above this produces no new value — it
+  // records a fact (a path constraint), so it returns void. Path-tracking
+  // analyses (concolic) override it; everyone else ignores branches.
+  protected conditionInfo(_id: number, _cond: Valued<Info>, _taken: boolean): void {}
 
   // ---- Info storage helpers ----
 
@@ -63,92 +99,124 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     return info;
   }
 
+  // Project a wrapped value into the user-facing `Valued` view (its concrete
+  // value + attached info). Used internally to feed the Info hooks, and exposed
+  // (protected) so an analysis's own entry points — e.g. prelude bridges that
+  // receive wrapped values — can speak `Valued` too instead of `Wrapped`.
+  protected valued(w: unknown): Valued<Info> {
+    return { info: this.getInfo(w), value: this.unwrap(w as Wrapped<unknown>) };
+  }
+
+  // Wrap a freshly-computed result and attach `info` if any. The one place the
+  // wrap+setInfo dance lives, so every op below is a one-liner.
+  private lift<T>(value: T, info: Info | undefined): Wrapped<T> {
+    const w = this.wrap(value);
+    if (info !== undefined) this.setInfo(w, info);
+    return w;
+  }
+
   // ---- SpecOps: wrap/unwrap plumbing; Info computation delegated to hooks ----
 
   spec: SpecOps = {
-    base: <T extends Unwrapped<unknown> | Primitive>(v: T, parents: Wrapped<unknown>[]): Wrapped<T> => {
-      const w = this.wrap(v);
-      const info = this.baseInfo(v, parents.map((p) => this.getInfo(p)));
-      if (info !== undefined) this.setInfo(w, info);
-      return w;
-    },
+    base: <T extends Unwrapped<unknown> | Primitive>(v: T, parents: Wrapped<unknown>[]): Wrapped<T> =>
+      this.lift(v, this.baseInfo(v, parents.map((p) => this.valued(p)))),
+    binary: (op: string, left: Wrapped, right: Wrapped, result: Unwrapped): Wrapped =>
+      this.lift(result, this.binaryInfo(op, this.valued(left), this.valued(right)) ?? this.baseInfo(result, [this.valued(left), this.valued(right)])),
     peek: <T>(wrapped: Wrapped<T>) => this.unwrap(wrapped),
     substring: (s: Wrapped<string>, start: Wrapped<number>, end: Wrapped<number>): Wrapped<string> => {
-      const raw = this.unwrap(s);
-      const startN = this.unwrap(start) as number;
-      const endN = this.unwrap(end) as number;
-      const r = raw.substring(startN, endN);
-      const w = this.wrap(r);
-      const info = this.substringInfo(this.getInfo(s), startN, r.length);
-      if (info !== undefined) this.setInfo(w, info);
-      return w;
+      const r = this.unwrap(s).substring(this.unwrap(start) as number, this.unwrap(end) as number);
+      return this.lift(r, this.substringInfo(this.valued(s), this.unwrap(start) as number, r.length) ?? this.baseInfo(r, [this.valued(s)]));
     },
     concatenate: (s1: Wrapped<string>, s2: Wrapped<string>): Wrapped<string> => {
       const r1 = this.unwrap(s1);
       const r2 = this.unwrap(s2);
       const r = r1 + r2;
-      const w = this.wrap(r);
-      const info = this.concatenateInfo(this.getInfo(s1), r1.length, this.getInfo(s2), r2.length);
-      if (info !== undefined) this.setInfo(w, info);
-      return w;
+      return this.lift(r, this.concatenateInfo(this.valued(s1), r1.length, this.valued(s2), r2.length) ?? this.baseInfo(r, [this.valued(s1), this.valued(s2)]));
     },
   };
 
   // Wrap a freshly-computed numeric result, propagating Info from its operands
-  // exactly like base() does. Used by every arithmetic/math runtime op.
+  // exactly like base() does. Used by the math runtime ops (min/max/abs/…) that
+  // have no op-aware Sym yet.
   private numOp(v: number, parents: Wrapped<unknown>[]): Wrapped<number> {
-    const w = this.wrap(v);
-    const info = this.baseInfo(v, parents.map((p) => this.getInfo(p)));
-    if (info !== undefined) this.setInfo(w, info);
-    return w;
+    return this.lift(v, this.baseInfo(v, parents.map((p) => this.valued(p))));
+  }
+
+  // Wrap a binary arithmetic result — same post-hoc op-aware annotation as the
+  // user-code path (`spec.binary`): op-aware analyses build the operator Sym via
+  // binaryInfo, everyone else falls back to baseInfo flow-through (taint).
+  private binOp(op: string, l: Wrapped<number>, r: Wrapped<number>, v: number): Wrapped<number> {
+    return this.spec.binary(op, l, r, v as unknown as Unwrapped) as Wrapped<number>;
+  }
+
+  // Wrap a unary arithmetic result (op-aware Sym, else baseInfo flow-through).
+  private unOp(op: string, x: Wrapped<number>, v: number): Wrapped<number> {
+    return this.lift(v, this.unaryInfo(op, this.valued(x)) ?? this.baseInfo(v, [this.valued(x)]));
+  }
+
+  // Wrap an ordering comparison's result: its comparison Sym (via binaryInfo)
+  // else baseInfo flow-through, like the arithmetic ops — so a comparison result
+  // carries its operands' Info (taint flows into the boolean; concolic attaches
+  // the comparison Sym). The Wrapped<boolean> is a truthy proxy, so a caller must
+  // funnel it through `condition` before any native branch — generated code does
+  // this at the branch site (see BootStrap.condition / type.ts).
+  private cmpOp(op: string, l: Wrapped<number>, r: Wrapped<number>, v: boolean): Wrapped<boolean> {
+    return this.spec.binary(op, l, r, v as unknown as Unwrapped) as Wrapped<boolean>;
+  }
+
+  // A branch point. Unwrap so native control flow sees the raw boolean, and hand
+  // the condition to the `conditionInfo` hook so a path-tracking analysis can
+  // record it. This is the same hook the instrumenter dispatches to for
+  // `D$.C(id, op, value)` on user code AND the one model-internal branches funnel
+  // through (BootStrap.condition), so both go through one place.
+  condition(id: number, _op: string, value: unknown): { result: unknown } {
+    const raw = this.unwrap(value as Wrapped<unknown>);
+    this.conditionInfo(id, this.valued(value), Boolean(raw));
+    return { result: raw };
   }
 
   // The runtime threaded into generated polyfills as `$`. Every operation on a
-  // value goes through here. Arithmetic carries the result (Wrapped); the
-  // comparison/equality/predicate ops return a concrete boolean so native
-  // control flow and short-circuiting still work.
+  // value goes through here. Arithmetic and ordering comparisons carry the
+  // result (Wrapped, to keep the symbolic value flowing); `condition` unwraps a
+  // comparison at the branch site so native control flow / short-circuiting work.
   runtime: BootStrap = {
-    length: (s) => this.numOp((this.unwrap(s) as string).length, [s]),
+    length: (s) => {
+      const v = (this.unwrap(s) as string).length;
+      return this.lift(v, this.lengthInfo(this.valued(s)) ?? this.baseInfo(v, [this.valued(s)]));
+    },
     substring: (s, from, to) => {
       const startN = this.unwrap(from) as number;
       const r = (this.unwrap(s) as string).substring(startN, this.unwrap(to) as number);
-      const w = this.wrap(r);
-      const info = this.substringInfo(this.getInfo(s), startN, r.length);
-      if (info !== undefined) this.setInfo(w, info);
-      return w;
+      return this.lift(r, this.substringInfo(this.valued(s), startN, r.length) ?? this.baseInfo(r, [this.valued(s)]));
     },
     concatenate: (l, r) => {
       const r1 = this.unwrap(l);
       const r2 = this.unwrap(r);
-      const w = this.wrap(r1 + r2);
-      const info = this.concatenateInfo(this.getInfo(l), r1.length, this.getInfo(r), r2.length);
-      if (info !== undefined) this.setInfo(w, info);
-      return w;
+      const res = r1 + r2;
+      return this.lift(res, this.concatenateInfo(this.valued(l), r1.length, this.valued(r), r2.length) ?? this.baseInfo(res, [this.valued(l), this.valued(r)]));
     },
     codeUnitAt: (s, i) => {
       const idx = this.unwrap(i) as number;
       const r = (this.unwrap(s) as string).charAt(idx);
-      const w = this.wrap(r);
-      const info = this.substringInfo(this.getInfo(s), idx, r.length);
-      if (info !== undefined) this.setInfo(w, info);
-      return w;
+      return this.lift(r, this.substringInfo(this.valued(s), idx, r.length) ?? this.baseInfo(r, [this.valued(s)]));
     },
 
-    add: (l, r) => this.numOp((this.unwrap(l) as number) + (this.unwrap(r) as number), [l, r]),
-    subtract: (l, r) => this.numOp((this.unwrap(l) as number) - (this.unwrap(r) as number), [l, r]),
-    multiply: (l, r) => this.numOp((this.unwrap(l) as number) * (this.unwrap(r) as number), [l, r]),
-    divide: (l, r) => this.numOp((this.unwrap(l) as number) / (this.unwrap(r) as number), [l, r]),
-    remainder: (l, r) => this.numOp((this.unwrap(l) as number) % (this.unwrap(r) as number), [l, r]),
-    negate: (x) => this.numOp(-(this.unwrap(x) as number), [x]),
-    exponentiate: (b, e) => this.numOp((this.unwrap(b) as number) ** (this.unwrap(e) as number), [b, e]),
-    bitwiseAND: (l, r) => this.numOp((this.unwrap(l) as number) & (this.unwrap(r) as number), [l, r]),
-    bitwiseOR: (l, r) => this.numOp((this.unwrap(l) as number) | (this.unwrap(r) as number), [l, r]),
-    bitwiseXOR: (l, r) => this.numOp((this.unwrap(l) as number) ^ (this.unwrap(r) as number), [l, r]),
+    add: (l, r) => this.binOp('+', l, r, (this.unwrap(l) as number) + (this.unwrap(r) as number)),
+    subtract: (l, r) => this.binOp('-', l, r, (this.unwrap(l) as number) - (this.unwrap(r) as number)),
+    multiply: (l, r) => this.binOp('*', l, r, (this.unwrap(l) as number) * (this.unwrap(r) as number)),
+    divide: (l, r) => this.binOp('/', l, r, (this.unwrap(l) as number) / (this.unwrap(r) as number)),
+    remainder: (l, r) => this.binOp('%', l, r, (this.unwrap(l) as number) % (this.unwrap(r) as number)),
+    negate: (x) => this.unOp('-', x, -(this.unwrap(x) as number)),
+    exponentiate: (b, e) => this.binOp('**', b, e, (this.unwrap(b) as number) ** (this.unwrap(e) as number)),
+    bitwiseAND: (l, r) => this.binOp('&', l, r, (this.unwrap(l) as number) & (this.unwrap(r) as number)),
+    bitwiseOR: (l, r) => this.binOp('|', l, r, (this.unwrap(l) as number) | (this.unwrap(r) as number)),
+    bitwiseXOR: (l, r) => this.binOp('^', l, r, (this.unwrap(l) as number) ^ (this.unwrap(r) as number)),
 
-    lessThan: (l, r) => (this.unwrap(l) as number) < (this.unwrap(r) as number),
-    lessThanEqual: (l, r) => (this.unwrap(l) as number) <= (this.unwrap(r) as number),
-    greaterThan: (l, r) => (this.unwrap(l) as number) > (this.unwrap(r) as number),
-    greaterThanEqual: (l, r) => (this.unwrap(l) as number) >= (this.unwrap(r) as number),
+    lessThan: (l, r) => this.cmpOp('<', l, r, (this.unwrap(l) as number) < (this.unwrap(r) as number)),
+    lessThanEqual: (l, r) => this.cmpOp('<=', l, r, (this.unwrap(l) as number) <= (this.unwrap(r) as number)),
+    greaterThan: (l, r) => this.cmpOp('>', l, r, (this.unwrap(l) as number) > (this.unwrap(r) as number)),
+    greaterThanEqual: (l, r) => this.cmpOp('>=', l, r, (this.unwrap(l) as number) >= (this.unwrap(r) as number)),
+    condition: (bid, cond) => this.condition(bid, 'model', cond).result as boolean,
     is: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(l: L, r: R): l is Extract<L, R> =>
       this.unwrap(l) === this.unwrap(r),
     isNot: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(l: L, r: R): l is Exclude<L, R> =>
@@ -161,7 +229,10 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     max: (...xs) => this.numOp(Math.max(...xs.map((x) => this.unwrap(x) as number)), xs),
     abs: (x) => this.numOp(Math.abs(this.unwrap(x) as number), [x]),
     floor: (x) => this.numOp(Math.floor(this.unwrap(x) as number), [x]),
-    truncate: (x) => this.numOp(Math.trunc(this.unwrap(x) as number), [x]),
+    truncate: (x) => {
+      const v = Math.trunc(this.unwrap(x) as number);
+      return this.lift(v, this.truncateInfo(this.valued(x)) ?? this.baseInfo(v, [this.valued(x)]));
+    },
     clamp: (x, lower, upper) =>
       this.numOp(
         Math.max(this.unwrap(lower) as number, Math.min(this.unwrap(x) as number, this.unwrap(upper) as number)),
@@ -170,12 +241,8 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
     append: <T>(list: T[], x: T): T[] => { list.push(x); return list; },
     contains: <T>(list: T[], x: T): boolean => list.includes(x),
-    base: <T extends Unwrapped<unknown> | Primitive>(v: T, parents: Wrapped<unknown>[]): Wrapped<T> => {
-      const w = this.wrap(v);
-      const info = this.baseInfo(v, parents.map((p) => this.getInfo(p)));
-      if (info !== undefined) this.setInfo(w, info);
-      return w;
-    },
+    base: <T extends Unwrapped<unknown> | Primitive>(v: T, parents: Wrapped<unknown>[]): Wrapped<T> =>
+      this.lift(v, this.baseInfo(v, parents.map((p) => this.valued(p)))),
     peek: <T>(wrapped: Wrapped<T>) => this.unwrap(wrapped),
   };
 
@@ -187,8 +254,10 @@ export abstract class FlowAnalysis<Info> implements Analysis {
         return this.model.applyBinary(frame.left, frame.op, frame.right, result);
       }
       case 'un': {
-        const parents = [frame.operand];
-        return this.spec.base(result, parents);
+        // Op-aware unary annotation (concolic builds `{unary, op}`), else baseInfo
+        // flow-through. Same contract as spec.binary, but inline since propagate
+        // can reach the hook directly (unlike binary, which crosses into Model).
+        return this.lift(result, this.unaryInfo(frame.op, this.valued(frame.operand)) ?? this.baseInfo(result, [this.valued(frame.operand)]));
       }
       case 'getField': {
         const b: unknown = this.spec.peek(frame.base);
@@ -201,6 +270,11 @@ export abstract class FlowAnalysis<Info> implements Analysis {
               this.spec.base(i, []),
               this.spec.base(i + 1, []),
             );
+          }
+          // `s.length` is the one field read with op-aware meaning (strlen);
+          // route it through lengthInfo, else baseInfo flow-through.
+          if (p === 'length') {
+            return this.lift(result, this.lengthInfo(this.valued(frame.base)) ?? this.baseInfo(result, [this.valued(frame.base)]));
           }
         }
         // Object/array elements are stored as Wrapped values that already carry
@@ -314,23 +388,22 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   }
 
   // wrappers
+  private id = 0;
+  private freshId() { return Symbol(this.id++); }
 
-   private id = 0;
-  freshId() { return Symbol(this.id++); }
-
-  isObjectish(v: unknown): v is object | Function {
+  private isObjectish(v: unknown): v is object | Function {
     return v !== null && (typeof v === "object" || typeof v === "function");
   }
 
-  isPrimitive(v: unknown): v is string | number | boolean | bigint | symbol | null | undefined {
+  private isPrimitive(v: unknown): v is string | number | boolean | bigint | symbol | null | undefined {
     return !this.isObjectish(v);
   }
 
-  isWrapped(v: unknown): v is Wrapped<unknown> {
+  private isWrapped(v: unknown): v is Wrapped<unknown> {
     return this.isObjectish(v) && this.valueMap.has(v);
   }
 
-  wrap<T>(value: T): Wrapped<T> {
+  private wrap<T>(value: T): Wrapped<T> {
     if (this.isObjectish(value)) {
       // Track objects/arrays/functions by identity so info can be attached.
       // Without this, spec.base on an object is silently info-less and taint
@@ -346,17 +419,18 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     return proxy as T as Wrapped<T>;
   }
 
+  // TODO : make this private
   unwrap<T = unknown>(value: Wrapped<T>): Unwrapped<T> {
     if (!this.isObjectish(value)) return value as T as Unwrapped<T>; // should not happen;
     const entry = this.valueMap.get(value);
     return entry === undefined ? value as T as Unwrapped<T> : entry.value as T as Unwrapped<T>;
   }
 
-  forcedUnwrap(value: unknown): Entry {
-    return this.valueMap.get(this.wrap(value)) as Entry; // should not fail
+  private forcedUnwrap(value: unknown): IdValuePair {
+    return this.valueMap.get(this.wrap(value)) as IdValuePair; // should not fail
   }
 
-  getEntry<E>(value: unknown): Entry | undefined {
+  private getEntry(value: unknown): IdValuePair | undefined {
     if (!this.isObjectish(value)) return undefined;
     return this.valueMap.get(value);
   }

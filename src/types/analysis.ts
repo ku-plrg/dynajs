@@ -1028,8 +1028,6 @@ interface FullAnalysis {
     isDirect: boolean
   ) => { result: string | any } | void;
 
-  spec: SpecOps;
-
   result: any;
 }
 

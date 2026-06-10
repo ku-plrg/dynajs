@@ -1,31 +1,11 @@
 import { execFileSync } from 'node:child_process';
-import {
-  FlowAnalysis,
-  type BinFrame,
-  type UnFrame,
-  type GetFieldFrame,
-} from '@/model/flow.js';
-import type { Wrapped } from '@/model/type.js';
+import { FlowAnalysis, type Valued } from '@/model/flow.js';
+import { type Sym, type Sort, UnsupportedSym, symToString } from '@shared/sym.js';
 import { installPrelude } from './prelude.js';
 
 declare const D$: { analysis: ConcolicAnalysis } & Record<string, any>;
 
 installPrelude();
-
-// SMT sort a symbolic variable is declared with — inferred from its seed's
-// concrete type (string -> String, otherwise Int).
-type Sort = 'Int' | 'String';
-
-type Sym =
-  | { kind: 'const'; value: unknown }
-  | { kind: 'var'; name: string; sort: Sort }
-  | { kind: 'unary'; op: string; operand: Sym }
-  | { kind: 'binary'; op: string; left: Sym; right: Sym }
-  // string structure (z3 String theory): concatenation, fixed-window
-  // substring/char-access, and length.
-  | { kind: 'concat'; left: Sym; right: Sym }
-  | { kind: 'substr'; src: Sym; start: number; length: number }
-  | { kind: 'strlen'; src: Sym };
 
 // A branch actually taken during concrete execution: `constraint` is the
 // symbolic form of the condition, `taken` whether it was truthy. Together these
@@ -41,12 +21,17 @@ type PathConstraint = { id: number; constraint: Sym; taken: boolean };
 // concolic microbenches. Operators outside this set (bitwise, **, string
 // ordering `< > <= >=`, ...) throw `UnsupportedSym`; symbolicAssert turns that
 // into an `error` verdict rather than silently mis-translating.
+// (`Sym`/`Sort`/`UnsupportedSym`/`symToString` live in the engine-neutral
+// `@shared/sym.js`; only the SMT-LIB translation below is concolic-only.)
 // ---------------------------------------------------------------------------
 
-class UnsupportedSym extends Error {}
-
 // op -> SMT-LIB builder. Comparisons/arith map almost 1:1; equality and
-// inequality need (=)/(not (=)); integer / and % become div/mod.
+// inequality need (=)/(not (=)); integer / becomes div. `%` can't reuse SMT's
+// `mod`: SMT-LIB `mod` is Euclidean (result always in [0, |b|)), whereas JS `%`
+// is truncated (the remainder takes the sign of the *dividend*, so e.g.
+// -2 % 3 === -2, not 1). We encode the JS rule as sign(a) * (|a| mod |b|) — the
+// truncated remainder — so negative-dividend modulo solves faithfully instead
+// of producing a spurious counterexample.
 const SMT_BINARY: Record<string, (a: string, b: string) => string> = {
   '===': (a, b) => `(= ${a} ${b})`,
   '==': (a, b) => `(= ${a} ${b})`,
@@ -60,7 +45,8 @@ const SMT_BINARY: Record<string, (a: string, b: string) => string> = {
   '-': (a, b) => `(- ${a} ${b})`,
   '*': (a, b) => `(* ${a} ${b})`,
   '/': (a, b) => `(div ${a} ${b})`,
-  '%': (a, b) => `(mod ${a} ${b})`,
+  '%': (a, b) =>
+    `(ite (>= ${a} 0) (mod ${a} (abs ${b})) (- (mod (- ${a}) (abs ${b}))))`,
   '&&': (a, b) => `(and ${a} ${b})`,
   '||': (a, b) => `(or ${a} ${b})`,
 };
@@ -104,25 +90,9 @@ function symToSmt(s: Sym, vars: Map<string, Sort>): string {
       return `(str.substr ${symToSmt(s.src, vars)} ${s.start} ${s.length})`;
     case 'strlen':
       return `(str.len ${symToSmt(s.src, vars)})`;
-  }
-}
-
-function symToString(s: Sym): string {
-  switch (s.kind) {
-    case 'const':
-      return JSON.stringify(s.value);
-    case 'var':
-      return s.name;
-    case 'unary':
-      return `(${s.op} ${symToString(s.operand)})`;
-    case 'binary':
-      return `(${symToString(s.left)} ${s.op} ${symToString(s.right)})`;
-    case 'concat':
-      return `(${symToString(s.left)} ++ ${symToString(s.right)})`;
-    case 'substr':
-      return `${symToString(s.src)}[${s.start}..${s.start + s.length}]`;
-    case 'strlen':
-      return `len(${symToString(s.src)})`;
+    case 'truncate':
+      // concolic models numbers as Int, so truncate-toward-zero is identity.
+      return symToSmt(s.src, vars);
   }
 }
 
@@ -169,12 +139,11 @@ function solveValidity(
 // We build on FlowAnalysis purely for its identity-based wrapping: every value
 // (incl. primitives) is a uniquely-wrapped object tracked by symbol id, so two
 // distinct literal `2`s are distinct entries — no value-keyed aliasing. The
-// symbolic expression for a value is stored as its `Info` (= Sym).
-//
-// FlowAnalysis's *Info hooks are operator-unaware (numeric binary falls through
-// to baseInfo, dropping the op) and it leaves decision values wrapped, so we
-// override binary/unary/condition here rather than route through them. A future
-// flow.ts that exposes op-aware hooks + raw decision values could absorb this.
+// symbolic expression for a value is stored as its `Info` (= Sym), built up
+// purely through the op-aware Info hooks (binaryInfo/unaryInfo/lengthInfo/
+// substringInfo/concatenateInfo/truncateInfo/conditionInfo) — no `Analysis`
+// method overrides, no frame types. Both user-code ops (via the instrumenter)
+// and model/polyfill ops (via `$`) funnel through these same hooks.
 export class ConcolicAnalysis extends FlowAnalysis<Sym> {
   result: unknown;
   private pathConstraints: PathConstraint[] = [];
@@ -185,9 +154,10 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym> {
     return ConcolicAnalysis.OPAQUE_CALLS.has(f);
   }
 
-  // baseInfo is operator-unaware, so it can't tell e.g. `.length` from any other
-  // field read — that case is recovered in the `getField` override below. Plain
-  // base propagation therefore carries no symbolic meaning and stays inert.
+  // baseInfo is operator-unaware (it can't tell `.length` from any other field
+  // read), so concolic builds NO flow-through info here — every symbolic value
+  // comes from the op-aware hooks below (the framework routes `.length` to
+  // lengthInfo, `s[i]` to substringInfo, etc.). Stays inert.
   protected baseInfo(): Sym | undefined {
     return undefined;
   }
@@ -195,33 +165,80 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym> {
   // The model routes string-builtin results (charAt/slice/substring/...) and the
   // `s[i]` char-access through these hooks, so they DO carry symbolic structure.
   protected substringInfo(
-    src: Sym | undefined,
+    src: Valued<Sym>,
     start: number,
     resultLength: number,
   ): Sym | undefined {
     // Non-symbolic source -> result has no symbolic dependency.
-    if (src === undefined) return undefined;
-    return { kind: 'substr', src, start, length: resultLength };
+    if (src.info === undefined) return undefined;
+    return { kind: 'substr', src: src.info, start, length: resultLength };
   }
 
   protected concatenateInfo(
-    left: Sym | undefined,
+    left: Valued<Sym>,
     _leftLength: number,
-    right: Sym | undefined,
+    right: Valued<Sym>,
     _rightLength: number,
   ): Sym | undefined {
-    // This hook gets only each side's Info, not its concrete value, so a
-    // non-symbolic side can't be reconstructed as a string constant — track only
-    // when both sides are symbolic. The common `sym + "literal"` shape is the `+`
-    // operator, which `binary` handles below (it has the wrapped operands).
-    if (left === undefined || right === undefined) return undefined;
-    return { kind: 'concat', left, right };
+    // `Valued` carries each side's concrete value, so a non-symbolic side is
+    // reconstructed as a string constant (via `symOf`) rather than dropped — the
+    // common `sym + "literal"` shape (str.++ s "literal"). Same as binaryInfo: no
+    // node when both sides are constant.
+    const l = this.symOf(left);
+    const r = this.symOf(right);
+    if (l.kind === 'const' && r.kind === 'const') return undefined;
+    return { kind: 'concat', left: l, right: r };
   }
 
-  // The symbolic expression for a wrapped value: its attached Info, else a
-  // constant of its concrete (unwrapped) value.
-  private symOf(w: Wrapped<unknown>): Sym {
-    return this.getInfo(w) ?? { kind: 'const', value: this.unwrap(w) };
+  // Arithmetic (`+ - * / …`) or ordering comparison (`< <= > >=`), from user code
+  // OR a generated model — both funnel here. Build the operator Sym; a
+  // non-symbolic side keeps its constant via `symOf`, two constants -> no node
+  // (keeps it out of the path condition). A `+` reaching here is numeric — string
+  // `+` is split to concatenate upstream (applyBinary step 1c / codegen).
+  protected binaryInfo(op: string, l: Valued<Sym>, r: Valued<Sym>): Sym | undefined {
+    const left = this.symOf(l);
+    const right = this.symOf(r);
+    if (left.kind === 'const' && right.kind === 'const') return undefined;
+    return { kind: 'binary', op, left, right };
+  }
+
+  protected unaryInfo(op: string, x: Valued<Sym>): Sym | undefined {
+    const operand = this.symOf(x);
+    if (operand.kind === 'const') return undefined;
+    return { kind: 'unary', op, operand };
+  }
+
+  // `s.length` — both user-code `.length` and model-side `$.length` route here:
+  // a symbolic string's length stays symbolic as a strlen node.
+  protected lengthInfo(s: Valued<Sym>): Sym | undefined {
+    const src = this.symOf(s);
+    if (src.kind === 'const') return undefined;
+    return { kind: 'strlen', src };
+  }
+
+  // ToIntegerOrInfinity truncate: keep a symbolic numeric operand symbolic across
+  // the integer coercion (identity in concolic's Int domain).
+  protected truncateInfo(x: Valued<Sym>): Sym | undefined {
+    const src = this.symOf(x);
+    if (src.kind === 'const') return undefined;
+    return { kind: 'truncate', src };
+  }
+
+  // A branch (user-code `if`/`&&`/… via D$.C, or a model-internal bound check via
+  // $.condition) was taken. If its condition is symbolic, record it as a path
+  // constraint; the concrete `taken` direction fixes its polarity. Both branch
+  // sources funnel here through FlowAnalysis.condition.
+  protected conditionInfo(id: number, cond: Valued<Sym>, taken: boolean): void {
+    const sym = this.symOf(cond);
+    if (sym.kind !== 'const') {
+      this.pathConstraints.push({ id, constraint: sym, taken });
+    }
+  }
+
+  // The symbolic expression for an operand: its attached Info, else a constant of
+  // its concrete value.
+  private symOf(v: Valued<Sym>): Sym {
+    return v.info ?? { kind: 'const', value: v.value };
   }
 
   // --- prelude entry points ------------------------------------------------
@@ -230,25 +247,24 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym> {
   // the program keeps running concretely on it. Identity-wrapping means the
   // seed's value never aliases an unrelated literal of the same value.
   makeSymbolic(name: unknown, seed: unknown): unknown {
-    const w = seed as Wrapped<unknown>;
     // The seed's concrete type fixes the variable's SMT sort: a string seed is a
     // String variable, anything else an Int (the only two sorts we translate).
-    const sort: Sort = typeof this.unwrap(w) === 'string' ? 'String' : 'Int';
-    this.setInfo(w, {
+    const sort: Sort = typeof this.valued(seed).value === 'string' ? 'String' : 'Int';
+    this.setInfo(seed, {
       kind: 'var',
-      name: String(this.unwrap(name as Wrapped<unknown>)),
+      name: String(this.valued(name).value),
       sort,
     });
-    return w;
+    return seed;
   }
 
   symbolicAssert(condArg: unknown): void {
-    const cond = condArg as Wrapped<unknown>;
+    const cond = this.valued(condArg);
     const sym = this.symOf(cond);
     if (sym.kind === 'const') {
       // No symbolic dependency: the assert reduces to its concrete truth value.
       console.log(
-        this.unwrap(cond) ? '@@DJX_VERDICT detected' : '@@DJX_VERDICT clean',
+        cond.value ? '@@DJX_VERDICT detected' : '@@DJX_VERDICT clean',
       );
       return;
     }
@@ -266,90 +282,6 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym> {
     console.log(
       verdict === 'valid' ? '@@DJX_VERDICT detected' : '@@DJX_VERDICT clean',
     );
-  }
-
-  // --- hooks (operator-aware; values arrive wrapped) -----------------------
-
-  // FlowAnalysis.binaryPre already peeked the operands (so the engine computed
-  // the raw result) and stashed the wrapped operands in the frame. We rebuild
-  // the symbolic form from them. A binary of two constants carries no symbolic
-  // info, so we leave the result a plain wrapped constant (keeps it out of the
-  // path condition).
-  binary(
-    _id: number,
-    op: string,
-    _l: Wrapped,
-    _r: Wrapped,
-    result: unknown,
-    frame?: unknown,
-  ) {
-    const f = frame as BinFrame;
-    const w = this.wrap(result);
-    const left = this.symOf(f.left);
-    const right = this.symOf(f.right);
-    if (left.kind !== 'const' || right.kind !== 'const') {
-      // `+` with a string operand is concatenation, not numeric addition — emit a
-      // string-concat node (str.++) rather than an arithmetic (+ ...). The wrapped
-      // operands are in scope here, so a non-symbolic side keeps its string const.
-      const isStringPlus =
-        op === '+' &&
-        (typeof this.unwrap(f.left) === 'string' ||
-          typeof this.unwrap(f.right) === 'string');
-      this.setInfo(
-        w,
-        isStringPlus
-          ? { kind: 'concat', left, right }
-          : { kind: 'binary', op, left, right },
-      );
-    }
-    return { result: w };
-  }
-
-  unary(
-    _id: number,
-    op: string,
-    _prefix: boolean,
-    _operand: unknown,
-    result: unknown,
-    frame?: unknown,
-  ) {
-    const f = frame as UnFrame;
-    const w = this.wrap(result);
-    const operand = this.symOf(f.operand);
-    if (operand.kind !== 'const') {
-      this.setInfo(w, { kind: 'unary', op, operand });
-    }
-    return { result: w };
-  }
-
-  // Record the branch as a path constraint, and — crucially — hand the engine
-  // the *raw* (unwrapped) value so control flow branches correctly; a wrapped
-  // boolean is a proxy object and would read as always-truthy.
-  condition(id: number, _op: string, value: unknown) {
-    const w = value as Wrapped<unknown>;
-    const raw = this.unwrap<unknown>(w);
-    const sym = this.symOf(w);
-    if (sym.kind !== 'const') {
-      this.pathConstraints.push({ id, constraint: sym, taken: Boolean(raw) });
-    }
-    return { result: raw };
-  }
-
-  // `s.length` on a symbolic string is the one field read with symbolic meaning;
-  // baseInfo can't recover it (operator-unaware), so we special-case it to a
-  // str.len node and delegate every other read (incl. the `s[i]` char-access,
-  // which the base path routes through substringInfo) to FlowAnalysis.
-  getField(id: number, base: any, prop: any, result: any, frame?: unknown) {
-    const f = frame as GetFieldFrame;
-    const b: unknown = this.unwrap(f.base);
-    const p: unknown = this.unwrap(f.prop);
-    if (typeof b === 'string' && p === 'length') {
-      const src = this.symOf(f.base);
-      const w = this.wrap(result);
-      if (src.kind !== 'const') this.setInfo(w, { kind: 'strlen', src });
-      return { result: w };
-    }
-    return super.getField(id, base, prop, result, frame);
   }
 
   endExecution() {
