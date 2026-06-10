@@ -419,8 +419,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     return proxy as T as Wrapped<T>;
   }
 
-  // TODO : make this private
-  unwrap<T = unknown>(value: Wrapped<T>): Unwrapped<T> {
+  private unwrap<T = unknown>(value: Wrapped<T>): Unwrapped<T> {
     if (!this.isObjectish(value)) return value as T as Unwrapped<T>; // should not happen;
     const entry = this.valueMap.get(value);
     return entry === undefined ? value as T as Unwrapped<T> : entry.value as T as Unwrapped<T>;

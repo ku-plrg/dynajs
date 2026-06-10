@@ -58,13 +58,27 @@ export class TaintAnalysis extends FlowAnalysis<TaintInfo> {
     return infoTainted(this.getInfo(value));
   }
 
-  isTaintedAt(value: unknown, index: number): boolean {
+  // Prelude entry point: `indexW` arrives still wrapped (the instrumented call
+  // site hands ghost functions wrapped values). Project it to its concrete
+  // index via the framework's `valued` — the prelude itself never touches
+  // Wrapped/unwrap.
+  isTaintedAt(value: unknown, indexW: unknown): boolean {
+    const raw = this.valued(indexW).value;
+    const index = typeof raw === "number" ? raw : Number(raw);
     const info = this.getInfo(value);
     if (info === undefined) return false;
     if (info.chars !== undefined && index >= 0 && index < info.chars.length) {
       return info.chars[index] === true;
     }
     return info.bit;
+  }
+
+  // Prelude entry point for `__assert__`: project the (wrapped) condition to its
+  // concrete truth value and throw on falsy. Same convention as the taint
+  // queries above — the prelude forwards a wrapped value, projection lives here.
+  assert(condW: unknown): void {
+    if (this.valued(condW).value) return;
+    throw new Error("Assertion failed");
   }
 
   setTaint(value: unknown, tainted: boolean): void {

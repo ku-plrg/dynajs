@@ -1,5 +1,4 @@
 import type { TaintAnalysis } from "./index.js";
-import type { Wrapped } from "@/model/type.js";
 
 declare const D$: { analysis: TaintAnalysis } & Record<string, any>;
 
@@ -12,14 +11,11 @@ function __is_tainted__(v: unknown): boolean {
 }
 
 function __is_tainted_at__(v: unknown, index: unknown): boolean {
-  const raw = D$.analysis.unwrap(index as Wrapped<unknown>);
-  const idx = typeof raw === "number" ? raw : Number(raw);
-  return D$.analysis.isTaintedAt(v, idx);
+  return D$.analysis.isTaintedAt(v, index);
 }
 
 function __assert__(v: unknown): void {
-  if (D$.analysis.unwrap(v as Wrapped<unknown>)) return;
-  throw new Error("Assertion failed");
+  D$.analysis.assert(v);
 }
 
 function __print_if_tainted__(x: unknown): void {
