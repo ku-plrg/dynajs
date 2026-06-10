@@ -1,5 +1,5 @@
 // @type taint
-// @oracle true
+// @oracle ttttffff
 // @target es5 String.prototype.replace
 // @feature builtin replace-partial
 // ported from unit/replace_partial.js
