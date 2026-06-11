@@ -10,15 +10,11 @@ export { INTRINSICS_String_prototype_indexOf } from "./INTRINSICS.String.prototy
 export { INTRINSICS_String_prototype_isWellFormed } from "./INTRINSICS.String.prototype.isWellFormed.js";
 export { INTRINSICS_String_prototype_lastIndexOf } from "./INTRINSICS.String.prototype.lastIndexOf.js";
 export { INTRINSICS_String_prototype_localeCompare } from "./INTRINSICS.String.prototype.localeCompare.js";
-export { INTRINSICS_String_prototype_match } from "./INTRINSICS.String.prototype.match.js";
-export { INTRINSICS_String_prototype_matchAll } from "./INTRINSICS.String.prototype.matchAll.js";
 export { INTRINSICS_String_prototype_normalize } from "./INTRINSICS.String.prototype.normalize.js";
 export { INTRINSICS_String_prototype_padEnd } from "./INTRINSICS.String.prototype.padEnd.js";
 export { INTRINSICS_String_prototype_padStart } from "./INTRINSICS.String.prototype.padStart.js";
 export { INTRINSICS_String_prototype_repeat } from "./INTRINSICS.String.prototype.repeat.js";
 export { INTRINSICS_String_prototype_replace } from "./INTRINSICS.String.prototype.replace.js";
-export { INTRINSICS_String_prototype_replaceAll } from "./INTRINSICS.String.prototype.replaceAll.js";
-export { INTRINSICS_String_prototype_search } from "./INTRINSICS.String.prototype.search.js";
 export { INTRINSICS_String_prototype_slice } from "./INTRINSICS.String.prototype.slice.js";
 export { INTRINSICS_String_prototype_split } from "./INTRINSICS.String.prototype.split.js";
 export { INTRINSICS_String_prototype_startsWith } from "./INTRINSICS.String.prototype.startsWith.js";

@@ -40,6 +40,9 @@ export interface BootStrap {
   substring: (s: Wrapped<string>, from: Wrapped<number>, to: Wrapped<number>) => Wrapped<string>;
   concatenate: (l: Wrapped<string>, r: Wrapped<string>) => Wrapped<string>;
   codeUnitAt: (s: Wrapped<string>, i: Wrapped<number>) => Wrapped<string>;
+  // Strip whitespace; `leading`/`trailing` select which ends (per TrimString's
+  // `where` ∈ {start, end, start+end}). Trimming applies only to strings.
+  trim: (s: Wrapped<string>, leading: boolean, trailing: boolean) => Wrapped<string>;
 
   // Arithmetic / bitwise — carry the result value (Wrapped).
   add: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<number>;
@@ -75,7 +78,11 @@ export interface BootStrap {
   isNot: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(l: L, r: R) => l is Exclude<L, R>;
   isNaN: (x: Wrapped<number>) => boolean;
   isFinite: (x: Wrapped<number>) => boolean;
-  typeOf: (x: Wrapped<unknown>) => string;
+  // "Type(x) is <ty>" — the runtime decides each type's membership (so e.g.
+  // "object" excludes null and includes functions, which a bare `typeof` gets
+  // wrong). Generated code routes every spec type-check through here. Raw boolean
+  // for direct use in `if`.
+  isType: (x: Wrapped<unknown>, ty: string) => boolean;
 
   // Math notations — Wrapped, like the arithmetic ops.
   min: (...xs: Wrapped<number>[]) => Wrapped<number>;
@@ -92,4 +99,10 @@ export interface BootStrap {
   // Basic operations.
   base: <T extends Unwrapped | Primitive>(v: T, parent: Wrapped[]) => Wrapped<T>;
   peek: <T>(wrapped: Wrapped<T>) => Unwrapped<T>;
+  // A Wrapped `undefined`, used as the default value for absent optional
+  // parameters. Keeping it Wrapped means the value domain stays uniform (no raw
+  // `undefined` leaks into generated polyfills), so a plain `name? : Wrapped<T>`
+  // — which would be `Wrapped<T> | undefined` and break `$.is`'s `Wrapped<unknown>`
+  // constraint — is instead rendered as `name : Wrapped<T> = $.undef`.
+  undef: Wrapped<undefined>;
 }

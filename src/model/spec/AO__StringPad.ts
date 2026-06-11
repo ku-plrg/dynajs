@@ -15,7 +15,7 @@ export function AO__StringPad ($ : BootStrap, S : Wrapped<string>, maxLength : W
   }
 
   var fillLen = $.subtract(maxLength, stringLength);
-  throw new Error("YET: Let _truncatedStringFiller_ be the String value consisting of repeated concatenations of _fillString_ truncated to length _fillLen_.")
+  var truncatedStringFiller = $.base(String($.peek(fillString)).repeat(Math.ceil($.peek(fillLen) / String($.peek(fillString)).length)).slice(0, $.peek(fillLen)), [fillString, fillLen]);
   if ($.is(placement, $.base<string>("start", [])))
   {
     return $.concatenate(truncatedStringFiller, S);

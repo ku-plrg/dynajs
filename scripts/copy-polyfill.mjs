@@ -27,7 +27,10 @@ const INCLUDE = [
 // or RegExp. Excluding a needed dependency can break a builtin's imports.
 const EXCLUDE = [
   // /Locale/,
-  // "INTRINSICS.String.prototype.split",
+  "INTRINSICS.String.prototype.match",
+  "INTRINSICS.String.prototype.matchAll",
+  "INTRINSICS.String.prototype.replaceAll",
+  "INTRINSICS.String.prototype.search",
 ];
 
 const ESMETA_HOME = process.env.ESMETA_HOME;

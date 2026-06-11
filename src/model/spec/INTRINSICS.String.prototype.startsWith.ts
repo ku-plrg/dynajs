@@ -7,8 +7,7 @@ import { AO__RequireObjectCoercible } from "./AO__RequireObjectCoercible.js";
 import { AO__ToIntegerOrInfinity } from "./AO__ToIntegerOrInfinity.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_String_prototype_startsWith ($ : BootStrap, $this : Wrapped<unknown>, searchString : Wrapped<unknown>, position? : Wrapped<unknown>) {
-  var position = arguments.length > 1 ? arguments[1] : undefined;
+export function INTRINSICS_String_prototype_startsWith ($ : BootStrap, $this : Wrapped<unknown>, searchString : Wrapped<unknown>, position : Wrapped<unknown> = $.undef) {
   var O = AO__RequireObjectCoercible($, $this);
   var S = AO__ToString($, (O as Wrapped<unknown>));
   var isRegExp = AO__IsRegExp($, (searchString as Wrapped<unknown>));

@@ -200,6 +200,15 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       const r = (this.unwrap(s) as string).charAt(idx);
       return this.lift(r, this.substringInfo(this.valued(s), idx, r.length) ?? this.baseInfo(r, [this.valued(s)]));
     },
+    trim: (s, leading, trailing) => {
+      let r = this.unwrap(s) as string;
+      if (leading && trailing) r = r.trim();
+      else if (leading) r = r.trimStart();
+      else if (trailing) r = r.trimEnd();
+      // Result is a substring of `s`; propagate via baseInfo so taint/symbolic
+      // provenance flows from the source string.
+      return this.lift(r, this.baseInfo(r, [this.valued(s)]));
+    },
 
     add: (l, r) => this.binOp('+', l, r, (this.unwrap(l) as number) + (this.unwrap(r) as number)),
     subtract: (l, r) => this.binOp('-', l, r, (this.unwrap(l) as number) - (this.unwrap(r) as number)),
@@ -223,7 +232,17 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       this.unwrap(l) !== this.unwrap(r),
     isNaN: (x) => Number.isNaN(this.unwrap(x) as number),
     isFinite: (x) => Number.isFinite(this.unwrap(x) as number),
-    typeOf: (x) => typeof this.unwrap(x),
+    isType: (x, ty) => {
+      const v = this.unwrap(x);
+      switch (ty) {
+        // "Type(x) is Object": objects and callables, but not null.
+        case 'object': return (typeof v === 'object' && v !== null) || typeof v === 'function';
+        case 'null': return v === null;
+        case 'undefined': return v === undefined;
+        // string / number / boolean / symbol / bigint / function
+        default: return typeof v === ty;
+      }
+    },
 
     min: (...xs) => this.numOp(Math.min(...xs.map((x) => this.unwrap(x) as number)), xs),
     max: (...xs) => this.numOp(Math.max(...xs.map((x) => this.unwrap(x) as number)), xs),
@@ -244,6 +263,12 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     base: <T extends Unwrapped<unknown> | Primitive>(v: T, parents: Wrapped<unknown>[]): Wrapped<T> =>
       this.lift(v, this.baseInfo(v, parents.map((p) => this.valued(p)))),
     peek: <T>(wrapped: Wrapped<T>) => this.unwrap(wrapped),
+    // Default for absent optional params (see BootStrap.undef / type.ts). `this`
+    // here is the runtime object, so `this.base` is the op above. An absent arg
+    // has no source, hence empty parents.
+    get undef(): Wrapped<undefined> {
+      return this.base(undefined, []);
+    },
   };
 
   private model = new Model(this.spec, this.runtime);

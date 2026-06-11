@@ -10,17 +10,17 @@ export function AO__TrimString ($ : BootStrap, string : Wrapped<unknown>, where 
   var S = AO__ToString($, (str as Wrapped<unknown>));
   if ($.is(where, $.base<string>("start", [])))
   {
-    var T = $.IN__Trim(S, true, false);
+    var T = $.trim(S, true, false);
   }
   else
   {
     if ($.is(where, $.base<string>("end", [])))
     {
-      var T = $.IN__Trim(S, false, true);
+      var T = $.trim(S, false, true);
     }
     else
     {
-      var T = $.IN__Trim(S, true, true);
+      var T = $.trim(S, true, true);
     }
 
   }

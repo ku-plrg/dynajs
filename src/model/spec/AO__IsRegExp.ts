@@ -6,7 +6,7 @@ import { AO__Get } from "./AO__Get.js";
 import { AO__ToBoolean } from "./AO__ToBoolean.js";
 
 export function AO__IsRegExp ($ : BootStrap, argument : Wrapped<unknown>) {
-  if (!(AO__IsObject($, argument)))
+  if (!($.isType(argument, "object")))
   {
     return $.base<boolean>(false, []);
   }

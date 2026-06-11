@@ -11,7 +11,7 @@ export function INTRINSICS_String_prototype_toLowerCase ($ : BootStrap, $this : 
   var O = AO__RequireObjectCoercible($, $this);
   var S = AO__ToString($, (O as Wrapped<unknown>));
   var sText = AO__StringToCodePoints($, (S as Wrapped<string>));
-  throw new Error("YET: Let _lowerText_ be toLowercase(_sText_), according to the Unicode Default Case Conversion algorithm.")
+  var lowerText = AO__StringToCodePoints($, $.base(sText.map(function (cp) { return String.fromCodePoint(Number($.peek(cp))); }).join("").toLowerCase(), [S])) as unknown as Wrapped<unknown>;
   var L = AO__CodePointsToString($, (lowerText as Wrapped<unknown>));
   return L;
 }
