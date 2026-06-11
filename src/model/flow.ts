@@ -32,9 +32,7 @@ export type InfoDomain<Info> = {
 // How the analysis treats call boundaries: a function for which `isOpaque`
 // returns true is a black box — the framework doesn't trace inside it and
 // propagates info to its result via baseInfo over the (unwrapped) args.
-// ("call policy", to keep clear of taint's source/sink "taint policy" and a
-// future DSE 
-// search policy.)
+// ("call policy", to keep clear of taint's source/sink "taint policy".)
 export type CallPolicy = {
   isOpaque: (f: unknown) => boolean;
 }
