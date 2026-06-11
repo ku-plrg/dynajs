@@ -1,6 +1,6 @@
 import util from "node:util";
 import type { Analysis } from "@/types/analysis.js";
-import type { SpecOps, SpecRuntime, Wrapped, Unwrapped, Primitive } from "./type.js";
+import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "./type.js";
 import { Model } from "./model.js";
 
 type IdValuePair = { id: symbol; value: unknown };
@@ -117,22 +117,9 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
   // ---- SpecOps: wrap/unwrap plumbing; Info computation delegated to hooks ----
 
-  spec: Pick<SpecOps, 'base' | 'binary' | 'peek' | 'substring' | 'concatenate'> = {
-    base: <T extends Unwrapped<unknown> | Primitive>(v: T, parents: Wrapped<unknown>[]): Wrapped<T> =>
-      this.lift(v, this.baseInfo(v, parents.map((p) => this.valued(p)))),
+  spec = {
     binary: (op: string, left: Wrapped, right: Wrapped, result: Unwrapped): Wrapped =>
       this.lift(result, this.binaryInfo(op, this.valued(left), this.valued(right)) ?? this.baseInfo(result, [this.valued(left), this.valued(right)])),
-    peek: <T>(wrapped: Wrapped<T>) => this.unwrap(wrapped),
-    substring: (s: Wrapped<string>, start: Wrapped<number>, end: Wrapped<number>): Wrapped<string> => {
-      const r = this.unwrap(s).substring(this.unwrap(start) as number, this.unwrap(end) as number);
-      return this.lift(r, this.substringInfo(this.valued(s), this.unwrap(start) as number, r.length) ?? this.baseInfo(r, [this.valued(s)]));
-    },
-    concatenate: (s1: Wrapped<string>, s2: Wrapped<string>): Wrapped<string> => {
-      const r1 = this.unwrap(s1);
-      const r2 = this.unwrap(s2);
-      const r = r1 + r2;
-      return this.lift(r, this.concatenateInfo(this.valued(s1), r1.length, this.valued(s2), r2.length) ?? this.baseInfo(r, [this.valued(s1), this.valued(s2)]));
-    },
   };
 
   // Wrap a freshly-computed numeric result, propagating Info from its operands
@@ -159,7 +146,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   // carries its operands' Info (taint flows into the boolean; concolic attaches
   // the comparison Sym). The Wrapped<boolean> is a truthy proxy, so a caller must
   // funnel it through `condition` before any native branch — generated code does
-  // this at the branch site (see BootStrap.condition / type.ts).
+  // this at the branch site (see SpecRuntime.condition / type.ts).
   private cmpOp(op: string, l: Wrapped<number>, r: Wrapped<number>, v: boolean): Wrapped<boolean> {
     return this.spec.binary(op, l, r, v as unknown as Unwrapped) as Wrapped<boolean>;
   }
@@ -168,7 +155,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   // the condition to the `conditionInfo` hook so a path-tracking analysis can
   // record it. This is the same hook the instrumenter dispatches to for
   // `D$.C(id, op, value)` on user code AND the one model-internal branches funnel
-  // through (BootStrap.condition), so both go through one place.
+  // through (SpecRuntime.condition), so both go through one place.
   condition(id: number, _op: string, value: unknown): { result: unknown } {
     const raw = this.unwrap(value as Wrapped<unknown>);
     this.conditionInfo(id, this.valued(value), Boolean(raw));
@@ -180,7 +167,6 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   // result (Wrapped, to keep the symbolic value flowing); `condition` unwraps a
   // comparison at the branch site so native control flow / short-circuiting work.
   runtime: SpecRuntime = {
-    binary: (op, left, right, result) => { throw new Error('TODO') },
     length: (s) => {
       const v = (this.unwrap(s) as string).length;
       return this.lift(v, this.lengthInfo(this.valued(s)) ?? this.baseInfo(v, [this.valued(s)]));
@@ -264,7 +250,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     base: <T extends Unwrapped<unknown> | Primitive>(v: T, parents: Wrapped<unknown>[]): Wrapped<T> =>
       this.lift(v, this.baseInfo(v, parents.map((p) => this.valued(p)))),
     peek: <T>(wrapped: Wrapped<T>) => this.unwrap(wrapped),
-    // Default for absent optional params (see BootStrap.undef / type.ts). `this`
+    // Default for absent optional params (see SpecRuntime.undef / type.ts). `this`
     // here is the runtime object, so `this.base` is the op above. An absent arg
     // has no source, hence empty parents.
     get undef(): Wrapped<undefined> {
@@ -286,15 +272,15 @@ export abstract class FlowAnalysis<Info> implements Analysis {
         return this.lift(result, this.unaryInfo(frame.op, this.valued(frame.operand)) ?? this.baseInfo(result, [this.valued(frame.operand)]));
       }
       case 'getField': {
-        const b: unknown = this.spec.peek(frame.base);
-        const p: unknown = this.spec.peek(frame.prop);
+        const b: unknown = this.runtime.peek(frame.base);
+        const p: unknown = this.runtime.peek(frame.prop);
         if (typeof b === 'string') {
           const i = asStringIndex(p, b.length);
           if (i !== undefined) {
-            return this.spec.substring(
+            return this.runtime.substring(
               frame.base as Wrapped<string>,
-              this.spec.base(i, []),
-              this.spec.base(i + 1, []),
+              this.runtime.base(i, []),
+              this.runtime.base(i + 1, []),
             );
           }
           // `s.length` is the one field read with op-aware meaning (strlen);
@@ -309,13 +295,13 @@ export abstract class FlowAnalysis<Info> implements Analysis {
         if (this.isWrapped(result) && this.getInfo(result) !== undefined) {
           return result as Wrapped<unknown>;
         }
-        return this.spec.base(result, [frame.base, frame.prop]);
+        return this.runtime.base(result, [frame.base, frame.prop]);
       }
       case 'opaque': {
         // when modeled, the runtime invoked Model.of(f) which already returned a Wrapped value
         if (frame.modeled) return result as unknown as Wrapped<unknown>;
         const parents = Array.from(frame.entries) as Wrapped[]; // can we do this without `as`?
-        return this.spec.base(result, parents);
+        return this.runtime.base(result, parents);
       }
       case 'transparent': {
         // Operations inside the callee already propagated info to `result`.
@@ -327,7 +313,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
           return result as Wrapped<unknown>;
         }
         const parents = Array.from(frame.entries) as Wrapped[];
-        return this.spec.base(result, parents);
+        return this.runtime.base(result, parents);
       }
     }
   }
@@ -335,13 +321,13 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   protected abstract isOpaqueFunction(_f: unknown): unknown
 
   literal(_id: number, value: unknown) {
-    const w = this.spec.base(value as Unwrapped<unknown>, []);
+    const w = this.runtime.base(value as Unwrapped<unknown>, []);
     return w === value ? undefined : { result: w };
   }
 
   binaryPre(_id: number, op: string, left: Wrapped, right: Wrapped) {
-    const l = this.spec.peek(left);
-    const r = this.spec.peek(right);
+    const l = this.runtime.peek(left);
+    const r = this.runtime.peek(right);
     const frame: BinFrame = { ty: 'bin', op, left, right };
     return { op, left: l, right: r, skip: false, frame };
   }
@@ -351,8 +337,8 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   }
 
   templateConcatPre(_id: number, left: Wrapped, right: Wrapped) {
-    const l = this.spec.peek(left);
-    const r = this.spec.peek(right);
+    const l = this.runtime.peek(left);
+    const r = this.runtime.peek(right);
     const frame: BinFrame = { ty: 'bin', op: '+', left, right };
     return { left: l, right: r, skip: false, frame };
   }
@@ -362,7 +348,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   }
 
   unaryPre(_id: number, op: string, _prefix: boolean, operand: Wrapped) {
-    const e = this.spec.peek(operand);
+    const e = this.runtime.peek(operand);
     const frame: UnFrame = { ty: 'un', op, operand: operand };
     return { op, operand: e, skip: false, frame };
   }
@@ -380,7 +366,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     // undefined (e.g. arr[i], split's result[k]). The frame keeps the wrapped prop so
     // propagate still sees its info / can recover the s[i] char-access case.
     const frame: GetFieldFrame = { ty: 'getField', base: base as Wrapped, prop: prop as Wrapped };
-    return { base: this.spec.peek(base as Wrapped), prop: this.spec.peek(prop as Wrapped), skip: false, frame };
+    return { base: this.runtime.peek(base as Wrapped), prop: this.runtime.peek(prop as Wrapped), skip: false, frame };
   }
 
   getField(_id: number, _base: any, _prop: any, result: any, frame?: unknown) {
@@ -399,7 +385,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
 
     if (this.isOpaqueFunction(_f)) {
-      const unwrappedArgs = argArr.map(this.spec.peek);
+      const unwrappedArgs = argArr.map(this.runtime.peek);
       return { skip: false, f: _f, base: _base, args: unwrappedArgs, frame: { ty: 'opaque', f: _f, modeled: false, entries } };
     }
     return { skip: false, f: _f, base: _base, args, frame: { ty: 'transparent', entries } };

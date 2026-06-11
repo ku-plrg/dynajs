@@ -7,14 +7,9 @@ export type Unwrapped<T = unknown> = T & { readonly [WrappedValueBrand]: false; 
 // Primitives are (implicit) subtype of unwrapped, but unwrapped is not necessarily primitive (e.g. it can be an object that has been unwrapped)
 export type Primitive = string | number | boolean | bigint | symbol | null | undefined;
 
-export interface SpecOps extends StringOps, ArithmeticOps, CompareOps, MathOps, ListOps {
+interface SpecOps extends StringOps, ArithmeticOps, CompareOps, MathOps, ListOps {
   // default propagation: unwrapped -> wrapped
   base: <T extends Unwrapped | Primitive>(v: T, parent: Wrapped[]) => Wrapped<T>;
-  // Op-aware annotation of an already-computed binary result (post-hoc): routes
-  // through the analysis's `binaryInfo` hook, else `base` flow-through. Lets the
-  // spec AO `ApplyStringOrNumericBinaryOperator` annotate its numeric result
-  // with the operator (e.g. `x - 2` vs `x + 2`) instead of an op-blind `base`.
-  binary: (op: string, left: Wrapped, right: Wrapped, result: Unwrapped) => Wrapped;
   // wrapped -> unwrapped
   peek: <T>(wrapped: Wrapped<T>) => Unwrapped<T>;
 }
