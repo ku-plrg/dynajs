@@ -1,0 +1,24 @@
+
+// THIS FILE IS AUTO-GENERATED, DO NOT EDIT
+import type { Wrapped, BootStrap } from "@/model/type.js";
+
+export function AO__StringIndexOf ($ : BootStrap, string : Wrapped<string>, searchValue : Wrapped<string>, fromIndex : Wrapped<number>) {
+  var len = $.length(string);
+  if ($.is(searchValue, $.base<string>("", [])) && $.condition(0, $.lessThanEqual(fromIndex, len)))
+  {
+    return fromIndex;
+  }
+
+  var searchLen = $.length(searchValue);
+  for (var i = fromIndex; i <=$.subtract(len, searchLen); i++)
+  {
+    var candidate = $.substring(string, i, $.add(i, searchLen));
+    if ($.is(candidate, searchValue))
+    {
+      return i;
+    }
+
+  }
+
+  return $.base<string>("not-found", []);
+}

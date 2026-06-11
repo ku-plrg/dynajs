@@ -1,0 +1,22 @@
+
+// THIS FILE IS AUTO-GENERATED, DO NOT EDIT
+import type { Wrapped, BootStrap } from "@/model/type.js";
+
+import { AO__CodePointAt } from "./AO__CodePointAt.js";
+
+export function AO__IsStringWellFormedUnicode ($ : BootStrap, string : Wrapped<string>) {
+  var len = $.length(string);
+  var k = $.base<number>(0, []);
+  while ($.condition(0, $.lessThan(k, len)))
+  {
+    var cp = AO__CodePointAt($, (string as Wrapped<string>), (k as Wrapped<number>));
+    if ($.is(cp["IsUnpairedSurrogate"], $.base<boolean>(true, [])))
+    {
+      return $.base<boolean>(false, []);
+    }
+
+    k = $.add(k, cp["CodeUnitCount"]);
+  }
+
+  return $.base<boolean>(true, []);
+}

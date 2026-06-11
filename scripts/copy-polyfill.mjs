@@ -12,21 +12,22 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import chalk from "chalk";
 
-// List of polyfill file names (extension .ts can be omitted).
+// Builtins to copy, as base names (extension .ts can be omitted). Each entry is
+// either an exact string or a RegExp. RegExp entries are expanded against the
+// set of generated + manual base names; exact strings are taken verbatim (and
+// reported as missing if no such file exists).
 // To use with different ESMETA_HOME: ESMETA_HOME=~/path/to/esmeta npm run copy
-const FILES = [
-  // "ToString",
-  // "GetSubstitution",
-  "INTRINSICS.String.prototype.at",
-  "INTRINSICS.String.prototype.charAt",
-  // "INTRINSICS.String.prototype.charCodeAt",
-  "INTRINSICS.String.prototype.slice",
-  "INTRINSICS.String.prototype.concat",
-  "INTRINSICS.String.prototype.repeat",
+const INCLUDE = [
+  // Bulk-select with a RegExp, then carve out exceptions in EXCLUDE below, e.g.:
+  /^INTRINSICS\.String\.prototype\./,
+];
 
-  "INTRINSICS.String.prototype.replace",
-  "INTRINSICS.String.prototype.split",
-  "INTRINSICS.String.prototype.substring",
+// Bases matching any of these are never copied — even when pulled in as a
+// transitive dependency. EXCLUDE wins over INCLUDE. Entries are exact strings
+// or RegExp. Excluding a needed dependency can break a builtin's imports.
+const EXCLUDE = [
+  // /Locale/,
+  // "INTRINSICS.String.prototype.split",
 ];
 
 const ESMETA_HOME = process.env.ESMETA_HOME;
@@ -35,14 +36,26 @@ if (!ESMETA_HOME) {
   process.exit(1);
 }
 
-if (FILES.length === 0) {
+if (INCLUDE.length === 0) {
   console.error(
     chalk.yellow(
-      "No files specified. Fill in the FILES array in scripts/copy-polyfill.mjs.",
+      "No files specified. Fill in the INCLUDE array in scripts/copy-polyfill.mjs.",
     ),
   );
   process.exit(1);
 }
+
+// A pattern set matcher: exact strings (with optional .ts stripped) or RegExp.
+function makeMatcher(patterns) {
+  const exact = new Set();
+  const regexes = [];
+  for (const p of patterns) {
+    if (p instanceof RegExp) regexes.push(p);
+    else exact.add(p.endsWith(".ts") ? p.slice(0, -3) : p);
+  }
+  return (name) => exact.has(name) || regexes.some((re) => re.test(name));
+}
+const isExcluded = makeMatcher(EXCLUDE);
 
 // Generate polyfills in ESMETA_HOME first.
 console.log(chalk.cyan(`▶ Running gen-poly (${ESMETA_HOME})`));
@@ -88,6 +101,7 @@ for (const entry of readdirSync(destDir)) {
 // can keep importing `./AO__Foo.js` without caring whether AO__Foo is generated
 // or hand-authored. The shim is regenerated each run; edit the .manual.ts file.
 for (const [base, file] of manualBases) {
+  if (isExcluded(base)) continue;
   const shim =
     `// THIS FILE IS AUTO-GENERATED, DO NOT EDIT\n` +
     `// Re-exports the hand-authored implementation in ${file}.\n` +
@@ -108,17 +122,39 @@ function depsOf(content) {
 const missing = [];
 const copiedNames = [];
 const visited = new Set();
-// Seed the worklist with the requested builtins and every manual file; transitive
+// Universe of selectable bases for RegExp expansion: every generated polyfill
+// plus every manual base. Exact-string INCLUDE entries are added verbatim even
+// if absent (so they surface in the missing report below).
+const universe = new Set([
+  ...readdirSync(srcDir)
+    .filter((f) => f.endsWith(".ts"))
+    .map((f) => f.slice(0, -3)),
+  ...manualBases.keys(),
+]);
+const roots = new Set();
+for (const entry of INCLUDE) {
+  if (entry instanceof RegExp) {
+    for (const name of universe) if (entry.test(name)) roots.add(name);
+  } else {
+    roots.add(entry.endsWith(".ts") ? entry.slice(0, -3) : entry);
+  }
+}
+// EXCLUDE wins over INCLUDE.
+for (const r of [...roots]) if (isExcluded(r)) roots.delete(r);
+
+// Seed the worklist with the resolved roots and every manual file; transitive
 // AO dependencies are discovered and copied below. Manual files resolve to their
 // shim (already written), but we still follow their imports to pull in any
-// generated AOs they depend on. Only the requested builtins (roots) are barreled.
-const queue = FILES.map((name) => (name.endsWith(".ts") ? name.slice(0, -3) : name));
-const roots = new Set(queue);
+// generated AOs they depend on. Only the roots are barreled.
+const queue = [...roots];
 queue.push(...manualBases.keys());
 while (queue.length > 0) {
   const base = queue.shift();
   if (visited.has(base)) continue;
   visited.add(base);
+  // EXCLUDE applies to roots and transitive deps alike: skip copying and don't
+  // follow this base's own dependencies.
+  if (isExcluded(base)) continue;
 
   let content;
   const manualFile = manualBases.get(base);

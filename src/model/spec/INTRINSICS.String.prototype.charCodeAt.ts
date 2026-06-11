@@ -1,0 +1,20 @@
+
+// THIS FILE IS AUTO-GENERATED, DO NOT EDIT
+import type { Wrapped, BootStrap } from "@/model/type.js";
+
+import { AO__RequireObjectCoercible } from "./AO__RequireObjectCoercible.js";
+import { AO__ToIntegerOrInfinity } from "./AO__ToIntegerOrInfinity.js";
+import { AO__ToString } from "./AO__ToString.js";
+
+export function INTRINSICS_String_prototype_charCodeAt ($ : BootStrap, $this : Wrapped<unknown>, pos : Wrapped<unknown>) {
+  var O = AO__RequireObjectCoercible($, $this);
+  var S = AO__ToString($, (O as Wrapped<unknown>));
+  var position = AO__ToIntegerOrInfinity($, (pos as Wrapped<unknown>));
+  var size = $.length(S);
+  if ($.condition(0, $.lessThan(position, $.base<number>(0, []))) || $.condition(1, $.greaterThanEqual(position, size)))
+  {
+    return $.base<number>(NaN, []);
+  }
+
+  return $.codeUnitAt(S, position);
+}

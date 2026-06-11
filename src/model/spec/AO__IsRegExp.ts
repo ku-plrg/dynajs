@@ -1,0 +1,26 @@
+
+// THIS FILE IS AUTO-GENERATED, DO NOT EDIT
+import type { Wrapped, BootStrap } from "@/model/type.js";
+
+import { AO__Get } from "./AO__Get.js";
+import { AO__ToBoolean } from "./AO__ToBoolean.js";
+
+export function AO__IsRegExp ($ : BootStrap, argument : Wrapped<unknown>) {
+  if (!(AO__IsObject($, argument)))
+  {
+    return $.base<boolean>(false, []);
+  }
+
+  var matcher = AO__Get($, (argument as Wrapped<unknown>), ($.base<symbol>(Symbol.match, []) as Wrapped<unknown>));
+  if (!$.is(matcher, $.base<undefined>(undefined, [])))
+  {
+    return AO__ToBoolean($, (matcher as Wrapped<unknown>));
+  }
+
+  if (("RegExpMatcher" in argument))
+  {
+    return $.base<boolean>(true, []);
+  }
+
+  return $.base<boolean>(false, []);
+}
