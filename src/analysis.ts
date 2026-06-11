@@ -635,23 +635,64 @@ const CONDITION_CB: Record<string, keyof Analysis> = {
   '?.': 'optionalChain', 'switch': 'switchCondition',
 };
 
-// hook for update operations
+// hook for update operations. Threads pre/post results like B/U: the pre's
+// (possibly unwrapped) operand feeds the `-(-x)` ToNumber idiom — a wrapped
+// operand has no valueOf, so coercing it directly would yield NaN — and the
+// binary post's result (e.g. a wrapped value) is what gets written back. The
+// unary `skip` is ignored: ++/-- has no single native op to skip, only the
+// decomposed binary, whose own `skip` is respected below.
 function Up(id: number, binaryId: number, op: string, prefix: boolean, argument: any, write: (x: any) => any): any {
-  D$.analysis.unaryPre?.(id, op, prefix, argument);
-  fireSpecificUnaryPre(id, op, prefix, argument);
-  const oldValue = -(-argument);
+  let operand = argument;
+  let unaryFrame: unknown;
+  let specificUnaryFrame: unknown;
+  // general pre fires first
+  const unaryPre = D$.analysis.unaryPre?.(id, op, prefix, operand);
+  if (unaryPre) {
+    operand = unaryPre.operand;
+    unaryFrame = unaryPre.frame;
+  }
+  // specific pre fires second and wins
+  const specificUnaryPre = fireSpecificUnaryPre(id, op, prefix, operand);
+  if (specificUnaryPre) {
+    operand = specificUnaryPre.operand;
+    specificUnaryFrame = specificUnaryPre.frame;
+  }
+  const oldValue = -(-operand);
   const binaryOp = op === '++' ? '+' : '-';
-  const right = typeof oldValue == 'bigint' ? 1n : 1;
-  D$.analysis.binaryPre?.(binaryId, binaryOp, oldValue, right);
-  fireSpecificBinaryPre(binaryId, binaryOp, oldValue, right);
-  // @ts-ignore
-  let newValue = op === '++' ? oldValue + right : oldValue - right;
-  D$.analysis.binary?.(binaryId, binaryOp, oldValue, right, newValue);
-  fireSpecificBinary(binaryId, binaryOp, oldValue, right, newValue);
+  let left: any = oldValue;
+  let right: any = typeof oldValue == 'bigint' ? 1n : 1;
+  let skip = false;
+  let binaryFrame: unknown;
+  let specificBinaryFrame: unknown;
+  const binaryPre = D$.analysis.binaryPre?.(binaryId, binaryOp, left, right);
+  if (binaryPre) {
+    left = binaryPre.left;
+    right = binaryPre.right;
+    skip = binaryPre.skip;
+    binaryFrame = binaryPre.frame;
+  }
+  const specificBinaryPre = fireSpecificBinaryPre(binaryId, binaryOp, left, right);
+  if (specificBinaryPre) {
+    left = specificBinaryPre.left;
+    right = specificBinaryPre.right;
+    skip = specificBinaryPre.skip;
+    specificBinaryFrame = specificBinaryPre.frame;
+  }
+  let newValue;
+  if (!skip) {
+    // @ts-ignore
+    newValue = op === '++' ? left + right : left - right;
+  }
+  const binaryPost = D$.analysis.binary?.(binaryId, binaryOp, left, right, newValue, binaryFrame);
+  if (binaryPost) newValue = binaryPost.result;
+  const specificBinaryPost = fireSpecificBinary(binaryId, binaryOp, left, right, newValue, specificBinaryFrame);
+  if (specificBinaryPost) newValue = specificBinaryPost.result;
   write(newValue);
-  const result = prefix ? newValue : oldValue;
-  D$.analysis.unary?.(id, op, prefix, argument, result);
-  fireSpecificUnary(id, op, prefix, argument, result);
+  let result = prefix ? newValue : oldValue;
+  const unaryPost = D$.analysis.unary?.(id, op, prefix, operand, result, unaryFrame);
+  if (unaryPost) result = unaryPost.result;
+  const specificUnaryPost = fireSpecificUnary(id, op, prefix, operand, result, specificUnaryFrame);
+  if (specificUnaryPost) result = specificUnaryPost.result;
   return result;
 }
 

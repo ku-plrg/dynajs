@@ -12,4 +12,5 @@ declare global {
   type Wrapped<T> = model.Wrapped<T>;
   type Unwrapped<T> = model.Unwrapped<T>;
   type SpecRuntime = model.SpecRuntime;
+  type Primitive = model.Primitive;
 }

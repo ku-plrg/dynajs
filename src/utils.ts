@@ -13,6 +13,14 @@ enum LogLevel {
   ERROR,
 }
 
+/* siimilar to `assert`, but this blames the caller of function */
+export function required(condition: boolean, message: string): void {
+  if (!condition) {
+    err(message);
+    throw new Error(message);
+  }
+}
+
 // read the file
 export function readFile(filename: string): string {
   if (!fs.existsSync(filename)) err(`File not found: \`${filename}\`.`);

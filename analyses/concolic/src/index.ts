@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { FlowAnalysis, type Valued } from '@/model/flow.js';
+import { FlowAnalysis, type Valued, type InfoDomain, type CallPolicy } from '@/model/flow.js';
 import { type Sym, type Sort, UnsupportedSym, symToString } from '@shared/sym.js';
 import { installPrelude } from './prelude.js';
 
@@ -144,15 +144,20 @@ function solveValidity(
 // substringInfo/concatenateInfo/truncateInfo/conditionInfo) — no `Analysis`
 // method overrides, no frame types. Both user-code ops (via the instrumenter)
 // and model/polyfill ops (via `$`) funnel through these same hooks.
-export class ConcolicAnalysis extends FlowAnalysis<Sym> {
+export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   result: unknown;
   private pathConstraints: PathConstraint[] = [];
 
   static OPAQUE_CALLS = new Set<unknown>([console.log]);
 
-  protected isOpaqueFunction(f: unknown) {
-    return ConcolicAnalysis.OPAQUE_CALLS.has(f);
-  }
+  domain: InfoDomain<Sym | undefined> = {
+    getBottom: () => undefined,
+    isBottom: (info): info is undefined => info === undefined,
+  };
+
+  policy: CallPolicy = {
+    isOpaque: (f) => ConcolicAnalysis.OPAQUE_CALLS.has(f),
+  };
 
   // baseInfo is operator-unaware (it can't tell `.length` from any other field
   // read), so concolic builds NO flow-through info here — every symbolic value

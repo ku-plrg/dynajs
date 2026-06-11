@@ -1,25 +1,43 @@
 import util from "node:util";
+import { required } from "@/utils.js";
 import type { Analysis } from "@/types/analysis.js";
 import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "./type.js";
 import { Model } from "./model.js";
 
-type IdValuePair = { id: symbol; value: unknown };
+type ValuedGeneral<Shape extends {}, Value = unknown> = Shape & { value: Value };
 
-type Frame = BinFrame | UnFrame | CallFrame | GetFieldFrame;
-export type BinFrame = { ty: 'bin'; op: string; left: Wrapped; right: Wrapped };
-export type UnFrame  = { ty: 'un'; op: string; operand: Wrapped };
-export type GetFieldFrame = { ty: 'getField'; base: Wrapped; prop: Wrapped };
+type IdValuePair = ValuedGeneral<{ id: symbol}, unknown>;
+
+type BinFrame = { ty: 'bin'; op: string; left: Wrapped; right: Wrapped };
+type UnFrame  = { ty: 'un'; op: string; operand: Wrapped };
+type GetFieldFrame = { ty: 'getField'; base: Wrapped; prop: Wrapped };
 
 type CallFrame = OpaqueCall | TransparentCall;
-export type OpaqueCall = { ty: 'opaque'; f: unknown; modeled: boolean; entries: unknown[] };
-export type TransparentCall = { ty: 'transparent', entries: unknown[] };
+type OpaqueCall = { ty: 'opaque'; f: unknown; modeled: boolean; entries: unknown[] };
+type TransparentCall = { ty: 'transparent', entries: unknown[] };
 
 // The user-facing view of a value: its concrete `value` plus the analysis `info`
 // attached to it (`info` is undefined when nothing has been attached yet). This
 // is the only currency the Info hooks speak — the framework projects each
 // internal `Wrapped` into a `Valued` before calling a hook, so a user analysis
 // never has to touch `Wrapped`/`Unwrapped`.
-export type Valued<Info> = { info: Info | undefined; value: unknown };
+// export type Valued<Info, Value = unknown> = { info: Info | undefined; value: Value };
+export type Valued<Info, Value = unknown> = ValuedGeneral<{ 'info': Info | undefined }, Value>;
+
+export type InfoDomain<Info> = {
+  getBottom: () => Info;
+  isBottom: (info: Info) => boolean;
+}
+
+// How the analysis treats call boundaries: a function for which `isOpaque`
+// returns true is a black box — the framework doesn't trace inside it and
+// propagates info to its result via baseInfo over the (unwrapped) args.
+// ("call policy", to keep clear of taint's source/sink "taint policy" and a
+// future DSE 
+// search policy.)
+export type CallPolicy = {
+  isOpaque: (f: unknown) => boolean;
+}
 
 // Returns the canonical char-access index when `p` is a property key that JS would
 // resolve to `s[i]` (i.e. a non-negative integer in range whose string form matches).
@@ -40,6 +58,9 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   private valueMap = new WeakMap<object, IdValuePair>();
   private infoMap = new Map<symbol, Info>();
 
+  abstract domain: InfoDomain<Info>;
+  abstract policy: CallPolicy;
+
   // ---- Info hooks ----
   //
   // `baseInfo` is the ONE primitive every analysis must define: the flow-through
@@ -57,29 +78,31 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   // Every operand a hook receives is a `Valued` (its concrete value + attached
   // info) — never a `Wrapped`. `baseInfo` is the exception: its `value` is the
   // freshly-produced result (no info yet), and its `parents` are the operands.
-  protected abstract baseInfo(value: unknown, parents: Valued<Info>[]): Info | undefined;
+  protected abstract baseInfo(value: unknown, parents: Valued<Info>[]): Info;
 
   // String structure.
-  protected substringInfo(_src: Valued<Info>, _start: number, _resultLength: number): Info | undefined { return undefined; }
-  protected concatenateInfo(_left: Valued<Info>, _leftLength: number, _right: Valued<Info>, _rightLength: number): Info | undefined { return undefined; }
+  protected substringInfo?(_src: Valued<Info, string>, _start: number, _resultLength: number): Info
+  protected concatenateInfo?(_left: Valued<Info, string>, _leftLength: number, _right: Valued<Info, string>, _rightLength: number): Info
+  protected lengthOfStringInfo?(_src: Valued<Info, string>): Info
+
   // Arithmetic (`+ - * / …`) and ordering comparisons (`< <= > >=`).
-  protected binaryInfo(_op: string, _left: Valued<Info>, _right: Valued<Info>): Info | undefined { return undefined; }
-  protected unaryInfo(_op: string, _operand: Valued<Info>): Info | undefined { return undefined; }
-  protected lengthInfo(_src: Valued<Info>): Info | undefined { return undefined; }
+  protected binaryInfo?(_op: string, _left: Valued<Info>, _right: Valued<Info>): Info
+  protected unaryInfo?(_op: string, _operand: Valued<Info>): Info
   // ToIntegerOrInfinity's truncate-toward-zero, so a symbolic numeric operand
   // keeps its Sym across the integer coercion (e.g. a symbolic index).
-  protected truncateInfo(_src: Valued<Info>): Info | undefined { return undefined; }
+  protected truncateInfo?(_src: Valued<Info, number>): Info
+
   // A branch was taken on `cond` (concrete direction `taken`), keyed by the
   // branch's source `id`. Unlike the hooks above this produces no new value — it
   // records a fact (a path constraint), so it returns void. Path-tracking
   // analyses (concolic) override it; everyone else ignores branches.
-  protected conditionInfo(_id: number, _cond: Valued<Info>, _taken: boolean): void {}
+  protected conditionInfo?(_id: number, _cond: Valued<Info>, _taken: boolean): void {}
 
   // ---- Info storage helpers ----
 
-  protected getInfo(value: unknown): Info | undefined {
+  protected /* final */ getInfo(value: unknown): Info {
     const e = this.getEntry(value);
-    return e === undefined ? undefined : this.infoMap.get(e.id);
+    return e === undefined ? this.domain.getBottom() : this.infoMap.get(e.id) ?? this.domain.getBottom();
   }
 
   protected setInfo(value: unknown, info: Info): void {
@@ -88,9 +111,9 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     this.infoMap.set(e.id, info);
   }
 
-  protected getOrCreateInfo(value: unknown, makeEmpty: () => Info): Info | undefined {
+  protected getOrCreateInfo(value: unknown, makeEmpty: () => Info): Info {
     const e = this.getEntry(value);
-    if (e === undefined) return undefined;
+    if (e === undefined) return this.domain.getBottom();
     let info = this.infoMap.get(e.id);
     if (info === undefined) {
       info = makeEmpty();
@@ -99,56 +122,37 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     return info;
   }
 
-  // Project a wrapped value into the user-facing `Valued` view (its concrete
-  // value + attached info). Used internally to feed the Info hooks, and exposed
-  // (protected) so an analysis's own entry points — e.g. prelude bridges that
-  // receive wrapped values — can speak `Valued` too instead of `Wrapped`.
-  protected valued(w: unknown): Valued<Info> {
-    return { info: this.getInfo(w), value: this.unwrap(w as Wrapped<unknown>) };
+  protected valued<V>(v: V): Valued<Info, V> {
+    return { info: this.getInfo(v) satisfies Info, value: this.unwrap(v as Wrapped<V>) } satisfies Valued<Info, V>;
   }
 
-  // Wrap a freshly-computed result and attach `info` if any. The one place the
-  // wrap+setInfo dance lives, so every op below is a one-liner.
-  private lift<T>(value: T, info: Info | undefined): Wrapped<T> {
+  private lift<T>(value: T, info: Info): Wrapped<T> {
     const w = this.wrap(value);
-    if (info !== undefined) this.setInfo(w, info);
+    // Bottom carries no information, so skip the map entry — getInfo's miss
+    // path reconstructs it. (infoMap is a strong Map; storing bottoms would
+    // grow it with every wrapped value.)
+    if (!this.domain.isBottom(info)) this.setInfo(w, info);
     return w;
   }
 
-  // ---- SpecOps: wrap/unwrap plumbing; Info computation delegated to hooks ----
-
-  spec = {
-    binary: (op: string, left: Wrapped, right: Wrapped, result: Unwrapped): Wrapped =>
-      this.lift(result, this.binaryInfo(op, this.valued(left), this.valued(right)) ?? this.baseInfo(result, [this.valued(left), this.valued(right)])),
-  };
-
-  // Wrap a freshly-computed numeric result, propagating Info from its operands
-  // exactly like base() does. Used by the math runtime ops (min/max/abs/…) that
-  // have no op-aware Sym yet.
+  /** internal(flow.ts) */
   private numOp(v: number, parents: Wrapped<unknown>[]): Wrapped<number> {
     return this.lift(v, this.baseInfo(v, parents.map((p) => this.valued(p))));
   }
 
-  // Wrap a binary arithmetic result — same post-hoc op-aware annotation as the
-  // user-code path (`spec.binary`): op-aware analyses build the operator Sym via
-  // binaryInfo, everyone else falls back to baseInfo flow-through (taint).
+  /** internal(flow.ts) */
   private binOp(op: string, l: Wrapped<number>, r: Wrapped<number>, v: number): Wrapped<number> {
-    return this.spec.binary(op, l, r, v as unknown as Unwrapped) as Wrapped<number>;
+    return this.lift(v, this.binaryInfo?.(op, this.valued(l), this.valued(r)) ?? this.baseInfo(v, [this.valued(l), this.valued(r)]))
   }
 
-  // Wrap a unary arithmetic result (op-aware Sym, else baseInfo flow-through).
+  /** internal(flow.ts) */
   private unOp(op: string, x: Wrapped<number>, v: number): Wrapped<number> {
-    return this.lift(v, this.unaryInfo(op, this.valued(x)) ?? this.baseInfo(v, [this.valued(x)]));
+    return this.lift(v, this.unaryInfo?.(op, this.valued(x)) ?? this.baseInfo(v, [this.valued(x)]));
   }
 
-  // Wrap an ordering comparison's result: its comparison Sym (via binaryInfo)
-  // else baseInfo flow-through, like the arithmetic ops — so a comparison result
-  // carries its operands' Info (taint flows into the boolean; concolic attaches
-  // the comparison Sym). The Wrapped<boolean> is a truthy proxy, so a caller must
-  // funnel it through `condition` before any native branch — generated code does
-  // this at the branch site (see SpecRuntime.condition / type.ts).
+  /** internal(flow.ts) */
   private cmpOp(op: string, l: Wrapped<number>, r: Wrapped<number>, v: boolean): Wrapped<boolean> {
-    return this.spec.binary(op, l, r, v as unknown as Unwrapped) as Wrapped<boolean>;
+    return this.lift(v, this.binaryInfo?.(op, this.valued(l), this.valued(r)) ?? this.baseInfo(v, [this.valued(l), this.valued(r)]));
   }
 
   // A branch point. Unwrap so native control flow sees the raw boolean, and hand
@@ -158,34 +162,33 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   // through (SpecRuntime.condition), so both go through one place.
   condition(id: number, _op: string, value: unknown): { result: unknown } {
     const raw = this.unwrap(value as Wrapped<unknown>);
-    this.conditionInfo(id, this.valued(value), Boolean(raw));
+    this.conditionInfo?.(id, this.valued(value), Boolean(raw));
     return { result: raw };
   }
 
-  // The runtime threaded into generated polyfills as `$`. Every operation on a
-  // value goes through here. Arithmetic and ordering comparisons carry the
-  // result (Wrapped, to keep the symbolic value flowing); `condition` unwraps a
-  // comparison at the branch site so native control flow / short-circuiting work.
-  runtime: SpecRuntime = {
+  $: SpecRuntime = {
     length: (s) => {
       const v = (this.unwrap(s) as string).length;
-      return this.lift(v, this.lengthInfo(this.valued(s)) ?? this.baseInfo(v, [this.valued(s)]));
+      if (this.$.isType(s, 'string')) {
+        return this.lift(v, this.lengthOfStringInfo?.(this.valued(s)) ?? this.baseInfo(v, [this.valued(s)]));
+      }
+      return this.lift(v, this.baseInfo(v, [this.valued(s)]));
     },
     substring: (s, from, to) => {
       const startN = this.unwrap(from) as number;
       const r = (this.unwrap(s) as string).substring(startN, this.unwrap(to) as number);
-      return this.lift(r, this.substringInfo(this.valued(s), startN, r.length) ?? this.baseInfo(r, [this.valued(s)]));
+      return this.lift(r, this.substringInfo?.(this.valued(s), startN, r.length) ?? this.baseInfo(r, [this.valued(s)]));
     },
     concatenate: (l, r) => {
       const r1 = this.unwrap(l);
       const r2 = this.unwrap(r);
       const res = r1 + r2;
-      return this.lift(res, this.concatenateInfo(this.valued(l), r1.length, this.valued(r), r2.length) ?? this.baseInfo(res, [this.valued(l), this.valued(r)]));
+      return this.lift(res, this.concatenateInfo?.(this.valued(l), r1.length, this.valued(r), r2.length) ?? this.baseInfo(res, [this.valued(l), this.valued(r)]));
     },
     codeUnitAt: (s, i) => {
       const idx = this.unwrap(i) as number;
       const r = (this.unwrap(s) as string).charAt(idx);
-      return this.lift(r, this.substringInfo(this.valued(s), idx, r.length) ?? this.baseInfo(r, [this.valued(s)]));
+      return this.lift(r, this.substringInfo?.(this.valued(s), idx, r.length) ?? this.baseInfo(r, [this.valued(s)]));
     },
     trim: (s, leading, trailing) => {
       let r = this.unwrap(s) as string;
@@ -237,7 +240,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     floor: (x) => this.numOp(Math.floor(this.unwrap(x) as number), [x]),
     truncate: (x) => {
       const v = Math.trunc(this.unwrap(x) as number);
-      return this.lift(v, this.truncateInfo(this.valued(x)) ?? this.baseInfo(v, [this.valued(x)]));
+      return this.lift(v, this.truncateInfo?.(this.valued(x)) ?? this.baseInfo(v, [this.valued(x)]));
     },
     clamp: (x, lower, upper) =>
       this.numOp(
@@ -258,103 +261,68 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     },
   };
 
-  private model = new Model(this.runtime);
-
-  protected propagate(frame: Frame, result: Unwrapped<unknown>): Wrapped<unknown> {
-    switch (frame.ty) {
-      case 'bin': {
-        return this.model.applyBinary(frame.left, frame.op, frame.right, result);
-      }
-      case 'un': {
-        // Op-aware unary annotation (concolic builds `{unary, op}`), else baseInfo
-        // flow-through. Same contract as spec.binary, but inline since propagate
-        // can reach the hook directly (unlike binary, which crosses into Model).
-        return this.lift(result, this.unaryInfo(frame.op, this.valued(frame.operand)) ?? this.baseInfo(result, [this.valued(frame.operand)]));
-      }
-      case 'getField': {
-        const b: unknown = this.runtime.peek(frame.base);
-        const p: unknown = this.runtime.peek(frame.prop);
-        if (typeof b === 'string') {
-          const i = asStringIndex(p, b.length);
-          if (i !== undefined) {
-            return this.runtime.substring(
-              frame.base as Wrapped<string>,
-              this.runtime.base(i, []),
-              this.runtime.base(i + 1, []),
-            );
-          }
-          // `s.length` is the one field read with op-aware meaning (strlen);
-          // route it through lengthInfo, else baseInfo flow-through.
-          if (p === 'length') {
-            return this.lift(result, this.lengthInfo(this.valued(frame.base)) ?? this.baseInfo(result, [this.valued(frame.base)]));
-          }
-        }
-        // Object/array elements are stored as Wrapped values that already carry
-        // their own info (e.g. split's substrings). Preserve it on read-back
-        // instead of re-deriving from [base, prop] (which would drop it).
-        if (this.isWrapped(result) && this.getInfo(result) !== undefined) {
-          return result as Wrapped<unknown>;
-        }
-        return this.runtime.base(result, [frame.base, frame.prop]);
-      }
-      case 'opaque': {
-        // when modeled, the runtime invoked Model.of(f) which already returned a Wrapped value
-        if (frame.modeled) return result as unknown as Wrapped<unknown>;
-        const parents = Array.from(frame.entries) as Wrapped[]; // can we do this without `as`?
-        return this.runtime.base(result, parents);
-      }
-      case 'transparent': {
-        // Operations inside the callee already propagated info to `result`.
-        // If we re-run baseInfo here we'd overwrite char-level info with a
-        // coarser bit-only info derived from the args. Preserve any info the
-        // callee attached; only fall back to base propagation when the callee
-        // produced a value with no info (e.g. a literal return).
-        if (this.isWrapped(result) && this.getInfo(result) !== undefined) {
-          return result as Wrapped<unknown>;
-        }
-        const parents = Array.from(frame.entries) as Wrapped[];
-        return this.runtime.base(result, parents);
-      }
-    }
-  }
-
-  protected abstract isOpaqueFunction(_f: unknown): unknown
-
   literal(_id: number, value: unknown) {
-    const w = this.runtime.base(value as Unwrapped<unknown>, []);
+    const w = this.$.base(value as Unwrapped<unknown>, []);
     return w === value ? undefined : { result: w };
   }
 
-  binaryPre(_id: number, op: string, left: Wrapped, right: Wrapped) {
-    const l = this.runtime.peek(left);
-    const r = this.runtime.peek(right);
-    const frame: BinFrame = { ty: 'bin', op, left, right };
-    return { op, left: l, right: r, skip: false, frame };
+  // for-in/of iterates natively, so a wrapped primitive RHS (a plain object,
+  // not iterable) must be unwrapped before it hits the iteration protocol.
+  // Objects/arrays keep their identity through peek and their elements are
+  // stored Wrapped, so element info survives; string iteration yields raw
+  // chars whose per-char info is currently lost (no iterator model yet).
+  forInOfObject(_id: number, value: unknown, _isForIn: boolean) {
+    const raw = this.$.peek(value as Wrapped<unknown>);
+    return raw === value ? undefined : { result: raw };
   }
 
-  binary(_id: number, _op: string, _l: Wrapped, _r: Wrapped, result: Unwrapped<unknown>, frame?: unknown) {
-    return { result: this.propagate(frame as BinFrame, result) };
+  binaryPre(_id: number, op: string, left: Wrapped, right: Wrapped) {
+    const l = this.$.peek(left);
+    const r = this.$.peek(right);
+    const frame: BinFrame = { ty: 'bin', op, left, right };
+    return { op, left: l, right: r, skip: Model.supportSyntax(op), frame };
+  }
+
+  binary(_id: number, _op: string, _l: Wrapped, _r: Wrapped, result: Unwrapped<unknown>, frame: unknown) {
+    required(frame !== undefined, 'binary hook missing frame');
+    const f = frame as BinFrame;
+    if (Model.supportSyntax(f.op)) {
+      return { result: Model.ofSyntax(f.op)(this.$, f.left, f.right) as Wrapped<unknown> };
+    } else {
+      // assert : result is given
+      // The hook's own l/r are the peeked raws binaryPre handed to native
+      // execution — info lives only on the frame's wrapped operands.
+      const left = this.valued(f.left);
+      const right = this.valued(f.right);
+      const resultInfo = this.binaryInfo?.(f.op, left, right) ?? this.baseInfo(result, [left, right]);
+      return { result: this.lift(result, resultInfo) };
+    }
   }
 
   templateConcatPre(_id: number, left: Wrapped, right: Wrapped) {
-    const l = this.runtime.peek(left);
-    const r = this.runtime.peek(right);
+    const l = this.$.peek(left);
+    const r = this.$.peek(right);
     const frame: BinFrame = { ty: 'bin', op: '+', left, right };
-    return { left: l, right: r, skip: false, frame };
+    return { left: l, right: r, skip: true, frame };
   }
 
-  templateConcat(_id: number, _left: Wrapped, _right: Wrapped, result: Unwrapped<unknown>, frame?: unknown) {
-    return { result: this.propagate(frame as BinFrame, result) };
+  templateConcat(_id: number, _left: Wrapped, _right: Wrapped, result: Unwrapped<unknown>, frame: unknown) {
+    required(frame !== undefined, 'templateConcat hook missing frame');
+    const f = frame as BinFrame;
+    return { result: Model.ofSyntax('+')(this.$, f.left, f.right) as Wrapped<string> };
   }
 
   unaryPre(_id: number, op: string, _prefix: boolean, operand: Wrapped) {
-    const e = this.runtime.peek(operand);
+    const e = this.$.peek(operand);
     const frame: UnFrame = { ty: 'un', op, operand: operand };
     return { op, operand: e, skip: false, frame };
   }
 
-  unary(_id: number, _op: string, _prefix: boolean, _operand: unknown, result: Unwrapped<unknown>, frame?: unknown) {
-    return { result: this.propagate(frame as UnFrame, result) };
+  unary(_id: number, _op: string, _prefix: boolean, _operand: unknown, result: Unwrapped<unknown>, frame: unknown) {
+    required(frame !== undefined, 'unary hook missing frame');
+    const f = frame as UnFrame;
+    const transformed : Wrapped<unknown> = this.lift(result, this.unaryInfo?.(f.op, this.valued(f.operand)) ?? this.baseInfo(result, [this.valued(f.operand)]));
+    return { result: transformed };
   }
 
   getFieldPre(_id: number, base: any, prop: any) {
@@ -366,11 +334,43 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     // undefined (e.g. arr[i], split's result[k]). The frame keeps the wrapped prop so
     // propagate still sees its info / can recover the s[i] char-access case.
     const frame: GetFieldFrame = { ty: 'getField', base: base as Wrapped, prop: prop as Wrapped };
-    return { base: this.runtime.peek(base as Wrapped), prop: this.runtime.peek(prop as Wrapped), skip: false, frame };
+    return { base: this.$.peek(base as Wrapped), prop: this.$.peek(prop as Wrapped), skip: false, frame };
   }
 
-  getField(_id: number, _base: any, _prop: any, result: any, frame?: unknown) {
-    return { result: this.propagate(frame as GetFieldFrame, result) };
+  getField(_id: number, _base: any, _prop: any, result: any, frame: unknown) {
+    required(frame !== undefined, 'getField hook missing frame');
+    const transformed = (() => {
+      const f = frame as GetFieldFrame;
+    const b: unknown = this.$.peek(f.base);
+    const p: unknown = this.$.peek(f.prop);
+    if (typeof b === 'string') {
+      const i = asStringIndex(p, b.length);
+      if (i !== undefined) {
+        return this.$.substring(
+          f.base as Wrapped<string>,
+          this.$.base(i, []),
+          this.$.base(i + 1, []),
+        );
+      }
+      // `s.length` is the one field read with op-aware meaning (strlen);
+      // route it through lengthInfo, else baseInfo flow-through.
+      if (p === 'length') {
+        if (this.$.isType(f.base, 'string')) {
+          return this.lift(result, this.lengthOfStringInfo?.(this.valued(f.base as Wrapped<string>)) ?? this.baseInfo(result, [this.valued(f.base)]));
+        } else {
+          return this.lift(result, this.baseInfo(result, [this.valued(f.base)]));
+        }
+      }
+    }
+    // Object/array elements are stored as Wrapped values that already carry
+    // their own info (e.g. split's substrings). Preserve it on read-back
+    // instead of re-deriving from [base, prop] (which would drop it).
+    if (this.isWrapped(result) && !this.domain.isBottom(this.getInfo(result))) {
+      return result as Wrapped<unknown>;
+    }
+    return this.$.base(result, [f.base, f.prop]);
+    })();
+    return { result: transformed };
   }
 
   invokeFunPre(_id: number, _f: any, _base: any, args: any, _isConstructor: boolean, _isMethod: boolean) {
@@ -384,19 +384,45 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     }
 
 
-    if (this.isOpaqueFunction(_f)) {
-      const unwrappedArgs = argArr.map(this.runtime.peek);
+    if (this.policy.isOpaque(_f)) {
+      const unwrappedArgs = argArr.map(this.$.peek);
       return { skip: false, f: _f, base: _base, args: unwrappedArgs, frame: { ty: 'opaque', f: _f, modeled: false, entries } };
     }
     return { skip: false, f: _f, base: _base, args, frame: { ty: 'transparent', entries } };
   }
 
-  invokeFun(_id: number, _f: any, _base: any, _args: any, result: any, _isConstructor: boolean, _isMethod: boolean, frame?: unknown) {
+  invokeFun(_id: number, _f: any, _base: any, _args: any, result: any, _isConstructor: boolean, _isMethod: boolean, frame: unknown) {
+    required(frame !== undefined, 'invokeFun hook missing frame');
     if (Model.support(_f)) {
-      let f : Function = this.model.of(_f);
-      result = f(this.runtime, _base as Wrapped, ...(_args as Wrapped[]));
+      let f : Function = Model.ofBuiltin(_f);
+      result = f(this.$, _base as Wrapped, ...(_args as Wrapped[]));
     }
-    return { result: this.propagate(frame as CallFrame, result) };
+
+    const f = frame as CallFrame;
+    const transformed = (() => {
+          switch (f.ty) {
+      case 'opaque': {
+        // when modeled, the runtime invoked Model.of(f) which already returned a Wrapped value
+        if (f.modeled) return result as unknown as Wrapped<unknown>;
+        const parents = Array.from(f.entries) as Wrapped[]; // can we do this without `as`?
+        return this.$.base(result, parents);
+      }
+      case 'transparent': {
+        // Operations inside the callee already propagated info to `result`.
+        // If we re-run baseInfo here we'd overwrite char-level info with a
+        // coarser bit-only info derived from the args. Preserve any info the
+        // callee attached; only fall back to base propagation when the callee
+        // produced a value with no info (e.g. a literal return).
+        if (this.isWrapped(result) && !this.domain.isBottom(this.getInfo(result))) {
+          return result as Wrapped<unknown>;
+        }
+        const parents = Array.from(f.entries) as Wrapped[];
+        return this.$.base(result, parents);
+      }
+    }
+    })();
+
+    return { result: transformed };
   }
 
   // wrappers

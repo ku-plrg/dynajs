@@ -27,7 +27,9 @@ export { AO__ToBoolean } from "./AO__ToBoolean.js";
 export { AO__ToIntegerOrInfinity } from "./AO__ToIntegerOrInfinity.js";
 export { AO__ToLength } from "./AO__ToLength.js";
 export { AO__ToNumber } from "./AO__ToNumber.js";
+export { AO__ToNumeric } from "./AO__ToNumeric.js";
 export { AO__ToObject } from "./AO__ToObject.js";
+export { AO__ToPrimitive } from "./AO__ToPrimitive.js";
 export { AO__ToString } from "./AO__ToString.js";
 export { AO__ToUint32 } from "./AO__ToUint32.js";
 export { AO__TrimString } from "./AO__TrimString.js";
@@ -60,3 +62,4 @@ export { INTRINSICS_String_prototype_trim } from "./INTRINSICS.String.prototype.
 export { INTRINSICS_String_prototype_trimEnd } from "./INTRINSICS.String.prototype.trimEnd.js";
 export { INTRINSICS_String_prototype_trimStart } from "./INTRINSICS.String.prototype.trimStart.js";
 export { INTRINSICS_String_prototype_valueOf } from "./INTRINSICS.String.prototype.valueOf.js";
+export { SYNTAX__add } from "./SYNTAX__add.js";

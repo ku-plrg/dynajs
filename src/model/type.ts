@@ -59,11 +59,8 @@ interface CompareOps {
   isNot: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(l: L, r: R) => l is Exclude<L, R>;
   isNaN: (x: Wrapped<number>) => boolean;
   isFinite: (x: Wrapped<number>) => boolean;
-  // "Type(x) is <ty>" — the runtime decides each type's membership (so e.g.
-  // "object" excludes null and includes functions, which a bare `typeof` gets
-  // wrong). Generated code routes every spec type-check through here. Raw boolean
-  // for direct use in `if`.
-  isType: (x: Wrapped<unknown>, ty: string) => boolean;
+  // "object" excludes null, and includes functions. "function" check is done via `AO__IsCallable`.
+  isType: (x: Wrapped<unknown>, ty: 'object' | 'null' | 'undefined' | 'string' | 'number' | 'boolean' | 'symbol' | 'bigint') => boolean;
 }
 
 interface MathOps {

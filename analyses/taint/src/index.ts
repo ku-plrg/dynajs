@@ -1,11 +1,12 @@
 import type { Analysis } from "@/types/analysis.js";
-import { FlowAnalysis, type Valued } from "@/model/flow.js";
+import { FlowAnalysis, type Valued, type InfoDomain, type CallPolicy } from "@/model/flow.js";
 import { installPrelude } from "./prelude.js";
 
 declare const D$: { analysis: Analysis } & Record<string, any>;
 
 installPrelude();
 
+// NOTE maybe we should extend TaintInfo = { ... } | undefined for performace?
 type TaintInfo = { bit: boolean; chars?: boolean[] };
 
 function infoTainted(info: TaintInfo | undefined): boolean {
@@ -18,19 +19,24 @@ export class TaintAnalysis extends FlowAnalysis<TaintInfo> {
 
   static OPAQUE_CALLS = new Set<unknown>([console.log]);
 
-  isOpaqueFunction(f: unknown) {
-    return TaintAnalysis.OPAQUE_CALLS.has(f);
+  domain: InfoDomain<TaintInfo> = {
+    getBottom: () => ({ bit: false }),
+    isBottom: (info) => !info.bit && (info.chars === undefined || info.chars.every((c) => !c)),
   }
 
-  protected baseInfo(value: unknown, parents: Valued<TaintInfo>[]): TaintInfo | undefined {
-    if (!parents.some((p) => infoTainted(p.info))) return undefined;
+  policy: CallPolicy = {
+    isOpaque: (f) => TaintAnalysis.OPAQUE_CALLS.has(f),
+  }
+
+  protected baseInfo(value: unknown, parents: Valued<TaintInfo>[]): TaintInfo {
+    if (!parents.some((p) => infoTainted(p.info))) return { bit: false };
     if (typeof value === "string") {
       return { bit: true, chars: Array.from({ length: value.length }, () => true) };
     }
     return { bit: true };
   }
 
-  protected substringInfo(src: Valued<TaintInfo>, start: number, resultLength: number): TaintInfo | undefined {
+  protected substringInfo(src: Valued<TaintInfo>, start: number, resultLength: number): TaintInfo {
     const chars: boolean[] = [];
     for (let i = 0; i < resultLength; i++) {
       if (src.info?.chars !== undefined) {
@@ -42,7 +48,7 @@ export class TaintAnalysis extends FlowAnalysis<TaintInfo> {
     return { bit: chars.some((c) => c), chars };
   }
 
-  protected concatenateInfo(left: Valued<TaintInfo>, leftLength: number, right: Valued<TaintInfo>, rightLength: number): TaintInfo | undefined {
+  protected concatenateInfo(left: Valued<TaintInfo>, leftLength: number, right: Valued<TaintInfo>, rightLength: number): TaintInfo {
     const chars: boolean[] = [];
     const push = (n: number, t: TaintInfo | undefined) => {
       for (let i = 0; i < n; i++) {

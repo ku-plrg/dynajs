@@ -80,7 +80,7 @@ interface FullAnalysis {
     result: any,
     isConstructor: boolean,
     isMethod: boolean,
-    frame?: unknown
+    frame: unknown
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
@@ -129,7 +129,7 @@ interface FullAnalysis {
     values: any[],
     result: any,
     isMethod: boolean,
-    frame?: unknown
+    frame: unknown
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
@@ -170,7 +170,7 @@ interface FullAnalysis {
     left: any,
     right: any,
     result: any,
-    frame?: unknown
+    frame: unknown
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
@@ -299,7 +299,7 @@ interface FullAnalysis {
     base: any,
     prop: any,
     result: any,
-    frame?: unknown
+    frame: unknown
   ) => { result: any } | void;
 
   /**
@@ -335,7 +335,7 @@ interface FullAnalysis {
     base: any,
     prop: any,
     value: any,
-    frame?: unknown
+    frame: unknown
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
@@ -419,7 +419,7 @@ interface FullAnalysis {
     prefix: boolean,
     operand: any,
     result: any,
-    frame?: unknown
+    frame: unknown
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
@@ -429,32 +429,32 @@ interface FullAnalysis {
   /** Pre-callback for arithmetic unary operators (`+`, `-`). Fires after {@link unaryPre}; result takes precedence. */
   arithmeticUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean, frame?: unknown } | void;
   /** Post-callback for arithmetic unary operators (`+`, `-`). Fires after {@link unary}; result takes precedence. */
-  arithmeticUnary: (id: number, op: string, prefix: boolean, operand: any, result: any, frame?: unknown) => { result: any } | void;
+  arithmeticUnary: (id: number, op: string, prefix: boolean, operand: any, result: any, frame: unknown) => { result: any } | void;
 
   /** Pre-callback for logical unary operator (`!`). Fires after {@link unaryPre}; result takes precedence. */
   logicalUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean, frame?: unknown } | void;
   /** Post-callback for logical unary operator (`!`). Fires after {@link unary}; result takes precedence. */
-  logicalUnary: (id: number, op: string, prefix: boolean, operand: any, result: any, frame?: unknown) => { result: any } | void;
+  logicalUnary: (id: number, op: string, prefix: boolean, operand: any, result: any, frame: unknown) => { result: any } | void;
 
   /** Pre-callback for bitwise unary operator (`~`). Fires after {@link unaryPre}; result takes precedence. */
   bitwiseUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean, frame?: unknown } | void;
   /** Post-callback for bitwise unary operator (`~`). Fires after {@link unary}; result takes precedence. */
-  bitwiseUnary: (id: number, op: string, prefix: boolean, operand: any, result: any, frame?: unknown) => { result: any } | void;
+  bitwiseUnary: (id: number, op: string, prefix: boolean, operand: any, result: any, frame: unknown) => { result: any } | void;
 
   /** Pre-callback for `typeof` operator. Fires after {@link unaryPre}; result takes precedence. */
   typeofUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean, frame?: unknown } | void;
   /** Post-callback for `typeof` operator. Fires after {@link unary}; result takes precedence. */
-  typeofUnary: (id: number, op: string, prefix: boolean, operand: any, result: any, frame?: unknown) => { result: any } | void;
+  typeofUnary: (id: number, op: string, prefix: boolean, operand: any, result: any, frame: unknown) => { result: any } | void;
 
   /** Pre-callback for `void` operator. Fires after {@link unaryPre}; result takes precedence. */
   voidUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean, frame?: unknown } | void;
   /** Post-callback for `void` operator. Fires after {@link unary}; result takes precedence. */
-  voidUnary: (id: number, op: string, prefix: boolean, operand: any, result: any, frame?: unknown) => { result: any } | void;
+  voidUnary: (id: number, op: string, prefix: boolean, operand: any, result: any, frame: unknown) => { result: any } | void;
 
   /** Pre-callback for update operators (`++`, `--`). Fires after {@link unaryPre}; result takes precedence. */
   updateUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean, frame?: unknown } | void;
   /** Post-callback for update operators (`++`, `--`). Fires after {@link unary}; result takes precedence. */
-  updateUnary: (id: number, op: string, prefix: boolean, operand: any, result: any, frame?: unknown) => { result: any } | void;
+  updateUnary: (id: number, op: string, prefix: boolean, operand: any, result: any, frame: unknown) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
   // Binary operations — general callback
@@ -505,7 +505,7 @@ interface FullAnalysis {
     left: any,
     right: any,
     result: any,
-    frame?: unknown
+    frame: unknown
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
@@ -533,7 +533,7 @@ interface FullAnalysis {
     left: any,
     right: any,
     result: any,
-    frame?: unknown
+    frame: unknown
   ) => { result: any } | void;
 
   /**
@@ -557,7 +557,7 @@ interface FullAnalysis {
     left: any,
     right: any,
     result: any,
-    frame?: unknown
+    frame: unknown
   ) => { result: any } | void;
 
   /**
@@ -581,7 +581,7 @@ interface FullAnalysis {
     left: any,
     right: any,
     result: any,
-    frame?: unknown
+    frame: unknown
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-import type { SpecRuntime, Wrapped, Unwrapped } from './type.js';
+import type { SpecRuntime } from './type.js';
 import * as generated from './spec/index.js';
 
 export class Model {
@@ -34,13 +34,21 @@ export class Model {
     [String.prototype.valueOf, generated.INTRINSICS_String_prototype_valueOf],
   ]);
 
+  static SYNTAX = new Map<string, Function>([
+    ['+', generated.SYNTAX__add],
+  ]);
+
   static support(f: Function): boolean {
     return this.BUILTINS.has(f);
   }
 
+  static supportSyntax(op: string): boolean {
+    return this.SYNTAX.has(op);
+  }
+
   constructor(public $: SpecRuntime) {}
 
-  of(f: Function): Function {
+  static ofBuiltin(f: Function): Function {
     const polyfill = Model.BUILTINS.get(f);
     if (polyfill === undefined) {
       throw new Error(`Unsupported built-in function: ${f.name}`);
@@ -48,77 +56,83 @@ export class Model {
     return polyfill;
   }
 
-  // syntactic models
-
-  // ApplyStringOrNumericBinaryOperator
-  //
-  // (A) post-hoc: the concrete value is the engine's already-computed `result`,
-  // so steps 3-8 below have no executable counterpart yet — we only model the
-  // operand->result info flow. The one case needing structural reconstruction is
-  // string concatenation (1.c), routed through specOps.concatenate to preserve
-  // char-level info. Spec-level splitting of the numeric operations is pending design.
-  applyBinary(left: Wrapped<unknown>, opText: string, right: Wrapped<unknown>, result: Unwrapped<unknown>): Wrapped<unknown> {
-    const $ = this.$;
-    // 1. If opText is +, then
-    if (opText === '+') {
-    //   a. Let lPrim be ? ToPrimitive(lVal).
-        const lPrim = left; // ???
-        //   b. Let rPrim be ? ToPrimitive(rVal).
-        const rPrim = right; // ???
-    //   c. If lPrim is a String or rPrim is a String, then
-        if (typeof $.peek(lPrim) === 'string' || typeof $.peek(rPrim) === 'string') { // ??? peek to test underlying type
-        //       i. Let lStr be ? ToString(lPrim).
-            const lStr = generated.AO__ToString($, lPrim);
-        //       ii. Let rStr be ? ToString(rPrim).
-            const rStr = generated.AO__ToString($, rPrim);
-        //       iii. Return the string-concatenation of lStr and rStr.
-            return $.concatenate(lStr, rStr);
-        }
-    //   d. Set lVal to lPrim.
-    //   e. Set rVal to rPrim.
+  static ofSyntax(op: string): Function {
+    const polyfill = Model.SYNTAX.get(op);
+    if (polyfill === undefined) {
+      throw new Error(`Unsupported syntax operator: ${op}`);
     }
-    // 2. NOTE: At this point, it must be a numeric operation.
-    // 3. Let lNum be ? ToNumeric(lVal).
-    let lNum = generated.AO__ToNumber($, left); // ???
-    // 4. Let rNum be ? ToNumeric(rVal).
-    let rNum = generated.AO__ToNumber($, right); // ???
-    // 5. If SameType(lNum, rNum) is false, throw a TypeError exception.
-    if (!( typeof $.peek(lNum) === typeof $.peek(rNum))) {
-      throw new TypeError('TypeError: Cannot mix BigInt and other types');
-    }
-    // 6. If lNum is a BigInt, then
-    //   a. If opText is **, return ? BigInt::exponentiate(lNum, rNum).
-    //   b. If opText is /, return ? BigInt::divide(lNum, rNum).
-    //   c. If opText is %, return ? BigInt::remainder(lNum, rNum).
-    //   d. If opText is >>>, return ? BigInt::unsignedRightShift(lNum, rNum).
-    //   e. Let operation be the abstract operation associated with opText in the following table:
-    //       opText	operation
-    //       *	BigInt::multiply
-    //       +	BigInt::add
-    //       -	BigInt::subtract
-    //       <<	BigInt::leftShift
-    //       >>	BigInt::signedRightShift
-    //       &	BigInt::bitwiseAND
-    //       ^	BigInt::bitwiseXOR
-    //       |	BigInt::bitwiseOR
-    // 7. Else,
-    //   a. Assert: lNum is a Number.
-    //   b. Let operation be the abstract operation associated with opText in the following table:
-    //       opText	operation
-    //       **	Number::exponentiate
-    //       *	Number::multiply
-    //       /	Number::divide
-    //       %	Number::remainder
-    //       +	Number::add
-    //       -	Number::subtract
-    //       <<	Number::leftShift
-    //       >>	Number::signedRightShift
-    //       >>>	Number::unsignedRightShift
-    //       &	Number::bitwiseAND
-    //       ^	Number::bitwiseXOR
-    //       |	Number::bitwiseOR
-    // 8. Return operation(lNum, rNum).
-    return $.binary(opText, left, right, result);
+    return polyfill;
   }
+
+  // // ApplyStringOrNumericBinaryOperator
+  // //
+  // // (A) post-hoc: the concrete value is the engine's already-computed `result`,
+  // // so steps 3-8 below have no executable counterpart yet — we only model the
+  // // operand->result info flow. The one case needing structural reconstruction is
+  // // string concatenation (1.c), routed through specOps.concatenate to preserve
+  // // char-level info. Spec-level splitting of the numeric operations is pending design.
+  // static applyBinary(left: Wrapped<unknown>, opText: string, right: Wrapped<unknown>, result: Unwrapped<unknown>): Wrapped<unknown> {
+  //   const $ = this.$;
+  //   // 1. If opText is +, then
+  //   if (opText === '+') {
+  //   //   a. Let lPrim be ? ToPrimitive(lVal).
+  //       const lPrim = left; // ???
+  //       //   b. Let rPrim be ? ToPrimitive(rVal).
+  //       const rPrim = right; // ???
+  //   //   c. If lPrim is a String or rPrim is a String, then
+  //       if (typeof $.peek(lPrim) === 'string' || typeof $.peek(rPrim) === 'string') { // ??? peek to test underlying type
+  //       //       i. Let lStr be ? ToString(lPrim).
+  //           const lStr = generated.AO__ToString($, lPrim);
+  //       //       ii. Let rStr be ? ToString(rPrim).
+  //           const rStr = generated.AO__ToString($, rPrim);
+  //       //       iii. Return the string-concatenation of lStr and rStr.
+  //           return $.concatenate(lStr, rStr);
+  //       }
+  //   //   d. Set lVal to lPrim.
+  //   //   e. Set rVal to rPrim.
+  //   }
+  //   // 2. NOTE: At this point, it must be a numeric operation.
+  //   // 3. Let lNum be ? ToNumeric(lVal).
+  //   let lNum = generated.AO__ToNumber($, left); // ???
+  //   // 4. Let rNum be ? ToNumeric(rVal).
+  //   let rNum = generated.AO__ToNumber($, right); // ???
+  //   // 5. If SameType(lNum, rNum) is false, throw a TypeError exception.
+  //   if (!( typeof $.peek(lNum) === typeof $.peek(rNum))) {
+  //     throw new TypeError('TypeError: Cannot mix BigInt and other types');
+  //   }
+  //   // 6. If lNum is a BigInt, then
+  //   //   a. If opText is **, return ? BigInt::exponentiate(lNum, rNum).
+  //   //   b. If opText is /, return ? BigInt::divide(lNum, rNum).
+  //   //   c. If opText is %, return ? BigInt::remainder(lNum, rNum).
+  //   //   d. If opText is >>>, return ? BigInt::unsignedRightShift(lNum, rNum).
+  //   //   e. Let operation be the abstract operation associated with opText in the following table:
+  //   //       opText	operation
+  //   //       *	BigInt::multiply
+  //   //       +	BigInt::add
+  //   //       -	BigInt::subtract
+  //   //       <<	BigInt::leftShift
+  //   //       >>	BigInt::signedRightShift
+  //   //       &	BigInt::bitwiseAND
+  //   //       ^	BigInt::bitwiseXOR
+  //   //       |	BigInt::bitwiseOR
+  //   // 7. Else,
+  //   //   a. Assert: lNum is a Number.
+  //   //   b. Let operation be the abstract operation associated with opText in the following table:
+  //   //       opText	operation
+  //   //       **	Number::exponentiate
+  //   //       *	Number::multiply
+  //   //       /	Number::divide
+  //   //       %	Number::remainder
+  //   //       +	Number::add
+  //   //       -	Number::subtract
+  //   //       <<	Number::leftShift
+  //   //       >>	Number::signedRightShift
+  //   //       >>>	Number::unsignedRightShift
+  //   //       &	Number::bitwiseAND
+  //   //       ^	Number::bitwiseXOR
+  //   //       |	Number::bitwiseOR
+  //   // 8. Return operation(lNum, rNum).
+  //   return $.binary(opText, left, right, result);
+  // }
 
 }
