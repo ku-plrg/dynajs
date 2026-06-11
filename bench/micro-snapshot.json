@@ -1,0 +1,360 @@
+{
+  "dynajs": {
+    "concolic_alias_bug": {
+      "verdict": "clean",
+      "result": "TN"
+    },
+    "concolic_arith": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "concolic_else_branch": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "concolic_implies": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "concolic_mod": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "concolic_string_charat": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "concolic_string_concat": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "concolic_string_eq": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "concolic_string_len": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "concolic_string_substring": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "concolic_string_unconstrained": {
+      "verdict": "clean",
+      "result": "TN"
+    },
+    "concolic_string_violable": {
+      "verdict": "clean",
+      "result": "TN"
+    },
+    "concolic_two_vars": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "concolic_unconstrained": {
+      "verdict": "clean",
+      "result": "TN"
+    },
+    "concolic_violable": {
+      "verdict": "clean",
+      "result": "TN"
+    },
+    "js": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "new__concolic_array_pop": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "new__concolic_array_push": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "new__concolic_at": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "new__concolic_bitwise_and": {
+      "verdict": "error",
+      "result": "FN"
+    },
+    "new__concolic_charcodeat": {
+      "verdict": "error",
+      "result": "FN"
+    },
+    "new__concolic_concat_number": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "new__concolic_encodeuri": {
+      "verdict": "error",
+      "result": "FN"
+    },
+    "new__concolic_encodeuricomponent_concrete": {
+      "verdict": "clean",
+      "result": "FN"
+    },
+    "new__concolic_endswith": {
+      "verdict": "clean",
+      "result": "FN"
+    },
+    "new__concolic_includes": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "new__concolic_indexof_negative": {
+      "verdict": "clean",
+      "result": "FN"
+    },
+    "new__concolic_json_stringify": {
+      "verdict": "clean",
+      "result": "FN"
+    },
+    "new__concolic_lastindexof": {
+      "verdict": "detected",
+      "result": "FP"
+    },
+    "new__concolic_lshift_overflow": {
+      "verdict": "error",
+      "result": "FP"
+    },
+    "new__concolic_math_max": {
+      "verdict": "error",
+      "result": "FN"
+    },
+    "new__concolic_math_trunc": {
+      "verdict": "error",
+      "result": "FN"
+    },
+    "new__concolic_modulo_negative": {
+      "verdict": "clean",
+      "result": "TN"
+    },
+    "new__concolic_padstart": {
+      "verdict": "error",
+      "result": "FP"
+    },
+    "new__concolic_parseint": {
+      "verdict": "error",
+      "result": "FN"
+    },
+    "new__concolic_regex_anchor": {
+      "verdict": "error",
+      "result": "FP"
+    },
+    "new__concolic_replace": {
+      "verdict": "clean",
+      "result": "TN"
+    },
+    "new__concolic_slice_zero_end": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "new__concolic_startswith": {
+      "verdict": "clean",
+      "result": "FN"
+    },
+    "new__concolic_substr_length": {
+      "verdict": "error",
+      "result": "FN"
+    },
+    "new__concolic_substring_length": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "new__concolic_substring_negclamp": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "new__concolic_substring_swap": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "new__concolic_tolowercase": {
+      "verdict": "error",
+      "result": "FP"
+    },
+    "new__concolic_tostring_number": {
+      "verdict": "clean",
+      "result": "FN"
+    },
+    "new__concolic_toupper": {
+      "verdict": "error",
+      "result": "FP"
+    },
+    "new__concolic_unsigned_rshift": {
+      "verdict": "error",
+      "result": "FP"
+    },
+    "new__taint_array_concat_neg": {
+      "verdict": "clean",
+      "result": "TN"
+    },
+    "new__taint_encodeURIComponent": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "new__taint_join_null": {
+      "verdict": "clean",
+      "result": "FN"
+    },
+    "new__taint_join_sep": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "new__taint_json_stringify_nested": {
+      "verdict": "clean",
+      "result": "FN"
+    },
+    "new__taint_json_stringify_quote_neg": {
+      "verdict": "detected",
+      "result": "FP"
+    },
+    "new__taint_replace_expand": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "new__taint_replace_global_expand": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "new__taint_replace_regex_neg": {
+      "verdict": "detected",
+      "result": "FP"
+    },
+    "new__taint_slice_cjk_neg": {
+      "verdict": "clean",
+      "result": "TN"
+    },
+    "new__taint_split_regex": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "new__taint_split_regex_neg": {
+      "verdict": "detected",
+      "result": "FP"
+    },
+    "new__taint_substr_length": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "new__taint_substring_negclamp": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "new__taint_substring_swap": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "new__taint_toLowerCase": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "new__taint_toUpperCase": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "new__taint_trim": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "new__taint_trimRight": {
+      "verdict": "detected",
+      "result": "FP"
+    },
+    "new__taint_trimStart_tab": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "taint_at_oob": {
+      "verdict": "clean",
+      "result": "TN"
+    },
+    "taint_before_taint": {
+      "verdict": "clean",
+      "result": "TN"
+    },
+    "taint_char_at": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "taint_char_at_neg": {
+      "verdict": "clean",
+      "result": "TN"
+    },
+    "taint_char_bracket": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "taint_clean": {
+      "verdict": "clean",
+      "result": "TN"
+    },
+    "taint_concat": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "taint_interprocedural": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "taint_isolated_var": {
+      "verdict": "clean",
+      "result": "TN"
+    },
+    "taint_low": {
+      "verdict": "detected",
+      "result": "FP"
+    },
+    "taint_number_arith": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "taint_plain_concat": {
+      "verdict": "clean",
+      "result": "TN"
+    },
+    "taint_reassign_clears": {
+      "verdict": "clean",
+      "result": "TN"
+    },
+    "taint_repeat": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "taint_replace_neg": {
+      "verdict": "detected",
+      "result": "FP"
+    },
+    "taint_replace-2": {
+      "verdict": "clean",
+      "result": "FN"
+    },
+    "taint_slice": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "taint_slice_neg": {
+      "verdict": "clean",
+      "result": "TN"
+    },
+    "taint_split": {
+      "verdict": "clean",
+      "result": "FN"
+    },
+    "taint_split_neg": {
+      "verdict": "detected",
+      "result": "FP"
+    },
+    "taint_template": {
+      "verdict": "detected",
+      "result": "TP"
+    },
+    "taint_unary_not": {
+      "verdict": "detected",
+      "result": "TP"
+    }
+  }
+}

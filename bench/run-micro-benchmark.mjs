@@ -27,7 +27,13 @@
 //   --warmup N        discarded warmup iterations               (default: 2)
 //   --timeout N       per-run timeout in seconds                (default: 30)
 //   --output-dir DIR  write logs and CSV into DIR
+//   --update-snapshot (re)write the committed correctness baseline (dynajs only)
+//   --check           compare this run to the committed baseline; exit 1 on drift
 //   --help
+//
+// Snapshot modes gate on the verdict only (not timing): they default to 1 rep /
+// 0 warmup and to the snapshotted runners (see SNAPSHOT_RUNNERS), so `--check`
+// runs fast in CI and needs no external analyzer installed.
 
 import { spawnSync } from "node:child_process";
 import {
@@ -40,6 +46,17 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BENCH_DIR = path.join(REPO_ROOT, "bench/micro");
+
+// Committed correctness baseline (--update-snapshot writes it, --check compares
+// against it). Only the runners listed here are snapshotted: `dynajs` is the
+// engine we own and the only one whose verdict is deterministic in CI; the
+// external analyzers (expose/nodemedic-jalangi) depend on out-of-tree installs
+// ($EXPOSE_HOME/$NODEMEDIC_HOME) and aren't gated. Timing is deliberately NOT
+// recorded — mean_ms is machine-dependent and would make every diff noisy; the
+// snapshot pins only the verdict/result, so it catches detection regressions
+// (a TP that became FN) and surfaces progressions (a known FN that became TP).
+const SNAPSHOT_FILE = path.join(REPO_ROOT, "bench/micro-snapshot.json");
+const SNAPSHOT_RUNNERS = ["dynajs"];
 
 // Preloaded by the `baseline` runner: stubs the taint prelude globals
 // (`__set_taint__`/`__print_if_tainted__`) to no-ops so a bench runs as plain
@@ -306,6 +323,58 @@ function resolveDynajs(bench, opts) {
 }
 
 // ---------------------------------------------------------------------------
+// snapshot (committed correctness baseline)
+// ---------------------------------------------------------------------------
+
+// Build the snapshot object from the per-runner records: { runner: { bench:
+// { verdict, result } } }, restricted to SNAPSHOT_RUNNERS and emitted with
+// sorted keys so the committed JSON is a stable, reviewable diff.
+function buildSnapshot(records) {
+  const snap = {};
+  for (const runner of SNAPSHOT_RUNNERS.filter((r) => records[r])) {
+    const byBench = {};
+    for (const rec of [...records[runner]].sort((a, b) => a.bench.name.localeCompare(b.bench.name)))
+      byBench[rec.bench.name] = { verdict: rec.verdict, result: rec.result };
+    snap[runner] = byBench;
+  }
+  return snap;
+}
+
+// Compare the current run's records against the committed snapshot. Returns
+// { regressions, progressions, changes, added, removed } lists of human strings.
+// Only (runner, bench) pairs that actually ran are compared; `removed` (in the
+// snapshot but not run) is reported only on a full run, so a `--bench` filter
+// doesn't flag everything it skipped. Any non-empty list except `progressions`
+// fails the check (a progression is good news, but still needs a snapshot bump).
+function diffSnapshot(records, snap, fullRun) {
+  const out = { regressions: [], progressions: [], changes: [], added: [], removed: [] };
+  const isRight = (r) => r === "TP" || r === "TN";
+  for (const runner of SNAPSHOT_RUNNERS.filter((r) => records[r])) {
+    const want = snap[runner] ?? {};
+    const seen = new Set();
+    for (const rec of records[runner]) {
+      seen.add(rec.bench.name);
+      const cur = { verdict: rec.verdict, result: rec.result };
+      const prev = want[rec.bench.name];
+      const where = `${runner}/${rec.bench.name}`;
+      if (!prev) {
+        out.added.push(`${where}: ${cur.result} (${cur.verdict}) — not in snapshot`);
+        continue;
+      }
+      if (prev.verdict === cur.verdict && prev.result === cur.result) continue;
+      const desc = `${where}: ${prev.result} (${prev.verdict}) -> ${cur.result} (${cur.verdict})`;
+      if (isRight(prev.result) && !isRight(cur.result)) out.regressions.push(desc);
+      else if (!isRight(prev.result) && isRight(cur.result)) out.progressions.push(desc);
+      else out.changes.push(desc); // verdict moved but correctness class didn't
+    }
+    if (fullRun)
+      for (const name of Object.keys(want))
+        if (!seen.has(name)) out.removed.push(`${runner}/${name}: in snapshot but not run`);
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
 // runners
 //
 // Each runner: { name, available(), exec(bench, out, err, timeoutMs), applies?, verdict? }
@@ -431,6 +500,9 @@ function parseArgs(argv) {
     outputDir: null,
     runnerFilters: [],
     benchFilters: [],
+    check: false, // compare against the committed snapshot, exit non-zero on drift
+    updateSnapshot: false, // (re)write the committed snapshot from this run
+    repsSet: false, // whether --reps was passed (snapshot modes default reps to 1)
   };
   const need = (i, flag) => {
     if (i + 1 >= argv.length) die(`${flag} requires a value`);
@@ -443,15 +515,18 @@ function parseArgs(argv) {
       case "--bench": opts.benchFilters.push(need(i, a)); i++; break;
       case "--analysis": opts.analysis = need(i, a); i++; break;
       case "--dynajs-flags": opts.dynajsFlags = need(i, a); i++; break;
-      case "--reps": opts.reps = Number(need(i, a)); i++; break;
+      case "--reps": opts.reps = Number(need(i, a)); opts.repsSet = true; i++; break;
       case "--warmup": opts.warmup = Number(need(i, a)); i++; break;
       case "--timeout": opts.timeoutSec = Number(need(i, a)); i++; break;
       case "--output-dir": opts.outputDir = need(i, a); i++; break;
+      case "--check": opts.check = true; break;
+      case "--update-snapshot": opts.updateSnapshot = true; break;
       case "--help":
         console.log(
           "Usage: node bench/run-micro-benchmark.mjs " +
             "[--runner NAME] [--bench NAME] [--analysis NAME] [--dynajs-flags STR] " +
-            "[--reps N] [--warmup N] [--timeout SEC] [--output-dir DIR]",
+            "[--reps N] [--warmup N] [--timeout SEC] [--output-dir DIR] " +
+            "[--check | --update-snapshot]",
         );
         process.exit(0);
       default: die(`unknown option: ${a}`);
@@ -469,6 +544,19 @@ const matchesAny = (value, filters) =>
 
 function main() {
   const opts = parseArgs(process.argv.slice(2));
+  if (opts.check && opts.updateSnapshot)
+    die("--check and --update-snapshot are mutually exclusive");
+
+  // Snapshot modes care only about the verdict (which is deterministic across
+  // reps), not timing, so collapse to a single rep with no warmup unless the
+  // caller asked otherwise, and gate only the snapshotted runners so the check
+  // doesn't need the external analyzers installed.
+  const snapshotMode = opts.check || opts.updateSnapshot;
+  if (snapshotMode) {
+    if (!opts.repsSet) { opts.reps = 1; opts.warmup = 0; }
+    if (!opts.runnerFilters.length) opts.runnerFilters = [...SNAPSHOT_RUNNERS];
+  }
+
   const timeoutMs = opts.timeoutSec * 1000;
 
   if (!existsSync(BENCH_DIR)) die(`no benchmark dir: ${BENCH_DIR}`);
@@ -577,6 +665,42 @@ function main() {
           colorResult(result, result.padStart(7)) + mean.toFixed(1).padStart(10),
       );
     }
+  }
+
+  // --- snapshot write / check --------------------------------------------
+  // A snapshot run gates on correctness, so the report below is noise; handle
+  // the snapshot and return before printing the confusion matrix.
+  if (opts.updateSnapshot) {
+    const snap = buildSnapshot(records);
+    writeFileSync(SNAPSHOT_FILE, JSON.stringify(snap, null, 2) + "\n");
+    const n = Object.values(snap).reduce((a, m) => a + Object.keys(m).length, 0);
+    console.log(`\nWrote snapshot: ${path.relative(REPO_ROOT, SNAPSHOT_FILE)} (${n} entries across ${Object.keys(snap).length} runner(s))`);
+    return;
+  }
+  if (opts.check) {
+    if (!existsSync(SNAPSHOT_FILE))
+      die(`no snapshot at ${path.relative(REPO_ROOT, SNAPSHOT_FILE)} — run with --update-snapshot first`);
+    const snap = JSON.parse(readFileSync(SNAPSHOT_FILE, "utf8"));
+    const fullRun = !opts.benchFilters.length;
+    const d = diffSnapshot(records, snap, fullRun);
+    console.log("\nSnapshot check:");
+    const section = (title, list, paint) => {
+      if (!list.length) return;
+      console.log(`  ${title}:`);
+      for (const line of list) console.log(`    ${paint ? paint(line) : line}`);
+    };
+    section("REGRESSIONS", d.regressions, red);
+    section("verdict changes (same correctness class)", d.changes, red);
+    section("new benches missing from snapshot", d.added, red);
+    section("snapshot entries not produced by this run", d.removed, red);
+    section("progressions (snapshot can be updated)", d.progressions, green);
+    const fail = d.regressions.length + d.changes.length + d.added.length + d.removed.length;
+    if (fail) {
+      console.log(red(`\n${fail} drift(s) from snapshot — run --update-snapshot to accept.`));
+      process.exit(1);
+    }
+    console.log(green(`\nOK — matches snapshot${d.progressions.length ? " (progressions noted above)" : ""}.`));
+    return;
   }
 
   console.log("\nConfusion matrix & precision/recall (errors counted as FN/FP):");
