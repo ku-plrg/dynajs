@@ -5,7 +5,7 @@
 // so this is plain array iteration delegating each element to UTF16EncodeCodePoint.
 import { AO__UTF16EncodeCodePoint } from "./AO__UTF16EncodeCodePoint.js";
 
-export function AO__CodePointsToString($: BootStrap, text: Wrapped<unknown>): Wrapped<string> {
+export function AO__CodePointsToString($: SpecRuntime, text: Wrapped<unknown>): Wrapped<string> {
   // 1. Let result be the empty String.
   var result = $.base<string>("", []);
   var codePoints = text as unknown as Wrapped<unknown>[];

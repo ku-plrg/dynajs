@@ -1,8 +1,8 @@
 
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, BootStrap } from "@/model/type.js";
+import type { Wrapped, SpecRuntime } from "@/model/type.js";
 
-export function AO__StringPad ($ : BootStrap, S : Wrapped<string>, maxLength : Wrapped<number>, fillString : Wrapped<string>, placement : Wrapped<unknown>) {
+export function AO__StringPad ($ : SpecRuntime, S : Wrapped<string>, maxLength : Wrapped<number>, fillString : Wrapped<string>, placement : Wrapped<unknown>) {
   var stringLength = $.length(S);
   if ($.condition(0, $.lessThanEqual(maxLength, stringLength)))
   {

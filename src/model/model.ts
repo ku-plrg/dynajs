@@ -1,48 +1,51 @@
-import type { SpecOps, BootStrap, Wrapped, Unwrapped } from './type.js';
-import { StringModel } from './string.js';
-import { AO } from './ao.js';
+import type { SpecRuntime, Wrapped, Unwrapped } from './type.js';
 import * as generated from './spec/index.js';
 
 export class Model {
 
   // --- static properties and methods ---
-  static SUPPORTED_BUILTINS = new Set<Function>([
-    String.prototype.at,
-    String.prototype.charAt,
-    String.prototype.slice,
-    String.prototype.substring,
-    String.prototype.concat,
-    String.prototype.repeat,
-    String.prototype.replace,
-    String.prototype.split,
+  static BUILTINS = new Map<Function, Function>([
+    [String.prototype.at, generated.INTRINSICS_String_prototype_at],
+    [String.prototype.charAt, generated.INTRINSICS_String_prototype_charAt],
+    [String.prototype.charCodeAt, generated.INTRINSICS_String_prototype_charCodeAt],
+    [String.prototype.codePointAt, generated.INTRINSICS_String_prototype_codePointAt],
+    [String.prototype.concat, generated.INTRINSICS_String_prototype_concat],
+    [String.prototype.endsWith, generated.INTRINSICS_String_prototype_endsWith],
+    [String.prototype.includes, generated.INTRINSICS_String_prototype_includes],
+    [String.prototype.indexOf, generated.INTRINSICS_String_prototype_indexOf],
+    [String.prototype.isWellFormed, generated.INTRINSICS_String_prototype_isWellFormed],
+    [String.prototype.lastIndexOf, generated.INTRINSICS_String_prototype_lastIndexOf],
+    [String.prototype.localeCompare, generated.INTRINSICS_String_prototype_localeCompare],
+    [String.prototype.normalize, generated.INTRINSICS_String_prototype_normalize],
+    [String.prototype.padEnd, generated.INTRINSICS_String_prototype_padEnd],
+    [String.prototype.padStart, generated.INTRINSICS_String_prototype_padStart],
+    [String.prototype.repeat, generated.INTRINSICS_String_prototype_repeat],
+    [String.prototype.replace, generated.INTRINSICS_String_prototype_replace],
+    [String.prototype.slice, generated.INTRINSICS_String_prototype_slice],
+    [String.prototype.split, generated.INTRINSICS_String_prototype_split],
+    [String.prototype.startsWith, generated.INTRINSICS_String_prototype_startsWith],
+    [String.prototype.substring, generated.INTRINSICS_String_prototype_substring],
+    [String.prototype.toLowerCase, generated.INTRINSICS_String_prototype_toLowerCase],
+    [String.prototype.toString, generated.INTRINSICS_String_prototype_toString],
+    [String.prototype.toWellFormed, generated.INTRINSICS_String_prototype_toWellFormed],
+    [String.prototype.trim, generated.INTRINSICS_String_prototype_trim],
+    [String.prototype.trimEnd, generated.INTRINSICS_String_prototype_trimEnd],
+    [String.prototype.trimStart, generated.INTRINSICS_String_prototype_trimStart],
+    [String.prototype.valueOf, generated.INTRINSICS_String_prototype_valueOf],
   ]);
 
   static support(f: Function): boolean {
-    return this.SUPPORTED_BUILTINS.has(f);
+    return this.BUILTINS.has(f);
   }
 
-  // --- instance properties and methods ---
-  ao: AO;
-  String: StringModel;
-
-  constructor(public specOps: SpecOps, public runtime: BootStrap) {
-    this.ao = new AO(specOps);
-    this.String = new StringModel(specOps);
-  }
+  constructor(public $: SpecRuntime) {}
 
   of(f: Function): Function {
-    switch (f) {
-      // generated polyfill (spec/INTRINSICS.String.prototype.at.ts), threaded with __runtime__
-      case String.prototype.at: return generated.INTRINSICS_String_prototype_at;
-      case String.prototype.charAt: return generated.INTRINSICS_String_prototype_charAt;
-      case String.prototype.slice: return generated.INTRINSICS_String_prototype_slice;
-      case String.prototype.substring: return generated.INTRINSICS_String_prototype_substring;
-      case String.prototype.concat: return generated.INTRINSICS_String_prototype_concat;
-      case String.prototype.repeat: return generated.INTRINSICS_String_prototype_repeat;
-      case String.prototype.replace: return generated.INTRINSICS_String_prototype_replace;
-      case String.prototype.split: return generated.INTRINSICS_String_prototype_split;
+    const polyfill = Model.BUILTINS.get(f);
+    if (polyfill === undefined) {
+      throw new Error(`Unsupported built-in function: ${f.name}`);
     }
-    throw new Error(`Unsupported built-in function: ${f.name}`);
+    return polyfill;
   }
 
   // syntactic models
@@ -55,7 +58,7 @@ export class Model {
   // string concatenation (1.c), routed through specOps.concatenate to preserve
   // char-level info. Spec-level splitting of the numeric operations is pending design.
   applyBinary(left: Wrapped<unknown>, opText: string, right: Wrapped<unknown>, result: Unwrapped<unknown>): Wrapped<unknown> {
-    const spec = this.String.specOps;
+    const $ = this.$;
     // 1. If opText is +, then
     if (opText === '+') {
     //   a. Let lPrim be ? ToPrimitive(lVal).
@@ -63,24 +66,24 @@ export class Model {
         //   b. Let rPrim be ? ToPrimitive(rVal).
         const rPrim = right; // ???
     //   c. If lPrim is a String or rPrim is a String, then
-        if (typeof spec.peek(lPrim) === 'string' || typeof spec.peek(rPrim) === 'string') { // ??? peek to test underlying type
+        if (typeof $.peek(lPrim) === 'string' || typeof $.peek(rPrim) === 'string') { // ??? peek to test underlying type
         //       i. Let lStr be ? ToString(lPrim).
-            const lStr = this.ao.ToString(lPrim); // ???
+            const lStr = generated.AO__ToString($, lPrim);
         //       ii. Let rStr be ? ToString(rPrim).
-            const rStr = this.ao.ToString(rPrim); // ???
+            const rStr = generated.AO__ToString($, rPrim);
         //       iii. Return the string-concatenation of lStr and rStr.
-            return spec.concatenate(lStr, rStr);
+            return $.concatenate(lStr, rStr);
         }
     //   d. Set lVal to lPrim.
     //   e. Set rVal to rPrim.
     }
     // 2. NOTE: At this point, it must be a numeric operation.
     // 3. Let lNum be ? ToNumeric(lVal).
-    let lNum = this.ao.ToNumber(left); // ???
+    let lNum = generated.AO__ToNumber($, left); // ???
     // 4. Let rNum be ? ToNumeric(rVal).
-    let rNum = this.ao.ToNumber(right); // ???
+    let rNum = generated.AO__ToNumber($, right); // ???
     // 5. If SameType(lNum, rNum) is false, throw a TypeError exception.
-    if (!( typeof lNum === typeof rNum)) {
+    if (!( typeof $.peek(lNum) === typeof $.peek(rNum))) {
       throw new TypeError('TypeError: Cannot mix BigInt and other types');
     }
     // 6. If lNum is a BigInt, then
@@ -115,7 +118,7 @@ export class Model {
     //       ^	Number::bitwiseXOR
     //       |	Number::bitwiseOR
     // 8. Return operation(lNum, rNum).
-    return spec.binary(opText, left, right, result);
+    return $.binary(opText, left, right, result);
   }
 
 }

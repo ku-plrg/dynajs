@@ -1,10 +1,10 @@
 
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, BootStrap } from "@/model/type.js";
+import type { Wrapped, SpecRuntime } from "@/model/type.js";
 
 import { AO__CodePointAt } from "./AO__CodePointAt.js";
 
-export function AO__StringToCodePoints ($ : BootStrap, string : Wrapped<string>) {
+export function AO__StringToCodePoints ($ : SpecRuntime, string : Wrapped<string>) {
   var codePoints = [] as Wrapped<never>[];
   var size = $.length(string);
   var position = $.base<number>(0, []);

@@ -1,8 +1,8 @@
 
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, BootStrap } from "@/model/type.js";
+import type { Wrapped, SpecRuntime } from "@/model/type.js";
 
-export function AO__ToBoolean ($ : BootStrap, argument : Wrapped<unknown>) {
+export function AO__ToBoolean ($ : SpecRuntime, argument : Wrapped<unknown>) {
   if (($.isType(argument, "boolean")))
   {
     return argument;

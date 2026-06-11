@@ -8,7 +8,7 @@
 import { AO__UTF16SurrogatePairToCodePoint } from "./AO__UTF16SurrogatePairToCodePoint.js";
 
 export function AO__CodePointAt(
-  $: BootStrap,
+  $: SpecRuntime,
   string: Wrapped<string>,
   position: Wrapped<number>,
 ) {

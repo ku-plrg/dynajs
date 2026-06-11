@@ -1,13 +1,13 @@
 
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, BootStrap } from "@/model/type.js";
+import type { Wrapped, SpecRuntime } from "@/model/type.js";
 
 import { AO__Get } from "./AO__Get.js";
 import { AO__StringIndexOf } from "./AO__StringIndexOf.js";
 import { AO__StringToNumber } from "./AO__StringToNumber.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function AO__GetSubstitution ($ : BootStrap, matched : Wrapped<string>, str : Wrapped<string>, position : Wrapped<number>, captures : Wrapped<string | undefined>[], namedCaptures : Wrapped<unknown>, replacementTemplate : Wrapped<string>) {
+export function AO__GetSubstitution ($ : SpecRuntime, matched : Wrapped<string>, str : Wrapped<string>, position : Wrapped<number>, captures : Wrapped<string | undefined>[], namedCaptures : Wrapped<unknown>, replacementTemplate : Wrapped<string>) {
   var stringLength = $.length(str);
   var result = $.base<string>("", []);
   var templateRemainder = replacementTemplate;

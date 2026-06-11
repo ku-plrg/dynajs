@@ -1,6 +1,6 @@
-import type { Wrapped, BootStrap } from "@/model/type.js";
+import type { Wrapped, SpecRuntime } from "@/model/type.js";
 
-export function AO__ToString($: BootStrap, argument: Wrapped<unknown>): Wrapped<string> {
+export function AO__ToString($: SpecRuntime, argument: Wrapped<unknown>): Wrapped<string> {
   "use strict";
 
   const unwrapped = $.peek(argument);

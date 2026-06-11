@@ -1,7 +1,7 @@
 import { AO__GetV } from "./AO__GetV.js";
 import { AO__IsCallable } from "./AO__IsCallable.js";
 
-export function AO__GetMethod($: BootStrap, V: Wrapped<unknown>, P: Wrapped<unknown>): Wrapped<unknown> {
+export function AO__GetMethod($: SpecRuntime, V: Wrapped<unknown>, P: Wrapped<unknown>): Wrapped<unknown> {
   // 1. Let _func_ be ? GetV(_V_, _P_).
   var func = AO__GetV($, V, P);
   // 1. If _func_ is either *undefined* or *null*, return *undefined*.

@@ -1,10 +1,10 @@
 
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, BootStrap } from "@/model/type.js";
+import type { Wrapped, SpecRuntime } from "@/model/type.js";
 
 import { AO__CodePointAt } from "./AO__CodePointAt.js";
 
-export function AO__IsStringWellFormedUnicode ($ : BootStrap, string : Wrapped<string>) {
+export function AO__IsStringWellFormedUnicode ($ : SpecRuntime, string : Wrapped<string>) {
   var len = $.length(string);
   var k = $.base<number>(0, []);
   while ($.condition(0, $.lessThan(k, len)))

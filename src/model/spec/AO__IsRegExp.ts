@@ -1,11 +1,11 @@
 
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, BootStrap } from "@/model/type.js";
+import type { Wrapped, SpecRuntime } from "@/model/type.js";
 
 import { AO__Get } from "./AO__Get.js";
 import { AO__ToBoolean } from "./AO__ToBoolean.js";
 
-export function AO__IsRegExp ($ : BootStrap, argument : Wrapped<unknown>) {
+export function AO__IsRegExp ($ : SpecRuntime, argument : Wrapped<unknown>) {
   if (!($.isType(argument, "object")))
   {
     return $.base<boolean>(false, []);

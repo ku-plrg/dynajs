@@ -1,8 +1,8 @@
 
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, BootStrap } from "@/model/type.js";
+import type { Wrapped, SpecRuntime } from "@/model/type.js";
 
-export function AO__StringIndexOf ($ : BootStrap, string : Wrapped<string>, searchValue : Wrapped<string>, fromIndex : Wrapped<number>) {
+export function AO__StringIndexOf ($ : SpecRuntime, string : Wrapped<string>, searchValue : Wrapped<string>, fromIndex : Wrapped<number>) {
   var len = $.length(string);
   if ($.is(searchValue, $.base<string>("", [])) && $.condition(0, $.lessThanEqual(fromIndex, len)))
   {

@@ -1,6 +1,6 @@
 import { AO__ToNumber } from "./AO__ToNumber.js";
 
-export function AO__ToUint32($: BootStrap, arg: Wrapped<unknown>): Wrapped<number> {
+export function AO__ToUint32($: SpecRuntime, arg: Wrapped<unknown>): Wrapped<number> {
   // 1. Let _number_ be ? ToNumber(_argument_).
   let number = AO__ToNumber($, arg);
   let numberUnwrapped = $.peek(number);

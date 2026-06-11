@@ -1,8 +1,8 @@
 
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, BootStrap } from "@/model/type.js";
+import type { Wrapped, SpecRuntime } from "@/model/type.js";
 
-export function AO__StringLastIndexOf ($ : BootStrap, string : Wrapped<string>, searchValue : Wrapped<string>, fromIndex : Wrapped<number>) {
+export function AO__StringLastIndexOf ($ : SpecRuntime, string : Wrapped<string>, searchValue : Wrapped<string>, fromIndex : Wrapped<number>) {
   var len = $.length(string);
   var searchLen = $.length(searchValue);
   for (var i = $.base<number>(0, []); i >=fromIndex; i--)

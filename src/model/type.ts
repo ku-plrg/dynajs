@@ -7,9 +7,7 @@ export type Unwrapped<T = unknown> = T & { readonly [WrappedValueBrand]: false; 
 // Primitives are (implicit) subtype of unwrapped, but unwrapped is not necessarily primitive (e.g. it can be an object that has been unwrapped)
 export type Primitive = string | number | boolean | bigint | symbol | null | undefined;
 
-type Entry<Info> = { value: unknown; info: Info };
-
-export interface SpecOps extends StringOps {
+export interface SpecOps extends StringOps, ArithmeticOps, CompareOps, MathOps, ListOps {
   // default propagation: unwrapped -> wrapped
   base: <T extends Unwrapped | Primitive>(v: T, parent: Wrapped[]) => Wrapped<T>;
   // Op-aware annotation of an already-computed binary result (post-hoc): routes
@@ -24,27 +22,12 @@ export interface SpecOps extends StringOps {
 interface StringOps {
   substring: (s: Wrapped<string>, start: Wrapped<number>, end: Wrapped<number>) => Wrapped<string>;
   concatenate: (s1: Wrapped<string>, s2: Wrapped<string>) => Wrapped<string>;
-  lengthOfString?: (s: Wrapped<string>) => Wrapped<number>;
+  length: (s: Wrapped<string>) => Wrapped<number>;
+  codeUnitAt: (s: Wrapped<string>, i: Wrapped<number>) => Wrapped<string>;
+  trim: (s: Wrapped<string>, leading: boolean, trailing: boolean) => Wrapped<string>;
 };
 
-// The runtime threaded into every generated polyfill as the `$` parameter.
-// Generated code routes EVERY operation on a value through these ops so an
-// analysis can observe it. To support concolic execution (not just taint),
-// even "decision values" (indices, lengths) are carried as Wrapped — they need
-// a tracked identity. Control flow is preserved because the comparison/equality
-// ops return a concrete `boolean` (so native `if`/`while`/`for`/`&&`/`||` work),
-// while arithmetic ops return Wrapped to keep the symbolic value flowing.
-export interface BootStrap {
-  // String ops — indices are Wrapped too.
-  length: (s: Wrapped<string>) => Wrapped<number>;
-  substring: (s: Wrapped<string>, from: Wrapped<number>, to: Wrapped<number>) => Wrapped<string>;
-  concatenate: (l: Wrapped<string>, r: Wrapped<string>) => Wrapped<string>;
-  codeUnitAt: (s: Wrapped<string>, i: Wrapped<number>) => Wrapped<string>;
-  // Strip whitespace; `leading`/`trailing` select which ends (per TrimString's
-  // `where` ∈ {start, end, start+end}). Trimming applies only to strings.
-  trim: (s: Wrapped<string>, leading: boolean, trailing: boolean) => Wrapped<string>;
-
-  // Arithmetic / bitwise — carry the result value (Wrapped).
+interface ArithmeticOps {
   add: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<number>;
   subtract: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<number>;
   multiply: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<number>;
@@ -55,6 +38,9 @@ export interface BootStrap {
   bitwiseAND: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<number>;
   bitwiseOR: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<number>;
   bitwiseXOR: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<number>;
+}
+
+interface CompareOps {
 
   // Ordering comparisons carry the decision symbolically: they return a
   // Wrapped<boolean> (so an analysis like concolic can attach the comparison's Sym), which
@@ -83,7 +69,9 @@ export interface BootStrap {
   // wrong). Generated code routes every spec type-check through here. Raw boolean
   // for direct use in `if`.
   isType: (x: Wrapped<unknown>, ty: string) => boolean;
+}
 
+interface MathOps {
   // Math notations — Wrapped, like the arithmetic ops.
   min: (...xs: Wrapped<number>[]) => Wrapped<number>;
   max: (...xs: Wrapped<number>[]) => Wrapped<number>;
@@ -91,14 +79,23 @@ export interface BootStrap {
   floor: (x: Wrapped<number>) => Wrapped<number>;
   truncate: (x: Wrapped<number>) => Wrapped<number>;
   clamp: (x: Wrapped<number>, lower: Wrapped<number>, upper: Wrapped<number>) => Wrapped<number>;
+}
 
+interface ListOps {
   // List notations.
   append: <T>(list: T[], x: T) => T[];
   contains: <T>(list: T[], x: T) => boolean;
+}
 
-  // Basic operations.
-  base: <T extends Unwrapped | Primitive>(v: T, parent: Wrapped[]) => Wrapped<T>;
-  peek: <T>(wrapped: Wrapped<T>) => Unwrapped<T>;
+// The runtime threaded into every generated polyfill as the `$` parameter.
+// Generated code routes EVERY operation on a value through these ops so an
+// analysis can observe it. To support concolic execution (not just taint),
+// even "decision values" (indices, lengths) are carried as Wrapped — they need
+// a tracked identity. Control flow is preserved because the comparison/equality
+// ops return a concrete `boolean` (so native `if`/`while`/`for`/`&&`/`||` work),
+// while arithmetic ops return Wrapped to keep the symbolic value flowing.
+export interface SpecRuntime extends SpecOps {
+
   // A Wrapped `undefined`, used as the default value for absent optional
   // parameters. Keeping it Wrapped means the value domain stays uniform (no raw
   // `undefined` leaks into generated polyfills), so a plain `name? : Wrapped<T>`

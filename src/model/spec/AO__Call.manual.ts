@@ -1,6 +1,6 @@
 import { AO__IsCallable } from "./AO__IsCallable.js";
 
-export function AO__Call($ : BootStrap, F : Wrapped<unknown>, V : Wrapped<unknown>, argumentsList ?: Wrapped<unknown>[]) {
+export function AO__Call($ : SpecRuntime, F : Wrapped<unknown>, V : Wrapped<unknown>, argumentsList ?: Wrapped<unknown>[]) {
   "use strict";
 
   // 1. If argumentsList is not present, set argumentsList to a new empty List.

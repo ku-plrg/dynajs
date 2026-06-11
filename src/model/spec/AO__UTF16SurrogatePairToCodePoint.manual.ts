@@ -4,7 +4,7 @@
 // arrive as single code-unit strings (the result of `$.codeUnitAt`), so we
 // recover their numeric values with `charCodeAt` and apply the spec formula.
 export function AO__UTF16SurrogatePairToCodePoint(
-  $: BootStrap,
+  $: SpecRuntime,
   lead: Wrapped<unknown>,
   trail: Wrapped<unknown>,
 ): Wrapped<number> {

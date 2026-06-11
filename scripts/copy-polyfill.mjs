@@ -189,11 +189,18 @@ if (missing.length > 0) {
   );
 }
 
-// Generate a barrel that re-exports every requested builtin, so consumers import
-// from a single place instead of one path per builtin. Support AOs (generated or
-// hand-authored) are imported directly by the builtin files and not re-exported.
-// The export name mirrors the generated function name: dots/dashes -> underscores.
-const exportLines = copiedNames.map((base) => {
+// Generate a barrel that re-exports every emitted module — both the requested
+// builtins and the support AOs they pull in — so consumers (e.g. model.ts) can
+// import everything from one place instead of one path per file. We derive the
+// list from what actually landed in destDir: every `.ts` except the barrel
+// itself and the hand-authored `*.manual.ts` sources (each of which already has
+// a generated `${base}.ts` shim re-exporting it). The export name mirrors the
+// function name: non-alphanumerics -> underscores.
+const barrelBases = readdirSync(destDir)
+  .filter((f) => f.endsWith(".ts") && f !== "index.ts" && !f.endsWith(MANUAL_SUFFIX))
+  .map((f) => f.slice(0, -3))
+  .sort();
+const exportLines = barrelBases.map((base) => {
   const symbol = base.replace(/[^A-Za-z0-9]/g, "_");
   return `export { ${symbol} } from "./${base}.js";`;
 });
@@ -203,5 +210,5 @@ writeFileSync(join(destDir, "index.ts"), barrel);
 console.log(
   chalk.green(`✓ Copied ${copiedNames.length} polyfill file(s) → src/model/spec/`),
 );
-console.log(chalk.green(`✓ Wrote barrel → src/model/spec/index.ts`));
+console.log(chalk.green(`✓ Wrote barrel (${barrelBases.length} exports) → src/model/spec/index.ts`));
 if (missing.length > 0) process.exit(1);

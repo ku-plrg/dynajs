@@ -6,7 +6,7 @@
 // essential internal methods are the host object's own. Callers (e.g.
 // OrdinaryObjectCreate) then assign slots like O["Prototype"] = proto.
 export function AO__MakeBasicObject(
-  $: BootStrap,
+  $: SpecRuntime,
   internalSlotsList: Wrapped<string>[],
 ): Record<string, unknown> {
   // 1. Set internalSlotsList to the list-concatenation of internalSlotsList and « [[PrivateElements]] ».

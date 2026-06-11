@@ -1,6 +1,6 @@
 
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, BootStrap } from "@/model/type.js";
+import type { Wrapped, SpecRuntime } from "@/model/type.js";
 
 import { AO__Call } from "./AO__Call.js";
 import { AO__CreateArrayFromList } from "./AO__CreateArrayFromList.js";
@@ -10,7 +10,7 @@ import { AO__StringIndexOf } from "./AO__StringIndexOf.js";
 import { AO__ToString } from "./AO__ToString.js";
 import { AO__ToUint32 } from "./AO__ToUint32.js";
 
-export function INTRINSICS_String_prototype_split ($ : BootStrap, $this : Wrapped<unknown>, separator : Wrapped<unknown>, limit : Wrapped<unknown>) {
+export function INTRINSICS_String_prototype_split ($ : SpecRuntime, $this : Wrapped<unknown>, separator : Wrapped<unknown>, limit : Wrapped<unknown>) {
   var O = AO__RequireObjectCoercible($, $this);
   if (!($.is(separator, $.base<undefined>(undefined, [])) || $.is(separator, $.base<null>(null, []))))
   {

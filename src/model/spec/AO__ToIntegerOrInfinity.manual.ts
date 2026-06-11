@@ -1,6 +1,6 @@
 import { AO__ToNumber } from './AO__ToNumber.js'
 
-export function AO__ToIntegerOrInfinity($: BootStrap, argument: Wrapped<unknown>): Wrapped<number> {
+export function AO__ToIntegerOrInfinity($: SpecRuntime, argument: Wrapped<unknown>): Wrapped<number> {
   "use strict";
 
   // 1. Let number be ? ToNumber(argument).

@@ -4,7 +4,7 @@
 // allocation in the String RegExp methods). Exists so the import resolves at
 // build time.
 export function AO__GetPrototypeFromConstructor(
-  $: BootStrap,
+  $: SpecRuntime,
   constructor: Wrapped<unknown>,
   intrinsicDefaultProto: Wrapped<string>,
 ): Wrapped<unknown> {

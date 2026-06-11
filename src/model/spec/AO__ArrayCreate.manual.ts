@@ -1,4 +1,4 @@
-export function AO__ArrayCreate($ : BootStrap, length : Wrapped<number>, proto?: Wrapped<unknown>): Wrapped<unknown> {
+export function AO__ArrayCreate($ : SpecRuntime, length : Wrapped<number>, proto?: Wrapped<unknown>): Wrapped<unknown> {
   const len = $.peek(length);
   // 1. If length > 2**32 - 1, throw a RangeError exception.
   if (len > 2 ** 32 - 1) {

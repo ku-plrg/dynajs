@@ -1,6 +1,6 @@
 import util from "node:util";
 import type { Analysis } from "@/types/analysis.js";
-import type { SpecOps, BootStrap, Wrapped, Unwrapped, Primitive } from "./type.js";
+import type { SpecOps, SpecRuntime, Wrapped, Unwrapped, Primitive } from "./type.js";
 import { Model } from "./model.js";
 
 type IdValuePair = { id: symbol; value: unknown };
@@ -117,7 +117,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
   // ---- SpecOps: wrap/unwrap plumbing; Info computation delegated to hooks ----
 
-  spec: SpecOps = {
+  spec: Pick<SpecOps, 'base' | 'binary' | 'peek' | 'substring' | 'concatenate'> = {
     base: <T extends Unwrapped<unknown> | Primitive>(v: T, parents: Wrapped<unknown>[]): Wrapped<T> =>
       this.lift(v, this.baseInfo(v, parents.map((p) => this.valued(p)))),
     binary: (op: string, left: Wrapped, right: Wrapped, result: Unwrapped): Wrapped =>
@@ -179,7 +179,8 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   // value goes through here. Arithmetic and ordering comparisons carry the
   // result (Wrapped, to keep the symbolic value flowing); `condition` unwraps a
   // comparison at the branch site so native control flow / short-circuiting work.
-  runtime: BootStrap = {
+  runtime: SpecRuntime = {
+    binary: (op, left, right, result) => { throw new Error('TODO') },
     length: (s) => {
       const v = (this.unwrap(s) as string).length;
       return this.lift(v, this.lengthInfo(this.valued(s)) ?? this.baseInfo(v, [this.valued(s)]));
@@ -271,7 +272,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     },
   };
 
-  private model = new Model(this.spec, this.runtime);
+  private model = new Model(this.runtime);
 
   protected propagate(frame: Frame, result: Unwrapped<unknown>): Wrapped<unknown> {
     switch (frame.ty) {
@@ -406,7 +407,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
   invokeFun(_id: number, _f: any, _base: any, _args: any, result: any, _isConstructor: boolean, _isMethod: boolean, frame?: unknown) {
     if (Model.support(_f)) {
-      let f : Function = new Model(this.spec, this.runtime).of(_f);
+      let f : Function = this.model.of(_f);
       result = f(this.runtime, _base as Wrapped, ...(_args as Wrapped[]));
     }
     return { result: this.propagate(frame as CallFrame, result) };
