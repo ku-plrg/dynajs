@@ -11,6 +11,7 @@ import * as spec from './spec.js';
 import { instrument } from './instrument/main.js';
 import { StateOption } from './instrument/state.js';
 import { CAPTURED } from './captured.js';
+import { INSTRUMENTED_MARK } from './constant.js';
 
 declare global { var D$: DynaJSType; };
 
@@ -855,6 +856,37 @@ function X(id: number, exception: any): void {
   uncaughtException = { exception };
 }
 
+// -----------------------------------------------------------------------------
+// instrumented-function detection
+// -----------------------------------------------------------------------------
+// The instrumenter stamps INSTRUMENTED_MARK into every function body it emits
+// (logFuncTail always writes a block body, so every function syntax funnels
+// through one stamp; bodiless classes carry it in the class body), and
+// Function.prototype.toString preserves source text verbatim. So a function's
+// text answers the actual question — "does this code call D$ hooks?" — for
+// every creation form (declarations, expressions, methods, accessors, class
+// fields), with no per-syntax registration sites and no hoisting window.
+// `isInstrumented` is the "controlled code" predicate: it separates
+// hook-bearing functions from natives AND from uninstrumented JS (files
+// outside the include roots), whose toString() looks like ordinary source —
+// a native-code check cannot tell those apart. Bound functions and callable
+// proxies report "[native code]" and correctly fall out as uncontrolled.
+const instrumentedCache = new WeakMap<Function, boolean>();
+
+function isInstrumented(f: unknown): boolean {
+  if (typeof f !== 'function') return false;
+  let cached = instrumentedCache.get(f);
+  if (cached === undefined) {
+    let src = '';
+    // pristine toString: user code may override Function.prototype.toString;
+    // exotic callables (revoked proxies) may throw — treat as uncontrolled
+    try { src = CAPTURED.FunctionToString.call(f); } catch { /* uncontrolled */ }
+    cached = src.includes(INSTRUMENTED_MARK);
+    instrumentedCache.set(f, cached);
+  }
+  return cached;
+}
+
 // hook for catch clause enter — always emitted, clears uncaughtException
 // regardless of isEnabled.D so partial hooking cannot leave it stale
 function Ce(): void {
@@ -999,7 +1031,7 @@ const BASE = {
   Ch,
   Se, Sx, F, M, Mp, TF, TM, TMp, Fe, Fx, Re, O, E, G, Gp, P, Pp, De,
   U, B, Up, C, Swl, Swr, D, R, W, L, TL, Th, X, Y, Yr, Aw, Awr,
-  Fi, Ce, Su, Sm, Gs, Ps, Ev, Lcs, Lcv
+  Fi, Ce, Su, Sm, Gs, Ps, Ev, Lcs, Lcv, isInstrumented
 };
 type GENERATED = {
   // on-the-fly instrumentation API

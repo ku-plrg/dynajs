@@ -6,6 +6,7 @@ import type { State } from './state.js';
 import {
   POS_MODE_DEFAULT,
   EXCEPTION_VAR,
+  INSTRUMENTED_MARK,
   PosMode,
   TEMP_PARAM_VAR,
 } from '../constant.js';
@@ -190,7 +191,9 @@ export function logClassDeclare(state: State, node: acorn.Node, isExpr: boolean)
     state.walk(superClass);
     state.write(' ');
   }
-  state.write('{');
+  // the stamp inside the class body covers bodiless classes (`class K {}`),
+  // whose toString contains no method body to carry one
+  state.write(`{ ${INSTRUMENTED_MARK}`);
   const prevInDerivedClass = state.inDerivedClass;
   state.inDerivedClass = !!superClass;
   state.wrap(() => state.walk(body));
@@ -224,7 +227,10 @@ export function logFuncTail(state: State, node: acorn.Function, isExpr: boolean,
     const wrapWithExceptionFrame = state.partial.Fe || state.partial.shouldWrapThrow;
     state.write('(');
     state.withLHS(() => state.walkArray(params));
-    state.write(isArrow ? ') => {' : ') {');
+    // every function-like body funnels through here (expression-bodied arrows
+    // included — they are emitted as block bodies), so this one stamp makes
+    // toString-based isInstrumented complete over all function syntax
+    state.write(isArrow ? `) => { ${INSTRUMENTED_MARK}` : `) { ${INSTRUMENTED_MARK}`);
     state.withStrictMode(strict, () => {
       state.wrap(() => {
         if (wrapWithExceptionFrame) {

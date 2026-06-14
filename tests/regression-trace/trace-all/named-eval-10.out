@@ -6,7 +6,7 @@ Se() @ 1:1-4:1
   R(f, <function>) @ 3:1-2
   L(0) @ 3:6-7
   B[pre](+, <function>, 0) @ 3:1-7
-  B(+, <function>, 0, "function f() {\n     ...") @ 3:1-7
-  W([f], "function f() {\n     ...") @ 3:1-7
-  E("function f() {\n     ...") @ 3:1-7
+  B(+, <function>, 0, "function f() { /* DY...") @ 3:1-7
+  W([f], "function f() { /* DY...") @ 3:1-7
+  E("function f() { /* DY...") @ 3:1-7
 Sx() @ 1:1-4:1
