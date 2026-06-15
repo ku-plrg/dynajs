@@ -24,7 +24,7 @@ export function INTRINSICS_String_prototype_lastIndexOf ($ : SpecRuntime, $this 
 
   var len = $.length(S);
   var searchLen = $.length(searchStr);
-  if ($.condition(0, $.lessThan(len, searchLen)))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 101, $.lessThan(len, searchLen)))
   {
     return $.base<number>(-1, []);
   }

@@ -13,7 +13,7 @@ export function INTRINSICS_String_prototype_toWellFormed ($ : SpecRuntime, $this
   var strLen = $.length(S);
   var k = $.base<number>(0, []);
   var result = $.base<string>("", []);
-  while ($.condition(0, $.lessThan(k, strLen)))
+  while ($.condition(Number.MAX_SAFE_INTEGER - 108, $.lessThan(k, strLen)))
   {
     var cp = AO__CodePointAt($, (S as Wrapped<string>), (k as Wrapped<number>));
     if ($.is(cp["IsUnpairedSurrogate"], $.base<boolean>(true, [])))

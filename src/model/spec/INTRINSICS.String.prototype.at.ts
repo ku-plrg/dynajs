@@ -11,7 +11,7 @@ export function INTRINSICS_String_prototype_at ($ : SpecRuntime, $this : Wrapped
   var S = AO__ToString($, (O as Wrapped<unknown>));
   var len = $.length(S);
   var relativeIndex = AO__ToIntegerOrInfinity($, (index as Wrapped<unknown>));
-  if ($.condition(0, $.greaterThanEqual(relativeIndex, $.base<number>(0, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 91, $.greaterThanEqual(relativeIndex, $.base<number>(0, []))))
   {
     var k = relativeIndex;
   }
@@ -20,7 +20,7 @@ export function INTRINSICS_String_prototype_at ($ : SpecRuntime, $this : Wrapped
     var k = $.add(len, relativeIndex);
   }
 
-  if ($.condition(1, $.lessThan(k, $.base<number>(0, []))) || $.condition(2, $.greaterThanEqual(k, len)))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 92, $.lessThan(k, $.base<number>(0, []))) || $.condition(Number.MAX_SAFE_INTEGER - 93, $.greaterThanEqual(k, len)))
   {
     return $.base<undefined>(undefined, []);
   }

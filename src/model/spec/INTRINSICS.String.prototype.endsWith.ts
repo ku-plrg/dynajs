@@ -35,7 +35,7 @@ export function INTRINSICS_String_prototype_endsWith ($ : SpecRuntime, $this : W
   }
 
   var start = $.subtract(end, searchLength);
-  if ($.condition(0, $.lessThan(start, $.base<number>(0, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 100, $.lessThan(start, $.base<number>(0, []))))
   {
     return $.base<boolean>(false, []);
   }

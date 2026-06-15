@@ -8,7 +8,7 @@ export function AO__StringToCodePoints ($ : SpecRuntime, string : Wrapped<string
   var codePoints = [] as Wrapped<never>[];
   var size = $.length(string);
   var position = $.base<number>(0, []);
-  while ($.condition(0, $.lessThan(position, size)))
+  while ($.condition(Number.MAX_SAFE_INTEGER - 122, $.lessThan(position, size)))
   {
     var cp = AO__CodePointAt($, (string as Wrapped<string>), (position as Wrapped<number>));
     $.append(codePoints, cp["CodePoint"])

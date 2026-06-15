@@ -17,7 +17,7 @@ export function INTRINSICS_String_prototype_slice ($ : SpecRuntime, $this : Wrap
   }
   else
   {
-    if ($.condition(0, $.lessThan(intStart, $.base<number>(0, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 104, $.lessThan(intStart, $.base<number>(0, []))))
     {
       var from = $.max($.add(len, intStart), $.base<number>(0, []));
     }
@@ -43,7 +43,7 @@ export function INTRINSICS_String_prototype_slice ($ : SpecRuntime, $this : Wrap
   }
   else
   {
-    if ($.condition(1, $.lessThan(intEnd, $.base<number>(0, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 105, $.lessThan(intEnd, $.base<number>(0, []))))
     {
       var to = $.max($.add(len, intEnd), $.base<number>(0, []));
     }
@@ -54,7 +54,7 @@ export function INTRINSICS_String_prototype_slice ($ : SpecRuntime, $this : Wrap
 
   }
 
-  if ($.condition(2, $.greaterThanEqual(from, to)))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 106, $.greaterThanEqual(from, to)))
   {
     return $.base<string>("", []);
   }

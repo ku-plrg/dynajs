@@ -4,7 +4,7 @@ import type { Wrapped, SpecRuntime } from "@/model/type.js";
 
 export function AO__StringPad ($ : SpecRuntime, S : Wrapped<string>, maxLength : Wrapped<number>, fillString : Wrapped<string>, placement : Wrapped<unknown>) {
   var stringLength = $.length(S);
-  if ($.condition(0, $.lessThanEqual(maxLength, stringLength)))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 120, $.lessThanEqual(maxLength, stringLength)))
   {
     return S;
   }

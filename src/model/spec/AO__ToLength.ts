@@ -6,7 +6,7 @@ import { AO__ToIntegerOrInfinity } from "./AO__ToIntegerOrInfinity.js";
 
 export function AO__ToLength ($ : SpecRuntime, argument : Wrapped<unknown>) {
   var len = AO__ToIntegerOrInfinity($, (argument as Wrapped<unknown>));
-  if ($.condition(0, $.lessThanEqual(len, $.base<number>(0, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 123, $.lessThanEqual(len, $.base<number>(0, []))))
   {
     return $.base<number>(0, []);
   }

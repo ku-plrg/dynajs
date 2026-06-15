@@ -7,7 +7,7 @@ import { AO__CodePointAt } from "./AO__CodePointAt.js";
 export function AO__IsStringWellFormedUnicode ($ : SpecRuntime, string : Wrapped<string>) {
   var len = $.length(string);
   var k = $.base<number>(0, []);
-  while ($.condition(0, $.lessThan(k, len)))
+  while ($.condition(Number.MAX_SAFE_INTEGER - 116, $.lessThan(k, len)))
   {
     var cp = AO__CodePointAt($, (string as Wrapped<string>), (k as Wrapped<number>));
     if ($.is(cp["IsUnpairedSurrogate"], $.base<boolean>(true, [])))

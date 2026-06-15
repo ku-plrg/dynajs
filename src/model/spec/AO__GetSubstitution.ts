@@ -49,7 +49,7 @@ export function AO__GetSubstitution ($ : SpecRuntime, matched : Wrapped<string>,
               var digits = $.substring(templateRemainder, $.base<number>(1, []), $.add($.base<number>(1, []), digitCount));
               var index = AO__StringToNumber($, (digits as Wrapped<string>));
               var captureLen = $.base<number>(captures.length, []);
-              if ($.condition(0, $.greaterThan(index, captureLen)) && $.is(digitCount, $.base<number>(2, [])))
+              if ($.condition(Number.MAX_SAFE_INTEGER - 6, $.greaterThan(index, captureLen)) && $.is(digitCount, $.base<number>(2, [])))
               {
                 digitCount = $.base<number>(1, []);
                 digits = $.substring(digits, $.base<number>(0, []), $.base<number>(1, []));
@@ -57,7 +57,7 @@ export function AO__GetSubstitution ($ : SpecRuntime, matched : Wrapped<string>,
               }
 
               var ref = $.substring(templateRemainder, $.base<number>(0, []), $.add($.base<number>(1, []), digitCount));
-              if (($.condition(1, $.greaterThanEqual(index, $.base<number>(1, []))) && $.condition(2, $.lessThanEqual(index, captureLen))))
+              if (($.condition(Number.MAX_SAFE_INTEGER - 7, $.greaterThanEqual(index, $.base<number>(1, []))) && $.condition(Number.MAX_SAFE_INTEGER - 8, $.lessThanEqual(index, captureLen))))
               {
                 var capture = captures[$.subtract(index, $.base<number>(1, []))];
                 if ($.is(capture, $.base<undefined>(undefined, [])))

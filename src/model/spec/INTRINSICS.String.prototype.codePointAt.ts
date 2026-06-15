@@ -12,7 +12,7 @@ export function INTRINSICS_String_prototype_codePointAt ($ : SpecRuntime, $this 
   var S = AO__ToString($, (O as Wrapped<unknown>));
   var position = AO__ToIntegerOrInfinity($, (pos as Wrapped<unknown>));
   var size = $.length(S);
-  if ($.condition(0, $.lessThan(position, $.base<number>(0, []))) || $.condition(1, $.greaterThanEqual(position, size)))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 98, $.lessThan(position, $.base<number>(0, []))) || $.condition(Number.MAX_SAFE_INTEGER - 99, $.greaterThanEqual(position, size)))
   {
     return $.base<undefined>(undefined, []);
   }
