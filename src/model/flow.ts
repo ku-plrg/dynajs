@@ -17,18 +17,8 @@ type CallFrame = OpaqueCall | TransparentCall;
 type OpaqueCall = { ty: 'opaque'; f: unknown; modeled: boolean; entries: unknown[]; escaped: EscapeRecord[] };
 type TransparentCall = { ty: 'transparent', entries: unknown[] };
 
-// One wrapped primitive that was stripped out of `container[prop]` (in place)
-// before an opaque call, so the callee's native code sees the raw value.
-// `wrapped` keeps the original proxy: restoring the SAME proxy after the call
-// preserves its identity, hence its attached info, with no new allocation.
 type EscapeRecord = { container: object; prop: string | symbol; wrapped: Wrapped<unknown> };
 
-// The "controlled code" predicate, resolved lazily through the runtime global
-// (flow.ts is bundled into the analysis, which loads independently of D$).
-// Instrumented = the function's source text carries the INSTRUMENTED_MARK
-// stamp the instrumenter writes into every body it emits; everything else —
-// natives AND uninstrumented JS, e.g. files outside the include roots — is
-// uncontrolled.
 function isInstrumentedFn(f: unknown): boolean {
   const d$ = (globalThis as { D$?: { isInstrumented?: (f: unknown) => boolean } }).D$;
   return d$?.isInstrumented?.(f) ?? false;
@@ -74,24 +64,11 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   private valueMap = new WeakMap<object, IdValuePair>();
   private infoMap = new Map<symbol, Info>();
 
-  // Ambient "where are we now", set at each hook entry from the id the hook
-  // already receives (NodeMedic's Tc, kept on the analysis instead of threaded
-  // through state). Resolution is LAZY: hooks only stash the id/builtin name —
-  // the D$ lookup happens in site() — so an analysis that never asks pays
-  // nothing. `currentBuiltin` (set around a modeled-builtin dispatch) takes
-  // precedence: inside split's model, site() reports the builtin, not the
-  // user-code call site.
   private currentId: number | undefined = undefined;
   private currentBuiltin: string | undefined = undefined;
 
-  // The source site of the operation currently feeding an Info hook. Analyses
-  // that record provenance (taint) call this from baseInfo/substringInfo/etc.;
-  // others ignore it. See the `Site` type above.
   protected site(): Site {
     if (this.currentBuiltin !== undefined) {
-      // currentId still holds the user call site (set in invokeFun before the
-      // builtin dispatch, never overwritten while the model runs), so a builtin
-      // node carries both its name and where it was invoked.
       const call = this.currentId !== undefined ? resolveCodeSite(this.currentId) : UNKNOWN_SITE;
       return { kind: 'builtin', name: this.currentBuiltin, call: call.kind === 'code' ? call : undefined };
     }
@@ -99,9 +76,6 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     return UNKNOWN_SITE;
   }
 
-  // Run `body` with the builtin site active, restoring the prior site after.
-  // Used around modeled dispatch so $.* ops inside a spec impl attribute to the
-  // builtin. Save/restore (not just set) keeps nesting sound.
   private withBuiltinSite<T>(name: string, body: () => T): T {
     const savedBuiltin = this.currentBuiltin;
     this.currentBuiltin = name;
@@ -114,40 +88,13 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
   abstract domain: InfoDomain<Info>;
 
-  // Callees the analysis insists on treating as controlled even though they are
-  // not instrumented — its own prelude ghosts (taint sources/sinks, concolic
-  // symbolic seams), which MUST receive wrapped values to read/write the
-  // analysis state. Empty by default; an analysis populates it from its
-  // installPrelude(). This is data, not logic: the framework owns the boundary
-  // rule below, the analysis only names its exceptions.
   protected transparentCalls: ReadonlySet<unknown> = new Set();
 
-  // Default call policy: opaque iff not created by instrumented code (see
-  // isInstrumentedFn) and not a declared transparent ghost. This is the sound
-  // boundary — a function whose inside we can't observe must not receive
-  // wrapped values — so analyses normally inherit it as-is.
   policy: CallPolicy = {
     isOpaque: (f) =>
       typeof f === 'function' && !isInstrumentedFn(f) && !this.transparentCalls.has(f),
   };
 
-  // ---- Info hooks ----
-  //
-  // `baseInfo` is the ONE primitive every analysis must define: the flow-through
-  // info for a result, derived from its operands' info (taint = OR of taint bits;
-  // concolic = none — it builds structure via the hooks below instead).
-  //
-  // Every other hook is an OPTIONAL precision refinement. Each caller tries the
-  // specific hook, then falls back to `baseInfo` flow-through (`hook(...) ??
-  // baseInfo(result, parents)`). So an analysis that overrides nothing still gets
-  // sound propagation through every op — overriding a hook only buys
-  // precision/structure (taint's char-level substring/concat ranges, concolic's
-  // operator/substr Sym nodes). Recall is preserved by the fallback; precision is
-  // opt-in.
-  //
-  // Every operand a hook receives is a `Valued` (its concrete value + attached
-  // info) — never a `Wrapped`. `baseInfo` is the exception: its `value` is the
-  // freshly-produced result (no info yet), and its `parents` are the operands.
   protected abstract baseInfo(value: unknown, parents: Valued<Info>[]): Info;
 
   // String structure.
@@ -155,26 +102,12 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   protected concatenateInfo?(_left: Valued<Info, string>, _leftLength: number, _right: Valued<Info, string>, _rightLength: number): Info
   protected lengthOfStringInfo?(_src: Valued<Info, string>): Info
 
-  // Arithmetic (`+ - * / …`) and ordering comparisons (`< <= > >=`).
   protected binaryInfo?(_op: string, _left: Valued<Info>, _right: Valued<Info>): Info
   protected unaryInfo?(_op: string, _operand: Valued<Info>): Info
-  // ToIntegerOrInfinity's truncate-toward-zero, so a symbolic numeric operand
-  // keeps its Sym across the integer coercion (e.g. a symbolic index).
   protected truncateInfo?(_src: Valued<Info, number>): Info
 
-  // A branch was taken on `cond` (concrete direction `taken`), keyed by the
-  // branch's source `id`. Unlike the hooks above this produces no new value — it
-  // records a fact (a path constraint), so it returns void. Path-tracking
-  // analyses (concolic) override it; everyone else ignores branches.
   protected conditionInfo?(_id: number, _cond: Valued<Info>, _taken: boolean): void {}
 
-  // Info crossed into uncontrolled code: before the opaque callee `f` ran,
-  // these values (top-level wrapped-primitive args plus every wrapped
-  // primitive found inside container args) were stripped to raws. Like
-  // conditionInfo this records a fact, not a value — concolic can flag the
-  // run's soundness, taint can treat the boundary as a sink. Whatever the
-  // callee leaves untouched is re-wrapped after the call; anything it
-  // overwrites stays raw (its info is stale and correctly dies).
   protected escapedInfo?(_f: unknown, _escaped: Valued<Info>[]): void {}
 
   // ---- Info storage helpers ----
@@ -478,31 +411,6 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   }
 
   // ---- uncontrolled-boundary escape ----
-  //
-  // Wrapped primitives are inert proxy objects: any native coercion/protocol
-  // site they reach silently breaks (NaN, "[object Object]", not-iterable).
-  // Top-level args were always peeked at the opaque seam; what leaked was a
-  // proxy stored INSIDE a container arg (`f({x: tainted})`). escapeValue
-  // walks container args recursively (NodeMedic-style: own writable data
-  // props only — accessors are skipped so getters can't fire, frozen slots
-  // can't be restored anyway; a visited set breaks cycles) and strips proxies
-  // IN PLACE — copying would break aliasing for a callee that mutates.
-  // restoreEscaped then puts the same proxies back after the call, but only
-  // into slots whose value still equals the stripped raw (Object.is): a slot
-  // rewritten to a DIFFERENT value keeps that value (restoring would revert the
-  // callee's write) and a deleted slot stays gone. The guard is value-equality,
-  // not write-identity — so if the callee overwrites a slot with a fresh but
-  // EQUAL primitive (e.g. resets a field to 0), we re-attach the old proxy's
-  // (now stale) info. That is over-attachment, not loss: an over-tainted /
-  // over-symbolic value, never a missed one — the recall-safe direction, which
-  // is the priority here. (Value correctness is always preserved; only the
-  // attached info can be stale, and only toward over-approximation.)
-
-  // True once any wrapped primitive has been stored into a container (putField,
-  // object/array literal, spec-list append, class field init). Until then no
-  // reachable container holds a proxy, so escapeValue skips the recursive walk
-  // entirely — programs that keep wrapped values in locals (all current
-  // microbenches) pay nothing at opaque-call boundaries.
   private containersMayHoldWrapped = false;
 
   private isPrimitiveProxy(v: unknown): v is Wrapped<unknown> {
@@ -542,12 +450,6 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   private restoreEscaped(log: EscapeRecord[]): void {
     for (const { container, prop, wrapped } of log) {
       const desc = Object.getOwnPropertyDescriptor(container, prop);
-      // Object.is, not ===: an escaped NaN field must still compare equal to
-      // itself. `value in desc` re-checked in case the callee redefined the
-      // slot as an accessor. This is value-equality, so a callee that overwrote
-      // the slot with a fresh-but-equal primitive still gets the old proxy back
-      // (stale info) — accepted as the recall-safe over-approximation; we never
-      // drop a still-correct proxy, which would risk a missed flow.
       if (desc !== undefined && 'value' in desc && desc.writable === true
           && Object.is(desc.value, this.unwrap(wrapped))) {
         (container as Record<string | symbol, unknown>)[prop] = wrapped;
@@ -555,14 +457,6 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     }
   }
 
-  // Property writes: the native write must see the raw base and key (a wrapped
-  // base is an inert proxy, a wrapped computed key would coerce to
-  // "[object Object]"), while the VALUE stays wrapped — object/array elements
-  // are stored Wrapped by convention (see getField's read-back path). The one
-  // exception is TypedArray/DataView stores, whose element write coerces
-  // natively (a proxy would become NaN/0): those store the raw. This hook is
-  // also where the escape fast-path flag learns that a container now holds a
-  // wrapped primitive.
   putFieldPre(_id: number, base: any, prop: any, value: any) {
     const rawBase: unknown = this.$.peek(base as Wrapped);
     let v: unknown = value;
@@ -580,10 +474,6 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   }
 
   invokeFunPre(_id: number, _f: any, _base: any, args: any, _isConstructor: boolean, _isMethod: boolean) {
-    // Set the call site BEFORE the callee runs: an opaque callee (a taint
-    // source/sink ghost, a native) executes between this pre-hook and the post
-    // hook, and any info it attaches (setTaint's origin) should read the call
-    // site, not whatever op last ran. Matches NodeMedic's Tc-at-invokeFunPre.
     this.currentId = _id;
     const argArr = Array.from(args) as Wrapped[]; // can we do this without `as`?
     // For method calls (`o.m(...)`), the receiver `o` is also a data
@@ -599,8 +489,6 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       const escaped: EscapeRecord[] = [];
       const visited = new Set<object>();
       const unwrappedArgs = argArr.map((a) => this.escapeValue(a, escaped, visited));
-      // the receiver crosses the same boundary as the args (a wrapped-primitive
-      // base would break the native method just like a wrapped arg)
       const base = this.escapeValue(_base, escaped, visited);
       if (this.escapedInfo !== undefined) {
         const crossed: Wrapped[] = [
@@ -616,10 +504,6 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
   invokeFun(_id: number, _f: any, _base: any, _args: any, result: any, _isConstructor: boolean, _isMethod: boolean, frame: unknown) {
     required(frame !== undefined, 'invokeFun hook missing frame');
-    // The call site itself is user code; the modeled builtin's body is not. Run
-    // the model under a builtin site so values it mints (split's substrings, …)
-    // attribute to the builtin (NodeMedic's `model:fname`), while the post-call
-    // baseInfo below — for non-modeled callees — keeps the user-code call site.
     this.currentId = _id;
     if (Model.support(_f)) {
       let f : Function = Model.ofBuiltin(_f);
@@ -679,9 +563,6 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
   private wrap<T>(value: T): Wrapped<T> {
     if (this.isObjectish(value)) {
-      // Track objects/arrays/functions by identity so info can be attached.
-      // Without this, spec.base on an object is silently info-less and taint
-      // dies at any object boundary (e.g. split's result array → join).
       if (!this.valueMap.has(value as object)) {
         this.valueMap.set(value as object, { id: this.freshId(), value });
       }
