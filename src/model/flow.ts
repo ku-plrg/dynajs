@@ -4,6 +4,7 @@ import type { Analysis } from "@/types/analysis.js";
 import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "./type.js";
 import { Model } from "./model.js";
 import { type Site, UNKNOWN_SITE, resolveCodeSite, builtinName } from "./site.js";
+import { BoundaryEscape, type EscapeRecord } from "./escape.js";
 
 type ValuedGeneral<Shape extends {}, Value = unknown> = Shape & { value: Value };
 
@@ -16,8 +17,6 @@ type GetFieldFrame = { ty: 'getField'; base: Wrapped; prop: Wrapped };
 type CallFrame = OpaqueCall | TransparentCall;
 type OpaqueCall = { ty: 'opaque'; f: unknown; modeled: boolean; entries: unknown[]; escaped: EscapeRecord[] };
 type TransparentCall = { ty: 'transparent', entries: unknown[] };
-
-type EscapeRecord = { container: object; prop: string | symbol; wrapped: Wrapped<unknown> };
 
 function isInstrumentedFn(f: unknown): boolean {
   const d$ = (globalThis as { D$?: { isInstrumented?: (f: unknown) => boolean } }).D$;
@@ -66,6 +65,8 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
   private currentId: number | undefined = undefined;
   private currentBuiltin: string | undefined = undefined;
+
+  private escaper = new BoundaryEscape(this.isPrimitiveProxy.bind(this), this.unwrap.bind(this));
 
   protected site(): Site {
     if (this.currentBuiltin !== undefined) {
@@ -265,7 +266,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
         [x, lower, upper],
       ),
 
-    append: <T>(list: T[], x: T): T[] => { this.markIfEscapableStore(x); list.push(x); return list; },
+    append: <T>(list: T[], x: T): T[] => { this.escaper.markEscapable(x); list.push(x); return list; },
     contains: <T>(list: T[], x: T): boolean => list.includes(x),
     base: <T extends Unwrapped<unknown> | Primitive>(v: T, parents: Wrapped<unknown>[]): Wrapped<T> =>
       this.lift(v, this.baseInfo(v, parents.map((p) => this.valued(p)))),
@@ -280,19 +281,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
   literal(_id: number, value: unknown) {
     this.currentId = _id;
-    // Object/array literals natively store their (possibly wrapped) member
-    // expressions before any putField fires — scan own props so the escape
-    // fast-path flag stays sound. Shallow is enough: nested literals each
-    // pass through here themselves.
-    if (!this.containersMayHoldWrapped && typeof value === 'object' && value !== null) {
-      for (const key of Reflect.ownKeys(value)) {
-        const desc = Object.getOwnPropertyDescriptor(value, key);
-        if (desc !== undefined && 'value' in desc && this.isPrimitiveProxy(desc.value)) {
-          this.containersMayHoldWrapped = true;
-          break;
-        }
-      }
-    }
+    this.escaper.markEscapableLiteral(value);
     const w = this.$.base(value as Unwrapped<unknown>, []);
     return w === value ? undefined : { result: w };
   }
@@ -410,67 +399,20 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     return { result: transformed };
   }
 
-  // ---- uncontrolled-boundary escape ----
-  private containersMayHoldWrapped = false;
-
-  private isPrimitiveProxy(v: unknown): v is Wrapped<unknown> {
-    return this.isObjectish(v) && this.primitiveWrapper.has(v);
-  }
-
-  protected markIfEscapableStore(value: unknown): void {
-    if (!this.containersMayHoldWrapped && this.isPrimitiveProxy(value)) {
-      this.containersMayHoldWrapped = true;
-    }
-  }
-
-  private escapeValue(v: unknown, log: EscapeRecord[], visited: Set<object>): unknown {
-    if (this.isPrimitiveProxy(v)) return this.unwrap(v);
-    if (this.containersMayHoldWrapped && typeof v === 'object' && v !== null) {
-      this.escapeInto(v, log, visited);
-    }
-    return v;
-  }
-
-  private escapeInto(obj: object, log: EscapeRecord[], visited: Set<object>): void {
-    if (visited.has(obj)) return;
-    visited.add(obj);
-    for (const key of Reflect.ownKeys(obj)) {
-      const desc = Object.getOwnPropertyDescriptor(obj, key);
-      if (desc === undefined || !('value' in desc) || desc.writable !== true) continue;
-      const child: unknown = desc.value;
-      if (this.isPrimitiveProxy(child)) {
-        (obj as Record<string | symbol, unknown>)[key] = this.unwrap(child);
-        log.push({ container: obj, prop: key, wrapped: child });
-      } else if (typeof child === 'object' && child !== null) {
-        this.escapeInto(child, log, visited);
-      }
-    }
-  }
-
-  private restoreEscaped(log: EscapeRecord[]): void {
-    for (const { container, prop, wrapped } of log) {
-      const desc = Object.getOwnPropertyDescriptor(container, prop);
-      if (desc !== undefined && 'value' in desc && desc.writable === true
-          && Object.is(desc.value, this.unwrap(wrapped))) {
-        (container as Record<string | symbol, unknown>)[prop] = wrapped;
-      }
-    }
-  }
-
   putFieldPre(_id: number, base: any, prop: any, value: any) {
     const rawBase: unknown = this.$.peek(base as Wrapped);
     let v: unknown = value;
     if (ArrayBuffer.isView(rawBase)) {
       v = this.$.peek(value as Wrapped);
     } else {
-      this.markIfEscapableStore(value);
+      this.escaper.markEscapable(value);
     }
     return { base: rawBase, prop: this.$.peek(prop as Wrapped), value: v, skip: false };
   }
 
   // Class field initializers store natively, like a putField.
   fieldInit(_id: number, _obj: any, _key: any, _isStatic: boolean, value: any) {
-    this.markIfEscapableStore(value);
+    this.escaper.markEscapable(value);
   }
 
   invokeFunPre(_id: number, _f: any, _base: any, args: any, _isConstructor: boolean, _isMethod: boolean) {
@@ -486,18 +428,9 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
 
     if (this.policy.isOpaque(_f)) {
-      const escaped: EscapeRecord[] = [];
-      const visited = new Set<object>();
-      const unwrappedArgs = argArr.map((a) => this.escapeValue(a, escaped, visited));
-      const base = this.escapeValue(_base, escaped, visited);
-      if (this.escapedInfo !== undefined) {
-        const crossed: Wrapped[] = [
-          ...entries.filter((e) => this.isPrimitiveProxy(e)),
-          ...escaped.map((e) => e.wrapped),
-        ];
-        if (crossed.length > 0) this.escapedInfo(_f, crossed.map((w) => this.valued(w)));
-      }
-      return { skip: false, f: _f, base, args: unwrappedArgs, frame: { ty: 'opaque', f: _f, modeled: false, entries, escaped } };
+      const esc = this.escaper.escape(_base, argArr, entries);
+      if (esc.crossed.length > 0) this.escapedInfo?.(_f, esc.crossed.map((w) => this.valued(w)));
+      return { skip: false, f: _f, base: esc.base, args: esc.args, frame: { ty: 'opaque', f: _f, modeled: false, entries, escaped: esc.log } };
     }
     return { skip: false, f: _f, base: _base, args, frame: { ty: 'transparent', entries } };
   }
@@ -516,7 +449,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       case 'opaque': {
         // when modeled, the runtime invoked Model.of(f) which already returned a Wrapped value
         if (f.modeled) return result as unknown as Wrapped<unknown>;
-        if (f.escaped.length > 0) this.restoreEscaped(f.escaped);
+        if (f.escaped.length > 0) this.escaper.restore(f.escaped);
         // An already-wrapped result means the callee was controlled after all
         // (e.g. an instrumented function the policy misclassified, or a value
         // that round-tripped through the native untouched) — re-running
@@ -559,6 +492,10 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
   private isWrapped(v: unknown): v is Wrapped<unknown> {
     return this.isObjectish(v) && this.valueMap.has(v);
+  }
+
+  private isPrimitiveProxy(v: unknown): v is Wrapped<unknown> {
+    return this.isObjectish(v) && this.primitiveWrapper.has(v);
   }
 
   private wrap<T>(value: T): Wrapped<T> {
