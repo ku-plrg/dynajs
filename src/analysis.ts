@@ -960,6 +960,16 @@ function idToLoc(id: number): string {
   return locToStr(D$.ids[id]);
 };
 
+// get the originating file for an id. `D$.files` holds one [lo, hi, file]
+// interval per instrumented file (ids are globally unique and contiguous per
+// file); intervals are disjoint, so the first containing interval is the file.
+function idToFile(id: number): string | undefined {
+  for (const [lo, hi, file] of D$.files) {
+    if (id >= lo && id <= hi) return file;
+  }
+  return undefined;
+};
+
 // hook for eval code instrumentation
 function Ev(id: number, code: any, isDirect: boolean): any {
   const pre = D$.analysis.instrumentCodePre?.(id, code, isDirect);
@@ -981,7 +991,9 @@ function Ev(id: number, code: any, isDirect: boolean): any {
 const BASE = {
   analysis: {} as Analysis,
   ids: {} as Record<string, [number, number, number, number]>,
+  files: [] as Array<[number, number, string]>,
   idToLoc,
+  idToFile,
   utils,
   chainSkip,
   Ch,

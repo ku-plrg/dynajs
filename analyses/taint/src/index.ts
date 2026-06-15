@@ -1,5 +1,5 @@
 import type { Analysis } from "@/types/analysis.js";
-import { FlowAnalysis, type Valued, type InfoDomain, type CallPolicy } from "@/model/flow.js";
+import { FlowAnalysis, type Valued, type InfoDomain, type CallPolicy, type Site } from "@/model/flow.js";
 import { installPrelude } from "./prelude.js";
 
 declare const D$: { analysis: Analysis } & Record<string, any>;
@@ -7,12 +7,24 @@ declare const D$: { analysis: Analysis } & Record<string, any>;
 installPrelude();
 
 // NOTE maybe we should extend TaintInfo = { ... } | undefined for performace?
-type TaintInfo = { bit: boolean; chars?: boolean[] };
+// `origin` is the source site where this taint was first introduced (set in
+// setTaint, carried forward on propagation). This is the lean provenance —
+// "where did it come from" — not the full flow DAG; extend to a path later.
+type TaintInfo = { bit: boolean; chars?: boolean[]; origin?: Site };
 
 function infoTainted(info: TaintInfo | undefined): boolean {
   if (info === undefined) return false;
   if (info.bit) return true;
   return info.chars?.some((c) => c) ?? false;
+}
+
+// The origin of the first tainted parent that carries one — what a propagated
+// value inherits as its own origin.
+function inheritedOrigin(parents: Valued<TaintInfo>[]): Site | undefined {
+  for (const p of parents) {
+    if (infoTainted(p.info) && p.info?.origin !== undefined) return p.info.origin;
+  }
+  return undefined;
 }
 
 export class TaintAnalysis extends FlowAnalysis<TaintInfo> {
@@ -30,10 +42,11 @@ export class TaintAnalysis extends FlowAnalysis<TaintInfo> {
 
   protected baseInfo(value: unknown, parents: Valued<TaintInfo>[]): TaintInfo {
     if (!parents.some((p) => infoTainted(p.info))) return { bit: false };
+    const origin = inheritedOrigin(parents);
     if (typeof value === "string") {
-      return { bit: true, chars: Array.from({ length: value.length }, () => true) };
+      return { bit: true, chars: Array.from({ length: value.length }, () => true), origin };
     }
-    return { bit: true };
+    return { bit: true, origin };
   }
 
   protected substringInfo(src: Valued<TaintInfo>, start: number, resultLength: number): TaintInfo {
@@ -45,7 +58,7 @@ export class TaintAnalysis extends FlowAnalysis<TaintInfo> {
         chars.push(src.info?.bit ?? false);
       }
     }
-    return { bit: chars.some((c) => c), chars };
+    return { bit: chars.some((c) => c), chars, origin: inheritedOrigin([src]) };
   }
 
   protected concatenateInfo(left: Valued<TaintInfo>, leftLength: number, right: Valued<TaintInfo>, rightLength: number): TaintInfo {
@@ -57,7 +70,7 @@ export class TaintAnalysis extends FlowAnalysis<TaintInfo> {
     };
     push(leftLength, left.info);
     push(rightLength, right.info);
-    return { bit: chars.some((c) => c), chars };
+    return { bit: chars.some((c) => c), chars, origin: inheritedOrigin([left, right]) };
   }
 
   isTainted(value: unknown): boolean {
@@ -91,10 +104,19 @@ export class TaintAnalysis extends FlowAnalysis<TaintInfo> {
     const info = this.getOrCreateInfo(value, () => ({ bit: false }));
     if (info === undefined) return;
     info.bit = tainted;
+    // The source site is where this taint is born; clearing taint clears it.
+    info.origin = tainted ? this.site() : undefined;
     const concrete = this.valued(value).value;
     if (typeof concrete === "string") {
       info.chars = Array.from({ length: concrete.length }, () => tainted);
     }
+  }
+
+  // Where this value's taint originated (the source site recorded at setTaint,
+  // carried forward through propagation), or undefined if untainted.
+  taintOrigin(value: unknown): Site | undefined {
+    const info = this.getInfo(value);
+    return infoTainted(info) ? info.origin : undefined;
   }
 
   endExecution() {

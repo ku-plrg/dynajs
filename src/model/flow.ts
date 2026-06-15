@@ -3,6 +3,8 @@ import { required } from "@/utils.js";
 import type { Analysis } from "@/types/analysis.js";
 import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "./type.js";
 import { Model } from "./model.js";
+import { type Site, UNKNOWN_SITE, resolveCodeSite, builtinName } from "./site.js";
+export type { Pos, CodeSite, Site } from "./site.js";
 
 type ValuedGeneral<Shape extends {}, Value = unknown> = Shape & { value: Value };
 
@@ -55,6 +57,44 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   private primitiveWrapper = new WeakSet<object>();
   private valueMap = new WeakMap<object, IdValuePair>();
   private infoMap = new Map<symbol, Info>();
+
+  // Ambient "where are we now", set at each hook entry from the id the hook
+  // already receives (NodeMedic's Tc, kept on the analysis instead of threaded
+  // through state). Resolution is LAZY: hooks only stash the id/builtin name —
+  // the D$ lookup happens in site() — so an analysis that never asks pays
+  // nothing. `currentBuiltin` (set around a modeled-builtin dispatch) takes
+  // precedence: inside split's model, site() reports the builtin, not the
+  // user-code call site.
+  private currentId: number | undefined = undefined;
+  private currentBuiltin: string | undefined = undefined;
+
+  // The source site of the operation currently feeding an Info hook. Analyses
+  // that record provenance (taint) call this from baseInfo/substringInfo/etc.;
+  // others ignore it. See the `Site` type above.
+  protected site(): Site {
+    if (this.currentBuiltin !== undefined) {
+      // currentId still holds the user call site (set in invokeFun before the
+      // builtin dispatch, never overwritten while the model runs), so a builtin
+      // node carries both its name and where it was invoked.
+      const call = this.currentId !== undefined ? resolveCodeSite(this.currentId) : UNKNOWN_SITE;
+      return { kind: 'builtin', name: this.currentBuiltin, call: call.kind === 'code' ? call : undefined };
+    }
+    if (this.currentId !== undefined) return resolveCodeSite(this.currentId);
+    return UNKNOWN_SITE;
+  }
+
+  // Run `body` with the builtin site active, restoring the prior site after.
+  // Used around modeled dispatch so $.* ops inside a spec impl attribute to the
+  // builtin. Save/restore (not just set) keeps nesting sound.
+  private withBuiltinSite<T>(name: string, body: () => T): T {
+    const savedBuiltin = this.currentBuiltin;
+    this.currentBuiltin = name;
+    try {
+      return body();
+    } finally {
+      this.currentBuiltin = savedBuiltin;
+    }
+  }
 
   abstract domain: InfoDomain<Info>;
   abstract policy: CallPolicy;
@@ -159,6 +199,11 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   // `D$.C(id, op, value)` on user code AND the one model-internal branches funnel
   // through (SpecRuntime.condition), so both go through one place.
   condition(id: number, _op: string, value: unknown): { result: unknown } {
+    // User-code branches carry a globally-unique id → a code site. Model-internal
+    // branches (SpecRuntime.condition, op === 'model') use function-local bids
+    // that collide with user ids, so don't resolve them as code: inside a model
+    // dispatch `currentBuiltin` is already set, so site() reports the builtin.
+    if (_op !== 'model') this.currentId = id;
     const raw = this.unwrap(value as Wrapped<unknown>);
     this.conditionInfo?.(id, this.valued(value), Boolean(raw));
     return { result: raw };
@@ -260,6 +305,20 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   };
 
   literal(_id: number, value: unknown) {
+    this.currentId = _id;
+    // Object/array literals natively store their (possibly wrapped) member
+    // expressions before any putField fires — scan own props so the escape
+    // fast-path flag stays sound. Shallow is enough: nested literals each
+    // pass through here themselves.
+    if (!this.containersMayHoldWrapped && typeof value === 'object' && value !== null) {
+      for (const key of Reflect.ownKeys(value)) {
+        const desc = Object.getOwnPropertyDescriptor(value, key);
+        if (desc !== undefined && 'value' in desc && this.isPrimitiveProxy(desc.value)) {
+          this.containersMayHoldWrapped = true;
+          break;
+        }
+      }
+    }
     const w = this.$.base(value as Unwrapped<unknown>, []);
     return w === value ? undefined : { result: w };
   }
@@ -283,6 +342,9 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
   binary(_id: number, _op: string, _l: Wrapped, _r: Wrapped, result: Unwrapped<unknown>, frame: unknown) {
     required(frame !== undefined, 'binary hook missing frame');
+    // A binary op (including `+`/template via SYNTAX__add) attributes to the
+    // user-code site, like NodeMedic stamps the source location on `binary`.
+    this.currentId = _id;
     const f = frame as BinFrame;
     if (Model.supportSyntax(f.op)) {
       return { result: Model.ofSyntax(f.op)(this.$, f.left, f.right) as Wrapped<unknown> };
@@ -306,6 +368,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
   templateConcat(_id: number, _left: Wrapped, _right: Wrapped, result: Unwrapped<unknown>, frame: unknown) {
     required(frame !== undefined, 'templateConcat hook missing frame');
+    this.currentId = _id;
     const f = frame as BinFrame;
     return { result: Model.ofSyntax('+')(this.$, f.left, f.right) as Wrapped<string> };
   }
@@ -318,6 +381,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
   unary(_id: number, _op: string, _prefix: boolean, _operand: unknown, result: Unwrapped<unknown>, frame: unknown) {
     required(frame !== undefined, 'unary hook missing frame');
+    this.currentId = _id;
     const f = frame as UnFrame;
     const transformed : Wrapped<unknown> = this.lift(result, this.unaryInfo?.(f.op, this.valued(f.operand)) ?? this.baseInfo(result, [this.valued(f.operand)]));
     return { result: transformed };
@@ -337,6 +401,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
   getField(_id: number, _base: any, _prop: any, result: any, frame: unknown) {
     required(frame !== undefined, 'getField hook missing frame');
+    this.currentId = _id;
     const transformed = (() => {
       const f = frame as GetFieldFrame;
     const b: unknown = this.$.peek(f.base);
@@ -372,6 +437,11 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   }
 
   invokeFunPre(_id: number, _f: any, _base: any, args: any, _isConstructor: boolean, _isMethod: boolean) {
+    // Set the call site BEFORE the callee runs: an opaque callee (a taint
+    // source/sink ghost, a native) executes between this pre-hook and the post
+    // hook, and any info it attaches (setTaint's origin) should read the call
+    // site, not whatever op last ran. Matches NodeMedic's Tc-at-invokeFunPre.
+    this.currentId = _id;
     const argArr = Array.from(args) as Wrapped[]; // can we do this without `as`?
     // For method calls (`o.m(...)`), the receiver `o` is also a data
     // dependency of the result — include it so baseInfo sees its taint.
@@ -391,9 +461,14 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
   invokeFun(_id: number, _f: any, _base: any, _args: any, result: any, _isConstructor: boolean, _isMethod: boolean, frame: unknown) {
     required(frame !== undefined, 'invokeFun hook missing frame');
+    // The call site itself is user code; the modeled builtin's body is not. Run
+    // the model under a builtin site so values it mints (split's substrings, …)
+    // attribute to the builtin (NodeMedic's `model:fname`), while the post-call
+    // baseInfo below — for non-modeled callees — keeps the user-code call site.
+    this.currentId = _id;
     if (Model.support(_f)) {
       let f : Function = Model.ofBuiltin(_f);
-      result = f(this.$, _base as Wrapped, ...(_args as Wrapped[]));
+      result = this.withBuiltinSite(builtinName(_f), () => f(this.$, _base as Wrapped, ...(_args as Wrapped[])));
     }
 
     const f = frame as CallFrame;
