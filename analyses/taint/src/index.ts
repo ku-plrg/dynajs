@@ -1,10 +1,10 @@
 import type { Analysis } from "@/types/analysis.js";
-import { FlowAnalysis, type Valued, type InfoDomain, type CallPolicy, type Site } from "@/model/index.js";
+import { FlowAnalysis, type Valued, type InfoDomain, type Site } from "@/model/index.js";
 import { installPrelude } from "./prelude.js";
 
 declare const D$: { analysis: Analysis } & Record<string, any>;
 
-installPrelude();
+const GHOSTS = installPrelude();
 
 // NOTE maybe we should extend TaintInfo = { ... } | undefined for performace?
 // `origin` is the source site where this taint was first introduced (set in
@@ -29,15 +29,15 @@ function inheritedOrigin(parents: Valued<TaintInfo>[]): Site | undefined {
 
 export class TaintAnalysis extends FlowAnalysis<TaintInfo> {
 
-  static OPAQUE_CALLS = new Set<unknown>([console.log]);
+  // The prelude ghosts (sources/sinks) stay transparent so they receive wrapped
+  // values; every other uncontrolled callee (natives, uninstrumented JS) is
+  // opaque per the framework default, so wrapped primitives are stripped before
+  // they reach native code (parseInt, JSON.stringify, Map.set, ...).
+  protected transparentCalls = GHOSTS;
 
   domain: InfoDomain<TaintInfo> = {
     getBottom: () => ({ bit: false }),
     isBottom: (info) => !info.bit && (info.chars === undefined || info.chars.every((c) => !c)),
-  }
-
-  policy: CallPolicy = {
-    isOpaque: (f) => TaintAnalysis.OPAQUE_CALLS.has(f),
   }
 
   protected baseInfo(value: unknown, parents: Valued<TaintInfo>[]): TaintInfo {

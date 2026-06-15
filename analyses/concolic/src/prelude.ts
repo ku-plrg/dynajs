@@ -20,8 +20,12 @@ function __symbolic_assert__(cond: unknown): void {
   D$.analysis.symbolicAssert(cond);
 }
 
-export function installPrelude(): void {
+// Installs the symbolic ghost seams and returns them as the set of transparent
+// callees: they run analysis code over wrapped values, so they must NOT be
+// stripped at the opaque boundary like a real native would be.
+export function installPrelude(): ReadonlySet<unknown> {
   const g = globalThis as Record<string, unknown>;
   g.__symbolic__ = __symbolic__;
   g.__symbolic_assert__ = __symbolic_assert__;
+  return new Set<unknown>([__symbolic__, __symbolic_assert__]);
 }

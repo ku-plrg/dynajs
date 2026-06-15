@@ -114,12 +114,21 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
   abstract domain: InfoDomain<Info>;
 
+  // Callees the analysis insists on treating as controlled even though they are
+  // not instrumented — its own prelude ghosts (taint sources/sinks, concolic
+  // symbolic seams), which MUST receive wrapped values to read/write the
+  // analysis state. Empty by default; an analysis populates it from its
+  // installPrelude(). This is data, not logic: the framework owns the boundary
+  // rule below, the analysis only names its exceptions.
+  protected transparentCalls: ReadonlySet<unknown> = new Set();
+
   // Default call policy: opaque iff not created by instrumented code (see
-  // isInstrumentedFn). Analyses may override with an explicit list, but the
-  // default is the sound boundary — a function whose inside we can't observe
-  // must not receive wrapped values.
+  // isInstrumentedFn) and not a declared transparent ghost. This is the sound
+  // boundary — a function whose inside we can't observe must not receive
+  // wrapped values — so analyses normally inherit it as-is.
   policy: CallPolicy = {
-    isOpaque: (f) => typeof f === 'function' && !isInstrumentedFn(f),
+    isOpaque: (f) =>
+      typeof f === 'function' && !isInstrumentedFn(f) && !this.transparentCalls.has(f),
   };
 
   // ---- Info hooks ----
@@ -479,9 +488,15 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   // can't be restored anyway; a visited set breaks cycles) and strips proxies
   // IN PLACE — copying would break aliasing for a callee that mutates.
   // restoreEscaped then puts the same proxies back after the call, but only
-  // into slots the callee left untouched: a rewritten slot keeps its raw (the
-  // old info is stale) and a deleted slot stays gone. Every failure mode is
-  // "info lost", never "wrong info attached".
+  // into slots whose value still equals the stripped raw (Object.is): a slot
+  // rewritten to a DIFFERENT value keeps that value (restoring would revert the
+  // callee's write) and a deleted slot stays gone. The guard is value-equality,
+  // not write-identity — so if the callee overwrites a slot with a fresh but
+  // EQUAL primitive (e.g. resets a field to 0), we re-attach the old proxy's
+  // (now stale) info. That is over-attachment, not loss: an over-tainted /
+  // over-symbolic value, never a missed one — the recall-safe direction, which
+  // is the priority here. (Value correctness is always preserved; only the
+  // attached info can be stale, and only toward over-approximation.)
 
   // True once any wrapped primitive has been stored into a container (putField,
   // object/array literal, spec-list append, class field init). Until then no
@@ -529,7 +544,10 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       const desc = Object.getOwnPropertyDescriptor(container, prop);
       // Object.is, not ===: an escaped NaN field must still compare equal to
       // itself. `value in desc` re-checked in case the callee redefined the
-      // slot as an accessor.
+      // slot as an accessor. This is value-equality, so a callee that overwrote
+      // the slot with a fresh-but-equal primitive still gets the old proxy back
+      // (stale info) — accepted as the recall-safe over-approximation; we never
+      // drop a still-correct proxy, which would risk a missed flow.
       if (desc !== undefined && 'value' in desc && desc.writable === true
           && Object.is(desc.value, this.unwrap(wrapped))) {
         (container as Record<string | symbol, unknown>)[prop] = wrapped;

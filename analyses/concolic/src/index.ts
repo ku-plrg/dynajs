@@ -1,11 +1,11 @@
 import { execFileSync } from 'node:child_process';
-import { FlowAnalysis, type Valued, type InfoDomain, type CallPolicy } from '@/model/index.js';
+import { FlowAnalysis, type Valued, type InfoDomain } from '@/model/index.js';
 import { type Sym, type Sort, UnsupportedSym, symToString } from '@shared/sym.js';
 import { installPrelude } from './prelude.js';
 
 declare const D$: { analysis: ConcolicAnalysis } & Record<string, any>;
 
-installPrelude();
+const GHOSTS = installPrelude();
 
 // A branch actually taken during concrete execution: `constraint` is the
 // symbolic form of the condition, `taken` whether it was truthy. Together these
@@ -148,15 +148,15 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   result: unknown;
   private pathConstraints: PathConstraint[] = [];
 
-  static OPAQUE_CALLS = new Set<unknown>([console.log]);
+  // The prelude ghosts (__symbolic__/__symbolic_assert__) stay transparent so
+  // they receive wrapped values; every other uncontrolled callee (natives,
+  // uninstrumented JS) is opaque per the framework default, so wrapped
+  // primitives are stripped before they reach native code.
+  protected transparentCalls = GHOSTS;
 
   domain: InfoDomain<Sym | undefined> = {
     getBottom: () => undefined,
     isBottom: (info): info is undefined => info === undefined,
-  };
-
-  policy: CallPolicy = {
-    isOpaque: (f) => ConcolicAnalysis.OPAQUE_CALLS.has(f),
   };
 
   // baseInfo is operator-unaware (it can't tell `.length` from any other field

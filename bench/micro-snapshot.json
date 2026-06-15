@@ -89,16 +89,16 @@
       "result": "TP"
     },
     "new__concolic_encodeuri": {
-      "verdict": "error",
+      "verdict": "clean",
       "result": "FN"
     },
     "new__concolic_encodeuricomponent_concrete": {
-      "verdict": "clean",
-      "result": "FN"
+      "verdict": "detected",
+      "result": "TP"
     },
     "new__concolic_endswith": {
-      "verdict": "clean",
-      "result": "FN"
+      "verdict": "detected",
+      "result": "TP"
     },
     "new__concolic_includes": {
       "verdict": "detected",
@@ -109,8 +109,8 @@
       "result": "FN"
     },
     "new__concolic_json_stringify": {
-      "verdict": "clean",
-      "result": "FN"
+      "verdict": "detected",
+      "result": "TP"
     },
     "new__concolic_lastindexof": {
       "verdict": "detected",
@@ -121,11 +121,11 @@
       "result": "FP"
     },
     "new__concolic_math_max": {
-      "verdict": "error",
+      "verdict": "clean",
       "result": "FN"
     },
     "new__concolic_math_trunc": {
-      "verdict": "error",
+      "verdict": "clean",
       "result": "FN"
     },
     "new__concolic_modulo_negative": {
@@ -133,16 +133,16 @@
       "result": "TN"
     },
     "new__concolic_padstart": {
-      "verdict": "error",
+      "verdict": "detected",
       "result": "FP"
     },
     "new__concolic_parseint": {
-      "verdict": "error",
-      "result": "FN"
+      "verdict": "detected",
+      "result": "TP"
     },
     "new__concolic_regex_anchor": {
-      "verdict": "error",
-      "result": "FP"
+      "verdict": "clean",
+      "result": "TN"
     },
     "new__concolic_replace": {
       "verdict": "clean",
@@ -153,12 +153,12 @@
       "result": "TP"
     },
     "new__concolic_startswith": {
-      "verdict": "clean",
-      "result": "FN"
+      "verdict": "detected",
+      "result": "TP"
     },
     "new__concolic_substr_length": {
-      "verdict": "error",
-      "result": "FN"
+      "verdict": "detected",
+      "result": "TP"
     },
     "new__concolic_substring_length": {
       "verdict": "detected",
@@ -173,16 +173,16 @@
       "result": "TP"
     },
     "new__concolic_tolowercase": {
-      "verdict": "error",
-      "result": "FP"
+      "verdict": "clean",
+      "result": "TN"
     },
     "new__concolic_tostring_number": {
       "verdict": "clean",
       "result": "FN"
     },
     "new__concolic_toupper": {
-      "verdict": "error",
-      "result": "FP"
+      "verdict": "clean",
+      "result": "TN"
     },
     "new__concolic_unsigned_rshift": {
       "verdict": "error",
