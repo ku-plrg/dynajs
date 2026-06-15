@@ -1,5 +1,4 @@
 // @type taint
-// @oracle true
 // @target es5 String.prototype.substr
 // @feature builtin substr-length-arg
 // Mirrors NodeMedic-FINE string_model_bugs.ts BUG A1: substr's 2nd arg is a
@@ -12,4 +11,4 @@ var x = "0123456789";
 __set_taint__(x);
 var y = x.substr(2, 3); // "234"
 
-__print_if_tainted__(y[2]); // '4', derived from the tainted base
+__assert_taint__(y[2], true); // '4', derived from the tainted base

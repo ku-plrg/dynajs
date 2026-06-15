@@ -1,5 +1,4 @@
 // @type concolic
-// @oracle false
 // @target es6+ string-padstart
 // @feature builtin padStart-unmodeled
 // Mirrors ExpoSE unmodeled/bug25: under x.padStart(5,"0") === "00abc" the input is
@@ -8,5 +7,5 @@
 
 var x = __symbolic__("x", "abc");
 if (x.padStart(5, "0") === "00abc") {
-  __symbolic_assert__(x === "abc");
+  __symbolic_assert__(x === "abc", false);
 }

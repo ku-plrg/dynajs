@@ -1,5 +1,4 @@
 // @type taint
-// @oracle true
 // @target es6+ String.prototype.trimStart
 // @feature builtin trim-whitespace-class
 // Mirrors ExpoSE string-model-bugs bug 4 (the `isWhite` facet: it treated ONLY
@@ -15,4 +14,4 @@ __set_taint__(x);
 var s = "\t" + x;
 var y = s.trimStart(); // "ab" (leading tab stripped)
 
-__print_if_tainted__(y[0]); // 'a', tainted
+__assert_taint__(y[0], true); // 'a', tainted

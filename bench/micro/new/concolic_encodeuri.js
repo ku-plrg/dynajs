@@ -1,5 +1,4 @@
 // @type concolic
-// @oracle true
 // @target es5 encodeuri
 // @feature builtin encodeURI-unmodeled
 // Mirrors ExpoSE else/bug19 (symbolic encodeURI modeled as identity): encodeURI
@@ -8,5 +7,5 @@
 
 var x = __symbolic__("x", "a b");
 if (encodeURI(x) === "a%20b") {
-  __symbolic_assert__(x === "a b");
+  __symbolic_assert__(x === "a b", true);
 }

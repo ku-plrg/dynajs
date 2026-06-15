@@ -1,5 +1,4 @@
 // @type concolic
-// @oracle true
 // @target es5 array-push
 // @feature builtin array-push-unmodeled
 // Mirrors ExpoSE arrays/bug28: a type-mismatched push wipes ExpoSE's symbolic array.
@@ -9,5 +8,5 @@
 var a = __symbolic__("a", ["secret"]);
 a.push(0); // number into a string array
 if (a[0] === "secret") {
-  __symbolic_assert__(a.length >= 2);
+  __symbolic_assert__(a.length >= 2, true);
 }

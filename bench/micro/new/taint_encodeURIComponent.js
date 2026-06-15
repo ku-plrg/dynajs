@@ -1,5 +1,4 @@
 // @type taint
-// @oracle true
 // @target es5 encodeURIComponent
 // @feature builtin encodeURIComponent
 // Mirrors NodeMedic-FINE builtin_model_bugs.ts BUG B10 (and ExpoSE else/bug18):
@@ -15,4 +14,4 @@ __set_taint__(secret);
 var mixed = "x" + secret; // "xSEC": byte 0 clean, bytes 1..3 tainted
 var r = encodeURIComponent(mixed); // "xSEC" (no chars need escaping)
 
-__print_if_tainted__(r[1]); // 'S', derived from the tainted secret
+__assert_taint__(r[1], true); // 'S', derived from the tainted secret

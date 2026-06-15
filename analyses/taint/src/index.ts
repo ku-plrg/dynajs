@@ -100,6 +100,16 @@ export class TaintAnalysis extends FlowAnalysis<TaintInfo> {
     throw new Error("Assertion failed");
   }
 
+  // Prelude entry point for `__assert_taint__(v, expected)`: emit this assert's
+  // verdict marker. `expected` is the bench's ground truth (true = taint should
+  // reach `value`); printing actual-vs-expected lets the runner classify each
+  // assert as TP/FP/FN/TN, so one file can chain several taint checks.
+  assertTaint(value: unknown, expectedArg: unknown): void {
+    const expected = this.valued(expectedArg).value ? "detected" : "clean";
+    const actual = this.isTainted(value) ? "detected" : "clean";
+    console.log(`@@DJX_VERDICT ${actual} ${expected}`);
+  }
+
   setTaint(value: unknown, tainted: boolean): void {
     const info = this.getOrCreateInfo(value, () => ({ bit: false }));
     if (info === undefined) return;

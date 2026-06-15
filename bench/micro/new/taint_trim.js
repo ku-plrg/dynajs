@@ -1,5 +1,4 @@
 // @type taint
-// @oracle true
 // @target es5 String.prototype.trim
 // @feature builtin trim
 // Mirrors NodeMedic-FINE builtin_model_bugs.ts BUG B1: trim() must strip real
@@ -14,4 +13,4 @@ __set_taint__(x);
 var s = "  " + x; // 2 clean spaces + tainted "abcd"
 var y = s.trim(); // "abcd"
 
-__print_if_tainted__(y[0]); // 'a', derived from the tainted core
+__assert_taint__(y[0], true); // 'a', derived from the tainted core

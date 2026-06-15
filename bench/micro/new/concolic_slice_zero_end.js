@@ -1,5 +1,4 @@
 // @type concolic
-// @oracle true
 // @target es5 string-slice
 // @feature builtin slice-zero-end
 // Mirrors ExpoSE string-model-bugs bug 6: a model that tests `if (args[1])` treats
@@ -10,4 +9,4 @@
 // window, so it should confirm validity.
 
 var s = __symbolic__("s", "hello");
-__symbolic_assert__(s.slice(1, 0) === "");
+__symbolic_assert__(s.slice(1, 0) === "", true);

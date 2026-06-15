@@ -2,21 +2,26 @@
 // Micro-benchmark + detection-quality runner.
 //
 // For every bench under bench/micro, this:
-//   1. parses the file header for ground truth  (`// @oracle true|false`)
-//      and an optional kind tag                 (`// @type taint`)
+//   1. parses the file header for its kind tag (`// @type taint`) and the
+//      optional `@target`/`@feature` classification tags. There is no file-level
+//      oracle: ground truth lives per-assert (see step 3).
 //   2. runs it under each available runner (plain node, dynajs, external
 //      analyzers you wire up), repeating for timing (min/mean ms)
-//   3. reads each runner's verdict from a stdout marker the analyzer prints:
-//          @@DJX_VERDICT detected      (property holds — positive)
-//          @@DJX_VERDICT clean         (ran fine, found nothing — negative)
-//      No marker / crash / timeout => `error`.
-//   4. builds a confusion matrix per runner and reports precision / recall.
+//   3. reads the runner's per-assert verdict markers. Each assert
+//      (`__symbolic_assert__(cond, expected)` / `__assert_taint__(v, expected)`)
+//      prints one marker carrying its actual outcome AND its ground truth:
+//          @@DJX_VERDICT <detected|clean|error> <detected|clean>
+//      where the 2nd token is what that assert expected. A file may chain
+//      several asserts; each marker is one independently-scored case. A run that
+//      emits no marker at all (crash/timeout before any assert) is one `error`.
+//   4. builds a confusion matrix per runner (counting cases, not files) and
+//      reports precision / recall.
 //
-// Scoring (per the chosen design):
-//   oracle=true (positive):  detected -> TP    clean|error -> FN
-//   oracle=false (negative): clean    -> TN    detected|error -> FP
-// i.e. a crash or timeout counts against the analyzer (FN on positives, FP on
-// negatives); the raw error/timeout counts are also surfaced separately.
+// Scoring (per case, from its marker's expected token):
+//   expected=detected (positive): detected -> TP    clean|error -> FN
+//   expected=clean    (negative): clean    -> TN    detected|error -> FP
+// A concolic assert z3 can't solve prints `error`, classified FN/FP by expected;
+// the raw error/timeout counts are also surfaced separately.
 //
 // Usage:
 //   node bench/run-micro-benchmark.mjs [options]
@@ -59,7 +64,7 @@ const SNAPSHOT_FILE = path.join(REPO_ROOT, "bench/micro-snapshot.json");
 const SNAPSHOT_RUNNERS = ["dynajs"];
 
 // Preloaded by the `baseline` runner: stubs the taint prelude globals
-// (`__set_taint__`/`__print_if_tainted__`) to no-ops so a bench runs as plain
+// (`__set_taint__`/`__assert_taint__`) to no-ops so a bench runs as plain
 // JS under stock node. Without it the bench throws `__set_taint__ is not
 // defined` on the first line, and baseline would clock crash time instead of
 // the program's actual execution time.
@@ -67,8 +72,9 @@ const BASELINE_IMPORT = pathToFileURL(
   path.join(REPO_ROOT, "bench/microbench-import-helper.mjs"),
 ).href;
 
-// Marker the analyzer must print so we can tell detected from clean.
-const VERDICT_RE = /@@DJX_VERDICT\s+(detected|clean)\b/g;
+// Per-assert marker: `@@DJX_VERDICT <actual> <expected>`. The 1st token is the
+// outcome the analyzer computed; the 2nd is the assert's declared ground truth.
+const VERDICT_RE = /@@DJX_VERDICT\s+(detected|clean|error)\s+(detected|clean)\b/g;
 
 // Per-`@type` dynajs configuration. A bench tagged `// @type taint` runs under
 // the analysis + flags listed here — no need to pass them on the CLI.
@@ -82,9 +88,11 @@ const TYPE_CONFIG = {
 // --- NodeMedic (Jalangi instrumentation mode) -------------------------------
 // The `nodemedic-jalangi` runner drives NodeMedic's taint engine under its
 // Jalangi2-babel instrumentation, on the SAME bench files. NodeMedic's
-// src/GhostFunction.ts registers `__set_taint__`/`__print_if_tainted__` (the
-// dynajs taint prelude names), so each bench marks taint and emits the
-// `@@DJX_VERDICT` marker identically — no bench rewriting needed.
+// src/GhostFunction.ts registers `__set_taint__`/`__assert_taint__` (the dynajs
+// taint prelude names), so each bench marks taint and emits the `@@DJX_VERDICT`
+// marker identically — no bench rewriting needed. NB: that registration is
+// out-of-tree and must be updated to the renamed `__assert_taint__(v, expected)`
+// emitting the 2-token marker for this runner to score.
 //
 // Two gotchas the runner handles:
 //   1. Jalangi instruments via the CommonJS loader (Module._extensions['.js']),
@@ -150,10 +158,16 @@ const EXPOSE_ANALYSE = path.join(EXPOSE_HOME, "scripts/analyse");
 // Prepended to each bench copy: bridge the engine-neutral prelude names. The
 // assert bridges to our single-path Object._expose.assertSymbolic (defined once
 // ExpoSE's analysis initialises, before the bench body runs).
+// The `expected` arg (the assert's ground truth) is ignored here: ExpoSE only
+// checks `cond`'s validity; our runner reads `expected` from the bench source
+// (see assertOracles) to classify the result. ExpoSE still reports one whole-run
+// error count, not per-assert, so the expose runner only applies to single-
+// assert benches (see its applies()); making it score per-assert would need
+// ExpoSE's assertSymbolic patch to emit a per-assert @@DJX_VERDICT marker.
 const EXPOSE_PRELUDE =
   'var S$ = require("S$");\n' +
   "globalThis.__symbolic__ = function (name, seed) { return S$.symbol(name, seed); };\n" +
-  "globalThis.__symbolic_assert__ = function (cond) { return Object._expose.assertSymbolic(cond); };\n";
+  "globalThis.__symbolic_assert__ = function (cond, expected) { return Object._expose.assertSymbolic(cond); };\n";
 // ExpoSE prints this summary line once a target finishes; the error count is
 // our verdict signal (see the polarity note above).
 const EXPOSE_DONE_RE = /ExpoSE Finished\.\s+\d+ paths,\s+(\d+) errors/;
@@ -191,27 +205,52 @@ function onPath(cmd) {
   return false;
 }
 
-// Ground truth + kind from the file header. Returns null if no @oracle.
-//   @oracle  true|false   ground truth (required)
+// Kind + classification from the file header. Returns null if there's no @type:
+// the kind drives the dynajs config and which runners apply, so it's required
+// now that ground truth lives per-assert (the `expected` arg) instead of in an
+// `@oracle` header.
 //   @type    NAME         dynajs config kind, e.g. taint (see TYPE_CONFIG)
 //   @target  es5|es6+ ...     language level the bench exercises
 //   @feature syntax|builtin ...   syntactic construct vs. builtin/library behavior
 // @target/@feature classify by their FIRST token only; any further
 // space-separated tokens are free-form notes (e.g. `@feature syntax binary-add`)
 // and are ignored for grouping. Missing tags fall into the "(none)" group.
-function parseOracle(file) {
+function parseMeta(file) {
   const head = readFileSync(file, "utf8").slice(0, 2048);
-  const o = head.match(/@oracle\s+(true|false)\b/i);
-  if (!o) return null;
   const t = head.match(/@type\s+([A-Za-z0-9_-]+)/);
+  if (!t) return null;
   const tg = head.match(/@target\s+([A-Za-z0-9_+.-]+)/i);
   const ft = head.match(/@feature\s+([A-Za-z0-9_-]+)/i);
   return {
-    oracle: o[1].toLowerCase() === "true",
-    type: t ? t[1] : "",
+    type: t[1],
     target: tg ? tg[1].toLowerCase() : "", // first token only; rest are notes
     feature: ft ? ft[1].toLowerCase() : "", // first token only; rest are notes
   };
+}
+
+// The per-assert `expected` booleans a bench declares, in source order: the last
+// argument of each __symbolic_assert__/__assert_taint__ call (paren-matched, so
+// commas inside the condition don't confuse it). Used by external runners that
+// emit a single whole-run signal instead of our per-assert markers (expose), and
+// to recover an assert's ground truth when a run crashes before emitting it.
+function assertOracles(file) {
+  const src = readFileSync(file, "utf8");
+  const re = /__(?:symbolic_assert|assert_taint)__\s*\(/g;
+  const out = [];
+  let m;
+  while ((m = re.exec(src))) {
+    let depth = 0, lastComma = -1, i = re.lastIndex - 1;
+    for (; i < src.length; i++) {
+      const c = src[i];
+      if (c === "(") depth++;
+      else if (c === ")") { if (--depth === 0) break; }
+      else if (c === "," && depth === 1) lastComma = i;
+    }
+    const arg = lastComma === -1 ? "" : src.slice(lastComma + 1, i).trim();
+    out.push(arg === "true" ? true : arg === "false" ? false : null);
+    re.lastIndex = i + 1;
+  }
+  return out;
 }
 
 // Run one iteration. Returns { code, ms, timedOut, stdout, stderr }, also
@@ -242,21 +281,23 @@ function timeRun(argv, env, stdoutFile, stderrFile, timeoutMs, cwd = REPO_ROOT) 
   };
 }
 
-// Default verdict: parse the @@DJX_VERDICT marker the analyzer prints.
-// 'error' when the run timed out or no marker was emitted.
-function parseVerdict(run) {
-  if (run.timedOut) return "error";
+// Default case parser: every @@DJX_VERDICT marker the analyzer printed becomes
+// one case `{ actual, expected }`, in order. A timed-out run yields no usable
+// markers (the caller treats an empty result as a single `error` case).
+function defaultCases(run) {
+  if (run.timedOut) return [];
   const text = `${run.stdout}\n${run.stderr}`;
-  let m, last = null;
+  const cases = [];
+  let m;
   VERDICT_RE.lastIndex = 0;
-  while ((m = VERDICT_RE.exec(text))) last = m[1];
-  return last ?? "error";
+  while ((m = VERDICT_RE.exec(text))) cases.push({ actual: m[1], expected: m[2] });
+  return cases;
 }
 
-// oracle (true=positive/false=negative) x verdict -> TP|FP|FN|TN
-function classify(oracle, verdict) {
-  if (oracle) return verdict === "detected" ? "TP" : "FN"; // clean|error -> FN
-  return verdict === "clean" ? "TN" : "FP"; //               detected|error -> FP
+// expected (detected=positive/clean=negative) x actual -> TP|FP|FN|TN
+function classify(expected, actual) {
+  if (expected === "detected") return actual === "detected" ? "TP" : "FN"; // clean|error -> FN
+  return actual === "clean" ? "TN" : "FP"; //                  detected|error -> FP
 }
 
 const ratio = (num, den) => (den === 0 ? null : num / den);
@@ -272,16 +313,20 @@ const red = (s) => color("31", s);
 const colorResult = (result, text) =>
   result === "TP" || result === "TN" ? green(text) : red(text);
 
-// Confusion matrix over a list of per-bench records ({ result, verdict,
-// anyTimeout, mean }). Used for the overall table and each grouped slice.
+// Confusion matrix over a list of per-bench records ({ cases:[{actual,result}],
+// anyTimeout, mean }). Counts are per CASE (an assert); timing is per FILE (one
+// run regardless of how many asserts it fired). Used for the overall table and
+// each grouped slice.
 function buildMatrix(recs) {
-  const m = { TP: 0, FP: 0, FN: 0, TN: 0, err: 0, timeout: 0, meanSum: 0, n: 0 };
+  const m = { TP: 0, FP: 0, FN: 0, TN: 0, err: 0, timeout: 0, meanSum: 0, files: 0 };
   for (const rec of recs) {
-    m[rec.result]++;
-    if (rec.verdict === "error") m.err++;
+    for (const c of rec.cases) {
+      m[c.result]++;
+      if (c.actual === "error") m.err++;
+    }
     if (rec.anyTimeout) m.timeout++;
     m.meanSum += rec.mean;
-    m.n++;
+    m.files++;
   }
   return m;
 }
@@ -302,7 +347,7 @@ function matrixRow(label, m) {
     [m.err, m.timeout].map((x) => String(x).padStart(5)).join("") +
     fmtRatio(precision).padStart(11) + fmtRatio(recall).padStart(9) +
     fmtRatio(f1).padStart(8) +
-    (m.n ? (m.meanSum / m.n).toFixed(1) : "0").padStart(10)
+    (m.files ? (m.meanSum / m.files).toFixed(1) : "0").padStart(10)
   );
 }
 
@@ -327,14 +372,17 @@ function resolveDynajs(bench, opts) {
 // ---------------------------------------------------------------------------
 
 // Build the snapshot object from the per-runner records: { runner: { bench:
-// { verdict, result } } }, restricted to SNAPSHOT_RUNNERS and emitted with
-// sorted keys so the committed JSON is a stable, reviewable diff.
+// [ { expected, actual, result }, ... ] } } — one entry per assert case, in
+// order. Restricted to SNAPSHOT_RUNNERS and emitted with sorted keys so the
+// committed JSON is a stable, reviewable diff.
 function buildSnapshot(records) {
   const snap = {};
   for (const runner of SNAPSHOT_RUNNERS.filter((r) => records[r])) {
     const byBench = {};
     for (const rec of [...records[runner]].sort((a, b) => a.bench.name.localeCompare(b.bench.name)))
-      byBench[rec.bench.name] = { verdict: rec.verdict, result: rec.result };
+      byBench[rec.bench.name] = rec.cases.map((c) => ({
+        expected: c.expected, actual: c.actual, result: c.result,
+      }));
     snap[runner] = byBench;
   }
   return snap;
@@ -349,23 +397,31 @@ function buildSnapshot(records) {
 function diffSnapshot(records, snap, fullRun) {
   const out = { regressions: [], progressions: [], changes: [], added: [], removed: [] };
   const isRight = (r) => r === "TP" || r === "TN";
+  const show = (c) => `${c.result} (${c.actual}/${c.expected})`;
   for (const runner of SNAPSHOT_RUNNERS.filter((r) => records[r])) {
     const want = snap[runner] ?? {};
     const seen = new Set();
     for (const rec of records[runner]) {
       seen.add(rec.bench.name);
-      const cur = { verdict: rec.verdict, result: rec.result };
       const prev = want[rec.bench.name];
+      const cur = rec.cases;
       const where = `${runner}/${rec.bench.name}`;
       if (!prev) {
-        out.added.push(`${where}: ${cur.result} (${cur.verdict}) — not in snapshot`);
+        out.added.push(`${where}: ${cur.length} case(s) — not in snapshot`);
         continue;
       }
-      if (prev.verdict === cur.verdict && prev.result === cur.result) continue;
-      const desc = `${where}: ${prev.result} (${prev.verdict}) -> ${cur.result} (${cur.verdict})`;
-      if (isRight(prev.result) && !isRight(cur.result)) out.regressions.push(desc);
-      else if (!isRight(prev.result) && isRight(cur.result)) out.progressions.push(desc);
-      else out.changes.push(desc); // verdict moved but correctness class didn't
+      // Compare case-by-case in order; length changes are added/removed cases.
+      for (let i = 0; i < Math.max(prev.length, cur.length); i++) {
+        const p = prev[i], c = cur[i];
+        const at = Math.max(prev.length, cur.length) > 1 ? `[${i}]` : "";
+        if (!p) { out.added.push(`${where}${at}: ${show(c)} — new case`); continue; }
+        if (!c) { out.removed.push(`${where}${at}: was ${show(p)} — case not produced`); continue; }
+        if (p.expected === c.expected && p.actual === c.actual && p.result === c.result) continue;
+        const desc = `${where}${at}: ${show(p)} -> ${show(c)}`;
+        if (isRight(p.result) && !isRight(c.result)) out.regressions.push(desc);
+        else if (!isRight(p.result) && isRight(c.result)) out.progressions.push(desc);
+        else out.changes.push(desc); // verdict moved but correctness class didn't
+      }
     }
     if (fullRun)
       for (const name of Object.keys(want))
@@ -377,13 +433,13 @@ function diffSnapshot(records, snap, fullRun) {
 // ---------------------------------------------------------------------------
 // runners
 //
-// Each runner: { name, available(), exec(bench, out, err, timeoutMs), applies?, verdict? }
-//   - exec(bench, ...) gets the bench object ({ file, name, type, oracle });
+// Each runner: { name, available(), exec(bench, out, err, timeoutMs), applies?, cases? }
+//   - exec(bench, ...) gets the bench object ({ file, name, type, target, feature });
 //     it returns the timeRun() result object.
 //   - applies(bench) -> bool: skip this bench for this runner (default true).
-//   - verdict(run) -> 'detected'|'clean'|'error'. Defaults to parseVerdict,
-//     which reads the @@DJX_VERDICT stdout marker. Override only for an
-//     external analyzer whose native output you'd rather parse directly.
+//   - cases(run, bench) -> [{ actual, expected }, ...], one per assert. Defaults
+//     to defaultCases, which reads the @@DJX_VERDICT stdout markers. Override only
+//     for an external analyzer whose native output you'd rather parse directly.
 // A runner whose available() is false is skipped with a notice.
 // ---------------------------------------------------------------------------
 
@@ -393,8 +449,8 @@ function makeRunners(opts) {
       // plain Node, no instrumentation: a pure-execution-time reference. The
       // taint prelude globals are stubbed to no-ops via BASELINE_IMPORT so the
       // bench runs as plain JS instead of crashing on the first `__set_taint__`
-      // call. It never emits a verdict marker, so it always lands in `error` ->
-      // a useful sanity floor for the matrix; only its mean_ms is meaningful.
+      // call. It never emits a verdict marker, so every bench lands in a single
+      // `error` case -> a useful sanity floor; only its mean_ms is meaningful.
       name: "baseline",
       available: () => onPath("node"),
       exec: (b, out, err, t) =>
@@ -403,8 +459,9 @@ function makeRunners(opts) {
     {
       // this project's analyzer. Analysis + flags are picked per bench from its
       // `@type` (see TYPE_CONFIG), unless overridden by --analysis/--dynajs-flags.
-      // The chosen analysis must print `@@DJX_VERDICT detected|clean` (e.g. the
-      // taint prelude's __print_if_tainted__); otherwise every run reads as error.
+      // The chosen analysis must print `@@DJX_VERDICT <actual> <expected>` per
+      // assert (e.g. the taint prelude's __assert_taint__); else every run reads
+      // as a single error.
       name: "dynajs",
       available: () => existsSync(path.join(REPO_ROOT, "dynajs")),
       applies: (b) => resolveDynajs(b, opts) != null,
@@ -424,10 +481,12 @@ function makeRunners(opts) {
     // --- external analyzers ------------------------------------------------
     {
       // NodeMedic's taint engine under Jalangi2-babel instrumentation. Runs the
-      // same bench files via the __set_taint__/__print_if_tainted__ ghost
-      // functions registered in NodeMedic's src/GhostFunction.ts, so the default
-      // @@DJX_VERDICT parser works. Only taint benches apply (NodeMedic is a
-      // taint engine). See the NODEMEDIC_* config block above.
+      // same bench files via the __set_taint__/__assert_taint__ ghost functions
+      // registered in NodeMedic's src/GhostFunction.ts, so the default
+      // @@DJX_VERDICT parser works -- but that registration is out-of-tree, so
+      // GhostFunction.ts must be updated to the renamed __assert_taint__(v,
+      // expected) and emit the 2-token marker for this runner to score. Only
+      // taint benches apply. See the NODEMEDIC_* config block above.
       name: "nodemedic-jalangi",
       applies: (b) => b.type === "taint",
       available: () =>
@@ -455,11 +514,15 @@ function makeRunners(opts) {
     {
       // ExpoSE's dynamic symbolic execution engine, on the same concolic
       // benches via the __symbolic__/__symbolic_assert__ -> S$ bridge prelude.
-      // Only concolic benches apply. See the EXPOSE_* config block above for
-      // the invocation (scripts/analyse) and the verdict polarity (errors>0 ->
-      // a counterexample -> `clean`; 0 errors -> assert held -> `detected`).
+      // ExpoSE reports one whole-run error count, not per-assert markers, so this
+      // runner only applies to SINGLE-assert concolic benches: it pairs the
+      // whole-run verdict with that assert's static oracle (see cases below).
+      // Multi-assert benches are skipped (logged) until ExpoSE's assertSymbolic
+      // patch emits a per-assert @@DJX_VERDICT marker. See the EXPOSE_* config
+      // block for the invocation and verdict polarity (errors>0 -> a
+      // counterexample -> `clean`; 0 errors -> assert held -> `detected`).
       name: "expose",
-      applies: (b) => b.type === "concolic",
+      applies: (b) => b.type === "concolic" && assertOracles(b.file).length <= 1,
       available: () => existsSync(EXPOSE_ANALYSE),
       exec: (b, out, err, t) => {
         // Copy the bench with the S$ bridge prelude prepended. Key on b.name
@@ -475,11 +538,15 @@ function makeRunners(opts) {
           EXPOSE_HOME, // cwd: scripts/analyse sources ./scripts/env relatively
         );
       },
-      verdict: (run) => {
-        if (run.timedOut) return "error";
+      cases: (run, b) => {
+        // One whole-run verdict from the error count, paired with the single
+        // assert's declared oracle. Empty -> the caller records one `error` case.
+        if (run.timedOut) return [];
         const m = EXPOSE_DONE_RE.exec(`${run.stdout}\n${run.stderr}`);
-        if (!m) return "error"; // no summary line: ExpoSE crashed/never finished
-        return Number(m[1]) > 0 ? "clean" : "detected";
+        if (!m) return []; // no summary line: ExpoSE crashed/never finished
+        const actual = Number(m[1]) > 0 ? "clean" : "detected";
+        const expected = assertOracles(b.file)[0] === false ? "clean" : "detected";
+        return [{ actual, expected }];
       },
     },
     // -----------------------------------------------------------------------
@@ -561,7 +628,7 @@ function main() {
 
   if (!existsSync(BENCH_DIR)) die(`no benchmark dir: ${BENCH_DIR}`);
 
-  // Collect benches with a parseable @oracle; warn and skip the rest. Walked
+  // Collect benches with a `@type` header; warn and skip the rest. Walked
   // recursively, so benches can be grouped into subfolders under bench/micro.
   // The path relative to BENCH_DIR (separators flattened to `__`) becomes the
   // bench name, so nested benches sharing a basename don't collide in the log
@@ -572,16 +639,16 @@ function main() {
     .sort();
   for (const rel of benchFiles) {
     const file = path.join(BENCH_DIR, rel);
-    const meta = parseOracle(file);
+    const meta = parseMeta(file);
     if (!meta) {
-      console.error(`skip ${rel} (no \`// @oracle true|false\` header)`);
+      console.error(`skip ${rel} (no \`// @type\` header)`);
       continue;
     }
     benches.push({ file, name: stripExt(rel).replace(/[\\/]/g, "__"), ...meta });
   }
   if (opts.benchFilters.length)
     benches = benches.filter((b) => matchesAny(path.basename(b.file), opts.benchFilters));
-  if (!benches.length) die("no benchmarks with an @oracle header matched");
+  if (!benches.length) die("no benchmarks with a @type header matched");
 
   let runners = makeRunners(opts);
   if (opts.runnerFilters.length)
@@ -600,38 +667,47 @@ function main() {
   const logsDir = path.join(outputDir, "logs");
   mkdirSync(logsDir, { recursive: true });
   const csvFile = path.join(outputDir, "results.csv");
-  writeFileSync(csvFile, "runner,benchmark,type,target,feature,oracle,rep,verdict,result,exit_code,timed_out,elapsed_ms\n");
+  writeFileSync(csvFile, "runner,benchmark,type,target,feature,rep,case,expected,actual,result,exit_code,timed_out,elapsed_ms\n");
 
-  const nPos = benches.filter((b) => b.oracle).length;
   console.log(`Output directory: ${outputDir}`);
   console.log(`Runners: ${active.map((r) => r.name).join(", ")}`);
   console.log(
-    `Benchmarks: ${benches.length} (${nPos} positive / ${benches.length - nPos} negative)` +
+    `Benchmarks: ${benches.length} files` +
       `   reps: ${opts.reps}   warmup: ${opts.warmup}   timeout: ${opts.timeoutSec}s\n`,
   );
   console.log(
-    "runner".padEnd(12) + "benchmark".padEnd(24) + "oracle".padEnd(8) +
-      "verdict".padEnd(10) + "result".padStart(7) + "mean_ms".padStart(10),
+    "runner".padEnd(12) + "benchmark".padEnd(24) + "expected".padEnd(10) +
+      "actual".padEnd(10) + "result".padStart(7) + "mean_ms".padStart(10),
   );
 
   // Per-bench outcomes, kept so the report can slice them any number of ways
-  // (overall, by @target, by @feature). records[runner] = [{ bench, result,
-  // verdict, anyTimeout, mean }, ...].
+  // (overall, by @target, by @feature). records[runner] = [{ bench, cases:
+  // [{actual, expected, result}], anyTimeout, mean }, ...]; counts are per case.
   const records = {};
   for (const r of active) records[r.name] = [];
 
+  // Each marker is one assert case; a run with no marker (crash/timeout before
+  // any assert fires) collapses to a single `error` case so it isn't silently
+  // dropped — its expected is recovered from the bench's first declared oracle.
+  const toCases = (raw, b) =>
+    raw.length
+      ? raw
+      : [{ actual: "error", expected: assertOracles(b.file)[0] === false ? "clean" : "detected" }];
+  const sig = (cs) => cs.map((c) => `${c.actual}/${c.expected}`).join(",");
+
   for (const r of active) {
-    const verdictOf = r.verdict ?? parseVerdict;
+    const casesOf = r.cases ?? defaultCases;
     for (const b of benches) {
       if (r.applies && !r.applies(b)) {
-        console.error(`skip ${r.name}/${b.name} (no config for @type ${b.type || "(none)"})`);
+        console.error(`skip ${r.name}/${b.name} (not applicable)`);
         continue;
       }
       for (let w = 0; w < opts.warmup; w++) r.exec(b, null, null, timeoutMs);
 
       const samples = [];
-      const verdicts = [];
+      const sigs = [];
       let anyTimeout = false;
+      let firstCases = null;
       for (let rep = 1; rep <= opts.reps; rep++) {
         const prefix = `${r.name}__${b.name}__rep${rep}`;
         const run = r.exec(
@@ -640,30 +716,35 @@ function main() {
           path.join(logsDir, `${prefix}.stderr`),
           timeoutMs,
         );
-        const v = verdictOf(run);
+        const cases = toCases(casesOf(run, b), b);
         samples.push(run.ms);
-        verdicts.push(v);
+        sigs.push(sig(cases));
         if (run.timedOut) anyTimeout = true;
-        appendFileSync(
-          csvFile,
-          `${r.name},${b.name},${b.type},${b.target},${b.feature},${b.oracle},${rep},${v},,${run.code},${run.timedOut},${run.ms.toFixed(1)}\n`,
+        if (rep === 1) firstCases = cases;
+        cases.forEach((c, i) =>
+          appendFileSync(
+            csvFile,
+            `${r.name},${b.name},${b.type},${b.target},${b.feature},${rep},${i},${c.expected},${c.actual},${classify(c.expected, c.actual)},${run.code},${run.timedOut},${run.ms.toFixed(1)}\n`,
+          ),
         );
       }
 
-      // Verdict should be deterministic across reps; warn if not, use rep 1.
-      const verdict = verdicts[0];
-      if (verdicts.some((v) => v !== verdict))
-        console.error(`warn ${r.name}/${b.name}: inconsistent verdict across reps: ${verdicts.join(",")}`);
+      // Cases should be deterministic across reps; warn if not, use rep 1.
+      if (sigs.some((s) => s !== sigs[0]))
+        console.error(`warn ${r.name}/${b.name}: inconsistent cases across reps: ${sigs.join(" | ")}`);
 
-      const result = classify(b.oracle, verdict);
+      const cases = firstCases.map((c) => ({ ...c, result: classify(c.expected, c.actual) }));
       const mean = samples.reduce((a, c) => a + c, 0) / samples.length;
-      records[r.name].push({ bench: b, result, verdict, anyTimeout, mean });
+      records[r.name].push({ bench: b, cases, anyTimeout, mean });
 
-      console.log(
-        r.name.padEnd(12) + b.name.padEnd(24) +
-          (b.oracle ? "pos" : "neg").padEnd(8) + verdict.padEnd(10) +
-          colorResult(result, result.padStart(7)) + mean.toFixed(1).padStart(10),
-      );
+      cases.forEach((c, i) => {
+        const tag = cases.length > 1 ? `${b.name}[${i}]` : b.name;
+        console.log(
+          r.name.padEnd(12) + tag.padEnd(24) + c.expected.padEnd(10) +
+            c.actual.padEnd(10) + colorResult(c.result, c.result.padStart(7)) +
+            (i === 0 ? mean.toFixed(1).padStart(10) : ""),
+        );
+      });
     }
   }
 

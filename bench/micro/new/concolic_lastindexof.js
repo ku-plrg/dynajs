@@ -1,5 +1,4 @@
 // @type concolic
-// @oracle false
 // @target es5 string-lastindexof
 // @feature builtin lastIndexOf-unmodeled
 // Mirrors ExpoSE string-model-bugs bug 2 (lastIndexOf modeled as indexOf): under the
@@ -8,5 +7,5 @@
 
 var s = __symbolic__("s", "aa");
 if (s.indexOf("a") === 0) {
-  __symbolic_assert__(s.lastIndexOf("a") === 0);
+  __symbolic_assert__(s.lastIndexOf("a") === 0, false);
 }

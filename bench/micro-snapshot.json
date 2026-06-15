@@ -1,360 +1,560 @@
 {
   "dynajs": {
-    "concolic_alias_bug": {
-      "verdict": "clean",
-      "result": "TN"
-    },
-    "concolic_arith": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "concolic_else_branch": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "concolic_implies": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "concolic_mod": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "concolic_string_charat": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "concolic_string_concat": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "concolic_string_eq": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "concolic_string_len": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "concolic_string_substring": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "concolic_string_unconstrained": {
-      "verdict": "clean",
-      "result": "TN"
-    },
-    "concolic_string_violable": {
-      "verdict": "clean",
-      "result": "TN"
-    },
-    "concolic_two_vars": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "concolic_unconstrained": {
-      "verdict": "clean",
-      "result": "TN"
-    },
-    "concolic_violable": {
-      "verdict": "clean",
-      "result": "TN"
-    },
-    "js": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__concolic_array_pop": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__concolic_array_push": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__concolic_at": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__concolic_bitwise_and": {
-      "verdict": "error",
-      "result": "FN"
-    },
-    "new__concolic_charcodeat": {
-      "verdict": "error",
-      "result": "FN"
-    },
-    "new__concolic_concat_number": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__concolic_encodeuri": {
-      "verdict": "clean",
-      "result": "FN"
-    },
-    "new__concolic_encodeuricomponent_concrete": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__concolic_endswith": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__concolic_includes": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__concolic_indexof_negative": {
-      "verdict": "clean",
-      "result": "FN"
-    },
-    "new__concolic_json_stringify": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__concolic_lastindexof": {
-      "verdict": "detected",
-      "result": "FP"
-    },
-    "new__concolic_lshift_overflow": {
-      "verdict": "error",
-      "result": "FP"
-    },
-    "new__concolic_math_max": {
-      "verdict": "clean",
-      "result": "FN"
-    },
-    "new__concolic_math_trunc": {
-      "verdict": "clean",
-      "result": "FN"
-    },
-    "new__concolic_modulo_negative": {
-      "verdict": "clean",
-      "result": "TN"
-    },
-    "new__concolic_padstart": {
-      "verdict": "detected",
-      "result": "FP"
-    },
-    "new__concolic_parseint": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__concolic_regex_anchor": {
-      "verdict": "clean",
-      "result": "TN"
-    },
-    "new__concolic_replace": {
-      "verdict": "clean",
-      "result": "TN"
-    },
-    "new__concolic_slice_zero_end": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__concolic_startswith": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__concolic_substr_length": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__concolic_substring_length": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__concolic_substring_negclamp": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__concolic_substring_swap": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__concolic_tolowercase": {
-      "verdict": "clean",
-      "result": "TN"
-    },
-    "new__concolic_tostring_number": {
-      "verdict": "clean",
-      "result": "FN"
-    },
-    "new__concolic_toupper": {
-      "verdict": "clean",
-      "result": "TN"
-    },
-    "new__concolic_unsigned_rshift": {
-      "verdict": "error",
-      "result": "FP"
-    },
-    "new__taint_array_concat_neg": {
-      "verdict": "clean",
-      "result": "TN"
-    },
-    "new__taint_encodeURIComponent": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__taint_join_null": {
-      "verdict": "clean",
-      "result": "FN"
-    },
-    "new__taint_join_sep": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__taint_json_stringify_nested": {
-      "verdict": "clean",
-      "result": "FN"
-    },
-    "new__taint_json_stringify_quote_neg": {
-      "verdict": "detected",
-      "result": "FP"
-    },
-    "new__taint_replace_expand": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__taint_replace_global_expand": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__taint_replace_regex_neg": {
-      "verdict": "detected",
-      "result": "FP"
-    },
-    "new__taint_slice_cjk_neg": {
-      "verdict": "clean",
-      "result": "TN"
-    },
-    "new__taint_split_regex": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__taint_split_regex_neg": {
-      "verdict": "detected",
-      "result": "FP"
-    },
-    "new__taint_substr_length": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__taint_substring_negclamp": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__taint_substring_swap": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__taint_toLowerCase": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__taint_toUpperCase": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__taint_trim": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "new__taint_trimRight": {
-      "verdict": "detected",
-      "result": "FP"
-    },
-    "new__taint_trimStart_tab": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "taint_at_oob": {
-      "verdict": "clean",
-      "result": "TN"
-    },
-    "taint_before_taint": {
-      "verdict": "clean",
-      "result": "TN"
-    },
-    "taint_char_at": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "taint_char_at_neg": {
-      "verdict": "clean",
-      "result": "TN"
-    },
-    "taint_char_bracket": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "taint_clean": {
-      "verdict": "clean",
-      "result": "TN"
-    },
-    "taint_concat": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "taint_interprocedural": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "taint_isolated_var": {
-      "verdict": "clean",
-      "result": "TN"
-    },
-    "taint_low": {
-      "verdict": "detected",
-      "result": "FP"
-    },
-    "taint_number_arith": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "taint_plain_concat": {
-      "verdict": "clean",
-      "result": "TN"
-    },
-    "taint_reassign_clears": {
-      "verdict": "clean",
-      "result": "TN"
-    },
-    "taint_repeat": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "taint_replace_neg": {
-      "verdict": "detected",
-      "result": "FP"
-    },
-    "taint_replace-2": {
-      "verdict": "clean",
-      "result": "FN"
-    },
-    "taint_slice": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "taint_slice_neg": {
-      "verdict": "clean",
-      "result": "TN"
-    },
-    "taint_split": {
-      "verdict": "clean",
-      "result": "FN"
-    },
-    "taint_split_neg": {
-      "verdict": "detected",
-      "result": "FP"
-    },
-    "taint_template": {
-      "verdict": "detected",
-      "result": "TP"
-    },
-    "taint_unary_not": {
-      "verdict": "detected",
-      "result": "TP"
-    }
+    "concolic_arithmetic": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "concolic_binary_relational": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "concolic_bitwise": [
+      {
+        "expected": "detected",
+        "actual": "error",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "error",
+        "result": "FP"
+      },
+      {
+        "expected": "clean",
+        "actual": "error",
+        "result": "FP"
+      }
+    ],
+    "concolic_string_charat": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "concolic_string_concat": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      }
+    ],
+    "concolic_string_equality": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "concolic_string_length": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "concolic_substring": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "new__concolic_array_pop": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "new__concolic_array_push": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "new__concolic_at": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "new__concolic_charcodeat": [
+      {
+        "expected": "detected",
+        "actual": "error",
+        "result": "FN"
+      }
+    ],
+    "new__concolic_encodeuri": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      }
+    ],
+    "new__concolic_encodeuricomponent_concrete": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "new__concolic_endswith": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "new__concolic_includes": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "new__concolic_indexof_negative": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      }
+    ],
+    "new__concolic_json_stringify": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "new__concolic_lastindexof": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "new__concolic_math_max": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      }
+    ],
+    "new__concolic_math_trunc": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      }
+    ],
+    "new__concolic_padstart": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "new__concolic_parseint": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "new__concolic_regex_anchor": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "new__concolic_replace": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "new__concolic_slice_zero_end": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "new__concolic_startswith": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "new__concolic_substr_length": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "new__concolic_tolowercase": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "new__concolic_toupper": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "new__taint_array_concat_neg": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "new__taint_encodeURIComponent": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "new__taint_substr_length": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "new__taint_toUpperCase": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "new__taint_trim": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "new__taint_trimRight": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "new__taint_trimStart_tab": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "taint_at": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "taint_binary_plus": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "taint_char_bracket": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "taint_charat": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "taint_join": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "taint_json_stringify": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "taint_reassign_clears": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "taint_repeat": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "taint_replace": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "taint_slice": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "taint_split": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "taint_substring": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "taint_template": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "taint_tolowercase": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "taint_unary_not": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "taint_var_assignment": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ]
   }
 }

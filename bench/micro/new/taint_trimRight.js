@@ -1,5 +1,4 @@
 // @type taint
-// @oracle false
 // @target es6+ String.prototype.trimRight
 // @feature builtin trimRight-not-trim
 // Mirrors ExpoSE string-model-bugs bug 3: trimRight/trimLeft (and the V8-aliased
@@ -15,4 +14,4 @@ __set_taint__(x);
 var s = "  " + x + "  ";
 var y = s.trimRight(); // "  ab" (leading run kept)
 
-__print_if_tainted__(y[0]); // ' ', clean leading space
+__assert_taint__(y[0], false); // ' ', clean leading space

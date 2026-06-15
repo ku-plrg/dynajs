@@ -1,5 +1,4 @@
 // @type concolic
-// @oracle true
 // @target es5 string-indexof
 // @feature builtin indexOf-negative-from
 // Mirrors ExpoSE coercion/bug33: a negative fromIndex clamps to 0, so
@@ -9,5 +8,5 @@
 
 var x = __symbolic__("x", "abc");
 if (x.indexOf("a", -5) === 0) {
-  __symbolic_assert__(x.charAt(0) === "a");
+  __symbolic_assert__(x.charAt(0) === "a", true);
 }

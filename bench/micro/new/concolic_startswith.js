@@ -1,5 +1,4 @@
 // @type concolic
-// @oracle true
 // @target es6+ string-startswith
 // @feature builtin startsWith-unmodeled
 // Mirrors ExpoSE unmodeled/bug23: under x.startsWith("foo") the string has at least
@@ -7,5 +6,5 @@
 
 var x = __symbolic__("x", "foobar");
 if (x.startsWith("foo")) {
-  __symbolic_assert__(x.length >= 3);
+  __symbolic_assert__(x.length >= 3, true);
 }

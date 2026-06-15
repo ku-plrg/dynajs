@@ -1,5 +1,4 @@
 // @type concolic
-// @oracle true
 // @target es6+ string-at
 // @feature builtin at-negative-index
 // Mirrors ExpoSE unmodeled/bug27: under x.at(-1) === "z" the string is non-empty,
@@ -8,5 +7,5 @@
 
 var x = __symbolic__("x", "abz");
 if (x.at(-1) === "z") {
-  __symbolic_assert__(x.length >= 1);
+  __symbolic_assert__(x.length >= 1, true);
 }

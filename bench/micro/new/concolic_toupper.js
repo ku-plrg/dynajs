@@ -1,5 +1,4 @@
 // @type concolic
-// @oracle false
 // @target es5 string-touppercase
 // @feature builtin toUpperCase-unmodeled
 // Mirrors ExpoSE unmodeled/bug20: under the path condition x.toUpperCase() === "ABC"
@@ -8,5 +7,5 @@
 
 var x = __symbolic__("x", "abc");
 if (x.toUpperCase() === "ABC") {
-  __symbolic_assert__(x === "abc");
+  __symbolic_assert__(x === "abc", false);
 }

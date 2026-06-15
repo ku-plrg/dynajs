@@ -1,5 +1,4 @@
 // @type taint
-// @oracle false
 // @target es5 Array.prototype.concat
 // @feature builtin array-concat
 // Mirrors NodeMedic-FINE builtin_model_bugs.ts BUG B13 (over-taint / false
@@ -15,4 +14,4 @@ var a = [s];
 var b = ["u"];
 var r = a.concat(b); // ['s','u']
 
-__print_if_tainted__(r[1]); // 'u', from the clean argument array
+__assert_taint__(r[1], false); // 'u', from the clean argument array

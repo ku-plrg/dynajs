@@ -1,5 +1,4 @@
 // @type concolic
-// @oracle false
 // @target es5 regex-test
 // @feature builtin regex-global-anchor
 // Mirrors ExpoSE regex/bug35: a global regex /a/g matches anywhere, so /a/g.test(x)
@@ -9,5 +8,5 @@
 
 var x = __symbolic__("x", "ba");
 if (/a/g.test(x)) {
-  __symbolic_assert__(x.charAt(0) === "a");
+  __symbolic_assert__(x.charAt(0) === "a", false);
 }

@@ -1,5 +1,4 @@
 // @type concolic
-// @oracle false
 // @target es5 string-replace
 // @feature builtin replace-unmodeled
 // Mirrors ExpoSE unmodeled/bug22: under x.replace("a","X") === "Xbc" the input is
@@ -8,5 +7,5 @@
 
 var x = __symbolic__("x", "abc");
 if (x.replace("a", "X") === "Xbc") {
-  __symbolic_assert__(x === "abc");
+  __symbolic_assert__(x === "abc", false);
 }

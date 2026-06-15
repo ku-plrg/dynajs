@@ -263,14 +263,19 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     return seed;
   }
 
-  symbolicAssert(condArg: unknown): void {
+  symbolicAssert(condArg: unknown, expectedArg: unknown): void {
+    // `expected` is the per-assert ground truth (true = should be detected). We
+    // print `@@DJX_VERDICT <actual> <expected>` so the runner classifies each
+    // assert as TP/FP/FN/TN on its own, with no file-level oracle header.
+    const expected = this.valued(expectedArg).value ? 'detected' : 'clean';
+    const emit = (actual: 'detected' | 'clean' | 'error') =>
+      console.log(`@@DJX_VERDICT ${actual} ${expected}`);
+
     const cond = this.valued(condArg);
     const sym = this.symOf(cond);
     if (sym.kind === 'const') {
       // No symbolic dependency: the assert reduces to its concrete truth value.
-      console.log(
-        cond.value ? '@@DJX_VERDICT detected' : '@@DJX_VERDICT clean',
-      );
+      emit(cond.value ? 'detected' : 'clean');
       return;
     }
     let verdict: 'valid' | 'invalid' | 'unknown';
@@ -278,15 +283,14 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
       verdict = solveValidity(this.pathConstraints, sym);
     } catch (e) {
       console.error(`[concolic] assert unsolved: ${(e as Error).message}`);
-      return; // no marker -> runner records `error`
+      emit('error'); // unsolved is its own verdict; classifies as FN/FP by expected
+      return;
     }
     console.error(
       `[concolic] assert ${symToString(sym)} under ${this.pathConstraints.length} ` +
         `constraint(s) -> ${verdict}`,
     );
-    console.log(
-      verdict === 'valid' ? '@@DJX_VERDICT detected' : '@@DJX_VERDICT clean',
-    );
+    emit(verdict === 'valid' ? 'detected' : 'clean');
   }
 
   endExecution() {

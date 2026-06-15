@@ -1,5 +1,4 @@
 // @type taint
-// @oracle true
 // @target es6+ String.prototype.toUpperCase
 // @feature builtin toUpperCase
 // Mirrors NodeMedic-FINE string_model_bugs.ts BUG A4 (toLowerCase counterpart is
@@ -12,4 +11,4 @@ var x = "ß";
 __set_taint__(x);
 var y = x.toUpperCase(); // "SS"
 
-__print_if_tainted__(y[1]); // 2nd 'S', derived from the tainted base
+__assert_taint__(y[1], true); // 2nd 'S', derived from the tainted base

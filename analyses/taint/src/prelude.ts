@@ -18,12 +18,12 @@ function __assert__(v: unknown): void {
   D$.analysis.assert(v);
 }
 
-function __print_if_tainted__(x: unknown): void {
-  if (D$.analysis.isTainted(x)) {
-    console.log("@@DJX_VERDICT detected");
-  } else {
-    console.log("@@DJX_VERDICT clean");
-  }
+// Assert whether taint reaches `v`. `expected` is this assert's ground truth
+// (true = taint should have flowed here); the verdict marker the microbench
+// runner reads carries actual-vs-expected, so a file can chain several asserts
+// (positive and negative cases) that each score on their own.
+function __assert_taint__(v: unknown, expected: unknown): void {
+  D$.analysis.assertTaint(v, expected);
 }
 
 // Installs the ghost source/sink functions and returns them as the set of
@@ -35,8 +35,8 @@ export function installPrelude(): ReadonlySet<unknown> {
   g.__is_tainted__ = __is_tainted__;
   g.__is_tainted_at__ = __is_tainted_at__;
   g.__assert__ = __assert__;
-  g.__print_if_tainted__ = __print_if_tainted__;
+  g.__assert_taint__ = __assert_taint__;
   return new Set<unknown>([
-    __set_taint__, __is_tainted__, __is_tainted_at__, __assert__, __print_if_tainted__,
+    __set_taint__, __is_tainted__, __is_tainted_at__, __assert__, __assert_taint__,
   ]);
 }

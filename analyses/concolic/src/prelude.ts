@@ -14,10 +14,12 @@ function __symbolic__(name: unknown, seed: unknown): unknown {
 // Complete an assertion *symbolically*: instead of checking `cond` on the
 // current concrete values, we hand z3 the conjunction of path conditions taken
 // to reach here together with `cond`, and ask whether `cond` is necessarily
-// true under that path condition (i.e. `PC ∧ ¬cond` is UNSAT). Prints the
-// `@@DJX_VERDICT detected|clean` marker the microbench runner reads.
-function __symbolic_assert__(cond: unknown): void {
-  D$.analysis.symbolicAssert(cond);
+// true under that path condition (i.e. `PC ∧ ¬cond` is UNSAT). `expected` is the
+// bench's ground truth for THIS assert (true = should be detected/valid); we
+// print the `@@DJX_VERDICT <actual> <expected>` marker the microbench runner
+// reads, so several asserts in one file each score independently.
+function __symbolic_assert__(cond: unknown, expected: unknown): void {
+  D$.analysis.symbolicAssert(cond, expected);
 }
 
 // Installs the symbolic ghost seams and returns them as the set of transparent

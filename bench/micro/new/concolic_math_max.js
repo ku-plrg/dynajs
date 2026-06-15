@@ -1,5 +1,4 @@
 // @type concolic
-// @oracle true
 // @target es5 math-max
 // @feature builtin Math.max-unmodeled
 // Mirrors ExpoSE math/bug31: under Math.max(x, 5) === 7 the input must be 7 (if
@@ -7,5 +6,5 @@
 
 var x = __symbolic__("x", 7);
 if (Math.max(x, 5) === 7) {
-  __symbolic_assert__(x === 7);
+  __symbolic_assert__(x === 7, true);
 }

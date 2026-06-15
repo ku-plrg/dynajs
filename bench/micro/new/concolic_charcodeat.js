@@ -1,5 +1,4 @@
 // @type concolic
-// @oracle true
 // @target es5 string-charcodeat
 // @feature builtin charCodeAt-unmodeled
 // Mirrors ExpoSE unmodeled/bug26: under x.charCodeAt(0) === 90 the string is
@@ -7,5 +6,5 @@
 
 var x = __symbolic__("x", "Z");
 if (x.charCodeAt(0) === 90) {
-  __symbolic_assert__(x.length >= 1);
+  __symbolic_assert__(x.length >= 1, true);
 }

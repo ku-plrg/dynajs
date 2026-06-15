@@ -1,5 +1,4 @@
 // @type concolic
-// @oracle true
 // @target es5 string-substr
 // @feature builtin substr-length-implies
 // Positive reference for the substr length semantics ExpoSE conflates with
@@ -9,5 +8,5 @@
 var s = __symbolic__("s", "hello");
 var p = s.substr(1, 2); // "el", window s[1..3)
 if (p === "el") {
-  __symbolic_assert__(s.length >= 3);
+  __symbolic_assert__(s.length >= 3, true);
 }
