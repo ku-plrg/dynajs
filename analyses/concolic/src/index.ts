@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { FlowAnalysis, type Valued, type InfoDomain, type CallPolicy } from '@/model/flow.js';
+import { FlowAnalysis, type Valued, type InfoDomain, type CallPolicy } from '@/model/index.js';
 import { type Sym, type Sort, UnsupportedSym, symToString } from '@shared/sym.js';
 import { installPrelude } from './prelude.js';
 

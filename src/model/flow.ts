@@ -4,7 +4,6 @@ import type { Analysis } from "@/types/analysis.js";
 import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "./type.js";
 import { Model } from "./model.js";
 import { type Site, UNKNOWN_SITE, resolveCodeSite, builtinName } from "./site.js";
-export type { Pos, CodeSite, Site } from "./site.js";
 
 type ValuedGeneral<Shape extends {}, Value = unknown> = Shape & { value: Value };
 
