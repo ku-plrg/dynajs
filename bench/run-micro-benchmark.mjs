@@ -27,9 +27,12 @@
 //   node bench/run-micro-benchmark.mjs [options]
 //   --runner NAME     run only the named runner (repeatable)
 //   --bench NAME      run only benchmarks matching NAME or NAME.js (repeatable)
+//   --dir SUB         run only benches under bench/micro/SUB (repeatable)
 //   --analysis NAME   analysis dynajs runs with (default: samples/EmptyAnalysis.js)
-//   --reps N          measured iterations per (runner, bench)   (default: 10)
-//   --warmup N        discarded warmup iterations               (default: 2)
+//   --reps N          measured iterations per (runner, bench)   (default: 1)
+//   --warmup N        discarded warmup iterations               (default: 0)
+//                     (defaults are verdict-only: verdicts are deterministic, so
+//                      1 rep suffices; pass --reps 10 --warmup 2 for stable timing)
 //   --timeout N       per-run timeout in seconds                (default: 30)
 //   --output-dir DIR  write logs and CSV into DIR
 //   --update-snapshot (re)write the committed correctness baseline (dynajs only)
@@ -109,9 +112,14 @@ const NODEMEDIC_JALANGI_CMD = path.join(
 const NODEMEDIC_REWRITE = path.join(NODEMEDIC_HOME, "src/rewrite.js");
 // NodeMedic reads analysis args as positional argv after the script (Jalangi
 // mode: config.setFromArgs(process.argv)), not from an env var.
+// `string:precise-no-flip` selects NodeMedic-FINE's precise per-character string
+// model but WITHOUT the bit-flipping encode/decode pass (StringPolicyPreciseNoFlip
+// in src/modules/String.ts). It requires NodeMedic-FINE: both the precise-no-flip
+// policy and the __set_taint__/__print_if_tainted__ verdict ghosts live there
+// (stock NodeMedic-wip has neither). Override via $NODEMEDIC_POLICIES for wip.
 const NODEMEDIC_ANALYSIS_ARGS = [
   "log_level=error",
-  "policies=string:precise,array:precise,object:precise",
+  `policies=${process.env.NODEMEDIC_POLICIES ?? "string:precise-no-flip,array:precise,object:precise"}`,
 ];
 
 // A CommonJS-scoped scratch dir so Jalangi's `.js` loader hook instruments the
@@ -561,12 +569,13 @@ function parseArgs(argv) {
   const opts = {
     analysis: null, // override; default analysis comes from each bench's @type
     dynajsFlags: null, // override; default flags come from each bench's @type
-    reps: 10,
-    warmup: 2,
+    reps: 1, // verdict-only default (verdicts are deterministic); pass --reps N for timing
+    warmup: 0, // each rep is a fresh process, so warmup doesn't warm anything measured
     timeoutSec: 30,
     outputDir: null,
     runnerFilters: [],
     benchFilters: [],
+    dirFilters: [], // restrict to benches under one or more subdirs of bench/micro
     check: false, // compare against the committed snapshot, exit non-zero on drift
     updateSnapshot: false, // (re)write the committed snapshot from this run
     repsSet: false, // whether --reps was passed (snapshot modes default reps to 1)
@@ -580,6 +589,7 @@ function parseArgs(argv) {
     switch (a) {
       case "--runner": opts.runnerFilters.push(need(i, a)); i++; break;
       case "--bench": opts.benchFilters.push(need(i, a)); i++; break;
+      case "--dir": opts.dirFilters.push(need(i, a)); i++; break;
       case "--analysis": opts.analysis = need(i, a); i++; break;
       case "--dynajs-flags": opts.dynajsFlags = need(i, a); i++; break;
       case "--reps": opts.reps = Number(need(i, a)); opts.repsSet = true; i++; break;
@@ -634,8 +644,13 @@ function main() {
   // bench name, so nested benches sharing a basename don't collide in the log
   // and temp-copy filenames keyed off it.
   let benches = [];
+  // `--dir SUB` keeps only benches whose path (relative to bench/micro) is under
+  // SUB, so a whole subtree runs without listing every basename (and without the
+  // cross-folder collisions a basename `--bench` filter would pull in).
+  const dirPrefixes = opts.dirFilters.map((d) => d.replace(/[\\/]+$/, "").split(/[\\/]/).join(path.sep) + path.sep);
   const benchFiles = readdirSync(BENCH_DIR, { recursive: true })
     .filter((f) => f.endsWith(".js") && !f.endsWith("__dynajs__.js"))
+    .filter((f) => !dirPrefixes.length || dirPrefixes.some((p) => f.startsWith(p)))
     .sort();
   for (const rel of benchFiles) {
     const file = path.join(BENCH_DIR, rel);
