@@ -152,10 +152,15 @@ function nodemedicCjsDir() {
 // not their search. `__symbolic__` still uses S$.symbol (it handles symbol
 // renaming and seeding through Object._expose.makeSymbolic).
 //
-// Polarity: assertSymbolic records one `error` (counterexample) iff `¬cond` is
-// SAT under the seed PC, i.e. the assert is violable. So errors>=1 -> `clean`
-// (violable); 0 errors -> `detected` (assert provably holds on this path) --
-// the same polarity as dynajs concolic's `PC ∧ ¬assert` UNSAT -> detected.
+// Per-assert verdict: assertSymbolic records one entry per call (violable when
+// `¬cond` is SAT under the seed PC, otherwise holds) into the only channel the
+// worker writes back -- its errors array -- which the Distributor prints as
+// `[!] Assertion violable|holds: <desc>`. violable -> the assert is breakable
+// -> `clean`; holds -> provably valid on this path -> `detected` -- the same
+// polarity as dynajs concolic's `PC ∧ ¬assert` UNSAT -> detected. Because every
+// executed assert prints (not just violable ones), a multi-assert bench reports
+// one ordered line per assert it ran; we carry the assert's ground truth in
+// `desc` so the pairing survives branches that skip an assert this seed.
 //
 // ExpoSE must be invoked through its own `scripts/analyse` entry point (which
 // sources scripts/env and spawns Tester workers with the right NODE_PATH/cwd);
@@ -165,20 +170,22 @@ const EXPOSE_HOME = process.env.EXPOSE_HOME ?? path.join(homedir(), "ExpoSE");
 const EXPOSE_ANALYSE = path.join(EXPOSE_HOME, "scripts/analyse");
 // Prepended to each bench copy: bridge the engine-neutral prelude names. The
 // assert bridges to our single-path Object._expose.assertSymbolic (defined once
-// ExpoSE's analysis initialises, before the bench body runs).
-// The `expected` arg (the assert's ground truth) is ignored here: ExpoSE only
-// checks `cond`'s validity; our runner reads `expected` from the bench source
-// (see assertOracles) to classify the result. ExpoSE still reports one whole-run
-// error count, not per-assert, so the expose runner only applies to single-
-// assert benches (see its applies()); making it score per-assert would need
-// ExpoSE's assertSymbolic patch to emit a per-assert @@DJX_VERDICT marker.
+// ExpoSE's analysis initialises, before the bench body runs), passing the
+// assert's ground truth as `desc` so the printed verdict line is self-contained
+// (actual from violable/holds, expected from the `desc` token) -- the runner
+// pairs each in execution order without re-reading the source (see cases()).
 const EXPOSE_PRELUDE =
   'var S$ = require("S$");\n' +
   "globalThis.__symbolic__ = function (name, seed) { return S$.symbol(name, seed); };\n" +
-  "globalThis.__symbolic_assert__ = function (cond, expected) { return Object._expose.assertSymbolic(cond); };\n";
-// ExpoSE prints this summary line once a target finishes; the error count is
-// our verdict signal (see the polarity note above).
-const EXPOSE_DONE_RE = /ExpoSE Finished\.\s+\d+ paths,\s+(\d+) errors/;
+  "globalThis.__symbolic_assert__ = function (cond, expected) {\n" +
+  '  return Object._expose.assertSymbolic(cond, expected ? "detected" : "clean");\n' +
+  "};\n";
+// ExpoSE prints this summary line once a target finishes; its presence means the
+// per-assert lines above it are complete (they print in the same done callback,
+// just before it), so cases() trusts the verdict stream only when it's seen.
+const EXPOSE_DONE_RE = /ExpoSE Finished\.\s+\d+ paths,\s+\d+ errors/;
+// One per-assert verdict line: `[!] Assertion violable|holds: <expected>`.
+const EXPOSE_ASSERT_RE = /\[!\] Assertion (violable|holds): (detected|clean)\b/g;
 
 // A scratch dir for the prelude-prepended bench copies ExpoSE analyses.
 let exposeDir = null;
@@ -238,9 +245,8 @@ function parseMeta(file) {
 
 // The per-assert `expected` booleans a bench declares, in source order: the last
 // argument of each __symbolic_assert__/__assert_taint__ call (paren-matched, so
-// commas inside the condition don't confuse it). Used by external runners that
-// emit a single whole-run signal instead of our per-assert markers (expose), and
-// to recover an assert's ground truth when a run crashes before emitting it.
+// commas inside the condition don't confuse it). Used to recover an assert's
+// ground truth when a run crashes before emitting any verdict marker (toCases).
 function assertOracles(file) {
   const src = readFileSync(file, "utf8");
   const re = /__(?:symbolic_assert|assert_taint)__\s*\(/g;
@@ -522,15 +528,11 @@ function makeRunners(opts) {
     {
       // ExpoSE's dynamic symbolic execution engine, on the same concolic
       // benches via the __symbolic__/__symbolic_assert__ -> S$ bridge prelude.
-      // ExpoSE reports one whole-run error count, not per-assert markers, so this
-      // runner only applies to SINGLE-assert concolic benches: it pairs the
-      // whole-run verdict with that assert's static oracle (see cases below).
-      // Multi-assert benches are skipped (logged) until ExpoSE's assertSymbolic
-      // patch emits a per-assert @@DJX_VERDICT marker. See the EXPOSE_* config
-      // block for the invocation and verdict polarity (errors>0 -> a
-      // counterexample -> `clean`; 0 errors -> assert held -> `detected`).
+      // assertSymbolic prints one ordered `[!] Assertion violable|holds: <expected>`
+      // line per executed assert (see the EXPOSE_* config block), so this scores
+      // per assert and applies to every concolic bench, single- or multi-assert.
       name: "expose",
-      applies: (b) => b.type === "concolic" && assertOracles(b.file).length <= 1,
+      applies: (b) => b.type === "concolic",
       available: () => existsSync(EXPOSE_ANALYSE),
       exec: (b, out, err, t) => {
         // Copy the bench with the S$ bridge prelude prepended. Key on b.name
@@ -547,14 +549,19 @@ function makeRunners(opts) {
         );
       },
       cases: (run, b) => {
-        // One whole-run verdict from the error count, paired with the single
-        // assert's declared oracle. Empty -> the caller records one `error` case.
+        // One case per executed assert, in order: violable -> `clean`, holds ->
+        // `detected`, paired with the `expected` token assertSymbolic echoed
+        // from `desc`. Only trusted once the run finished (the verdict lines are
+        // complete then); otherwise empty -> the caller records one `error` case.
         if (run.timedOut) return [];
-        const m = EXPOSE_DONE_RE.exec(`${run.stdout}\n${run.stderr}`);
-        if (!m) return []; // no summary line: ExpoSE crashed/never finished
-        const actual = Number(m[1]) > 0 ? "clean" : "detected";
-        const expected = assertOracles(b.file)[0] === false ? "clean" : "detected";
-        return [{ actual, expected }];
+        const text = `${run.stdout}\n${run.stderr}`;
+        if (!EXPOSE_DONE_RE.test(text)) return []; // crashed/never finished
+        const cases = [];
+        let m;
+        EXPOSE_ASSERT_RE.lastIndex = 0;
+        while ((m = EXPOSE_ASSERT_RE.exec(text)))
+          cases.push({ actual: m[1] === "violable" ? "clean" : "detected", expected: m[2] });
+        return cases;
       },
     },
     // -----------------------------------------------------------------------
