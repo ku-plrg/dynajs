@@ -88,8 +88,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
   protected abstract baseInfo(value: unknown, parents: Valued<Info>[]): Info;
 
-  // String structure.
-  protected substringInfo?(_src: Valued<Info, string>, _start: number, _resultLength: number): Info
+  protected substringInfo?(_src: Valued<Info, string>, _start: Valued<Info, number>, _end: Valued<Info, number>, _resultLength: number): Info
   protected concatenateInfo?(_left: Valued<Info, string>, _leftLength: number, _right: Valued<Info, string>, _rightLength: number): Info
   protected lengthOfStringInfo?(_src: Valued<Info, string>): Info
 
@@ -97,26 +96,14 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   protected unaryInfo?(_op: string, _operand: Valued<Info>): Info
   protected truncateInfo?(_src: Valued<Info, number>): Info
 
-  // A non-string field read `base[prop]` (object property or array element/
-  // `.length`) whose result the analysis wants to attribute structurally — the
-  // counterpart of substringInfo/lengthOfStringInfo for the object/array world.
-  // Fired only when the result carries no info of its own (a stored Wrapped
-  // element keeps its own info, see getField), so an analysis can derive
-  // e.g. a symbolic array element (`select`), its symbolic length, or a lazily
-  // minted symbolic-object field. baseInfo flow-through if undefined.
+  /* property read from object property or array element */
   protected getFieldInfo?(_base: Valued<Info>, _prop: Valued<Info>, _result: Valued<Info>): Info
 
   protected conditionInfo?(_id: number, _cond: Valued<Info>, _taken: boolean): void {}
 
   protected escapedInfo?(_f: unknown, _escaped: Valued<Info>[]): void {}
 
-  // Result of an opaque (uninstrumented native) call the analysis wants to model
-  // symbolically — `entries` are the original wrapped receiver+args (entries[0]
-  // is the receiver for a method call), `result` the native's wrapped/raw
-  // return. Lets an analysis attach structure to the result (e.g. an array
-  // `indexOf`/`includes`) and, as a side effect on its own Info store, track
-  // mutation of an operand the native performed out of view (`push`/`pop`).
-  // baseInfo flow-through if undefined.
+  /* opaque call the analysis wants to model */
   protected opaqueCallInfo?(_f: unknown, _entries: unknown[], _result: unknown): Info
 
   // ---- Info storage helpers ----
@@ -147,20 +134,14 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     return { info: this.getInfo(v) satisfies Info, value: this.unwrap(v as Wrapped<V>) } satisfies Valued<Info, V>;
   }
 
-  // Dual of `valued` ({value, info} ⇒ Wrapped): construct a wrapped value carrying
-  // `value` as its concrete payload and `info` as its attached Info. Lets an
-  // analysis *introduce* a value into the flow — concolic replay, fuzz/mutation
-  // inputs — not only annotate existing ones. `info` defaults to bottom for a
-  // plain wrapped concrete.
+  /* dual of `valued` */
   protected make<V>(value: V, info: Info = this.domain.getBottom()): Wrapped<V> {
     return this.lift(value, info);
   }
 
   private lift<T>(value: T, info: Info): Wrapped<T> {
     const w = this.wrap(value);
-    // Bottom carries no information, so skip the map entry — getInfo's miss
-    // path reconstructs it. (infoMap is a strong Map; storing bottoms would
-    // grow it with every wrapped value.)
+    /* Bottom carries no information, so skip */
     if (!this.domain.isBottom(info)) this.setInfo(w, info);
     return w;
   }
@@ -212,7 +193,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     substring: (s, from, to) => {
       const startN = this.unwrap(from) as number;
       const r = (this.unwrap(s) as string).substring(startN, this.unwrap(to) as number);
-      return this.lift(r, this.substringInfo?.(this.valued(s), startN, r.length) ?? this.baseInfo(r, [this.valued(s)]));
+      return this.lift(r, this.substringInfo?.(this.valued(s), this.valued(from), this.valued(to), r.length) ?? this.baseInfo(r, [this.valued(s), this.valued(from), this.valued(to)]));
     },
     concatenate: (l, r) => {
       const r1 = this.unwrap(l);
@@ -223,7 +204,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     codeUnitAt: (s, i) => {
       const idx = this.unwrap(i) as number;
       const r = (this.unwrap(s) as string).charAt(idx);
-      return this.lift(r, this.substringInfo?.(this.valued(s), idx, r.length) ?? this.baseInfo(r, [this.valued(s)]));
+      return this.lift(r, this.substringInfo?.(this.valued(s), this.valued(i), this.valued(i), r.length) ?? this.baseInfo(r, [this.valued(s), this.valued(i)]));
     },
     trim: (s, leading, trailing) => {
       let r = this.unwrap(s) as string;
@@ -303,11 +284,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     return w === value ? undefined : { result: w };
   }
 
-  // for-in/of iterates natively, so a wrapped primitive RHS (a plain object,
-  // not iterable) must be unwrapped before it hits the iteration protocol.
-  // Objects/arrays keep their identity through peek and their elements are
-  // stored Wrapped, so element info survives; string iteration yields raw
-  // chars whose per-char info is currently lost (no iterator model yet).
+  /* for-in/of iterates natively, currently string iteration losts info */
   forInOfObject(_id: number, value: unknown, _isForIn: boolean) {
     const raw = this.$.peek(value as Wrapped<unknown>);
     return raw === value ? undefined : { result: raw };
@@ -368,13 +345,6 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   }
 
   getFieldPre(_id: number, base: any, prop: any) {
-    // primitives are wrapped in plain objects with no prototype chain to String/Number/etc.,
-    // so x.at would resolve to undefined. unwrap the base for the lookup; the call site still
-    // sees the original wrapped base, so the model receives the wrapped `this`.
-    // The key must be unwrapped too: a wrapped prop is a plain proxy object, so a
-    // computed read `base[prop]` would coerce it to "[object Object]" and resolve to
-    // undefined (e.g. arr[i], split's result[k]). The frame keeps the wrapped prop so
-    // propagate still sees its info / can recover the s[i] char-access case.
     const frame: GetFieldFrame = { ty: 'getField', base: base as Wrapped, prop: prop as Wrapped };
     return { base: this.$.peek(base as Wrapped), prop: this.$.peek(prop as Wrapped), skip: false, frame };
   }
@@ -389,10 +359,12 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     if (typeof b === 'string') {
       const i = asStringIndex(p, b.length);
       if (i !== undefined) {
+        // Carry the prop's info into the offsets so an index-flow (s[taintedIndex])
+        // reaches substringInfo; a plain literal index propagates nothing.
         return this.$.substring(
           f.base as Wrapped<string>,
-          this.$.base(i, []),
-          this.$.base(i + 1, []),
+          this.$.base(i, [f.prop]),
+          this.$.base(i + 1, [f.prop]),
         );
       }
       // `s.length` is the one field read with op-aware meaning (strlen);
@@ -405,14 +377,9 @@ export abstract class FlowAnalysis<Info> implements Analysis {
         }
       }
     }
-    // Object/array elements are stored as Wrapped values that already carry
-    // their own info (e.g. split's substrings). Preserve it on read-back
-    // instead of re-deriving from [base, prop] (which would drop it).
     if (this.isWrapped(result) && !this.domain.isBottom(this.getInfo(result))) {
       return result as Wrapped<unknown>;
     }
-    // An info-less field read: let the analysis attribute it structurally
-    // (symbolic array element/length, symbolic-object field), else baseInfo flow.
     return this.lift(
       result,
       this.getFieldInfo?.(this.valued(f.base), this.valued(f.prop), this.valued(result))
@@ -473,10 +440,6 @@ export abstract class FlowAnalysis<Info> implements Analysis {
         // when modeled, the model dispatched above already returned a Wrapped value
         if (f.modeled) return result as unknown as Wrapped<unknown>;
         if (f.escaped.length > 0) this.escaper.restore(f.escaped);
-        // Let the analysis model the native's result and/or track a mutation it
-        // performed on an operand (push/pop on a symbolic array). `entries` are
-        // the original wrapped receiver+args (the escape seam preserves their
-        // identity + info), so this sees the operands the native saw.
         const opaqueInfo = this.opaqueCallInfo?.(_f, Array.from(f.entries), result);
         if (opaqueInfo !== undefined) return this.lift(result, opaqueInfo);
         if (this.isWrapped(result) && !this.domain.isBottom(this.getInfo(result))) {
@@ -486,11 +449,6 @@ export abstract class FlowAnalysis<Info> implements Analysis {
         return this.$.base(result, parents);
       }
       case 'transparent': {
-        // Operations inside the callee already propagated info to `result`.
-        // If we re-run baseInfo here we'd overwrite char-level info with a
-        // coarser bit-only info derived from the args. Preserve any info the
-        // callee attached; only fall back to base propagation when the callee
-        // produced a value with no info (e.g. a literal return).
         if (this.isWrapped(result) && !this.domain.isBottom(this.getInfo(result))) {
           return result as Wrapped<unknown>;
         }

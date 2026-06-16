@@ -8,48 +8,17 @@ declare const D$: { analysis: ConcolicAnalysis } & Record<string, any>;
 
 const GHOSTS = installPrelude();
 
-// A branch actually taken during concrete execution: `constraint` is the
-// symbolic form of the condition, `taken` whether it was truthy. Together these
-// form the path condition leading up to a __symbolic_assert__. `binder` marks a
-// constraint the engine introduced itself rather than a real branch — a symbolic
-// array's `length >= 0` and the `0 <= i < length` element-access bounds (ExpoSE's
-// SymbolicState binder PCs): part of the conjunction, but never flipped to spawn
-// an alternative input.
 type PathConstraint = { id: number; constraint: Sym; taken: boolean; binder?: boolean };
-
-// Per-symbolic-array bookkeeping kept off the Info (which holds the live sequence
-// expression: a `var` initially, a `seqConcat`/`seqExtract` after push/pop). The
-// element sort is fixed at creation from the seed's first element and is what a
-// push must type-match (ExpoSE wipes the symbolic array on a mismatched push).
 type ArrayMeta = { elemSort: Sort };
-
-// Per-symbolic-object bookkeeping. Fields are minted lazily on first read and
-// cached so repeated reads return the same symbol (ExpoSE's SymbolicObject).
 type ObjectMeta = { name: string; counter: number; fields: Map<string, Sym> };
 
-// We build on FlowAnalysis purely for its identity-based wrapping: every value
-// (incl. primitives) is a uniquely-wrapped object tracked by symbol id, so two
-// distinct literal `2`s are distinct entries — no value-keyed aliasing. The
-// symbolic expression for a value is stored as its `Info` (= Sym), built up
-// purely through the op-aware Info hooks (binaryInfo/unaryInfo/lengthInfo/
-// substringInfo/concatenateInfo/truncateInfo/conditionInfo and, for symbolic
-// arrays/objects, getFieldInfo + opaqueCallInfo) — no `Analysis` method
-// overrides, no frame types. Both user-code ops (via the instrumenter) and
-// model/polyfill ops (via `$`) funnel through these same hooks.
 export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   result: unknown;
   private pathConstraints: PathConstraint[] = [];
 
-  // Symbolic arrays/objects, keyed by the (identity-stable) container object.
-  // A symbolic array additionally carries its live sequence Sym as its `Info`;
-  // a symbolic object carries no Info and is recognised solely by membership.
   private arrayMeta = new WeakMap<object, ArrayMeta>();
   private objectMeta = new WeakMap<object, ObjectMeta>();
 
-  // The prelude ghosts (__symbolic__/__symbolic_assert__) stay transparent so
-  // they receive wrapped values; every other uncontrolled callee (natives,
-  // uninstrumented JS) is opaque per the framework default, so wrapped
-  // primitives are stripped before they reach native code.
   protected transparentCalls = GHOSTS;
 
   domain: InfoDomain<Sym | undefined> = {
@@ -57,28 +26,18 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     isBottom: (info): info is undefined => info === undefined,
   };
 
-  // baseInfo is operator-unaware (it can't tell `.length` from any other field
-  // read), so it builds no real structure — every genuine symbolic value comes
-  // from the op-aware hooks (which run first). Reaching baseInfo with a SYMBOLIC
-  // parent therefore means a symbolic value flowed through an op with no model:
-  // information loss, marked `lost`. (Unscoped on purpose: this also fires inside
-  // modeled builtins' internal fallbacks, so a model that bails to baseInfo taints
-  // its result — whether that is desirable for padStart/startsWith/indexOf is
-  // under review. A purely concrete op stays inert.)
   protected baseInfo(_value: unknown, parents: Valued<Sym>[]): Sym | undefined {
     return parents.some((p) => p.info !== undefined) ? { kind: 'lost' } : undefined;
   }
 
-  // The model routes string-builtin results (charAt/slice/substring/...) and the
-  // `s[i]` char-access through these hooks, so they DO carry symbolic structure.
   protected substringInfo(
     src: Valued<Sym>,
-    start: number,
+    start: Valued<Sym, number>,
+    _end: Valued<Sym, number>,
     resultLength: number,
   ): Sym | undefined {
-    // Non-symbolic source -> result has no symbolic dependency.
     if (src.info === undefined) return undefined;
-    return { kind: 'substr', src: src.info, start, length: resultLength };
+    return { kind: 'substr', src: src.info, start: start.value, length: resultLength };
   }
 
   protected concatenateInfo(
@@ -87,21 +46,12 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     right: Valued<Sym>,
     _rightLength: number,
   ): Sym | undefined {
-    // `Valued` carries each side's concrete value, so a non-symbolic side is
-    // reconstructed as a string constant (via `symOf`) rather than dropped — the
-    // common `sym + "literal"` shape (str.++ s "literal"). Same as binaryInfo: no
-    // node when both sides are constant.
     const l = this.symOf(left);
     const r = this.symOf(right);
     if (l.kind === 'const' && r.kind === 'const') return undefined;
     return { kind: 'concat', left: l, right: r };
   }
 
-  // Arithmetic (`+ - * / …`) or ordering comparison (`< <= > >=`), from user code
-  // OR a generated model — both funnel here. Build the operator Sym; a
-  // non-symbolic side keeps its constant via `symOf`, two constants -> no node
-  // (keeps it out of the path condition). A `+` reaching here is numeric — string
-  // `+` is split to concatenate upstream (applyBinary step 1c / codegen).
   protected binaryInfo(op: string, l: Valued<Sym>, r: Valued<Sym>): Sym | undefined {
     const left = this.symOf(l);
     const right = this.symOf(r);
@@ -115,21 +65,12 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     return { kind: 'unary', op, operand };
   }
 
-  // `s.length` — both user-code `.length` and model-side `$.length` route here:
-  // a symbolic string's length stays symbolic as a strlen node.
   protected lengthOfStringInfo(s: Valued<Sym>): Sym | undefined {
     const src = this.symOf(s);
     if (src.kind === 'const') return undefined;
     return { kind: 'strlen', src };
   }
 
-  // A non-string field read `base[prop]`. Two symbolic sources:
-  //  - symbolic object: lazily mint (and cache) a fresh symbol for the field,
-  //    ExpoSE SymbolicObject. The sort is inferred from the field's concrete
-  //    value (an unseeded field is `undefined` -> Int, concolic's default).
-  //  - symbolic array (base.info is the live sequence Sym): `.length` -> arrlen,
-  //    an integer index -> a `select`, guarding the read with `0 <= i < length`
-  //    (ExpoSE symbolicField). A symbolic index keeps its symbolic form.
   protected getFieldInfo(base: Valued<Sym>, prop: Valued<Sym>, result: Valued<Sym>): Sym | undefined {
     const container = base.value;
     if (container === null || typeof container !== 'object') return undefined;
@@ -166,10 +107,6 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     return undefined;
   }
 
-  // An opaque (native) call on a symbolic array. We model exactly the operations
-  // ExpoSE's ArrayModels covers; any other native is a NoOp (the array keeps its
-  // current symbolic expression, which then goes stale through an unmodeled
-  // mutation — the same gap ExpoSE NoOps). `entries[0]` is the receiver array.
   protected opaqueCallInfo(f: unknown, entries: unknown[], _result: unknown): Sym | undefined {
     const base = entries[0];
     if (base === null || typeof base !== 'object') return undefined;
@@ -213,8 +150,6 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     return undefined;
   }
 
-  // ToIntegerOrInfinity truncate: keep a symbolic numeric operand symbolic across
-  // the integer coercion (identity in concolic's Int domain).
   protected truncateInfo(x: Valued<Sym>): Sym | undefined {
     const src = this.symOf(x);
     if (src.kind === 'const') return undefined;

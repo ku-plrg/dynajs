@@ -541,13 +541,13 @@
       },
       {
         "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
+        "actual": "detected",
+        "result": "FP"
       },
       {
         "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
+        "actual": "detected",
+        "result": "FP"
       }
     ],
     "taint_split": [

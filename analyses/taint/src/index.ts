@@ -6,10 +6,6 @@ declare const D$: { analysis: Analysis } & Record<string, any>;
 
 const GHOSTS = installPrelude();
 
-// NOTE maybe we should extend TaintInfo = { ... } | undefined for performace?
-// `origin` is the source site where this taint was first introduced (set in
-// setTaint, carried forward on propagation). This is the lean provenance —
-// "where did it come from" — not the full flow DAG; extend to a path later.
 type TaintInfo = { bit: boolean; chars?: boolean[]; origin?: Site };
 
 function infoTainted(info: TaintInfo | undefined): boolean {
@@ -18,8 +14,6 @@ function infoTainted(info: TaintInfo | undefined): boolean {
   return info.chars?.some((c) => c) ?? false;
 }
 
-// The origin of the first tainted parent that carries one — what a propagated
-// value inherits as its own origin.
 function inheritedOrigin(parents: Valued<TaintInfo>[]): Site | undefined {
   for (const p of parents) {
     if (infoTainted(p.info) && p.info?.origin !== undefined) return p.info.origin;
@@ -29,10 +23,6 @@ function inheritedOrigin(parents: Valued<TaintInfo>[]): Site | undefined {
 
 export class TaintAnalysis extends FlowAnalysis<TaintInfo> {
 
-  // The prelude ghosts (sources/sinks) stay transparent so they receive wrapped
-  // values; every other uncontrolled callee (natives, uninstrumented JS) is
-  // opaque per the framework default, so wrapped primitives are stripped before
-  // they reach native code (parseInt, JSON.stringify, Map.set, ...).
   protected transparentCalls = GHOSTS;
 
   domain: InfoDomain<TaintInfo> = {
@@ -49,16 +39,19 @@ export class TaintAnalysis extends FlowAnalysis<TaintInfo> {
     return { bit: true, origin };
   }
 
-  protected substringInfo(src: Valued<TaintInfo>, start: number, resultLength: number): TaintInfo {
+  protected substringInfo(src: Valued<TaintInfo, string>, start: Valued<TaintInfo, number>, end: Valued<TaintInfo, number>, resultLength: number): TaintInfo {
+    const indexTainted = infoTainted(start.info) || infoTainted(end.info);
     const chars: boolean[] = [];
     for (let i = 0; i < resultLength; i++) {
-      if (src.info?.chars !== undefined) {
-        chars.push(src.info.chars[start + i] === true);
+      if (indexTainted) {
+        chars.push(true);
+      } else if (src.info?.chars !== undefined) {
+        chars.push(src.info.chars[start.value + i] === true);
       } else {
         chars.push(src.info?.bit ?? false);
       }
     }
-    return { bit: chars.some((c) => c), chars, origin: inheritedOrigin([src]) };
+    return { bit: chars.some((c) => c), chars, origin: inheritedOrigin([src, start, end]) };
   }
 
   protected concatenateInfo(left: Valued<TaintInfo>, leftLength: number, right: Valued<TaintInfo>, rightLength: number): TaintInfo {
@@ -77,10 +70,6 @@ export class TaintAnalysis extends FlowAnalysis<TaintInfo> {
     return infoTainted(this.getInfo(value));
   }
 
-  // Prelude entry point: `indexW` arrives still wrapped (the instrumented call
-  // site hands ghost functions wrapped values). Project it to its concrete
-  // index via the framework's `valued` — the prelude itself never touches
-  // Wrapped/unwrap.
   isTaintedAt(value: unknown, indexW: unknown): boolean {
     const raw = this.valued(indexW).value;
     const index = typeof raw === "number" ? raw : Number(raw);
@@ -92,18 +81,11 @@ export class TaintAnalysis extends FlowAnalysis<TaintInfo> {
     return info.bit;
   }
 
-  // Prelude entry point for `__assert__`: project the (wrapped) condition to its
-  // concrete truth value and throw on falsy. Same convention as the taint
-  // queries above — the prelude forwards a wrapped value, projection lives here.
   assert(condW: unknown): void {
     if (this.valued(condW).value) return;
     throw new Error("Assertion failed");
   }
 
-  // Prelude entry point for `__assert_taint__(v, expected)`: emit this assert's
-  // verdict marker. `expected` is the bench's ground truth (true = taint should
-  // reach `value`); printing actual-vs-expected lets the runner classify each
-  // assert as TP/FP/FN/TN, so one file can chain several taint checks.
   assertTaint(value: unknown, expectedArg: unknown): void {
     const expected = this.valued(expectedArg).value ? "detected" : "clean";
     const actual = this.isTainted(value) ? "detected" : "clean";
@@ -122,8 +104,6 @@ export class TaintAnalysis extends FlowAnalysis<TaintInfo> {
     }
   }
 
-  // Where this value's taint originated (the source site recorded at setTaint,
-  // carried forward through propagation), or undefined if untainted.
   taintOrigin(value: unknown): Site | undefined {
     const info = this.getInfo(value);
     return infoTainted(info) ? info.origin : undefined;
