@@ -104,18 +104,6 @@
             return { result: val };
         },
 
-        // _return: function (iid, val) {
-        //     return { result: val };
-        // },
-
-        // _throw: function (iid, val) {
-        //     return { result: val };
-        // },
-
-        // _with: function (iid, val) {
-        //     return { result: val };
-        // },
-
         functionEnter: function (iid, f, base, args, isAsync, isGenerator) {
             stringify({ type: "functionEnter", fo: '', level: __level });
             ++__level;
@@ -125,13 +113,6 @@
             stringify({ type: "functionExit", fo: 'todo', level: __level });
             --__level;
         },
-
-        // scriptEnter: function (iid, instrumentedFileName, originalFileName) {
-        // },
-
-        // scriptExit: function (iid, wrappedExceptionVal) {
-        //     return { wrappedExceptionVal: wrappedExceptionVal, isBacktrack: false };
-        // },
 
         binaryPre: function (iid, op, left, right, isOpAssign, isSwitchCaseComparison, isComputed) {
             stringify({ type: "binaryPre", op, level: __level });
@@ -156,31 +137,5 @@
             --__level;
             return { result: result };
         },
-
-        // condition: function (id, op, value) {
-        //     return { result: value };
-        // },
-
-        // instrumentCodePre: function (iid, code, isDirect) {
-        //     return { code: code, skip: false };
-        // },
-
-        // instrumentCode: function (iid, newCode, newAst, isDirect) {
-        //     return { result: newCode };
-        // },
-
-        // endExpression: function (iid) {
-        // },
-
-        // endExecution: function () {
-        // },
-
-        // runInstrumentedFunctionBody: function (iid, f, functionIid, functionSid) {
-        //     return false;
-        // },
-
-        // onReady: function (cb) {
-        //     cb();
-        // },
     };
 }());
