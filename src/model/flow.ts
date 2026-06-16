@@ -166,16 +166,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     return this.lift(v, this.binaryInfo?.(op, this.valued(l), this.valued(r)) ?? this.baseInfo(v, [this.valued(l), this.valued(r)]));
   }
 
-  // A branch point. Unwrap so native control flow sees the raw boolean, and hand
-  // the condition to the `conditionInfo` hook so a path-tracking analysis can
-  // record it. This is the same hook the instrumenter dispatches to for
-  // `D$.C(id, op, value)` on user code AND the one model-internal branches funnel
-  // through (SpecRuntime.condition), so both go through one place.
   condition(id: number, _op: string, value: unknown): { result: unknown } {
-    // User-code branches carry a globally-unique id → a code site. Model-internal
-    // branches (SpecRuntime.condition, op === 'model') use function-local bids
-    // that collide with user ids, so don't resolve them as code: inside a model
-    // dispatch `currentBuiltin` is already set, so site() reports the builtin.
     if (_op !== 'model') this.currentId = id;
     const raw = this.unwrap(value as Wrapped<unknown>);
     this.conditionInfo?.(id, this.valued(value), Boolean(raw));
