@@ -23,12 +23,6 @@ function isInstrumentedFn(f: unknown): boolean {
   return d$?.isInstrumented?.(f) ?? false;
 }
 
-// The user-facing view of a value: its concrete `value` plus the analysis `info`
-// attached to it (`info` is undefined when nothing has been attached yet). This
-// is the only currency the Info hooks speak — the framework projects each
-// internal `Wrapped` into a `Valued` before calling a hook, so a user analysis
-// never has to touch `Wrapped`/`Unwrapped`.
-// export type Valued<Info, Value = unknown> = { info: Info | undefined; value: Value };
 export type Valued<Info, Value = unknown> = ValuedGeneral<{ 'info': Info | undefined }, Value>;
 
 export type InfoDomain<Info> = {
@@ -36,10 +30,6 @@ export type InfoDomain<Info> = {
   isBottom: (info: Info) => boolean;
 }
 
-// How the analysis treats call boundaries: a function for which `isOpaque`
-// returns true is a black box — the framework doesn't trace inside it and
-// propagates info to its result via baseInfo over the (unwrapped) args.
-// ("call policy", to keep clear of taint's source/sink "taint policy".)
 export type CallPolicy = {
   isOpaque: (f: unknown) => boolean;
 }
@@ -418,13 +408,13 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   invokeFunPre(_id: number, _f: any, _base: any, args: any, _isConstructor: boolean, _isMethod: boolean) {
     this.currentId = _id;
     const argArr = Array.from(args) as Wrapped[]; // can we do this without `as`?
-    // For method calls (`o.m(...)`), the receiver `o` is also a data
-    // dependency of the result — include it so baseInfo sees its taint.
     const entries: Wrapped[] = _isMethod ? [_base as Wrapped, ...argArr] : argArr;
-    if (Model.support(_f)) {
+    if (Model.support(_f) && !(entries.every((e) =>
+      this.isPrimitive(this.$.peek(e)) && this.domain.isBottom(this.getInfo(e))))) {
       // model takes wrapped args and returns a wrapped result; runtime will dispatch via Model.of(f)
       return { skip: true, f: _f, base: _base, args: argArr, frame: { ty: 'opaque', f: _f, modeled: true, entries, escaped: [] } };
     }
+    // fall through: A modeled builtin with all-bottom-primitive inputs
 
 
     if (this.policy.isOpaque(_f)) {
@@ -438,22 +428,18 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   invokeFun(_id: number, _f: any, _base: any, _args: any, result: any, _isConstructor: boolean, _isMethod: boolean, frame: unknown) {
     required(frame !== undefined, 'invokeFun hook missing frame');
     this.currentId = _id;
-    if (Model.support(_f)) {
-      let f : Function = Model.ofBuiltin(_f);
-      result = this.withBuiltinSite(builtinName(_f), () => f(this.$, _base as Wrapped, ...(_args as Wrapped[])));
+    const f = frame as CallFrame;
+    if (f.ty === 'opaque' && f.modeled) {
+      const modelFn = Model.ofBuiltin(_f);
+      result = this.withBuiltinSite(builtinName(_f), () => modelFn(this.$, _base as Wrapped, ...(_args as Wrapped[])));
     }
 
-    const f = frame as CallFrame;
     const transformed = (() => {
           switch (f.ty) {
       case 'opaque': {
-        // when modeled, the runtime invoked Model.of(f) which already returned a Wrapped value
+        // when modeled, the model dispatched above already returned a Wrapped value
         if (f.modeled) return result as unknown as Wrapped<unknown>;
         if (f.escaped.length > 0) this.escaper.restore(f.escaped);
-        // An already-wrapped result means the callee was controlled after all
-        // (e.g. an instrumented function the policy misclassified, or a value
-        // that round-tripped through the native untouched) — re-running
-        // baseInfo would coarsen or double-wrap it.
         if (this.isWrapped(result) && !this.domain.isBottom(this.getInfo(result))) {
           return result as Wrapped<unknown>;
         }
