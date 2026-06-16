@@ -1,6 +1,7 @@
-import { execFileSync } from 'node:child_process';
+import { writeFileSync } from 'node:fs';
 import { FlowAnalysis, type Valued, type InfoDomain } from '@/model/index.js';
-import { type Sym, type Sort, UnsupportedSym, symToString } from '@shared/sym.js';
+import { type Sym, type Sort, symToString } from '@shared/sym.js';
+import { solveValidity, solveModel } from './smt.js';
 import { installPrelude } from './prelude.js';
 
 declare const D$: { analysis: ConcolicAnalysis } & Record<string, any>;
@@ -11,130 +12,6 @@ const GHOSTS = installPrelude();
 // symbolic form of the condition, `taken` whether it was truthy. Together these
 // form the path condition leading up to a __symbolic_assert__.
 type PathConstraint = { id: number; constraint: Sym; taken: boolean };
-
-// ---------------------------------------------------------------------------
-// SMT-LIB translation
-//
-// Scope: integer arithmetic, comparisons, boolean logic, and a slice of the z3
-// String theory — string equality, concatenation (`str.++`), fixed-window
-// substring/char-access (`str.substr`), and length (`str.len`) — enough for the
-// concolic microbenches. Operators outside this set (bitwise, **, string
-// ordering `< > <= >=`, ...) throw `UnsupportedSym`; symbolicAssert turns that
-// into an `error` verdict rather than silently mis-translating.
-// (`Sym`/`Sort`/`UnsupportedSym`/`symToString` live in the engine-neutral
-// `@shared/sym.js`; only the SMT-LIB translation below is concolic-only.)
-// ---------------------------------------------------------------------------
-
-// op -> SMT-LIB builder. Comparisons/arith map almost 1:1; equality and
-// inequality need (=)/(not (=)); integer / becomes div. `%` can't reuse SMT's
-// `mod`: SMT-LIB `mod` is Euclidean (result always in [0, |b|)), whereas JS `%`
-// is truncated (the remainder takes the sign of the *dividend*, so e.g.
-// -2 % 3 === -2, not 1). We encode the JS rule as sign(a) * (|a| mod |b|) — the
-// truncated remainder — so negative-dividend modulo solves faithfully instead
-// of producing a spurious counterexample.
-const SMT_BINARY: Record<string, (a: string, b: string) => string> = {
-  '===': (a, b) => `(= ${a} ${b})`,
-  '==': (a, b) => `(= ${a} ${b})`,
-  '!==': (a, b) => `(not (= ${a} ${b}))`,
-  '!=': (a, b) => `(not (= ${a} ${b}))`,
-  '<': (a, b) => `(< ${a} ${b})`,
-  '<=': (a, b) => `(<= ${a} ${b})`,
-  '>': (a, b) => `(> ${a} ${b})`,
-  '>=': (a, b) => `(>= ${a} ${b})`,
-  '+': (a, b) => `(+ ${a} ${b})`,
-  '-': (a, b) => `(- ${a} ${b})`,
-  '*': (a, b) => `(* ${a} ${b})`,
-  '/': (a, b) => `(div ${a} ${b})`,
-  '%': (a, b) =>
-    `(ite (>= ${a} 0) (mod ${a} (abs ${b})) (- (mod (- ${a}) (abs ${b}))))`,
-  '&&': (a, b) => `(and ${a} ${b})`,
-  '||': (a, b) => `(or ${a} ${b})`,
-};
-
-// SMT-LIB string literal: double quotes, with an embedded `"` escaped as `""`.
-function smtString(v: string): string {
-  return `"${v.replace(/"/g, '""')}"`;
-}
-
-function constToSmt(value: unknown): string {
-  if (typeof value === 'boolean') return value ? 'true' : 'false';
-  if (typeof value === 'number' && Number.isInteger(value)) {
-    return value < 0 ? `(- ${-value})` : `${value}`;
-  }
-  if (typeof value === 'string') return smtString(value);
-  throw new UnsupportedSym(`unsupported constant: ${JSON.stringify(value)}`);
-}
-
-function symToSmt(s: Sym, vars: Map<string, Sort>): string {
-  switch (s.kind) {
-    case 'const':
-      return constToSmt(s.value);
-    case 'var':
-      vars.set(s.name, s.sort);
-      return s.name;
-    case 'unary': {
-      const x = symToSmt(s.operand, vars);
-      if (s.op === '!') return `(not ${x})`;
-      if (s.op === '-') return `(- ${x})`;
-      if (s.op === '+') return x;
-      throw new UnsupportedSym(`unsupported unary op: ${s.op}`);
-    }
-    case 'binary': {
-      const build = SMT_BINARY[s.op];
-      if (!build) throw new UnsupportedSym(`unsupported binary op: ${s.op}`);
-      return build(symToSmt(s.left, vars), symToSmt(s.right, vars));
-    }
-    case 'concat':
-      return `(str.++ ${symToSmt(s.left, vars)} ${symToSmt(s.right, vars)})`;
-    case 'substr':
-      return `(str.substr ${symToSmt(s.src, vars)} ${s.start} ${s.length})`;
-    case 'strlen':
-      return `(str.len ${symToSmt(s.src, vars)})`;
-    case 'truncate':
-      // concolic models numbers as Int, so truncate-toward-zero is identity.
-      return symToSmt(s.src, vars);
-  }
-}
-
-// Ask z3 whether `assertSym` necessarily holds under the path condition `pc`,
-// by checking `pc ∧ ¬assert` for satisfiability:
-//   unsat -> "valid"   (no counterexample: assert always holds)
-//   sat   -> "invalid" (a model violates the assert)
-//   else  -> "unknown"
-function solveValidity(
-  pc: PathConstraint[],
-  assertSym: Sym,
-): 'valid' | 'invalid' | 'unknown' {
-  const vars = new Map<string, Sort>();
-  const lines: string[] = [];
-  for (const p of pc) {
-    const c = symToSmt(p.constraint, vars);
-    lines.push(`(assert ${p.taken ? c : `(not ${c})`})`);
-  }
-  lines.push(`(assert (not ${symToSmt(assertSym, vars)}))`);
-
-  // The String theory needs an explicit logic; the all-Int path stays bare so
-  // existing integer benches translate byte-for-byte as before.
-  const hasString = [...vars.values()].includes('String');
-  const smt =
-    (hasString ? '(set-logic ALL)\n' : '') +
-    [...vars].map(([v, sort]) => `(declare-const ${v} ${sort})`).join('\n') +
-    '\n' +
-    lines.join('\n') +
-    '\n(check-sat)\n';
-
-  let out: string;
-  try {
-    out = execFileSync('z3', ['-in'], { input: smt, encoding: 'utf8' }).trim();
-  } catch (e) {
-    throw new UnsupportedSym(`z3 invocation failed: ${(e as Error).message}`);
-  }
-  if (out.startsWith('unsat')) return 'valid';
-  if (out.startsWith('sat')) return 'invalid';
-  return 'unknown';
-}
-
-// ---------------------------------------------------------------------------
 
 // We build on FlowAnalysis purely for its identity-based wrapping: every value
 // (incl. primitives) is a uniquely-wrapped object tracked by symbol id, so two
@@ -248,19 +125,19 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
 
   // --- prelude entry points ------------------------------------------------
 
-  // Tag the (already-wrapped) seed as symbolic variable `name` and return it so
-  // the program keeps running concretely on it. Identity-wrapping means the
-  // seed's value never aliases an unrelated literal of the same value.
+  // Introduce symbolic variable `name`, returning a wrapped value the program
+  // runs concretely on. Replay (M3): if the Distributor's seed input carries a
+  // concrete for this variable (a child input from a negated branch), drive
+  // execution with THAT value so we follow the intended path; otherwise keep the
+  // program's own seed. Either way `make` mints a fresh value tagged with the
+  // `var` Info — the concrete's type fixes the SMT sort (string -> String, else
+  // Int, the only two sorts we translate).
   makeSymbolic(name: unknown, seed: unknown): unknown {
-    // The seed's concrete type fixes the variable's SMT sort: a string seed is a
-    // String variable, anything else an Int (the only two sorts we translate).
-    const sort: Sort = typeof this.valued(seed).value === 'string' ? 'String' : 'Int';
-    this.setInfo(seed, {
-      kind: 'var',
-      name: String(this.valued(name).value),
-      sort,
-    });
-    return seed;
+    const varName = String(this.valued(name).value);
+    const input = this.seedInput();
+    const concrete = varName in input ? input[varName] : this.valued(seed).value;
+    const sort: Sort = typeof concrete === 'string' ? 'String' : 'Int';
+    return this.make(concrete, { kind: 'var', name: varName, sort });
   }
 
   symbolicAssert(condArg: unknown, expectedArg: unknown): void {
@@ -301,6 +178,85 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
         constraint: symToString(p.constraint),
       })),
     };
+    this.writeExpoSEResult();
+  }
+
+  // ExpoSE drop-in: run as ExpoSE's analyseScript, the Distributor spawns us with
+  // a seed input on argv and reads two result files on exit (Spawn.js + the
+  // SymbolicExecution exitFn). We honour that contract: EXPOSE_OUT_PATH gets
+  // { pc, input, errors, alternatives, stats }, EXPOSE_COVERAGE_PATH the coverage
+  // map. `alternatives` are the negated-branch child inputs the Distributor
+  // re-queues to drive multi-path search (M2); coverage stays empty until M4.
+  // Without the env vars (e.g. the microbench) this is a no-op; the @@DJX_VERDICT
+  // path is untouched.
+  private writeExpoSEResult(): void {
+    const outPath = process.env.EXPOSE_OUT_PATH;
+    if (!outPath) return;
+    // `stats` is a JSON *string* (ExpoSE Stats.export() = JSON.stringify(data);
+    // the Distributor re-parses it via Stats.merge). An empty run serialises to "{}".
+    writeFileSync(
+      outPath,
+      JSON.stringify({
+        pc: this.pcToString(this.pathConstraints),
+        input: this.seedInput(),
+        errors: [],
+        alternatives: this.alternatives(),
+        stats: JSON.stringify({}),
+      }),
+    );
+    const covPath = process.env.EXPOSE_COVERAGE_PATH;
+    if (covPath) writeFileSync(covPath, JSON.stringify({}));
+  }
+
+  // Readable path-condition rendering (ExpoSE _stringPC analogue; only the `pc`
+  // display field, not parsed by the Distributor).
+  private pcToString(cs: readonly { constraint: Sym; taken: boolean }[]): string {
+    return cs.map((p) => `${p.taken ? '' : '¬'}${symToString(p.constraint)}`).join(', ');
+  }
+
+  // Child inputs for the unexplored side of each branch (ExpoSE
+  // SymbolicState.alternatives/_buildPC). From `_bound` onward, negate branch i
+  // while holding branches [0..i-1] at their taken polarity, solve for a model,
+  // and emit it as a child input tagged `_bound = i+1` (a re-run then fixes the
+  // prefix and explores past i). The Distributor re-queues these
+  // (Center._expandAlternatives) — that is how multi-path search proceeds. A
+  // branch we can't translate or that is infeasible is skipped, not fatal.
+  private alternatives(): { input: Record<string, unknown>; pc: string; forkIid: number }[] {
+    const bound =
+      typeof this.seedInput()._bound === 'number' ? (this.seedInput()._bound as number) : 0;
+    const pcs = this.pathConstraints;
+    const out: { input: Record<string, unknown>; pc: string; forkIid: number }[] = [];
+    for (let i = bound; i < pcs.length; i++) {
+      const branches = [...pcs.slice(0, i), { constraint: pcs[i].constraint, taken: !pcs[i].taken }];
+      let model;
+      try {
+        model = solveModel(branches);
+      } catch {
+        continue; // unsupported op in this branch -> can't flip
+      }
+      if (!model) continue; // negated branch infeasible under the prefix
+      const input: Record<string, unknown> = Object.fromEntries(model);
+      input._bound = i + 1;
+      out.push({ input, pc: this.pcToString(branches), forkIid: pcs[i].id });
+    }
+    return out;
+  }
+
+  // The seed input the Distributor replayed (last argv entry — the ExpoSE
+  // convention; see Analyser.js): named symbolic values + a `_bound`. Cached; a
+  // fresh unbounded seed when absent or unparseable (argv tail is the target path).
+  private _seed?: Record<string, unknown>;
+  private seedInput(): Record<string, unknown> {
+    if (this._seed) return this._seed;
+    let seed: Record<string, unknown> = { _bound: 0 };
+    const raw = process.argv[process.argv.length - 1];
+    try {
+      const parsed = raw ? JSON.parse(raw) : null;
+      if (parsed && typeof parsed === 'object') seed = parsed as Record<string, unknown>;
+    } catch {
+      /* not JSON -> fresh seed */
+    }
+    return (this._seed = seed);
   }
 }
 

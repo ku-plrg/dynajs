@@ -129,6 +129,15 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     return { info: this.getInfo(v) satisfies Info, value: this.unwrap(v as Wrapped<V>) } satisfies Valued<Info, V>;
   }
 
+  // Dual of `valued` ({value, info} ⇒ Wrapped): construct a wrapped value carrying
+  // `value` as its concrete payload and `info` as its attached Info. Lets an
+  // analysis *introduce* a value into the flow — concolic replay, fuzz/mutation
+  // inputs — not only annotate existing ones. `info` defaults to bottom for a
+  // plain wrapped concrete.
+  protected make<V>(value: V, info: Info = this.domain.getBottom()): Wrapped<V> {
+    return this.lift(value, info);
+  }
+
   private lift<T>(value: T, info: Info): Wrapped<T> {
     const w = this.wrap(value);
     // Bottom carries no information, so skip the map entry — getInfo's miss
