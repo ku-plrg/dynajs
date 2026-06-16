@@ -49,7 +49,6 @@ function mergeFileToRuntime(lo: number, hi: number, file: string): void {
   runtime.files.push([lo, hi, file]);
 }
 
-// instrument a JS file
 export function instrumentFile(filename: string, options: StateOption): string {
   const code = readFile(filename);
   const { verbose } = options;
@@ -67,7 +66,6 @@ export function instrumentFile(filename: string, options: StateOption): string {
   return instrumentedCode;
 }
 
-// return the instrumented code
 export function instrument(code: string, options: StateOption): string {
   if (options.verbose) header('Instrumenting the code...');
   const locMode: PosMode = options.pos ?? POS_MODE_DEFAULT;

@@ -211,7 +211,6 @@ export const visitors: RecursiveVisitors<State> = {
       head();
       state.walk(body);
     }
-    // general head function
     function head() {
       state.write('for (');
       if (init != null) {

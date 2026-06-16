@@ -21,31 +21,27 @@ export function required(condition: boolean, message: string): void {
   }
 }
 
-// read the file
 export function readFile(filename: string): string {
   if (!fs.existsSync(filename)) err(`File not found: \`${filename}\`.`);
   return fs.readFileSync(filename, 'utf-8').toString();
 }
 
-// walk through a directory recursively
 export function walkDir(dir: string, callback: (filename: string) => void): void {
   fs.readdirSync(dir, { withFileTypes: true }).forEach(entry => {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
-      walkDir(fullPath, callback);   // ⬅ 재귀 호출
+      walkDir(fullPath, callback);
     } else {
-      callback(fullPath);            // ⬅ 파일 발견 시 callback 호출
+      callback(fullPath);
     }
   });
 }
 
-// write the file
 export function writeFile(filename: string, content: string): void {
   fs.mkdirSync(path.dirname(filename), { recursive: true });
   fs.writeFileSync(filename, content);
 }
 
-// get extension from a filename
 export function getExtension(filename: string): string {
   const parts = filename.split('.');
   if (parts.length <= 1) return '';
@@ -58,7 +54,6 @@ export function getNameaWithExtension(filename: string): [string, string] {
   return [filename.substring(0, filename.length - ext.length - 1), ext];
 }
 
-// get name without extension from a filename
 export function getNameWithoutExtension(filename: string): string {
   const ext = getExtension(filename);
   if (ext === '') return filename;
@@ -75,7 +70,6 @@ export function getStatName(filename: string): string {
   return `${name}__${SCRIPT_NAME}__.dynajs-stats-json`;
 }
 
-// get command arguments
 export function getArgs(cmd: string, argv: any, expected: number): string[] {
   if (argv._.length - 1 != expected) {
     err(`Exactly ${expected} arguments are required for \`${cmd}\`.`);
@@ -83,12 +77,10 @@ export function getArgs(cmd: string, argv: any, expected: number): string[] {
   return argv._.slice(1);
 }
 
-// read the JSON file
 export function readJSON(filename: string): any {
   return JSON.parse(readFile(filename));
 }
 
-// get the string representation of a value
 export function getString(value: any): string {
   if (typeof value === 'string') return value;
   if (value === null) return 'null';
@@ -97,7 +89,6 @@ export function getString(value: any): string {
   return inspect(value, { depth: 3 });
 }
 
-// get the JSON representation of a value
 export function stringify(value: any): string {
   return JSON.stringify(value, (key, value) => {
     if (typeof value === 'bigint') {
@@ -107,10 +98,8 @@ export function stringify(value: any): string {
   }, 2)
 }
 
-// a horizontal bar
 export const BAR = '-'.repeat(80);
 
-// log a message
 export function log(
   value: any,
   color: (msg: string) => string = chalk.white,
@@ -138,41 +127,34 @@ export function log(
   print(msg);
 }
 
-// header message
 export function header(msg: string): void {
   log(BAR);
   log(msg);
   log(BAR);
 }
 
-// warning message
 export function warn(value: any) {
   log(value, chalk.yellow, LogLevel.WARN, 'WARN');
 }
 
-// error message
 export function err(value: any) {
   log(value, chalk.red, LogLevel.ERROR, 'ERROR');
 }
 
-// error message, with throwing an exception
 export function raise(value: any): never {
   err(value);
   throw new Error(getString(value));
 }
 
-// to-do message
 export function todo(msg: string = '') {
   log(msg, chalk.red, LogLevel.ERROR, 'TODO', EXIT_CODE_TODO);
 }
 
-// parse the string into an AST
 export function parse(code: string, isScript: boolean): Program {
   const sourceType = isScript ? 'script' : 'module';
   return acorn.parse(code, {locations: true, ecmaVersion: ECMA_VERSION, sourceType });
 }
 
-// input validity check
 export function inputValidCheck(inputs: any): void {
   if (!Array.isArray(inputs)) {
     err('Input set must be an array.');
@@ -185,7 +167,6 @@ export function inputValidCheck(inputs: any): void {
   }
 }
 
-// cursor in the code
 export class Cursor {
   index: number;
   line: number;
@@ -199,7 +180,6 @@ export class Cursor {
   toString = (): string => `${this.line}:${this.col}`;
 }
 
-// range of code
 export class Range {
   start: Cursor;
   end: Cursor;
@@ -217,7 +197,6 @@ export class Range {
   toString = (): string => `${this.start.toString()}-${this.end.toString()}`;
 }
 
-// string builder
 export class StringBuilder {
   indent: string;
   result: string;
@@ -243,7 +222,6 @@ export class StringBuilder {
   }
 }
 
-// variable kind
 export enum VarKind {
   Var = 0,
   Let = 1,

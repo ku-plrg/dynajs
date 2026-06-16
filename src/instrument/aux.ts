@@ -18,7 +18,6 @@ import {
 // -----------------------------------------------------------------------------
 // helpers
 // -----------------------------------------------------------------------------
-// collect all identifiers in a pattern
 export function collectIdentifiers(node: acorn.Pattern): string[] {
   const ids: string[] = [];
   function collect(node: acorn.Pattern): void {

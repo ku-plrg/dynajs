@@ -26,20 +26,17 @@ export function hasUseStrictDirective(body: readonly acorn.AnyNode[]): boolean {
 // logging functions
 // -----------------------------------------------------------------------------
 
-// logging script enter
 export function logScriptEnter(state: State, program: acorn.Node): void {
   if (!state.partial.scriptEnter) return;
   const { instrumentedPath: i, originalPath: o } = state;
   state.writeln(`${LOG.SCRIPT_ENTER}(${newId(program)}, "${i}", "${o}");`);
 }
 
-// logging script exit
 export function logScriptExit(state: State, program: acorn.Node): void {
   if (!state.partial.scriptExit) return;
   state.writeln(`${LOG.SCRIPT_EXIT}(${newId(program)});`);
 }
 
-// logging a function call
 export function logCall(state: State, callee: acorn.Node, isConstructor: boolean, callOptional: boolean): void {
   if (!state.partial.F) {
     if (isConstructor) state.write('new ');
@@ -181,7 +178,6 @@ export function logTaggedCall(state: State, tag: acorn.Node): void {
   }
 }
 
-// logging class
 export function logClassDeclare(state: State, node: acorn.Node, isExpr: boolean): void {
   const { id, superClass, body } = node as acorn.Class;
   state.write('class ');
@@ -201,7 +197,6 @@ export function logClassDeclare(state: State, node: acorn.Node, isExpr: boolean)
   state.writeln('}');
 }
 
-// logging function declaration
 export function logFuncDeclare(state: State, node: acorn.Function, isExpr: boolean): void {
   const { id, generator, async } = node;
   if (async) state.write('async ');
@@ -212,14 +207,12 @@ export function logFuncDeclare(state: State, node: acorn.Function, isExpr: boole
   logFuncTail(state, node, isExpr, false);
 }
 
-// logging arrow function declaration
 export function logArrowFuncDeclare(state: State, node: acorn.Function): void {
   const { async } = node as acorn.Function;
   state.write(async ? 'async ' : '');
   logFuncTail(state, node, true, true);
 }
 
-// logging function tail
 export function logFuncTail(state: State, node: acorn.Function, isExpr: boolean, isArrow: boolean): void {
   state.withScope(scope => scope.walkFunction(node, isExpr), () => {
     const { params, body, type, id } = node;
@@ -279,7 +272,6 @@ export function logFuncTail(state: State, node: acorn.Function, isExpr: boolean,
   state.writeln('}');
 }
 
-// logging function enter
 export function logFuncEnter(state: State, func: acorn.Function): void {
   if (!state.partial.Fe) return;
   const { id } = func;
@@ -320,13 +312,11 @@ export function logFuncEnter(state: State, func: acorn.Function): void {
   );
 }
 
-// logging function exit
 export function logFuncExit(state: State, func: acorn.Function): void {
   if (!state.partial.Fe) return;
   state.writeln(`${LOG.FUNC_EXIT}(${newId(func)}, ${func.async}, ${func.generator});`);
 }
 
-// logging a return statement
 export function logReturn(state: State, expr: acorn.ReturnStatement | acorn.Expression, body: () => void): void {
   if (!state.partial.Re) {
     state.write('return ');
@@ -339,7 +329,6 @@ export function logReturn(state: State, expr: acorn.ReturnStatement | acorn.Expr
   state.write(');');
 }
 
-// logging a for-in/of statement
 export function logForInOfStatement(state: State, node: acorn.ForInStatement | acorn.ForOfStatement, isForIn: boolean, isAwait: boolean): void {
   const { left, right, body } = node;
   const awaitStr = isAwait ? 'await ' : '';
@@ -371,7 +360,6 @@ export function logForInOfStatement(state: State, node: acorn.ForInStatement | a
   state.writeln('}');
 }
 
-// logging the RHS object of a for-in/of statement
 export function logForInOfObject(state: State, expr: acorn.Expression, isForIn: boolean): void {
   if (!state.partial.forLoopRhsObj) {
     state.walk(expr);
@@ -382,7 +370,6 @@ export function logForInOfObject(state: State, expr: acorn.Expression, isForIn: 
   }
 }
 
-// logging end of an expression
 export function logExpression(state: State, expr: acorn.Expression): void {
   if (!state.partial.E) {
     state.walk(expr);
@@ -393,7 +380,6 @@ export function logExpression(state: State, expr: acorn.Expression): void {
   }
 }
 
-// logging a property read (get-field) operation
 export function logGetField(state: State, expr: acorn.Expression): void {
   const { object, property, computed, optional } = expr as acorn.MemberExpression;
   if (object.type === 'Super') {
@@ -465,7 +451,6 @@ export function logGetField(state: State, expr: acorn.Expression): void {
   state.write(')');
 }
 
-// logging a property write (put-field) operation
 export function logPutField(state: State, lhs: acorn.Node, rhs: acorn.Node, body: () => void): void {
   const { object, property, computed } = lhs as acorn.MemberExpression;
   if (object.type === 'Super') {
@@ -549,7 +534,6 @@ export function logPutField(state: State, lhs: acorn.Node, rhs: acorn.Node, body
   state.write(')');
 }
 
-// logging a delete operation
 export function logDelete(state: State, expr: acorn.Expression): void {
   if (!state.partial.De) {
     if (expr.type === 'MemberExpression') {
@@ -627,7 +611,6 @@ export function logUnaryOp(state: State, expr: acorn.UnaryExpression): void {
   state.write(')');
 }
 
-// logging a binary operation
 export function logBinaryOp(state: State, expr: acorn.BinaryExpression): void {
   const { left, right, operator } = expr;
   const enabled = state.partial.B;
@@ -646,7 +629,6 @@ export function logBinaryOp(state: State, expr: acorn.BinaryExpression): void {
   state.write(')');
 }
 
-// logging an update operation
 export function logUpdateOp(state: State, expr: acorn.UpdateExpression): void {
   if (!state.partial.U) {
     state.write(generate(expr));
@@ -660,7 +642,6 @@ export function logUpdateOp(state: State, expr: acorn.UpdateExpression): void {
   state.write(')');
 }
 
-// logging a condition expression
 export function logCondition(state: State, test: acorn.Expression, kind: string, end: boolean = false): void {
   if (!state.partial.C) {
     if (end) logExpression(state, test);
@@ -673,7 +654,6 @@ export function logCondition(state: State, test: acorn.Expression, kind: string,
   state.write(`)`);
 }
 
-// logging the left side of a switch statement
 export function logSwitchLeft(state: State, discriminant: acorn.Expression): void {
   if (!state.partial.C && !state.partial.B) {
     logExpression(state, discriminant);
@@ -684,7 +664,6 @@ export function logSwitchLeft(state: State, discriminant: acorn.Expression): voi
   state.write(')');
 }
 
-// logging the right side of a switch case
 export function logSwitchRight(state: State, test: acorn.Expression): void {
   if (!state.partial.C && !state.partial.B) {
     logExpression(state, test);
@@ -695,7 +674,6 @@ export function logSwitchRight(state: State, test: acorn.Expression): void {
   state.write(')');
 }
 
-// logging a variable declaration
 export function logDeclare(state: State, node: acorn.Pattern | acorn.Identifier | acorn.BlockStatement | acorn.CatchClause | acorn.VariableDeclaration | acorn.StaticBlock | acorn.Program | acorn.Function): void {
   if (!state.partial.declare) return;
   const vars = state.scope?.vars;
@@ -720,7 +698,6 @@ export function logDeclare(state: State, node: acorn.Pattern | acorn.Identifier 
   }
 }
 
-// logging a variable read
 export function logRead(state: State, node: acorn.ThisExpression | acorn.MetaProperty | acorn.Identifier, name: string): void {
   if (!state.partial.R) {
     state.write(name);
@@ -729,7 +706,6 @@ export function logRead(state: State, node: acorn.ThisExpression | acorn.MetaPro
   state.write(`${LOG.READ}(${newId(node)}, "${name}", ${name})`);
 }
 
-// logging a variable write
 export function logWrite(state: State, lhs: acorn.Pattern | acorn.Expression, rhs: acorn.Node, body: () => void): void {
   if (lhs.type === 'MemberExpression') {
     logPutField(state, lhs, rhs, body);
@@ -764,7 +740,6 @@ export function logWrite(state: State, lhs: acorn.Pattern | acorn.Expression, rh
   }
 }
 
-// logging a literal
 export function logLiteral(state: State, literal: acorn.Literal | acorn.ArrayExpression | acorn.ObjectExpression | acorn.FunctionExpression | acorn.ClassExpression | acorn.TemplateLiteral | acorn.ArrowFunctionExpression, body?: () => void): void {
   const enabled = state.partial.literal(literal);
   if (!enabled) {
@@ -792,7 +767,6 @@ export function writeQuasiLiteral(state: State, refNode: acorn.Node, value: stri
   }
 }
 
-// logging a throw statement
 export function logThrow(state: State, arg: acorn.Expression): void {
   if (!state.partial.Th) {
     logExpression(state, arg);
@@ -803,7 +777,6 @@ export function logThrow(state: State, arg: acorn.Expression): void {
   state.write(')');
 }
 
-// logging a yield expression
 export function logYield(state: State, node: acorn.Node, argument: acorn.Expression | null | undefined, delegate: boolean): void {
   if (!state.partial.Y) {
     state.write('yield');
@@ -819,7 +792,6 @@ export function logYield(state: State, node: acorn.Node, argument: acorn.Express
   }
 }
 
-// logging an await expression
 export function logAwait(state: State, node: acorn.Node, argument: acorn.Expression | null | undefined): void {
   if (!state.partial.Aw) {
     state.write('await ');
@@ -833,7 +805,6 @@ export function logAwait(state: State, node: acorn.Node, argument: acorn.Express
   }
 }
 
-// logging an exception
 export function logException(state: State, program: acorn.Node): void {
   state.writeln(`${LOG.EXCEPTION}(${newId(program)}, ${EXCEPTION_VAR});`);
 }

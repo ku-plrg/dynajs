@@ -9,7 +9,6 @@ import type { PosMode } from '../constant.js';
 // states for walking the AST
 // -----------------------------------------------------------------------------
 
-// state options
 export interface StateOption {
   write?: (str: string) => void
   indent?: string
@@ -61,7 +60,6 @@ export class State {
     this.isStrict = options.isScript ? false : true;
   }
 
-  // execute body with isLHS = true
   withLHS<T>(body: () => T): T {
     const prev = this.isLHS;
     this.isLHS = true;
@@ -70,7 +68,6 @@ export class State {
     return result;
   }
 
-  // create and enter a new scope
   createScope(body: (scope: Scope) => void, forLexical: boolean = false): Scope {
     const scope = new Scope(this.scope, forLexical);
     body(scope);
@@ -78,7 +75,6 @@ export class State {
     return scope;
   }
 
-  // execute body within a fresh scope and restore the previous scope afterwards
   withScope<T>(
     collect: (scope: Scope) => void,
     body: () => T,
@@ -103,33 +99,28 @@ export class State {
     }
   }
 
-  // wrap
   wrap(body: () => void): void {
     this.indentLevel++;
     body();
     this.indentLevel--;
   }
 
-  // write with newline
   writeln(str: string): void {
     this.write(this.lineEnd);
     this.write(this.indent.repeat(this.indentLevel));
     this.write(str);
   }
 
-  // walk the AST nodes recursively
   walk(node: acorn.Node): void {
     recursive(node, this, visitors);
   }
 
-  // walk the AST nodes in an array recursively with newline
   walkln(node: acorn.Node): void {
     this.write(this.lineEnd);
     this.write(this.indent.repeat(this.indentLevel));
     this.walk(node);
   }
 
-  // walk the AST nodes in an array recursively
   walkArray(
     nodes: acorn.Node[],
     sep: string = ', ',
