@@ -1,5 +1,4 @@
 // @type concolic
-// @oracle true
 // @target es6+ string-padstart
 // @feature builtin padStart-unmodeled
 // Mirrors ExpoSE unmodeled/bug25, oriented so the concretization is VISIBLE:
@@ -13,5 +12,5 @@
 
 var x = __symbolic__("x", "abc");
 if (x.padStart(5, "0") === "00abc") {
-  __symbolic_assert__(x.length >= 3);
+  __symbolic_assert__(x.length >= 3, true);
 }

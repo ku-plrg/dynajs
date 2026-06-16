@@ -1,5 +1,4 @@
 // @type concolic
-// @oracle true
 // @target es5 string-replace
 // @feature builtin replace-unmodeled
 // Mirrors ExpoSE unmodeled/bug22, oriented so the concretization is VISIBLE:
@@ -13,5 +12,5 @@
 
 var x = __symbolic__("x", "abc");
 if (x.replace("a", "X") === "Xbc") {
-  __symbolic_assert__(x.length === 3);
+  __symbolic_assert__(x.length === 3, true);
 }

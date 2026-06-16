@@ -1,5 +1,4 @@
 // @type concolic
-// @oracle true
 // @target es5 string-touppercase
 // @feature builtin toUpperCase-unmodeled
 // Mirrors ExpoSE unmodeled/bug20, oriented so the concretization is VISIBLE:
@@ -14,5 +13,5 @@
 
 var x = __symbolic__("x", "abc");
 if (x.toUpperCase() === "ABC") {
-  __symbolic_assert__(x.length === 3);
+  __symbolic_assert__(x.length === 3, true);
 }

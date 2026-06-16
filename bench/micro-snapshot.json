@@ -136,6 +136,46 @@
         "result": "TP"
       }
     ],
+    "new__concolic_array_includes": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "new__concolic_array_index": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "new__concolic_array_indexof": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "new__concolic_array_join": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "new__concolic_array_length": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
     "new__concolic_array_pop": [
       {
         "expected": "detected",
@@ -155,6 +195,13 @@
         "expected": "detected",
         "actual": "detected",
         "result": "TP"
+      }
+    ],
+    "new__concolic_bitwise_and": [
+      {
+        "expected": "detected",
+        "actual": "error",
+        "result": "FN"
       }
     ],
     "new__concolic_charcodeat": [
@@ -181,8 +228,8 @@
     "new__concolic_endswith": [
       {
         "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
+        "actual": "clean",
+        "result": "FN"
       }
     ],
     "new__concolic_includes": [
@@ -195,8 +242,8 @@
     "new__concolic_indexof_negative": [
       {
         "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
+        "actual": "detected",
+        "result": "TP"
       }
     ],
     "new__concolic_json_stringify": [
@@ -227,18 +274,30 @@
         "result": "FN"
       }
     ],
-    "new__concolic_padstart": [
+    "new__concolic_object_field": [
       {
         "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
         "actual": "detected",
-        "result": "FP"
+        "result": "TP"
+      }
+    ],
+    "new__concolic_padstart": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
       }
     ],
     "new__concolic_parseint": [
       {
         "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
+        "actual": "clean",
+        "result": "FN"
       }
     ],
     "new__concolic_regex_anchor": [
@@ -250,9 +309,9 @@
     ],
     "new__concolic_replace": [
       {
-        "expected": "clean",
+        "expected": "detected",
         "actual": "clean",
-        "result": "TN"
+        "result": "FN"
       }
     ],
     "new__concolic_slice_zero_end": [
@@ -265,11 +324,18 @@
     "new__concolic_startswith": [
       {
         "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
+        "actual": "clean",
+        "result": "FN"
       }
     ],
     "new__concolic_substr_length": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      }
+    ],
+    "new__concolic_substring_length": [
       {
         "expected": "detected",
         "actual": "detected",
@@ -285,9 +351,9 @@
     ],
     "new__concolic_toupper": [
       {
-        "expected": "clean",
+        "expected": "detected",
         "actual": "clean",
-        "result": "TN"
+        "result": "FN"
       }
     ],
     "new__taint_array_concat_neg": [

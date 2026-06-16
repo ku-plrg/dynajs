@@ -11,5 +11,5 @@
 
 var x = __symbolic__("x", "abc");
 if (x.charAt(0) === "a") {
-  __symbolic_assert__(x.indexOf("a", -5) === 0);
+  __symbolic_assert__(x.indexOf("a", -5) === 0, true);
 }

@@ -1,5 +1,4 @@
 // @type concolic
-// @oracle true
 // @target es5 bitwise
 // @feature syntax bitwise-and
 // Mirrors ExpoSE else/bug12: '&' is missing from _symbolicBinary's switch, so
@@ -11,7 +10,7 @@
 
 var x = __symbolic__("x", 3);
 if ((x & 1) === 1) {
-  __symbolic_assert__(x !== 2);
+  __symbolic_assert__(x !== 2, true);
 } else {
-  __symbolic_assert__(x !== 3);
+  __symbolic_assert__(x !== 3, true);
 }

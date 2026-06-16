@@ -1,5 +1,4 @@
 // @type concolic
-// @oracle true
 // @target es5 string-substring
 // @feature builtin substring-length-vs-end
 // Mirrors ExpoSE string-model-bugs bug 1a/1c: substring's 2nd arg is an END
@@ -13,4 +12,4 @@
 
 var s = __symbolic__("s", "hello");
 var p = s.substring(1, 3); // s[1..3): at most 2 chars
-__symbolic_assert__(p.length <= 2);
+__symbolic_assert__(p.length <= 2, true);

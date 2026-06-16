@@ -1,6 +1,6 @@
 import { writeFileSync } from 'node:fs';
 import { FlowAnalysis, type Valued, type InfoDomain } from '@/model/index.js';
-import { type Sym, type Sort, symToString } from '@shared/sym.js';
+import { type Sym, type Sort, seqElementSort, containsLost, symToString } from '@shared/sym.js';
 import { solveValidity, solveModel } from './smt.js';
 import { installPrelude } from './prelude.js';
 
@@ -10,20 +10,41 @@ const GHOSTS = installPrelude();
 
 // A branch actually taken during concrete execution: `constraint` is the
 // symbolic form of the condition, `taken` whether it was truthy. Together these
-// form the path condition leading up to a __symbolic_assert__.
-type PathConstraint = { id: number; constraint: Sym; taken: boolean };
+// form the path condition leading up to a __symbolic_assert__. `binder` marks a
+// constraint the engine introduced itself rather than a real branch — a symbolic
+// array's `length >= 0` and the `0 <= i < length` element-access bounds (ExpoSE's
+// SymbolicState binder PCs): part of the conjunction, but never flipped to spawn
+// an alternative input.
+type PathConstraint = { id: number; constraint: Sym; taken: boolean; binder?: boolean };
+
+// Per-symbolic-array bookkeeping kept off the Info (which holds the live sequence
+// expression: a `var` initially, a `seqConcat`/`seqExtract` after push/pop). The
+// element sort is fixed at creation from the seed's first element and is what a
+// push must type-match (ExpoSE wipes the symbolic array on a mismatched push).
+type ArrayMeta = { elemSort: Sort };
+
+// Per-symbolic-object bookkeeping. Fields are minted lazily on first read and
+// cached so repeated reads return the same symbol (ExpoSE's SymbolicObject).
+type ObjectMeta = { name: string; counter: number; fields: Map<string, Sym> };
 
 // We build on FlowAnalysis purely for its identity-based wrapping: every value
 // (incl. primitives) is a uniquely-wrapped object tracked by symbol id, so two
 // distinct literal `2`s are distinct entries — no value-keyed aliasing. The
 // symbolic expression for a value is stored as its `Info` (= Sym), built up
 // purely through the op-aware Info hooks (binaryInfo/unaryInfo/lengthInfo/
-// substringInfo/concatenateInfo/truncateInfo/conditionInfo) — no `Analysis`
-// method overrides, no frame types. Both user-code ops (via the instrumenter)
-// and model/polyfill ops (via `$`) funnel through these same hooks.
+// substringInfo/concatenateInfo/truncateInfo/conditionInfo and, for symbolic
+// arrays/objects, getFieldInfo + opaqueCallInfo) — no `Analysis` method
+// overrides, no frame types. Both user-code ops (via the instrumenter) and
+// model/polyfill ops (via `$`) funnel through these same hooks.
 export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   result: unknown;
   private pathConstraints: PathConstraint[] = [];
+
+  // Symbolic arrays/objects, keyed by the (identity-stable) container object.
+  // A symbolic array additionally carries its live sequence Sym as its `Info`;
+  // a symbolic object carries no Info and is recognised solely by membership.
+  private arrayMeta = new WeakMap<object, ArrayMeta>();
+  private objectMeta = new WeakMap<object, ObjectMeta>();
 
   // The prelude ghosts (__symbolic__/__symbolic_assert__) stay transparent so
   // they receive wrapped values; every other uncontrolled callee (natives,
@@ -37,11 +58,15 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   };
 
   // baseInfo is operator-unaware (it can't tell `.length` from any other field
-  // read), so concolic builds NO flow-through info here — every symbolic value
-  // comes from the op-aware hooks below (the framework routes `.length` to
-  // lengthInfo, `s[i]` to substringInfo, etc.). Stays inert.
-  protected baseInfo(): Sym | undefined {
-    return undefined;
+  // read), so it builds no real structure — every genuine symbolic value comes
+  // from the op-aware hooks (which run first). Reaching baseInfo with a SYMBOLIC
+  // parent therefore means a symbolic value flowed through an op with no model:
+  // information loss, marked `lost`. (Unscoped on purpose: this also fires inside
+  // modeled builtins' internal fallbacks, so a model that bails to baseInfo taints
+  // its result — whether that is desirable for padStart/startsWith/indexOf is
+  // under review. A purely concrete op stays inert.)
+  protected baseInfo(_value: unknown, parents: Valued<Sym>[]): Sym | undefined {
+    return parents.some((p) => p.info !== undefined) ? { kind: 'lost' } : undefined;
   }
 
   // The model routes string-builtin results (charAt/slice/substring/...) and the
@@ -92,10 +117,100 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
 
   // `s.length` — both user-code `.length` and model-side `$.length` route here:
   // a symbolic string's length stays symbolic as a strlen node.
-  protected lengthInfo(s: Valued<Sym>): Sym | undefined {
+  protected lengthOfStringInfo(s: Valued<Sym>): Sym | undefined {
     const src = this.symOf(s);
     if (src.kind === 'const') return undefined;
     return { kind: 'strlen', src };
+  }
+
+  // A non-string field read `base[prop]`. Two symbolic sources:
+  //  - symbolic object: lazily mint (and cache) a fresh symbol for the field,
+  //    ExpoSE SymbolicObject. The sort is inferred from the field's concrete
+  //    value (an unseeded field is `undefined` -> Int, concolic's default).
+  //  - symbolic array (base.info is the live sequence Sym): `.length` -> arrlen,
+  //    an integer index -> a `select`, guarding the read with `0 <= i < length`
+  //    (ExpoSE symbolicField). A symbolic index keeps its symbolic form.
+  protected getFieldInfo(base: Valued<Sym>, prop: Valued<Sym>, result: Valued<Sym>): Sym | undefined {
+    const container = base.value;
+    if (container === null || typeof container !== 'object') return undefined;
+
+    const obj = this.objectMeta.get(container);
+    if (obj !== undefined) {
+      const key = String(prop.value);
+      let sym = obj.fields.get(key);
+      if (sym === undefined) {
+        sym = { kind: 'var', name: `${obj.name}_${key}_${obj.counter++}`, sort: this.scalarSort(result.value) };
+        obj.fields.set(key, sym);
+      }
+      return sym;
+    }
+
+    const arr = base.info;
+    if (this.arrayMeta.has(container) && arr !== undefined) {
+      if (prop.value === 'length') return { kind: 'arrlen', arr };
+      const index = this.arrayIndex(prop);
+      if (index !== undefined) {
+        const length: Sym = { kind: 'arrlen', arr };
+        this.pushConstraint(
+          {
+            kind: 'binary',
+            op: '&&',
+            left: { kind: 'binary', op: '>=', left: index, right: { kind: 'const', value: 0 } },
+            right: { kind: 'binary', op: '<', left: index, right: length },
+          },
+          true,
+        );
+        return { kind: 'select', arr, index };
+      }
+    }
+    return undefined;
+  }
+
+  // An opaque (native) call on a symbolic array. We model exactly the operations
+  // ExpoSE's ArrayModels covers; any other native is a NoOp (the array keeps its
+  // current symbolic expression, which then goes stale through an unmodeled
+  // mutation — the same gap ExpoSE NoOps). `entries[0]` is the receiver array.
+  protected opaqueCallInfo(f: unknown, entries: unknown[], _result: unknown): Sym | undefined {
+    const base = entries[0];
+    if (base === null || typeof base !== 'object') return undefined;
+    const meta = this.arrayMeta.get(base);
+    if (meta === undefined) return undefined;
+    const arr = this.getInfo(base);
+    if (arr === undefined) return undefined;
+
+    if (f === Array.prototype.push) {
+      const arg = this.valued(entries[1]);
+      // A type-mismatched push wipes the symbolic array (ExpoSE bug28): from here
+      // on the array is concrete, so drop both its sequence Info and its meta.
+      if (typeof arg.value !== this.elemTypeof(meta.elemSort)) {
+        this.setInfo(base, undefined);
+        this.arrayMeta.delete(base);
+        return undefined;
+      }
+      const grown: Sym = { kind: 'seqConcat', left: arr, right: { kind: 'seqUnit', elem: this.symOf(arg) } };
+      this.setInfo(base, grown);
+      return { kind: 'arrlen', arr: grown }; // push returns the new length
+    }
+
+    if (f === Array.prototype.pop) {
+      const lastIndex: Sym = { kind: 'binary', op: '-', left: { kind: 'arrlen', arr }, right: { kind: 'const', value: 1 } };
+      this.setInfo(base, { kind: 'seqExtract', src: arr, offset: { kind: 'const', value: 0 }, length: lastIndex });
+      return { kind: 'select', arr, index: lastIndex }; // the removed last element
+    }
+
+    if (f === Array.prototype.indexOf) {
+      const sub: Sym = { kind: 'seqUnit', elem: this.symOf(this.valued(entries[1])) };
+      return { kind: 'seqIndexOf', arr, sub, from: { kind: 'const', value: 0 } };
+    }
+
+    if (f === Array.prototype.includes) {
+      const sub: Sym = { kind: 'seqUnit', elem: this.symOf(this.valued(entries[1])) };
+      return { kind: 'seqContains', arr, sub };
+    }
+
+    if (f === Array.prototype.join) return this.joinSym(base, arr, entries[1], meta);
+
+    return undefined;
   }
 
   // ToIntegerOrInfinity truncate: keep a symbolic numeric operand symbolic across
@@ -112,7 +227,11 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   // sources funnel here through FlowAnalysis.condition.
   protected conditionInfo(id: number, cond: Valued<Sym>, taken: boolean): void {
     const sym = this.symOf(cond);
-    if (sym.kind !== 'const') {
+    // A constant branch carries no constraint; a `lost` one we cannot express, so
+    // we drop it (the branch already ran concretely) — the path condition is then
+    // weaker, never wrong. Matches ExpoSE, which concretizes such a branch to a
+    // vacuous `true`.
+    if (sym.kind !== 'const' && !containsLost(sym)) {
       this.pathConstraints.push({ id, constraint: sym, taken });
     }
   }
@@ -123,19 +242,105 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     return v.info ?? { kind: 'const', value: v.value };
   }
 
+  // Record an engine-introduced constraint (taken on the concrete path) — never a
+  // real branch, so it is tagged `binder` and excluded from alternative-input
+  // generation. Synthetic constraints carry the sentinel id -1.
+  private pushConstraint(constraint: Sym, binder = false): void {
+    this.pathConstraints.push({ id: -1, constraint, taken: true, binder });
+  }
+
+  // The scalar SMT sort concolic models a concrete value with (its two scalar
+  // sorts, plus Bool); the seq sort whose elements are that scalar; and the JS
+  // `typeof` those elements have (for the push type-match check).
+  private scalarSort(v: unknown): Sort {
+    if (typeof v === 'string') return 'String';
+    if (typeof v === 'boolean') return 'Bool';
+    return 'Int';
+  }
+  private seqSortOf(elem: unknown): Sort {
+    switch (this.scalarSort(elem)) {
+      case 'String': return 'StringSeq';
+      case 'Bool': return 'BoolSeq';
+      default: return 'IntSeq';
+    }
+  }
+  private elemTypeof(seqSort: Sort): string {
+    switch (seqElementSort(seqSort)) {
+      case 'String': return 'string';
+      case 'Bool': return 'boolean';
+      default: return 'number';
+    }
+  }
+
+  // The array index a property key denotes, as a Sym, or undefined if `prop` is
+  // not a non-negative integer index (e.g. `length`, a method name). A symbolic
+  // index keeps its symbolic form; a concrete one becomes a const.
+  private arrayIndex(prop: Valued<Sym>): Sym | undefined {
+    const raw = prop.value;
+    let n: number;
+    if (typeof raw === 'number') n = raw;
+    else if (typeof raw === 'string') {
+      n = Number(raw);
+      if (String(n) !== raw) return undefined;
+    } else return undefined;
+    if (!Number.isInteger(n) || n < 0) return undefined;
+    return prop.info ?? { kind: 'const', value: n };
+  }
+
+  // Array.prototype.join over a symbolic string array: unfold across the concrete
+  // length into nested string concatenations of the (symbolic) elements and the
+  // separator (ExpoSE join). Only string-element arrays are modeled; others
+  // concretize (undefined). `sepArg` is the separator argument (undefined -> ",").
+  private joinSym(base: object, arr: Sym, sepArg: unknown, meta: ArrayMeta): Sym | undefined {
+    if (seqElementSort(meta.elemSort) !== 'String') return undefined;
+    const n = (base as unknown[]).length;
+    if (n === 0) return { kind: 'const', value: '' };
+    const sepValue = sepArg === undefined ? undefined : this.valued(sepArg).value;
+    const sep: Sym = { kind: 'const', value: sepValue === undefined ? ',' : String(sepValue) };
+    const at = (i: number): Sym => ({ kind: 'select', arr, index: { kind: 'const', value: i } });
+    let acc = at(0);
+    for (let i = 1; i < n; i++) {
+      acc = { kind: 'concat', left: { kind: 'concat', left: acc, right: sep }, right: at(i) };
+    }
+    return acc;
+  }
+
   // --- prelude entry points ------------------------------------------------
 
   // Introduce symbolic variable `name`, returning a wrapped value the program
   // runs concretely on. Replay (M3): if the Distributor's seed input carries a
   // concrete for this variable (a child input from a negated branch), drive
   // execution with THAT value so we follow the intended path; otherwise keep the
-  // program's own seed. Either way `make` mints a fresh value tagged with the
-  // `var` Info — the concrete's type fixes the SMT sort (string -> String, else
-  // Int, the only two sorts we translate).
-  makeSymbolic(name: unknown, seed: unknown): unknown {
+  // program's own seed. `make` then mints a fresh value tagged with its symbolic
+  // form, dispatched on the concrete's shape:
+  //   - array  -> a `(Seq T)` variable (T from the seed's first element); reads
+  //     of `.length`/elements become symbolic via getFieldInfo, and the array's
+  //     length is constrained non-negative (ExpoSE).
+  //   - object -> a symbolic object whose fields are minted lazily on read.
+  //   - scalar -> a `var` of String (string seed) or Int (the default sort).
+  // Array/object replay inputs don't round-trip the scalar SMT model parser, so
+  // only the scalar case is re-seeded from a child input.
+  makeSymbolic(name: unknown, seed: unknown): unknown /* Wrapped */ {
     const varName = String(this.valued(name).value);
     const input = this.seedInput();
     const concrete = varName in input ? input[varName] : this.valued(seed).value;
+
+    if (Array.isArray(concrete)) {
+      // Array elements are still individually wrapped (only the array itself was
+      // unwrapped), so project the first through `valued` to read its type.
+      const sort = this.seqSortOf(concrete.length ? this.valued(concrete[0]).value : undefined);
+      const arrSym: Sym = { kind: 'var', name: varName, sort };
+      this.arrayMeta.set(concrete, { elemSort: sort });
+      this.pushConstraint(
+        { kind: 'binary', op: '>=', left: { kind: 'arrlen', arr: arrSym }, right: { kind: 'const', value: 0 } },
+        true,
+      );
+      return this.make(concrete, arrSym);
+    }
+    if (concrete !== null && typeof concrete === 'object') {
+      this.objectMeta.set(concrete, { name: varName, counter: 0, fields: new Map() });
+      return this.make(concrete);
+    }
     const sort: Sort = typeof concrete === 'string' ? 'String' : 'Int';
     return this.make(concrete, { kind: 'var', name: varName, sort });
   }
@@ -150,8 +355,10 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
 
     const cond = this.valued(condArg);
     const sym = this.symOf(cond);
-    if (sym.kind === 'const') {
-      // No symbolic dependency: the assert reduces to its concrete truth value.
+    if (sym.kind === 'const' || containsLost(sym)) {
+      // No symbolic dependency, OR the condition rests on a value lost to an
+      // unmodeled op. For a fair single-path comparison we DON'T error on loss
+      // (for now): we fall back to the concrete truth value, as ExpoSE does.
       emit(cond.value ? 'detected' : 'clean');
       return;
     }
@@ -227,6 +434,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     const pcs = this.pathConstraints;
     const out: { input: Record<string, unknown>; pc: string; forkIid: number }[] = [];
     for (let i = bound; i < pcs.length; i++) {
+      if (pcs[i].binder) continue; // engine-introduced (bounds/length>=0): never flipped
       const branches = [...pcs.slice(0, i), { constraint: pcs[i].constraint, taken: !pcs[i].taken }];
       let model;
       try {

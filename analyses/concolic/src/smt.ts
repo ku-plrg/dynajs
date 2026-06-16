@@ -1,18 +1,32 @@
 import { spawnSync } from 'node:child_process';
-import { type Sym, type Sort, UnsupportedSym } from '@shared/sym.js';
+import { type Sym, type Sort, isSeqSort, UnsupportedSym } from '@shared/sym.js';
 
 // ---------------------------------------------------------------------------
 // SMT-LIB translation + z3
 //
-// Scope: integer arithmetic, comparisons, boolean logic, and a slice of the z3
+// Scope: integer arithmetic, comparisons, boolean logic, a slice of the z3
 // String theory — string equality, concatenation (`str.++`), fixed-window
-// substring/char-access (`str.substr`), and length (`str.len`) — enough for the
-// concolic microbenches. Operators outside this set (bitwise, **, string
-// ordering `< > <= >=`, ...) throw `UnsupportedSym`; callers turn that into an
-// `error` verdict rather than silently mis-translating.
+// substring/char-access (`str.substr`), and length (`str.len`) — and the z3
+// Sequence theory for symbolic arrays (`seq.nth`/`seq.len`/`seq.++`/`seq.unit`/
+// `seq.extract`/`seq.indexof`/`seq.contains`) — enough for the concolic
+// microbenches. Operators outside this set (bitwise, **, string ordering
+// `< > <= >=`, ...) throw `UnsupportedSym`; callers turn that into an `error`
+// verdict rather than silently mis-translating.
 // (`Sym`/`Sort`/`UnsupportedSym`/`symToString` live in the engine-neutral
 // `@shared/sym.js`; only the SMT-LIB translation below is concolic-only.)
 // ---------------------------------------------------------------------------
+
+// SMT-LIB rendering of a sort: scalars map to their name, the `*Seq` sorts to
+// `(Seq T)` (z3 Sequence theory).
+const SORT_SMT: Record<Sort, string> = {
+  Int: 'Int',
+  Real: 'Real',
+  String: 'String',
+  Bool: 'Bool',
+  IntSeq: '(Seq Int)',
+  StringSeq: '(Seq String)',
+  BoolSeq: '(Seq Bool)',
+};
 
 // op -> SMT-LIB builder. Comparisons/arith map almost 1:1; equality and
 // inequality need (=)/(not (=)); integer / becomes div. `%` can't reuse SMT's
@@ -82,6 +96,25 @@ function symToSmt(s: Sym, vars: Map<string, Sort>): string {
     case 'truncate':
       // concolic models numbers as Int, so truncate-toward-zero is identity.
       return symToSmt(s.src, vars);
+    case 'select':
+      return `(seq.nth ${symToSmt(s.arr, vars)} ${symToSmt(s.index, vars)})`;
+    case 'arrlen':
+      return `(seq.len ${symToSmt(s.arr, vars)})`;
+    case 'seqUnit':
+      return `(seq.unit ${symToSmt(s.elem, vars)})`;
+    case 'seqConcat':
+      return `(seq.++ ${symToSmt(s.left, vars)} ${symToSmt(s.right, vars)})`;
+    case 'seqExtract':
+      return `(seq.extract ${symToSmt(s.src, vars)} ${symToSmt(s.offset, vars)} ${symToSmt(s.length, vars)})`;
+    case 'seqIndexOf':
+      return `(seq.indexof ${symToSmt(s.arr, vars)} ${symToSmt(s.sub, vars)} ${symToSmt(s.from, vars)})`;
+    case 'seqContains':
+      return `(seq.contains ${symToSmt(s.arr, vars)} ${symToSmt(s.sub, vars)})`;
+    case 'lost':
+      // Defensive: branches drop `lost` constraints and asserts concretize over
+      // them, so a `lost` should never reach the solver — if one does, refuse to
+      // translate rather than fabricate (caller -> `error`).
+      throw new UnsupportedSym('information lost: symbolic value through an unmodeled op');
   }
 }
 
@@ -94,13 +127,14 @@ export type Polarized = { constraint: Sym; taken: boolean };
 // A satisfying assignment: each symbolic variable -> its concrete model value.
 export type Solution = Map<string, unknown>;
 
-// Assemble the SMT-LIB problem. The String theory needs an explicit logic; the
-// all-Int path stays bare so existing integer benches translate byte-for-byte.
+// Assemble the SMT-LIB problem. The String/Sequence theories need an explicit
+// logic; the all-Int path stays bare so existing integer benches translate
+// byte-for-byte.
 function buildSmt(vars: Map<string, Sort>, assertions: string[], tail: string): string {
-  const hasString = [...vars.values()].includes('String');
+  const needsLogic = [...vars.values()].some((s) => s === 'String' || isSeqSort(s));
   return (
-    (hasString ? '(set-logic ALL)\n' : '') +
-    [...vars].map(([v, sort]) => `(declare-const ${v} ${sort})`).join('\n') +
+    (needsLogic ? '(set-logic ALL)\n' : '') +
+    [...vars].map(([v, sort]) => `(declare-const ${v} ${SORT_SMT[sort]})`).join('\n') +
     '\n' +
     assertions.join('\n') +
     '\n' +

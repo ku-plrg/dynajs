@@ -97,9 +97,27 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   protected unaryInfo?(_op: string, _operand: Valued<Info>): Info
   protected truncateInfo?(_src: Valued<Info, number>): Info
 
+  // A non-string field read `base[prop]` (object property or array element/
+  // `.length`) whose result the analysis wants to attribute structurally — the
+  // counterpart of substringInfo/lengthOfStringInfo for the object/array world.
+  // Fired only when the result carries no info of its own (a stored Wrapped
+  // element keeps its own info, see getField), so an analysis can derive
+  // e.g. a symbolic array element (`select`), its symbolic length, or a lazily
+  // minted symbolic-object field. baseInfo flow-through if undefined.
+  protected getFieldInfo?(_base: Valued<Info>, _prop: Valued<Info>, _result: Valued<Info>): Info
+
   protected conditionInfo?(_id: number, _cond: Valued<Info>, _taken: boolean): void {}
 
   protected escapedInfo?(_f: unknown, _escaped: Valued<Info>[]): void {}
+
+  // Result of an opaque (uninstrumented native) call the analysis wants to model
+  // symbolically — `entries` are the original wrapped receiver+args (entries[0]
+  // is the receiver for a method call), `result` the native's wrapped/raw
+  // return. Lets an analysis attach structure to the result (e.g. an array
+  // `indexOf`/`includes`) and, as a side effect on its own Info store, track
+  // mutation of an operand the native performed out of view (`push`/`pop`).
+  // baseInfo flow-through if undefined.
+  protected opaqueCallInfo?(_f: unknown, _entries: unknown[], _result: unknown): Info
 
   // ---- Info storage helpers ----
 
@@ -393,7 +411,13 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     if (this.isWrapped(result) && !this.domain.isBottom(this.getInfo(result))) {
       return result as Wrapped<unknown>;
     }
-    return this.$.base(result, [f.base, f.prop]);
+    // An info-less field read: let the analysis attribute it structurally
+    // (symbolic array element/length, symbolic-object field), else baseInfo flow.
+    return this.lift(
+      result,
+      this.getFieldInfo?.(this.valued(f.base), this.valued(f.prop), this.valued(result))
+        ?? this.baseInfo(result, [this.valued(f.base), this.valued(f.prop)]),
+    );
     })();
     return { result: transformed };
   }
@@ -449,6 +473,12 @@ export abstract class FlowAnalysis<Info> implements Analysis {
         // when modeled, the model dispatched above already returned a Wrapped value
         if (f.modeled) return result as unknown as Wrapped<unknown>;
         if (f.escaped.length > 0) this.escaper.restore(f.escaped);
+        // Let the analysis model the native's result and/or track a mutation it
+        // performed on an operand (push/pop on a symbolic array). `entries` are
+        // the original wrapped receiver+args (the escape seam preserves their
+        // identity + info), so this sees the operands the native saw.
+        const opaqueInfo = this.opaqueCallInfo?.(_f, Array.from(f.entries), result);
+        if (opaqueInfo !== undefined) return this.lift(result, opaqueInfo);
         if (this.isWrapped(result) && !this.domain.isBottom(this.getInfo(result))) {
           return result as Wrapped<unknown>;
         }
