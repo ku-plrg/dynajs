@@ -10,7 +10,7 @@ export function AO__ArraySpeciesCreate ($ : SpecRuntime, originalArray : Wrapped
     return $.base(new Array($.peek(length)) as Unwrapped<unknown[]>, [length]);
   }
   // 3. Let C be ? Get(originalArray, "constructor").
-  const C = AO__Get($, originalArray, $.base("constructor", []));
+  let C = AO__Get($, originalArray, $.base("constructor", []));
   if ($.peek(AO__IsConstructor($, C))) {
   // 4. If IsConstructor(C) is true, then
   //    a. Let thisRealm be the current Realm Record.
@@ -21,7 +21,9 @@ export function AO__ArraySpeciesCreate ($ : SpecRuntime, originalArray : Wrapped
   if ($.isType(C, "object")) {
   // 5. If C is an Object, then
   //    a. Set C to ? Get(C, %Symbol.species%).
+    C = AO__Get($, C, $.base(Symbol.species, []));
   //    b. If C is null, set C to undefined.
+    if ($.peek(C) === null) C = $.undef;
   }
   if ($.isType(C, "undefined")) {
   // 6. If C is undefined, return ? ArrayCreate(length).
@@ -29,4 +31,7 @@ export function AO__ArraySpeciesCreate ($ : SpecRuntime, originalArray : Wrapped
   }
   // 7. If IsConstructor(C) is false, throw a TypeError exception.
   // 8. Return ? Construct(C, « 𝔽(length) »).
+  // The default species is %Array%; model Construct(C, «length») as
+  // ArrayCreate(length). User-defined @@species subclasses are not modeled.
+  return AO__ArrayCreate($, length);
 }

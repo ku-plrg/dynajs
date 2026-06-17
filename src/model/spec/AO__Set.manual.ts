@@ -2,13 +2,15 @@ export function AO__Set ($ : SpecRuntime, O : Wrapped<unknown>, P : Wrapped<unkn
   "use strict";
 
   const Ou = $.peek(O);
-  const Pu = $.peek(P);
-  const Vu = $.peek(V);
+  const Pu: unknown = $.peek(P);
+
+  // in some cases engine coerces the value
+  const storeRaw = ArrayBuffer.isView(Ou) || Pu === "length";
 
   // 1. Let success be ? O.[[Set]](P, V, O).
   try {
     // @ts-ignore coerce as property key
-    Ou[Pu] = Vu;
+    Ou[Pu] = storeRaw ? $.peek(V) : V;
   } catch (error) {
     // 2. If success is false and Throw is true, throw a TypeError exception.
     if (Throw) throw error;

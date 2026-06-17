@@ -32,6 +32,17 @@ export class Model {
     [String.prototype.trimEnd, generated.INTRINSICS_String_prototype_trimEnd],
     [String.prototype.trimStart, generated.INTRINSICS_String_prototype_trimStart],
     [String.prototype.valueOf, generated.INTRINSICS_String_prototype_valueOf],
+
+    [Array.prototype.at, generated.INTRINSICS_Array_prototype_at],
+    [Array.prototype.concat, generated.INTRINSICS_Array_prototype_concat],
+    [Array.prototype.copyWithin, generated.INTRINSICS_Array_prototype_copyWithin],
+    [Array.prototype.fill, generated.INTRINSICS_Array_prototype_fill],
+    [Array.prototype.filter, generated.INTRINSICS_Array_prototype_filter],
+    [Array.prototype.join, generated.INTRINSICS_Array_prototype_join],
+    [Array.prototype.map, generated.INTRINSICS_Array_prototype_map],
+    [Array.prototype.push, generated.INTRINSICS_Array_prototype_push],
+    [Array.prototype.reduce, generated.INTRINSICS_Array_prototype_reduce],
+    [Array.prototype.reduceRight, generated.INTRINSICS_Array_prototype_reduceRight],
   ]);
 
   static SYNTAX = new Map<string, Function>([
