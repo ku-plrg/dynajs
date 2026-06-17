@@ -1,0 +1,16 @@
+// @type taint
+// @target es6+ Array.prototype.toSpliced
+// @feature builtin array-toSpliced
+
+var e0 = "a";
+var e1 = "b";
+var e2 = "c";
+var e3 = "d";
+__set_taint__(e0);
+__set_taint__(e3);
+var a = [e0, e1, e2, e3];
+var r = a.toSpliced(1, 1);
+
+__assert_taint__(r[0], true);
+__assert_taint__(r[1], false);
+__assert_taint__(r[2], true);
