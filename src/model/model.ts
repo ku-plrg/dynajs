@@ -38,11 +38,18 @@ export class Model {
     [Array.prototype.copyWithin, generated.INTRINSICS_Array_prototype_copyWithin],
     [Array.prototype.fill, generated.INTRINSICS_Array_prototype_fill],
     [Array.prototype.filter, generated.INTRINSICS_Array_prototype_filter],
+    [Array.prototype.find, generated.INTRINSICS_Array_prototype_find],
+    [Array.prototype.findIndex, generated.INTRINSICS_Array_prototype_findIndex],
+    [Array.prototype.findLast, generated.INTRINSICS_Array_prototype_findLast],
+    [Array.prototype.findLastIndex, generated.INTRINSICS_Array_prototype_findLastIndex],
     [Array.prototype.join, generated.INTRINSICS_Array_prototype_join],
     [Array.prototype.map, generated.INTRINSICS_Array_prototype_map],
+    [Array.prototype.pop, generated.INTRINSICS_Array_prototype_pop],
     [Array.prototype.push, generated.INTRINSICS_Array_prototype_push],
     [Array.prototype.reduce, generated.INTRINSICS_Array_prototype_reduce],
     [Array.prototype.reduceRight, generated.INTRINSICS_Array_prototype_reduceRight],
+    [Array.prototype.shift, generated.INTRINSICS_Array_prototype_shift],
+    [Array.prototype.slice, generated.INTRINSICS_Array_prototype_slice],
   ]);
 
   static SYNTAX = new Map<string, Function>([
