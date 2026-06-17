@@ -15,6 +15,7 @@
     "build": "run-p typecheck typecheck:analyses build:entry build:analysis",
     "typecheck": "tsc -b",
     "typecheck:analyses": "tsc -p ./analyses/tsconfig.json",
+    "typecheck:full": "node ./scripts/typecheck-full.mjs",
     "build:analysis": "node ./scripts/build-analysis.mjs",
     "build:entry": "node ./scripts/build-entry.mjs",
     "build:watch": "tsc -b -w",

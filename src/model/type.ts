@@ -81,6 +81,10 @@ interface ListOps {
   // List notations.
   append: <T>(list: T[], x: T) => T[];
   contains: <T>(list: T[], x: T) => boolean;
+  // The List of integers in the interval from `lo` to `hi` (inclusivity given by
+  // `loInclusive`/`hiInclusive`), in ascending or descending order. Models the
+  // spec's "integers in the interval from X to Y" notation (e.g. FindViaPredicate).
+  IN__IntRange: (lo: Wrapped<number>, loInclusive: boolean, hi: Wrapped<number>, hiInclusive: boolean, ascending: boolean) => Wrapped<number>[];
 }
 
 // The runtime threaded into every generated polyfill as the `$` parameter.

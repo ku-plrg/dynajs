@@ -257,6 +257,16 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
     append: <T>(list: T[], x: T): T[] => { this.escaper.markEscapable(x); list.push(x); return list; },
     contains: <T>(list: T[], x: T): boolean => list.includes(x),
+    IN__IntRange: (lo, loInclusive, hi, hiInclusive, ascending) => {
+      const start = (this.unwrap(lo) as number) + (loInclusive ? 0 : 1);
+      const end = (this.unwrap(hi) as number) - (hiInclusive ? 0 : 1);
+      const out: Wrapped<number>[] = [];
+      // Indices are concrete integers, so they enter as fresh literals (no
+      // provenance) — matching how an explicit `for` counter is generated.
+      for (let i = start; i <= end; i++) out.push(this.numOp(i, []));
+      if (!ascending) out.reverse();
+      return out;
+    },
     base: <T extends Unwrapped<unknown> | Primitive>(v: T, parents: Wrapped<unknown>[]): Wrapped<T> =>
       this.lift(v, this.baseInfo(v, parents.map((p) => this.valued(p)))),
     peek: <T>(wrapped: Wrapped<T>) => this.unwrap(wrapped),

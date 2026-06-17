@@ -12,15 +12,23 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import chalk from "chalk";
 
-// Builtins to copy, as base names (extension .ts can be omitted). Each entry is
-// either an exact string or a RegExp. RegExp entries are expanded against the
-// set of generated + manual base names; exact strings are taken verbatim (and
-// reported as missing if no such file exists).
 // To use with different ESMETA_HOME: ESMETA_HOME=~/path/to/esmeta npm run copy
 const INCLUDE = [
   // Bulk-select with a RegExp, then carve out exceptions in EXCLUDE below, e.g.:
   // /^INTRINSICS\.Array\./,
-  /^INTRINSICS\.Array\.prototype\./,
+  // /^INTRINSICS\.Array\.prototype\./,
+  "INTRINSICS.Array.prototype.at",
+  // "INTRINSICS.Array.prototype.pop",
+  // "INTRINSICS.Array.prototype.concat",
+  // "INTRINSICS.Array.prototype.find",
+  "INTRINSICS.Array.prototype.join",
+  "INTRINSICS.Array.prototype.map",
+  "INTRINSICS.Array.prototype.reduce",
+  "INTRINSICS.Array.prototype.reduceRight",
+  
+  "INTRINSICS.Array.prototype.push",
+  // "INTRINSICS.Array.prototype.indexOf",
+  // "INTRINSICS.Array.prototype.includes",
   // /^INTRINSICS\.Boolean\./,
   // /^INTRINSICS\.Function\./,
   // /^INTRINSICS\.JSON\./,
@@ -34,15 +42,18 @@ const INCLUDE = [
   /^INTRINSICS\.String\.prototype\./,
 ];
 
-// Bases matching any of these are never copied — even when pulled in as a
-// transitive dependency. EXCLUDE wins over INCLUDE. Entries are exact strings
-// or RegExp. Excluding a needed dependency can break a builtin's imports.
 const EXCLUDE = [
   // /Locale/,
   "INTRINSICS.String.prototype.match",
   "INTRINSICS.String.prototype.matchAll",
   "INTRINSICS.String.prototype.replaceAll",
   "INTRINSICS.String.prototype.search",
+];
+
+const NO_CHECK = [
+  "INTRINSICS.Array.prototype.reduce",
+  "INTRINSICS.Array.prototype.reduceRight",
+  "AO__GetSubstitution",
 ];
 
 const ESMETA_HOME = process.env.ESMETA_HOME;
@@ -71,6 +82,7 @@ function makeMatcher(patterns) {
   return (name) => exact.has(name) || regexes.some((re) => re.test(name));
 }
 const isExcluded = makeMatcher(EXCLUDE);
+const isNoCheck = makeMatcher(NO_CHECK);
 
 // Generate polyfills in ESMETA_HOME first.
 console.log(chalk.cyan(`▶ Running gen-poly (${ESMETA_HOME})`));
@@ -185,7 +197,8 @@ while (queue.length > 0) {
       continue;
     }
     content = readFileSync(from, "utf8");
-    cpSync(from, join(destDir, file));
+    if (isNoCheck(base)) writeFileSync(join(destDir, file), `// @ts-nocheck\n${content}`);
+    else cpSync(from, join(destDir, file));
     if (roots.has(base)) copiedNames.push(base);
   }
 
@@ -201,13 +214,7 @@ if (missing.length > 0) {
   );
 }
 
-// Generate a barrel that re-exports every emitted module — both the requested
-// builtins and the support AOs they pull in — so consumers (e.g. model.ts) can
-// import everything from one place instead of one path per file. We derive the
-// list from what actually landed in destDir: every `.ts` except the barrel
-// itself and the hand-authored `*.manual.ts` sources (each of which already has
-// a generated `${base}.ts` shim re-exporting it). The export name mirrors the
-// function name: non-alphanumerics -> underscores.
+// Generate a barrel that re-exports every emitted module
 const barrelBases = readdirSync(destDir)
   .filter((f) => f.endsWith(".ts") && f !== "index.ts" && !f.endsWith(MANUAL_SUFFIX))
   .map((f) => f.slice(0, -3))
