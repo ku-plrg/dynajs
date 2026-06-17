@@ -1,8 +1,7 @@
-
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
 import type { Wrapped, SpecRuntime } from "@/model/type.js";
 
-import { AO__IsRegExp } from "./AO__IsRegExp.manual.js";
+import { AO__IsRegExp } from "./AO__IsRegExp.js";
 import { AO__RequireObjectCoercible } from "./AO__RequireObjectCoercible.js";
 import { AO__StringIndexOf } from "./AO__StringIndexOf.js";
 import { AO__ToIntegerOrInfinity } from "./AO__ToIntegerOrInfinity.js";

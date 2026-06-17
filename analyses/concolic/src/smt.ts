@@ -52,6 +52,9 @@ const SMT_BINARY: Record<string, (a: string, b: string) => string> = {
     `(ite (>= ${a} 0) (mod ${a} (abs ${b})) (- (mod (- ${a}) (abs ${b}))))`,
   '&&': (a, b) => `(and ${a} ${b})`,
   '||': (a, b) => `(or ${a} ${b})`,
+  // No SMT-LIB primitive for min/max — encode via ite (used by clampInfo).
+  max: (a, b) => `(ite (>= ${a} ${b}) ${a} ${b})`,
+  min: (a, b) => `(ite (<= ${a} ${b}) ${a} ${b})`,
 };
 
 // SMT-LIB string literal: double quotes, with an embedded `"` escaped as `""`.

@@ -47,20 +47,9 @@ interface CompareOps {
   lessThanEqual: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<boolean>;
   greaterThan: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<boolean>;
   greaterThanEqual: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<boolean>;
-  // A branch point: record `cond`'s symbolic form as a (flippable) path
-  // constraint keyed by the codegen-assigned branch id `bid`, then return the
-  // raw boolean so native `if`/`while`/`&&`/`||` and short-circuiting work. The
-  // model-side mirror of the instrumenter's `D$.C(id, op, value)` on user code.
-  // `cond` is `Wrapped<boolean>` from the ordering comparisons (carrying their
-  // Sym) but a raw `boolean` from the equality/type predicates below (`is`,
-  // `isNot`, `isNaN`, ...), which codegen also funnels through here — both are
-  // accepted; the symbolic form is recorded only when one is present.
-  condition: (bid: number, cond: Wrapped<boolean> | boolean) => boolean;
-  // Type predicates so a `not-found`-style guard narrows a mixed return
-  // (e.g. StringIndexOf's `Wrapped<string> | Wrapped<number>`): after
-  // `if ($.is(pos, $.base("not-found"))) ...`, the else branch sees Wrapped<number>.
-  is: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(l: L, r: R) => l is Extract<L, R>;
-  isNot: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(l: L, r: R) => l is Exclude<L, R>;
+  condition: (bid: number, cond: Wrapped<boolean>) => boolean;
+  is: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(l: L, r: R) => Wrapped<boolean /* l is Extract<L, R> */>;
+  isNot: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(l: L, r: R) => Wrapped<boolean /* l is Exclude<L, R> */>;
   isNaN: (x: Wrapped<number>) => boolean;
   isFinite: (x: Wrapped<number>) => boolean;
   // "object" excludes null, and includes functions. "function" check is done via `AO__IsCallable`.

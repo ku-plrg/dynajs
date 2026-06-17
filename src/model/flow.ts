@@ -95,6 +95,8 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   protected binaryInfo?(_op: string, _left: Valued<Info>, _right: Valued<Info>): Info
   protected unaryInfo?(_op: string, _operand: Valued<Info>): Info
   protected truncateInfo?(_src: Valued<Info, number>): Info
+  /* clamp(x, lower, upper) = max(lower, min(x, upper)) */
+  protected clampInfo?(_x: Valued<Info, number>, _lower: Valued<Info, number>, _upper: Valued<Info, number>): Info
 
   /* property read from object property or array element */
   protected getFieldInfo?(_base: Valued<Info>, _prop: Valued<Info>, _result: Valued<Info>): Info
@@ -161,8 +163,9 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     return this.lift(v, this.unaryInfo?.(op, this.valued(x)) ?? this.baseInfo(v, [this.valued(x)]));
   }
 
-  /** internal(flow.ts) */
-  private cmpOp(op: string, l: Wrapped<number>, r: Wrapped<number>, v: boolean): Wrapped<boolean> {
+  /** internal(flow.ts) — operands are Wrapped<unknown>: ordering comparisons pass
+   * numbers, but `is`/`isNot` compare strings, sentinels, etc. */
+  private cmpOp(op: string, l: Wrapped<unknown>, r: Wrapped<unknown>, v: boolean): Wrapped<boolean> {
     return this.lift(v, this.binaryInfo?.(op, this.valued(l), this.valued(r)) ?? this.baseInfo(v, [this.valued(l), this.valued(r)]));
   }
 
@@ -223,10 +226,10 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     greaterThan: (l, r) => this.cmpOp('>', l, r, (this.unwrap(l) as number) > (this.unwrap(r) as number)),
     greaterThanEqual: (l, r) => this.cmpOp('>=', l, r, (this.unwrap(l) as number) >= (this.unwrap(r) as number)),
     condition: (bid, cond) => this.condition(bid, 'model', cond).result as boolean,
-    is: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(l: L, r: R): l is Extract<L, R> =>
-      this.unwrap(l) === this.unwrap(r),
-    isNot: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(l: L, r: R): l is Exclude<L, R> =>
-      this.unwrap(l) !== this.unwrap(r),
+    is: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(l: L, r: R): Wrapped<boolean> =>
+      this.cmpOp('===', l, r, this.unwrap(l) === this.unwrap(r)),
+    isNot: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(l: L, r: R): Wrapped<boolean> =>
+      this.cmpOp('!==', l, r, this.unwrap(l) !== this.unwrap(r)),
     isNaN: (x) => Number.isNaN(this.unwrap(x) as number),
     isFinite: (x) => Number.isFinite(this.unwrap(x) as number),
     isType: (x, ty) => {
@@ -249,11 +252,13 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       const v = Math.trunc(this.unwrap(x) as number);
       return this.lift(v, this.truncateInfo?.(this.valued(x)) ?? this.baseInfo(v, [this.valued(x)]));
     },
-    clamp: (x, lower, upper) =>
-      this.numOp(
-        Math.max(this.unwrap(lower) as number, Math.min(this.unwrap(x) as number, this.unwrap(upper) as number)),
-        [x, lower, upper],
-      ),
+    clamp: (x, lower, upper) => {
+      const v = Math.max(this.unwrap(lower) as number, Math.min(this.unwrap(x) as number, this.unwrap(upper) as number));
+      return this.lift(
+        v,
+        this.clampInfo?.(this.valued(x), this.valued(lower), this.valued(upper)) ?? this.baseInfo(v, [this.valued(x), this.valued(lower), this.valued(upper)]),
+      );
+    },
 
     append: <T>(list: T[], x: T): T[] => { this.escaper.markEscapable(x); list.push(x); return list; },
     contains: <T>(list: T[], x: T): boolean => list.includes(x),
