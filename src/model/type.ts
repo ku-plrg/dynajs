@@ -52,11 +52,13 @@ interface CompareOps {
   // raw boolean so native `if`/`while`/`&&`/`||` and short-circuiting work. The
   // model-side mirror of the instrumenter's `D$.C(id, op, value)` on user code.
   condition: (bid: number, cond: Wrapped<boolean>) => boolean;
-  // Type predicates so a `not-found`-style guard narrows a mixed return
-  // (e.g. StringIndexOf's `Wrapped<string> | Wrapped<number>`): after
-  // `if ($.is(pos, $.base("not-found"))) ...`, the else branch sees Wrapped<number>.
-  is: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(l: L, r: R) => l is Extract<L, R>;
-  isNot: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(l: L, r: R) => l is Exclude<L, R>;
+  // Equality, symmetric with the ordering comparisons above: returns a
+  // Wrapped<boolean> carrying the `===`/`!==` Sym, which codegen funnels through
+  // `condition(...)` at each branch site (so e.g. a string `candidate === search`
+  // inside a search loop becomes a flippable path constraint). NOT a TS type
+  // guard — a `not-found`-style mixed return stays a union past the check.
+  is: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(l: L, r: R) => Wrapped<boolean>;
+  isNot: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(l: L, r: R) => Wrapped<boolean>;
   isNaN: (x: Wrapped<number>) => boolean;
   isFinite: (x: Wrapped<number>) => boolean;
   // "object" excludes null, and includes functions. "function" check is done via `AO__IsCallable`.

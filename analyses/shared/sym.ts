@@ -25,6 +25,37 @@ export function isSeqSort(sort: Sort): boolean {
   return seqElementSort(sort) !== undefined;
 }
 
+const BOOL_BINARY_OPS = new Set(['<', '<=', '>', '>=', '===', '==', '!==', '!=', '&&', '||']);
+
+// The SMT sort a Sym denotes when statically determinable from its structure;
+// undefined when not (a `select` whose element sort isn't carried here, a seq
+// kind, or `lost`). A concolic value has one definite sort per path, so this lets
+// equality drop a cross-sort comparison — e.g. a numeric StringIndexOf result vs
+// the "not-found" string sentinel (a discriminated union arm) is concretely false,
+// not a (ill-typed) symbolic constraint.
+export function sortOf(s: Sym): Sort | undefined {
+  switch (s.kind) {
+    case 'const':
+      switch (typeof s.value) {
+        case 'string': return 'String';
+        case 'boolean': return 'Bool';
+        case 'number': return 'Int';
+        default: return undefined;
+      }
+    case 'var': return s.sort;
+    case 'unary': return s.op === '!' ? 'Bool' : 'Int';
+    case 'binary': return BOOL_BINARY_OPS.has(s.op) ? 'Bool' : 'Int';
+    case 'concat':
+    case 'substr': return 'String';
+    case 'strlen':
+    case 'truncate':
+    case 'arrlen':
+    case 'seqIndexOf': return 'Int';
+    case 'seqContains': return 'Bool';
+    default: return undefined; // select (elem sort not carried), seq*, lost
+  }
+}
+
 export type Sym =
   | { kind: 'const'; value: unknown }
   | { kind: 'var'; name: string; sort: Sort }

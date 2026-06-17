@@ -22,6 +22,19 @@ function __symbolic_assert__(cond: unknown, expected: unknown): void {
   D$.analysis.symbolicAssert(cond, expected);
 }
 
+// The ExpoSE `S$` corpus seams (analyses/concolic/expose/S$). `S$.symbol(name,
+// seed)` and `S$.pureSymbol(name)` route here; unlike `__symbolic__` (the
+// microbench seam) these per-run *unique* the name first, so two `S$.symbol("X",
+// …)` calls become distinct SMT variables — ExpoSE's AssertToolkit.rename.
+function __s_symbol__(name: unknown, seed: unknown): unknown {
+  return D$.analysis.symbolNamed(name, seed);
+}
+
+// Typeless symbol (no seed). Full type-forking is M8; for now a named scalar.
+function __s_pure__(name: unknown): unknown {
+  return D$.analysis.pureSymbolNamed(name);
+}
+
 // Installs the symbolic ghost seams and returns them as the set of transparent
 // callees: they run analysis code over wrapped values, so they must NOT be
 // stripped at the opaque boundary like a real native would be.
@@ -29,5 +42,7 @@ export function installPrelude(): ReadonlySet<unknown> {
   const g = globalThis as Record<string, unknown>;
   g.__symbolic__ = __symbolic__;
   g.__symbolic_assert__ = __symbolic_assert__;
-  return new Set<unknown>([__symbolic__, __symbolic_assert__]);
+  g.__s_symbol__ = __s_symbol__;
+  g.__s_pure__ = __s_pure__;
+  return new Set<unknown>([__symbolic__, __symbolic_assert__, __s_symbol__, __s_pure__]);
 }

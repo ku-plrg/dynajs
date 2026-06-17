@@ -1,6 +1,6 @@
 import { writeFileSync } from 'node:fs';
 import { FlowAnalysis, type Valued, type InfoDomain } from '@/model/index.js';
-import { type Sym, type Sort, seqElementSort, containsLost, symToString } from '@shared/sym.js';
+import { type Sym, type Sort, seqElementSort, containsLost, sortOf, symToString } from '@shared/sym.js';
 import { solveValidity, solveModel } from './smt.js';
 import { installPrelude } from './prelude.js';
 
@@ -15,6 +15,7 @@ type ObjectMeta = { name: string; counter: number; fields: Map<string, Sym> };
 export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   result: unknown;
   private pathConstraints: PathConstraint[] = [];
+  private errors: { error: string; stack?: string }[] = [];
 
   private arrayMeta = new WeakMap<object, ArrayMeta>();
   private objectMeta = new WeakMap<object, ObjectMeta>();
@@ -52,10 +53,20 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     return { kind: 'concat', left: l, right: r };
   }
 
+  private static readonly EQUALITY_OPS = new Set(['===', '==', '!==', '!=']);
   protected binaryInfo(op: string, l: Valued<Sym>, r: Valued<Sym>): Sym | undefined {
     const left = this.symOf(l);
     const right = this.symOf(r);
     if (left.kind === 'const' && right.kind === 'const') return undefined;
+    // Cross-sort equality is concretely decided (a value is one definite sort per
+    // path): e.g. a numeric StringIndexOf result vs the "not-found" string sentinel
+    // — discriminating a union arm. It carries no symbolic info and would emit
+    // ill-typed SMT (`(= Int String)` -> z3 unknown), so leave it concrete.
+    if (ConcolicAnalysis.EQUALITY_OPS.has(op)) {
+      const ls = sortOf(left);
+      const rs = sortOf(right);
+      if (ls !== undefined && rs !== undefined && ls !== rs) return undefined;
+    }
     return { kind: 'binary', op, left, right };
   }
 
@@ -156,6 +167,18 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     return { kind: 'truncate', src };
   }
 
+  // clamp(x, lo, hi) = max(lo, min(x, hi)). Modeled symbolically (not via baseInfo)
+  // so a clamp over a symbolic bound — e.g. a search loop's start index clamped to
+  // a symbolic length — stays a real Sym instead of a `lost` that would drop the
+  // loop-bound constraint. min/max render to ite in smt.ts.
+  protected clampInfo(x: Valued<Sym>, lower: Valued<Sym>, upper: Valued<Sym>): Sym | undefined {
+    const xs = this.symOf(x);
+    const lo = this.symOf(lower);
+    const hi = this.symOf(upper);
+    if (xs.kind === 'const' && lo.kind === 'const' && hi.kind === 'const') return undefined;
+    return { kind: 'binary', op: 'max', left: lo, right: { kind: 'binary', op: 'min', left: xs, right: hi } };
+  }
+
   // A branch (user-code `if`/`&&`/… via D$.C, or a model-internal bound check via
   // $.condition) was taken. If its condition is symbolic, record it as a path
   // constraint; the concrete `taken` direction fixes its polarity. Both branch
@@ -242,6 +265,33 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
 
   // --- prelude entry points ------------------------------------------------
 
+  // ExpoSE's AssertToolkit gives every symbol a process-unique name (first `X`
+  // stays `X`, the next becomes `X_2`, …) so reused names are independent SMT
+  // variables. We do the same per run, on the *raw* name — running this over a
+  // Wrapped string would coerce it to "[object Object]" at the Map key (see the
+  // raw-vs-wrapped seam). `makeSymbolic`/`__symbolic__` deliberately skip this:
+  // the microbench already hands out distinct names and snapshots its SMT vars.
+  private nameCounts = new Map<string, number>();
+  private rename(name: string): string {
+    const n = (this.nameCounts.get(name) ?? 0) + 1;
+    this.nameCounts.set(name, n);
+    return n === 1 ? name : `${name}_${n}`;
+  }
+
+  // `S$.symbol(name, seed)`: unique the name, then mint as usual. Deterministic
+  // renaming keeps replay sound — a child run re-issues the same calls, so the
+  // same renamed names line up with the child input's keys.
+  symbolNamed(name: unknown, seed: unknown): unknown /* Wrapped */ {
+    return this.makeSymbolic(this.rename(String(this.valued(name).value)), seed);
+  }
+
+  // `S$.pureSymbol(name)`: a typeless symbol with no seed. Real type-forking
+  // (the value is reused as string/number/bool across branches) is M8; for now
+  // we stand it up as a named Int seeded 0 so corpus files at least run.
+  pureSymbolNamed(name: unknown): unknown /* Wrapped */ {
+    return this.makeSymbolic(this.rename(String(this.valued(name).value)), 0);
+  }
+
   // Introduce symbolic variable `name`, returning a wrapped value the program
   // runs concretely on. Replay (M3): if the Distributor's seed input carries a
   // concrete for this variable (a child input from a negated branch), drive
@@ -252,7 +302,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   //     of `.length`/elements become symbolic via getFieldInfo, and the array's
   //     length is constrained non-negative (ExpoSE).
   //   - object -> a symbolic object whose fields are minted lazily on read.
-  //   - scalar -> a `var` of String (string seed) or Int (the default sort).
+  //   - scalar -> a `var` whose sort follows the seed (String / Bool / else Int).
   // Array/object replay inputs don't round-trip the scalar SMT model parser, so
   // only the scalar case is re-seeded from a child input.
   makeSymbolic(name: unknown, seed: unknown): unknown /* Wrapped */ {
@@ -276,8 +326,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
       this.objectMeta.set(concrete, { name: varName, counter: 0, fields: new Map() });
       return this.make(concrete);
     }
-    const sort: Sort = typeof concrete === 'string' ? 'String' : 'Int';
-    return this.make(concrete, { kind: 'var', name: varName, sort });
+    return this.make(concrete, { kind: 'var', name: varName, sort: this.scalarSort(concrete) });
   }
 
   symbolicAssert(condArg: unknown, expectedArg: unknown): void {
@@ -312,6 +361,18 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     emit(verdict === 'valid' ? 'detected' : 'clean');
   }
 
+  // An uncaught throw escaping the program (ExpoSE SymbolicExecution._uncaughtException).
+  // Corpus findings ARE these throws (`throw "Reachable"`), and the corpus oracle
+  // counts them, so we record one per escaping exception. `assume(false)` throws
+  // the bridge's NotAnErrorException to prune a path — that is not a program error,
+  // so we drop it. The thrown value is Wrapped (instrumented code), hence unwrap.
+  recordUncaught(e: unknown): void {
+    const v: unknown = this.valued(e).value;
+    const NotAnError = (globalThis as Record<string, unknown>).__NotAnError__;
+    if (typeof NotAnError === 'function' && v instanceof NotAnError) return;
+    this.errors.push({ error: String(v), stack: v instanceof Error ? v.stack : undefined });
+  }
+
   endExecution() {
     D$.analysis.result = {
       pathConstraints: this.pathConstraints.map((p) => ({
@@ -341,7 +402,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
       JSON.stringify({
         pc: this.pcToString(this.pathConstraints),
         input: this.seedInput(),
-        errors: [],
+        errors: this.errors,
         alternatives: this.alternatives(),
         stats: JSON.stringify({}),
       }),
@@ -367,6 +428,16 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     const bound =
       typeof this.seedInput()._bound === 'number' ? (this.seedInput()._bound as number) : 0;
     const pcs = this.pathConstraints;
+    // Replay divergence (ExpoSE SymbolicState.js:299): the seed pinned `_bound`
+    // branches, but this run reached fewer — the child input failed to steer
+    // execution onto the intended path (a modeling gap, e.g. an op we don't
+    // translate so a branch went concrete). ExpoSE throws here and writes no
+    // result; we mirror that — writeExpoSEResult evaluates us before the file
+    // write, so divergence leaves no out file and the Distributor sees a failed
+    // path rather than a silently-wrong one.
+    if (bound > pcs.length) {
+      throw `Bound ${bound} > ${pcs.length}, divergence has occured`;
+    }
     const out: { input: Record<string, unknown>; pc: string; forkIid: number }[] = [];
     for (let i = bound; i < pcs.length; i++) {
       if (pcs[i].binder) continue; // engine-introduced (bounds/length>=0): never flipped
@@ -403,4 +474,13 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   }
 }
 
-D$.analysis = new ConcolicAnalysis();
+const analysis = new ConcolicAnalysis();
+D$.analysis = analysis;
+
+// ExpoSE drop-in only: route uncaught program throws into errors[] (the corpus
+// oracle counts them; see recordUncaught). Mirrors ExpoSE's process-level
+// handler. Gated on EXPOSE_OUT_PATH so the microbench keeps Node's default
+// crash-on-throw behaviour.
+if (process.env.EXPOSE_OUT_PATH) {
+  process.on('uncaughtException', (e) => analysis.recordUncaught(e));
+}

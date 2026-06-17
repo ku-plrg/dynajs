@@ -11,10 +11,10 @@ export function INTRINSICS_String_prototype_charAt ($ : SpecRuntime, $this : Wra
   var S = AO__ToString($, (O as Wrapped<unknown>));
   var position = AO__ToIntegerOrInfinity($, (pos as Wrapped<unknown>));
   var size = $.length(S);
-  if ($.condition(Number.MAX_SAFE_INTEGER - 94, $.lessThan(position, $.base<number>(0, []))) || $.condition(Number.MAX_SAFE_INTEGER - 95, $.greaterThanEqual(position, size)))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 333, $.lessThan(position, $.base<number>(0, []))) || $.condition(Number.MAX_SAFE_INTEGER - 334, $.greaterThanEqual(position, size)))
   {
     return $.base<string>("", []);
   }
 
-  return $.substring(S, position, $.add(position, $.base<number>(1, [])));
+  return $.substring(S, (position as Wrapped<number>), ($.add((position as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>)) as Wrapped<number>));
 }

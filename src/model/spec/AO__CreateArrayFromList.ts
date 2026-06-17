@@ -13,7 +13,7 @@ export function AO__CreateArrayFromList ($ : SpecRuntime, elements : Wrapped<unk
   {
     var e = elements[_x0];
     AO__CreateDataPropertyOrThrow($, (array as Wrapped<unknown>), (AO__ToString($, (n as Wrapped<unknown>)) as Wrapped<unknown>), (e as Wrapped<unknown>));
-    n = $.add(n, $.base<number>(1, []));
+    n = $.add((n as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>));
   }
 
   return array;
