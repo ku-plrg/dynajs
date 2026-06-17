@@ -11,5 +11,6 @@ var t = 0;
 __set_taint__(t);
 var r = a.copyWithin(t, 2);
 
-__assert_taint__(r[0], true);
-__assert_taint__(r[1], true);
+// implicit branch: false
+__assert_taint__(r[0], false);
+__assert_taint__(r[1], false);

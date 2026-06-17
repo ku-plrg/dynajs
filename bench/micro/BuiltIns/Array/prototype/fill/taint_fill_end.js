@@ -11,5 +11,6 @@ var en = 3;
 __set_taint__(en);
 var r = a.fill("Z", 1, en);
 
-__assert_taint__(r[1], true);
-__assert_taint__(r[2], true);
+// implicit branch: false
+__assert_taint__(r[1], false);
+__assert_taint__(r[2], false);
