@@ -84,6 +84,12 @@ function makeMatcher(patterns) {
 const isExcluded = makeMatcher(EXCLUDE);
 const isNoCheck = makeMatcher(NO_CHECK);
 
+const srcDir = join(ESMETA_HOME, "logs", "polyfill");
+
+// Clear stale gen-poly output so a builtin removed or renamed upstream doesn't
+// linger and get pulled back in by the dependency walk below.
+rmSync(srcDir, { recursive: true, force: true });
+
 // Generate polyfills in ESMETA_HOME first.
 console.log(chalk.cyan(`▶ Running gen-poly (${ESMETA_HOME})`));
 execSync('sbt "run gen-poly -silent -gen-poly:log"', {
@@ -91,7 +97,6 @@ execSync('sbt "run gen-poly -silent -gen-poly:log"', {
   stdio: "inherit",
 });
 
-const srcDir = join(ESMETA_HOME, "logs", "polyfill");
 if (!existsSync(srcDir)) {
   console.error(chalk.red(`✗ Source directory not found: ${srcDir}`));
   process.exit(1);

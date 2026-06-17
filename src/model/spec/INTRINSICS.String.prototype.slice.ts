@@ -11,13 +11,13 @@ export function INTRINSICS_String_prototype_slice ($ : SpecRuntime, $this : Wrap
   var S = AO__ToString($, (O as Wrapped<unknown>));
   var len = $.length(S);
   var intStart = AO__ToIntegerOrInfinity($, (start as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 381, $.is(intStart, $.base<number>(-Infinity, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 391, $.is(intStart, $.base<number>(-Infinity, []))))
   {
     var from = $.base<number>(0, []);
   }
   else
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 382, $.lessThan(intStart, $.base<number>(0, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 392, $.lessThan(intStart, $.base<number>(0, []))))
     {
       var from = $.max($.add((len as Wrapped<number>), (intStart as Wrapped<number>)), $.base<number>(0, []));
     }
@@ -28,7 +28,7 @@ export function INTRINSICS_String_prototype_slice ($ : SpecRuntime, $this : Wrap
 
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 383, $.is(end, $.base<undefined>(undefined, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 393, $.is(end, $.base<undefined>(undefined, []))))
   {
     var intEnd = len;
   }
@@ -37,13 +37,13 @@ export function INTRINSICS_String_prototype_slice ($ : SpecRuntime, $this : Wrap
     var intEnd = AO__ToIntegerOrInfinity($, (end as Wrapped<unknown>));
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 384, $.is(intEnd, $.base<number>(-Infinity, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 394, $.is(intEnd, $.base<number>(-Infinity, []))))
   {
     var to = $.base<number>(0, []);
   }
   else
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 385, $.lessThan(intEnd, $.base<number>(0, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 395, $.lessThan(intEnd, $.base<number>(0, []))))
     {
       var to = $.max($.add((len as Wrapped<number>), (intEnd as Wrapped<number>)), $.base<number>(0, []));
     }
@@ -54,7 +54,7 @@ export function INTRINSICS_String_prototype_slice ($ : SpecRuntime, $this : Wrap
 
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 386, $.greaterThanEqual(from, to)))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 396, $.greaterThanEqual(from, to)))
   {
     return $.base<string>("", []);
   }

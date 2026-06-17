@@ -12,10 +12,10 @@ import { AO__ToString } from "./AO__ToString.js";
 
 export function INTRINSICS_String_prototype_replace ($ : SpecRuntime, $this : Wrapped<unknown>, searchValue : Wrapped<unknown>, replaceValue : Wrapped<unknown>) {
   var O = AO__RequireObjectCoercible($, $this);
-  if (!($.condition(Number.MAX_SAFE_INTEGER - 364, $.is(searchValue, $.base<undefined>(undefined, []))) || $.condition(Number.MAX_SAFE_INTEGER - 365, $.is(searchValue, $.base<null>(null, [])))))
+  if (!($.condition(Number.MAX_SAFE_INTEGER - 374, $.is(searchValue, $.base<undefined>(undefined, []))) || $.condition(Number.MAX_SAFE_INTEGER - 375, $.is(searchValue, $.base<null>(null, [])))))
   {
     var replacer = AO__GetMethod($, (searchValue as Wrapped<unknown>), ($.base<symbol>(Symbol.replace, []) as Wrapped<unknown>));
-    if (!$.condition(Number.MAX_SAFE_INTEGER - 366, $.is(replacer, $.base<undefined>(undefined, []))))
+    if (!$.condition(Number.MAX_SAFE_INTEGER - 376, $.is(replacer, $.base<undefined>(undefined, []))))
     {
       return AO__Call($, (replacer as Wrapped<unknown>), (searchValue as Wrapped<unknown>), ([O, replaceValue] as Wrapped<unknown>[]));
     }
@@ -25,21 +25,21 @@ export function INTRINSICS_String_prototype_replace ($ : SpecRuntime, $this : Wr
   var string = AO__ToString($, (O as Wrapped<unknown>));
   var searchString = AO__ToString($, (searchValue as Wrapped<unknown>));
   var functionalReplace = AO__IsCallable($, (replaceValue as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 367, $.is(functionalReplace, $.base<boolean>(false, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 377, $.is(functionalReplace, $.base<boolean>(false, []))))
   {
     replaceValue = AO__ToString($, (replaceValue as Wrapped<unknown>));
   }
 
   var searchLength = $.length(searchString);
   var position = AO__StringIndexOf($, (string as Wrapped<string>), (searchString as Wrapped<string>), ($.base<number>(0, []) as Wrapped<number>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 368, $.is(position, $.base<string>("not-found", []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 378, $.is(position, $.base<string>("not-found", []))))
   {
     return string;
   }
 
   var preceding = $.substring(string, ($.base<number>(0, []) as Wrapped<number>), (position as Wrapped<number>));
   var following = $.substring(string, ($.add((position as Wrapped<number>), (searchLength as Wrapped<number>)) as Wrapped<number>), $.length(string));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 369, $.is(functionalReplace, $.base<boolean>(true, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 379, $.is(functionalReplace, $.base<boolean>(true, []))))
   {
     var replacement = AO__ToString($, (AO__Call($, (replaceValue as Wrapped<unknown>), ($.base<undefined>(undefined, []) as Wrapped<unknown>), ([searchString, position, string] as Wrapped<unknown>[])) as Wrapped<unknown>));
   }

@@ -12,12 +12,12 @@ export function AO__IsRegExp ($ : SpecRuntime, argument : Wrapped<unknown>) {
   }
 
   var matcher = AO__Get($, (argument as Wrapped<unknown>), ($.base<symbol>(Symbol.match, []) as Wrapped<unknown>));
-  if (!$.condition(Number.MAX_SAFE_INTEGER - 473, $.is(matcher, $.base<undefined>(undefined, []))))
+  if (!$.peek($.is(matcher, $.base<undefined>(undefined, []))))
   {
     return AO__ToBoolean($, (matcher as Wrapped<unknown>));
   }
 
-  if (("RegExpMatcher" in argument))
+  if (("RegExpMatcher" /* NOTE: internal */ in argument))
   {
     return $.base<boolean>(true, []);
   }

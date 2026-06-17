@@ -18,7 +18,7 @@ export { AO__GetV } from "./AO__GetV.js";
 export { AO__HasProperty } from "./AO__HasProperty.js";
 export { AO__IsCallable } from "./AO__IsCallable.js";
 export { AO__IsConstructor } from "./AO__IsConstructor.js";
-export { AO__IsRegExp } from "./AO__IsRegExp.js";
+export { AO__IsRegExp } from "./AO__IsRegExp.manual.js";
 export { AO__IsStringWellFormedUnicode } from "./AO__IsStringWellFormedUnicode.js";
 export { AO__LengthOfArrayLike } from "./AO__LengthOfArrayLike.js";
 export { AO__MakeBasicObject } from "./AO__MakeBasicObject.js";
