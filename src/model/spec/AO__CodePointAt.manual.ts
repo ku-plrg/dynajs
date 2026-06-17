@@ -16,30 +16,30 @@ export function AO__CodePointAt(
   var size = $.length(string);
   // 2. Assert: position ≥ 0 and position < size.
   // 3. Let first be the code unit at index position within string.
-  var first = $.codeUnitAt(string, position);
+  var first : Wrapped<string> = $.substring(string, position, $.add(position, $.base(1, [])));
+  var firstUnwrapped : number = $.peek(first).charCodeAt(0);
   // 4. Let cp be the code point whose numeric value is the numeric value of first.
-  var firstCU = $.peek(first).charCodeAt(0);
-  var cp = $.base<number>(firstCU, [first]);
+  var cp = $.base<number>(firstUnwrapped, [first]);
   // 5. If first is neither a leading surrogate nor a trailing surrogate, then
-  if (!(firstCU >= 0xd800 && firstCU <= 0xdfff)) {
+  if (!(firstUnwrapped >= 0xd800 && firstUnwrapped <= 0xdfff)) {
     // a. Return the Record { [[CodePoint]]: cp, [[CodeUnitCount]]: 1, [[IsUnpairedSurrogate]]: false }.
     return { "CodePoint": cp, "CodeUnitCount": $.base<number>(1, []), "IsUnpairedSurrogate": $.base<boolean>(false, []) };
   }
   // 6. If first is a trailing surrogate or position + 1 = size, then
-  if ((firstCU >= 0xdc00 && firstCU <= 0xdfff) || $.peek(position) + 1 === $.peek(size)) {
+  if ((firstUnwrapped >= 0xdc00 && firstUnwrapped <= 0xdfff) || $.peek(position) + 1 === $.peek(size)) {
     // a. Return the Record { [[CodePoint]]: cp, [[CodeUnitCount]]: 1, [[IsUnpairedSurrogate]]: true }.
     return { "CodePoint": cp, "CodeUnitCount": $.base<number>(1, []), "IsUnpairedSurrogate": $.base<boolean>(true, []) };
   }
   // 7. Let second be the code unit at index position + 1 within string.
-  var second = $.codeUnitAt(string, $.add(position, $.base<number>(1, [])));
-  var secondCU = $.peek(second).charCodeAt(0);
+  var second = $.substring(string, $.add(position, $.base<number>(1, [])), $.add(position, $.base<number>(2, [])));
+  var secondUnwrapped : number = $.peek(second).charCodeAt(0);
   // 8. If second is not a trailing surrogate, then
-  if (!(secondCU >= 0xdc00 && secondCU <= 0xdfff)) {
+  if (!(secondUnwrapped >= 0xdc00 && secondUnwrapped <= 0xdfff)) {
     // a. Return the Record { [[CodePoint]]: cp, [[CodeUnitCount]]: 1, [[IsUnpairedSurrogate]]: true }.
     return { "CodePoint": cp, "CodeUnitCount": $.base<number>(1, []), "IsUnpairedSurrogate": $.base<boolean>(true, []) };
   }
   // 9. Set cp to UTF16SurrogatePairToCodePoint(first, second).
-  cp = AO__UTF16SurrogatePairToCodePoint($, first as Wrapped<unknown>, second as Wrapped<unknown>);
+  cp = AO__UTF16SurrogatePairToCodePoint($, first as Wrapped<string>, second as Wrapped<string>);
   // 10. Return the Record { [[CodePoint]]: cp, [[CodeUnitCount]]: 2, [[IsUnpairedSurrogate]]: false }.
   return { "CodePoint": cp, "CodeUnitCount": $.base<number>(2, []), "IsUnpairedSurrogate": $.base<boolean>(false, []) };
 }

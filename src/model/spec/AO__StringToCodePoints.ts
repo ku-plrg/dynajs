@@ -10,8 +10,8 @@ export function AO__StringToCodePoints ($ : SpecRuntime, string : Wrapped<string
   while ($.condition(Number.MAX_SAFE_INTEGER - 596, $.lessThan(position, size)))
   {
     var cp = AO__CodePointAt($, (string as Wrapped<string>), (position as Wrapped<number>));
-    $.append(codePoints, cp["CodePoint"])
-    position = $.add((position as Wrapped<number>), (cp["CodeUnitCount"] as Wrapped<number>));
+    $.append(codePoints, cp["CodePoint" /* TODO INTERNAL : internal access */])
+    position = $.add((position as Wrapped<number>), (cp["CodeUnitCount" /* TODO INTERNAL : internal access */] as Wrapped<number>));
   }
 
   return codePoints;

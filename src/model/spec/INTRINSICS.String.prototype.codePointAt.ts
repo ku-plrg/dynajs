@@ -17,5 +17,5 @@ export function INTRINSICS_String_prototype_codePointAt ($ : SpecRuntime, $this 
   }
 
   var cp = AO__CodePointAt($, (S as Wrapped<string>), (position as Wrapped<number>));
-  return cp["CodePoint"];
+  return cp["CodePoint" /* TODO INTERNAL : internal access */];
 }

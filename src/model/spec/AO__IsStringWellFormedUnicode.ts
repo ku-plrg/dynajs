@@ -9,12 +9,12 @@ export function AO__IsStringWellFormedUnicode ($ : SpecRuntime, string : Wrapped
   while ($.condition(Number.MAX_SAFE_INTEGER - 485, $.lessThan(k, len)))
   {
     var cp = AO__CodePointAt($, (string as Wrapped<string>), (k as Wrapped<number>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 486, $.is(cp["IsUnpairedSurrogate"], $.base<boolean>(true, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 486, $.is(cp["IsUnpairedSurrogate" /* TODO INTERNAL : internal access */], $.base<boolean>(true, []))))
     {
       return $.base<boolean>(false, []);
     }
 
-    k = $.add((k as Wrapped<number>), (cp["CodeUnitCount"] as Wrapped<number>));
+    k = $.add((k as Wrapped<number>), (cp["CodeUnitCount" /* TODO INTERNAL : internal access */] as Wrapped<number>));
   }
 
   return $.base<boolean>(true, []);

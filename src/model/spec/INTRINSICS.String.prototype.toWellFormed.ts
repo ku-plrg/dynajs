@@ -15,16 +15,16 @@ export function INTRINSICS_String_prototype_toWellFormed ($ : SpecRuntime, $this
   while ($.condition(Number.MAX_SAFE_INTEGER - 413, $.lessThan(k, strLen)))
   {
     var cp = AO__CodePointAt($, (S as Wrapped<string>), (k as Wrapped<number>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 414, $.is(cp["IsUnpairedSurrogate"], $.base<boolean>(true, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 414, $.is(cp["IsUnpairedSurrogate" /* TODO INTERNAL : internal access */], $.base<boolean>(true, []))))
     {
       result = $.concatenate(result, $.base<string>("�", []));
     }
     else
     {
-      result = $.concatenate(result, AO__UTF16EncodeCodePoint($, (cp["CodePoint"] as Wrapped<unknown>)));
+      result = $.concatenate(result, AO__UTF16EncodeCodePoint($, (cp["CodePoint" /* TODO INTERNAL : internal access */] as Wrapped<unknown>)));
     }
 
-    k = $.add((k as Wrapped<number>), (cp["CodeUnitCount"] as Wrapped<number>));
+    k = $.add((k as Wrapped<number>), (cp["CodeUnitCount" /* TODO INTERNAL : internal access */] as Wrapped<number>));
   }
 
   return result;

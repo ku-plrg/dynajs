@@ -261,6 +261,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     },
 
     append: <T>(list: T[], x: T): T[] => { this.escaper.markEscapable(x); list.push(x); return list; },
+    prepend: <T>(list: T[], x: T): T[] => { this.escaper.markEscapable(x); list.unshift(x); return list; },
     contains: <T>(list: T[], x: T): boolean => list.includes(x),
     IN__IntRange: (lo, loInclusive, hi, hiInclusive, ascending) => {
       const start = (this.unwrap(lo) as number) + (loInclusive ? 0 : 1);

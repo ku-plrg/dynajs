@@ -69,6 +69,10 @@ interface MathOps {
 interface ListOps {
   // List notations.
   append: <T>(list: T[], x: T) => T[];
+  // Models the spec's "Prepend X to Y" notation (e.g. Array.prototype.concat
+  // prepends O to items). Generated as `prepend(list, x)` — adds x to the
+  // front of list.
+  prepend: <T>(list: T[], x: T) => T[];
   contains: <T>(list: T[], x: T) => boolean;
   // The List of integers in the interval from `lo` to `hi` (inclusivity given by
   // `loInclusive`/`hiInclusive`), in ascending or descending order. Models the
