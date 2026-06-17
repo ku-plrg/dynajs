@@ -19,6 +19,18 @@ import chalk from "chalk";
 // To use with different ESMETA_HOME: ESMETA_HOME=~/path/to/esmeta npm run copy
 const INCLUDE = [
   // Bulk-select with a RegExp, then carve out exceptions in EXCLUDE below, e.g.:
+  // /^INTRINSICS\.Array\./,
+  /^INTRINSICS\.Array\.prototype\./,
+  // /^INTRINSICS\.Boolean\./,
+  // /^INTRINSICS\.Function\./,
+  // /^INTRINSICS\.JSON\./,
+  // /^INTRINSICS\.Map\./,
+  // /^INTRINSICS\.Math\./,
+  // /^INTRINSICS\.Number\./,
+  // /^INTRINSICS\.Object\./,
+  // /^INTRINSICS\.RegExp\./,
+  // /^INTRINSICS\.Set\./,
+  // /^INTRINSICS\.String\./,
   /^INTRINSICS\.String\.prototype\./,
 ];
 

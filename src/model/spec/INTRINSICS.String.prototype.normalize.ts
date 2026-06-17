@@ -8,7 +8,7 @@ import { AO__ToString } from "./AO__ToString.js";
 export function INTRINSICS_String_prototype_normalize ($ : SpecRuntime, $this : Wrapped<unknown>, form : Wrapped<unknown> = $.undef) {
   var O = AO__RequireObjectCoercible($, $this);
   var S = AO__ToString($, (O as Wrapped<unknown>));
-  if ($.is(form, $.base<undefined>(undefined, [])))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 356, $.is(form, $.base<undefined>(undefined, []))))
   {
     var f = $.base<string>("NFC", []);
   }
@@ -17,7 +17,7 @@ export function INTRINSICS_String_prototype_normalize ($ : SpecRuntime, $this : 
     var f = AO__ToString($, (form as Wrapped<unknown>));
   }
 
-  if (!((($.is(f, $.base<string>("NFC", [])) || $.is(f, $.base<string>("NFD", []))) || $.is(f, $.base<string>("NFKC", []))) || $.is(f, $.base<string>("NFKD", []))))
+  if (!((($.condition(Number.MAX_SAFE_INTEGER - 357, $.is(f, $.base<string>("NFC", []))) || $.condition(Number.MAX_SAFE_INTEGER - 358, $.is(f, $.base<string>("NFD", [])))) || $.condition(Number.MAX_SAFE_INTEGER - 359, $.is(f, $.base<string>("NFKC", [])))) || $.condition(Number.MAX_SAFE_INTEGER - 360, $.is(f, $.base<string>("NFKD", [])))))
   {
     throw new RangeError;
   }

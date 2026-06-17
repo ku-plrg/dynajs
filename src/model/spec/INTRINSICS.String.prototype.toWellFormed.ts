@@ -13,10 +13,10 @@ export function INTRINSICS_String_prototype_toWellFormed ($ : SpecRuntime, $this
   var strLen = $.length(S);
   var k = $.base<number>(0, []);
   var result = $.base<string>("", []);
-  while ($.condition(Number.MAX_SAFE_INTEGER - 108, $.lessThan(k, strLen)))
+  while ($.condition(Number.MAX_SAFE_INTEGER - 403, $.lessThan(k, strLen)))
   {
     var cp = AO__CodePointAt($, (S as Wrapped<string>), (k as Wrapped<number>));
-    if ($.is(cp["IsUnpairedSurrogate"], $.base<boolean>(true, [])))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 404, $.is(cp["IsUnpairedSurrogate"], $.base<boolean>(true, []))))
     {
       result = $.concatenate(result, $.base<string>("�", []));
     }
@@ -25,7 +25,7 @@ export function INTRINSICS_String_prototype_toWellFormed ($ : SpecRuntime, $this
       result = $.concatenate(result, AO__UTF16EncodeCodePoint($, (cp["CodePoint"] as Wrapped<unknown>)));
     }
 
-    k = $.add(k, cp["CodeUnitCount"]);
+    k = $.add((k as Wrapped<number>), (cp["CodeUnitCount"] as Wrapped<number>));
   }
 
   return result;

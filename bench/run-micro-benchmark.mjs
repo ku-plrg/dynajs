@@ -105,7 +105,7 @@ const TYPE_CONFIG = {
 //   2. NodeMedic resolves its deps (@babel/preset-env, immutable, ...) from its
 //      own node_modules, so the run's cwd must be NODEMEDIC_HOME.
 const NODEMEDIC_HOME =
-  process.env.NODEMEDIC_HOME ?? path.join(homedir(), "NodeMedic-wip");
+  process.env.NODEMEDIC_HOME ?? path.join(homedir(), "arts/NodeMedic-FINE");
 const NODEMEDIC_JALANGI_CMD = path.join(
   NODEMEDIC_HOME, "lib/jalangi2-babel/src/js/commands/jalangi.js",
 );

@@ -11,14 +11,14 @@ export function INTRINSICS_String_prototype_startsWith ($ : SpecRuntime, $this :
   var O = AO__RequireObjectCoercible($, $this);
   var S = AO__ToString($, (O as Wrapped<unknown>));
   var isRegExp = AO__IsRegExp($, (searchString as Wrapped<unknown>));
-  if ($.is(isRegExp, $.base<boolean>(true, [])))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 397, $.is(isRegExp, $.base<boolean>(true, []))))
   {
     throw new TypeError;
   }
 
   var searchStr = AO__ToString($, (searchString as Wrapped<unknown>));
   var len = $.length(S);
-  if ($.is(position, $.base<undefined>(undefined, [])))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 398, $.is(position, $.base<undefined>(undefined, []))))
   {
     var pos = $.base<number>(0, []);
   }
@@ -29,19 +29,19 @@ export function INTRINSICS_String_prototype_startsWith ($ : SpecRuntime, $this :
 
   var start = $.clamp(pos, $.base<number>(0, []), len);
   var searchLength = $.length(searchStr);
-  if ($.is(searchLength, $.base<number>(0, [])))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 399, $.is(searchLength, $.base<number>(0, []))))
   {
     return $.base<boolean>(true, []);
   }
 
-  var end = $.add(start, searchLength);
-  if ($.condition(Number.MAX_SAFE_INTEGER - 107, $.greaterThan(end, len)))
+  var end = $.add((start as Wrapped<number>), (searchLength as Wrapped<number>));
+  if ($.condition(Number.MAX_SAFE_INTEGER - 400, $.greaterThan(end, len)))
   {
     return $.base<boolean>(false, []);
   }
 
-  var substring = $.substring(S, start, end);
-  if ($.is(substring, searchStr))
+  var substring = $.substring(S, (start as Wrapped<number>), (end as Wrapped<number>));
+  if ($.condition(Number.MAX_SAFE_INTEGER - 401, $.is(substring, searchStr)))
   {
     return $.base<boolean>(true, []);
   }
