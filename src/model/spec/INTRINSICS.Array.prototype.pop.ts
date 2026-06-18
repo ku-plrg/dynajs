@@ -11,7 +11,7 @@ import { AO__ToString } from "./AO__ToString.js";
 export function INTRINSICS_Array_prototype_pop ($ : SpecRuntime, $this : Wrapped<unknown>) {
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 152, $.is(len, $.base<number>(0, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 154, $.is(len, $.base<number>(0, []))))
   {
     AO__Set($, (O as Wrapped<unknown>), ($.base<string>("length", []) as Wrapped<unknown>), ($.base<number>(0, []) as Wrapped<unknown>), ($.base<boolean>(true, []) as Wrapped<boolean>));
     return $.base<undefined>(undefined, []);

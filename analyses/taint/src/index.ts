@@ -66,6 +66,13 @@ export class TaintAnalysis extends FlowAnalysis<TaintInfo> {
     return { bit: chars.some((c) => c), chars, origin: inheritedOrigin([left, right]) };
   }
 
+  protected rangeInfo(_index: number, _lo: Valued<TaintInfo, number>, _loInclusive: boolean, _hi: Valued<TaintInfo, number>, _hiInclusive: boolean, _ascending: boolean, _bid: number): TaintInfo {
+    // A range index is a pure loop counter, so return it untainted no matter how the
+    // bounds are tainted — deliberately dropping the control/bound taint a default
+    // bound-derived `baseInfo` would carry.
+    return { bit: false };
+  }
+
   isTainted(value: unknown): boolean {
     return infoTainted(this.getInfo(value));
   }

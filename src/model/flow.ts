@@ -98,6 +98,10 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   /* clamp(x, lower, upper) = max(lower, min(x, upper)) */
   protected clampInfo?(_x: Valued<Info, number>, _lower: Valued<Info, number>, _upper: Valued<Info, number>): Info
 
+  /* one index of an integer range `lo..hi`; called per element so the analysis can
+   * tie each index to the (possibly symbolic) bounds. `bid` keys the loop-bound branch. */
+  protected rangeInfo?(_index: number, _lo: Valued<Info, number>, _loInclusive: boolean, _hi: Valued<Info, number>, _hiInclusive: boolean, _ascending: boolean, _bid: number): Info
+
   /* property read from object property or array element */
   protected getFieldInfo?(_base: Valued<Info>, _prop: Valued<Info>, _result: Valued<Info>): Info
 
@@ -263,13 +267,21 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     append: <T>(list: T[], x: T): T[] => { this.escaper.markEscapable(x); list.push(x); return list; },
     prepend: <T>(list: T[], x: T): T[] => { this.escaper.markEscapable(x); list.unshift(x); return list; },
     contains: <T>(list: T[], x: T): boolean => list.includes(x),
-    IN__IntRange: (lo, loInclusive, hi, hiInclusive, ascending) => {
+    range: (lo, loInclusive, hi, hiInclusive, ascending, bid): Wrapped<number>[] => {
+      // The interval is the SET {x : lo ≤/< x ≤/< hi}; `ascending` only picks the
+      // order. Materialized eagerly as an array (driven by a native `for...of` in
+      // generated code), so each index is a `lift`ed value: a user analysis observes
+      // the loop through `rangeInfo` (which gets the possibly-symbolic bounds + bid),
+      // and without that hook each index falls back to deriving from the bounds.
       const start = (this.unwrap(lo) as number) + (loInclusive ? 0 : 1);
       const end = (this.unwrap(hi) as number) - (hiInclusive ? 0 : 1);
       const out: Wrapped<number>[] = [];
-      // Indices are concrete integers, so they enter as fresh literals (no
-      // provenance) — matching how an explicit `for` counter is generated.
-      for (let i = start; i <= end; i++) out.push(this.numOp(i, []));
+      for (let i = start; i <= end; i++) {
+        out.push(this.lift(i,
+          this.rangeInfo?.(i, this.valued(lo), loInclusive, this.valued(hi), hiInclusive, ascending, bid)
+            ?? this.baseInfo(i, [this.valued(lo), this.valued(hi)]),
+        ));
+      }
       if (!ascending) out.reverse();
       return out;
     },

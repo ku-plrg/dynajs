@@ -7,7 +7,7 @@ export type Unwrapped<T = unknown> = T & { readonly [WrappedValueBrand]: false; 
 // Primitives are (implicit) subtype of unwrapped, but unwrapped is not necessarily primitive (e.g. it can be an object that has been unwrapped)
 export type Primitive = string | number | boolean | bigint | symbol | null | undefined;
 
-interface SpecOps extends StringOps, ArithmeticOps, CompareOps, MathOps, ListOps {
+interface SpecOps extends StringOps, ArithmeticOps, CompareOps, MathOps, ListOps, RangeOps {
   // default propagation: unwrapped -> wrapped
   base: <T extends Unwrapped | Primitive>(v: T, parent: Wrapped[]) => Wrapped<T>;
   // wrapped -> unwrapped
@@ -74,10 +74,22 @@ interface ListOps {
   // front of list.
   prepend: <T>(list: T[], x: T) => T[];
   contains: <T>(list: T[], x: T) => boolean;
-  // The List of integers in the interval from `lo` to `hi` (inclusivity given by
-  // `loInclusive`/`hiInclusive`), in ascending or descending order. Models the
-  // spec's "integers in the interval from X to Y" notation (e.g. FindViaPredicate).
-  IN__IntRange: (lo: Wrapped<number>, loInclusive: boolean, hi: Wrapped<number>, hiInclusive: boolean, ascending: boolean) => Wrapped<number>[];
+}
+
+// The integers in an interval [lo, hi] (inclusivity per `loInclusive`/`hiInclusive`),
+// in ascending or descending order, as the array of index values — driven by a
+// native `for...of` in generated code (arrays are iterable). One op for both spec
+// phrasings of the same concept: a "For each integer i such that lo ≤/< i ≤/< hi"
+// step (ForEachIntegerStep) and the "a List of the integers in the interval from X
+// to Y" expression notation (e.g. FindViaPredicate), which is just an integer loop
+// spelled via an intermediate List.
+interface RangeOps {
+  // Each index is a Wrapped value carrying `rangeInfo` (see FlowAnalysis), so a user
+  // analysis can model the loop — including a symbolic `hi` (e.g. a string `length`)
+  // — as a unit instead of reconstructing it from per-step ops. `bid` keys the
+  // loop-bound branch for the analysis. Without a `rangeInfo` hook the indices fall
+  // back to deriving from the bounds (`baseInfo`).
+  range: (lo: Wrapped<number>, loInclusive: boolean, hi: Wrapped<number>, hiInclusive: boolean, ascending: boolean, bid: number) => Wrapped<number>[];
 }
 
 // The runtime threaded into every generated polyfill as the `$` parameter.

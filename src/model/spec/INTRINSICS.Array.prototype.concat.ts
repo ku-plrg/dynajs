@@ -16,24 +16,23 @@ export function INTRINSICS_Array_prototype_concat ($ : SpecRuntime, $this : Wrap
   var A = AO__ArraySpeciesCreate($, (O as Wrapped<unknown>), ($.base<number>(0, []) as Wrapped<number>));
   var n = $.base<number>(0, []);
   $.prepend(items, O)
-  for (var _x0 = 0; _x0 < items.length; _x0++)
+  for (var E of items)
   {
-    var E = items[_x0];
     var spreadable = AO__IsConcatSpreadable($, (E as Wrapped<unknown>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 87, $.is(spreadable, $.base<boolean>(true, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 89, $.is(spreadable, $.base<boolean>(true, []))))
     {
       var len = AO__LengthOfArrayLike($, (E as Wrapped<unknown>));
-      if ($.condition(Number.MAX_SAFE_INTEGER - 88, $.greaterThan($.add((n as Wrapped<number>), (len as Wrapped<number>)), $.subtract(($.exponentiate($.base<number>(2, []), $.base<number>(53, [])) as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>)))))
+      if ($.condition(Number.MAX_SAFE_INTEGER - 90, $.greaterThan($.add((n as Wrapped<number>), (len as Wrapped<number>)), $.subtract(($.exponentiate($.base<number>(2, []), $.base<number>(53, [])) as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>)))))
       {
         throw new TypeError;
       }
 
       var k = $.base<number>(0, []);
-      while ($.condition(Number.MAX_SAFE_INTEGER - 89, $.lessThan(k, len)))
+      while ($.condition(Number.MAX_SAFE_INTEGER - 91, $.lessThan(k, len)))
       {
         var Pk = AO__ToString($, (k as Wrapped<unknown>));
         var exists = AO__HasProperty($, (E as Wrapped<unknown>), (Pk as Wrapped<unknown>));
-        if ($.condition(Number.MAX_SAFE_INTEGER - 90, $.is(exists, $.base<boolean>(true, []))))
+        if ($.condition(Number.MAX_SAFE_INTEGER - 92, $.is(exists, $.base<boolean>(true, []))))
         {
           var subElement = AO__Get($, (E as Wrapped<unknown>), (Pk as Wrapped<unknown>));
           AO__CreateDataPropertyOrThrow($, (A as Wrapped<unknown>), (AO__ToString($, (n as Wrapped<unknown>)) as Wrapped<unknown>), (subElement as Wrapped<unknown>));
@@ -46,7 +45,7 @@ export function INTRINSICS_Array_prototype_concat ($ : SpecRuntime, $this : Wrap
     }
     else
     {
-      if ($.condition(Number.MAX_SAFE_INTEGER - 91, $.greaterThanEqual(n, $.subtract(($.exponentiate($.base<number>(2, []), $.base<number>(53, [])) as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>)))))
+      if ($.condition(Number.MAX_SAFE_INTEGER - 93, $.greaterThanEqual(n, $.subtract(($.exponentiate($.base<number>(2, []), $.base<number>(53, [])) as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>)))))
       {
         throw new TypeError;
       }

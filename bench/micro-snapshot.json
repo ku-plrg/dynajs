@@ -1424,6 +1424,13 @@
         "result": "TN"
       }
     ],
+    "BuiltIns__String__prototype__indexOf__stringlength": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
     "BuiltIns__String__prototype__indexOf__taint_indexOf_position": [
       {
         "expected": "detected",
@@ -1890,8 +1897,8 @@
       },
       {
         "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
+        "actual": "detected",
+        "result": "FP"
       }
     ],
     "BuiltIns__String__prototype__replaceAll__taint_replaceAll_replaceValue": [
@@ -2050,8 +2057,8 @@
       },
       {
         "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
+        "actual": "detected",
+        "result": "TP"
       }
     ],
     "BuiltIns__String__prototype__split__taint_split_this": [
@@ -2062,13 +2069,18 @@
       },
       {
         "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
+        "actual": "detected",
+        "result": "FP"
       },
       {
         "expected": "detected",
         "actual": "detected",
         "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
       }
     ],
     "BuiltIns__String__prototype__startsWith__taint_startsWith_position": [

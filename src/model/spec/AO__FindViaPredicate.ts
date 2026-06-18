@@ -15,20 +15,19 @@ export function AO__FindViaPredicate ($ : SpecRuntime, O : Wrapped<unknown>, len
 
   if ($.condition(Number.MAX_SAFE_INTEGER - 36, $.is(direction, $.base<string>("ascending", []))))
   {
-    var indices = $.IN__IntRange($.base<number>(0, []), true, len, false, true);
+    var indices = $.range($.base<number>(0, []), true, len, false, true, Number.MAX_SAFE_INTEGER - 37);
   }
   else
   {
-    var indices = $.IN__IntRange($.base<number>(0, []), true, len, false, false);
+    var indices = $.range($.base<number>(0, []), true, len, false, false, Number.MAX_SAFE_INTEGER - 38);
   }
 
-  for (var _x0 = 0; _x0 < indices.length; _x0++)
+  for (var k of indices)
   {
-    var k = indices[_x0];
     var Pk = AO__ToString($, (k as Wrapped<unknown>));
     var kValue = AO__Get($, (O as Wrapped<unknown>), (Pk as Wrapped<unknown>));
     var testResult = AO__Call($, (predicate as Wrapped<unknown>), (thisArg as Wrapped<unknown>), ([kValue, k, O] as Wrapped<unknown>[]));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 37, $.is(AO__ToBoolean($, (testResult as Wrapped<unknown>)), $.base<boolean>(true, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 39, $.is(AO__ToBoolean($, (testResult as Wrapped<unknown>)), $.base<boolean>(true, []))))
     {
       return {"Index": k, "Value": kValue};
     }

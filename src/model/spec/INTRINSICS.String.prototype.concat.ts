@@ -8,9 +8,8 @@ export function INTRINSICS_String_prototype_concat ($ : SpecRuntime, $this : Wra
   var O = AO__RequireObjectCoercible($, $this);
   var S = AO__ToString($, (O as Wrapped<unknown>));
   var R = S;
-  for (var _x0 = 0; _x0 < args.length; _x0++)
+  for (var next of args)
   {
-    var next = args[_x0];
     var nextString = AO__ToString($, (next as Wrapped<unknown>));
     R = $.concatenate(R, nextString);
   }
