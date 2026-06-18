@@ -1,420 +1,10 @@
 {
   "dynajs": {
-    "concolic_arithmetic": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      },
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      },
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      },
-      {
-        "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
-      }
-    ],
-    "concolic_binary_relational": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      },
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      },
-      {
-        "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
-      },
-      {
-        "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
-      },
-      {
-        "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
-      }
-    ],
-    "concolic_bitwise": [
-      {
-        "expected": "detected",
-        "actual": "error",
-        "result": "FN"
-      },
-      {
-        "expected": "clean",
-        "actual": "error",
-        "result": "FP"
-      },
-      {
-        "expected": "clean",
-        "actual": "error",
-        "result": "FP"
-      }
-    ],
-    "concolic_string_charat": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "concolic_string_concat": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      },
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      },
+    "BuiltIns__Array__from_static__taint_from_static_items": [
       {
         "expected": "detected",
         "actual": "clean",
         "result": "FN"
-      }
-    ],
-    "concolic_string_equality": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      },
-      {
-        "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
-      }
-    ],
-    "concolic_string_length": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      },
-      {
-        "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
-      }
-    ],
-    "concolic_substring": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      },
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      },
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      },
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "new__concolic_array_includes": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "new__concolic_array_index": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "new__concolic_array_indexof": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "new__concolic_array_join": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "new__concolic_array_length": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      },
-      {
-        "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
-      }
-    ],
-    "new__concolic_array_pop": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "new__concolic_array_push": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "new__concolic_at": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "new__concolic_bitwise_and": [
-      {
-        "expected": "detected",
-        "actual": "error",
-        "result": "FN"
-      }
-    ],
-    "new__concolic_charcodeat": [
-      {
-        "expected": "detected",
-        "actual": "error",
-        "result": "FN"
-      }
-    ],
-    "new__concolic_encodeuri": [
-      {
-        "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
-      }
-    ],
-    "new__concolic_encodeuricomponent_concrete": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "new__concolic_endswith": [
-      {
-        "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
-      }
-    ],
-    "new__concolic_includes": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "new__concolic_indexof_negative": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "new__concolic_json_stringify": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "new__concolic_lastindexof": [
-      {
-        "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
-      }
-    ],
-    "new__concolic_math_max": [
-      {
-        "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
-      }
-    ],
-    "new__concolic_math_trunc": [
-      {
-        "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
-      }
-    ],
-    "new__concolic_object_field": [
-      {
-        "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
-      },
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "new__concolic_padstart": [
-      {
-        "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
-      }
-    ],
-    "new__concolic_parseint": [
-      {
-        "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
-      }
-    ],
-    "new__concolic_regex_anchor": [
-      {
-        "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
-      }
-    ],
-    "new__concolic_replace": [
-      {
-        "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
-      }
-    ],
-    "new__concolic_slice_zero_end": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "new__concolic_startswith": [
-      {
-        "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
-      }
-    ],
-    "new__concolic_substr_length": [
-      {
-        "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
-      }
-    ],
-    "new__concolic_substring_length": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "new__concolic_tolowercase": [
-      {
-        "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
-      }
-    ],
-    "new__concolic_toupper": [
-      {
-        "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
-      }
-    ],
-    "new__taint_array_concat_neg": [
-      {
-        "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
-      }
-    ],
-    "new__taint_encodeURIComponent": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "new__taint_substr_length": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "new__taint_toUpperCase": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "new__taint_trim": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "new__taint_trimRight": [
-      {
-        "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
-      }
-    ],
-    "new__taint_trimStart_tab": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "taint_at": [
-      {
-        "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
-      },
-      {
-        "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
       },
       {
         "expected": "clean",
@@ -423,105 +13,18 @@
       },
       {
         "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
+        "actual": "clean",
+        "result": "FN"
       }
     ],
-    "taint_binary_plus": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      },
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      },
+    "BuiltIns__Array__isArray_static__taint_isArray_static_arg": [
       {
         "expected": "clean",
         "actual": "clean",
         "result": "TN"
       }
     ],
-    "taint_char_bracket": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "taint_charat": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      },
-      {
-        "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
-      }
-    ],
-    "taint_join": [
-      {
-        "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
-      },
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "taint_json_stringify": [
-      {
-        "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
-      },
-      {
-        "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
-      }
-    ],
-    "taint_reassign_clears": [
-      {
-        "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
-      }
-    ],
-    "taint_repeat": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "taint_replace": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      },
-      {
-        "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
-      },
-      {
-        "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
-      },
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      },
+    "BuiltIns__Array__of_static__taint_of_static_items": [
       {
         "expected": "detected",
         "actual": "detected",
@@ -533,11 +36,364 @@
         "result": "FP"
       }
     ],
-    "taint_slice": [
+    "BuiltIns__Array__prototype__at__taint_at_index": [
       {
         "expected": "detected",
         "actual": "detected",
         "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__at__taint_at_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__concat__taint_concat_items": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__concat__taint_concat_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__copyWithin__taint_copyWithin_end": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__copyWithin__taint_copyWithin_start": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__Array__prototype__copyWithin__taint_copyWithin_target": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__copyWithin__taint_copyWithin_this": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__Array__prototype__entries__taint_entries_this": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__Array__prototype__every__taint_every_this": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__fill__taint_fill_end": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__fill__taint_fill_start": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__fill__taint_fill_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__fill__taint_fill_value": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__filter__taint_filter_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__Array__prototype__find__taint_find_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__findIndex__taint_findIndex_this": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__findLast__taint_findLast_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__findLastIndex__taint_findLastIndex_this": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__flat__taint_flat_depth": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
       },
       {
         "expected": "clean",
@@ -550,7 +406,7 @@
         "result": "FP"
       }
     ],
-    "taint_split": [
+    "BuiltIns__Array__prototype__flat__taint_flat_this": [
       {
         "expected": "detected",
         "actual": "clean",
@@ -558,9 +414,86 @@
       },
       {
         "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__flatMap__taint_flatMap_this": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      }
+    ],
+    "BuiltIns__Array__prototype__forEach__taint_forEach_this": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__includes__taint_includes_fromIndex": [
+      {
+        "expected": "clean",
         "actual": "detected",
         "result": "FP"
       },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__Array__prototype__includes__taint_includes_searchElement": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__Array__prototype__includes__taint_includes_this": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__indexOf__taint_indexOf_fromIndex": [
       {
         "expected": "detected",
         "actual": "detected",
@@ -572,26 +505,7 @@
         "result": "FP"
       }
     ],
-    "taint_substring": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      },
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "taint_template": [
-      {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      }
-    ],
-    "taint_tolowercase": [
+    "BuiltIns__Array__prototype__indexOf__taint_indexOf_searchElement": [
       {
         "expected": "detected",
         "actual": "detected",
@@ -603,14 +517,34 @@
         "result": "FP"
       }
     ],
-    "taint_unary_not": [
+    "BuiltIns__Array__prototype__indexOf__taint_indexOf_this": [
       {
         "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
       }
     ],
-    "taint_var_assignment": [
+    "BuiltIns__Array__prototype__join__taint_join_separator": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
       {
         "expected": "detected",
         "actual": "detected",
@@ -620,6 +554,1892 @@
         "expected": "clean",
         "actual": "clean",
         "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__join__taint_join_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__Array__prototype__keys__taint_keys_this": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__lastIndexOf__taint_lastIndexOf_fromIndex": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__Array__prototype__lastIndexOf__taint_lastIndexOf_searchElement": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__Array__prototype__lastIndexOf__taint_lastIndexOf_this": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__map__taint_map_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__Array__prototype__pop__taint_pop_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__push__taint_push_items": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__Array__prototype__push__taint_push_this": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__reduce__taint_reduce_initialValue": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__Array__prototype__reduce__taint_reduce_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__Array__prototype__reduceRight__taint_reduceRight_initialValue": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__Array__prototype__reduceRight__taint_reduceRight_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__Array__prototype__reverse__taint_reverse_this": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      }
+    ],
+    "BuiltIns__Array__prototype__shift__taint_shift_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__slice__taint_slice_end": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__slice__taint_slice_start": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__Array__prototype__slice__taint_slice_this": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__Array__prototype__some__taint_some_this": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__sort__taint_sort_this": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      }
+    ],
+    "BuiltIns__Array__prototype__splice__taint_splice_deleteCount": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__Array__prototype__splice__taint_splice_items": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__splice__taint_splice_start": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__Array__prototype__splice__taint_splice_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      }
+    ],
+    "BuiltIns__Array__prototype__toReversed__taint_toReversed_this": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      }
+    ],
+    "BuiltIns__Array__prototype__toSorted__taint_toSorted_this": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      }
+    ],
+    "BuiltIns__Array__prototype__toSpliced__taint_toSpliced_items": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__Array__prototype__toSpliced__taint_toSpliced_skipCount": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__Array__prototype__toSpliced__taint_toSpliced_start": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__Array__prototype__toSpliced__taint_toSpliced_this": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      }
+    ],
+    "BuiltIns__Array__prototype__toString__taint_toString_this": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      }
+    ],
+    "BuiltIns__Array__prototype__unshift__taint_unshift_items": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__unshift__taint_unshift_this": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__values__taint_values_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__Array__prototype__with__taint_with_index": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__Array__prototype__with__taint_with_this": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__Array__prototype__with__taint_with_value": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__String__prototype__at__taint_at_index": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__at__taint_at_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__blink__taint_blink_this": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__String__prototype__charAt__taint_charAt_pos": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__charAt__taint_charAt_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__charCodeAt__taint_charCodeAt_pos": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__charCodeAt__taint_charCodeAt_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__codePointAt__taint_codePointAt_pos": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__codePointAt__taint_codePointAt_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__concat__taint_concat_args": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__concat__taint_concat_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__endsWith__taint_endsWith_endPosition": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__endsWith__taint_endsWith_searchString": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__endsWith__taint_endsWith_this": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__includes__taint_includes_position": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__includes__taint_includes_searchString": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__includes__taint_includes_this": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__indexOf__taint_indexOf_position": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__indexOf__taint_indexOf_searchString": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__indexOf__taint_indexOf_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__lastIndexOf__taint_lastIndexOf_position": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__lastIndexOf__taint_lastIndexOf_searchString": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__lastIndexOf__taint_lastIndexOf_this": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__localeCompare__taint_localeCompare_that": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__localeCompare__taint_localeCompare_this": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__match__taint_match_regexp": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__String__prototype__match__taint_match_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__String__prototype__matchAll__taint_matchAll_regexp": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      }
+    ],
+    "BuiltIns__String__prototype__matchAll__taint_matchAll_this": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__normalize__taint_normalize_form": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__String__prototype__normalize__taint_normalize_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__String__prototype__padEnd__taint_padEnd_fillString": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__padEnd__taint_padEnd_maxLength": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__padEnd__taint_padEnd_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__padStart__taint_padStart_fillString": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__padStart__taint_padStart_maxLength": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__padStart__taint_padStart_this": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__repeat__taint_repeat_count": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__repeat__taint_repeat_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__replace__taint_replace_replaceValue": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__replace__taint_replace_searchValue": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      }
+    ],
+    "BuiltIns__String__prototype__replace__taint_replace_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__replaceAll__taint_replaceAll_replaceValue": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__String__prototype__replaceAll__taint_replaceAll_searchValue": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__String__prototype__replaceAll__taint_replaceAll_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__String__prototype__search__taint_search_regexp": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__String__prototype__search__taint_search_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__String__prototype__slice__taint_slice_end": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__slice__taint_slice_start": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__slice__taint_slice_this": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__split__taint_split_limit": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      }
+    ],
+    "BuiltIns__String__prototype__split__taint_split_separator": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      }
+    ],
+    "BuiltIns__String__prototype__split__taint_split_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__String__prototype__startsWith__taint_startsWith_position": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__startsWith__taint_startsWith_searchString": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__startsWith__taint_startsWith_this": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__substr__taint_substr_length": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__String__prototype__substr__taint_substr_start": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__String__prototype__substr__taint_substr_this": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__String__prototype__substring__taint_substring_end": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__substring__taint_substring_start": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__substring__taint_substring_this": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__toLocaleLowerCase__taint_toLocaleLowerCase_locales": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__String__prototype__toLocaleLowerCase__taint_toLocaleLowerCase_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__String__prototype__toLocaleUpperCase__taint_toLocaleUpperCase_locales": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__String__prototype__toLocaleUpperCase__taint_toLocaleUpperCase_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__String__prototype__toLowerCase__taint_toLowerCase_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__String__prototype__toString__taint_toString_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__String__prototype__toUpperCase__taint_toUpperCase_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__String__prototype__trim__taint_trim_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__String__prototype__trimEnd__taint_trimEnd_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__String__prototype__trimLeft__taint_trimLeft_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__String__prototype__trimRight__taint_trimRight_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__String__prototype__trimStart__taint_trimStart_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__String__prototype__valueOf__taint_valueOf_this": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__String__raw_static__taint_raw_static_substitutions": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      },
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
       }
     ]
   }
