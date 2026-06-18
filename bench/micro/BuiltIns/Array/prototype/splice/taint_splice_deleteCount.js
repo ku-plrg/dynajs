@@ -11,5 +11,6 @@ var dc = 2;
 __set_taint__(dc);
 var r = a.splice(1, dc);
 
-__assert_taint__(r[0], true);
-__assert_taint__(r[1], true);
+// implicit branch: false
+__assert_taint__(r[0], false);
+__assert_taint__(r[1], false);

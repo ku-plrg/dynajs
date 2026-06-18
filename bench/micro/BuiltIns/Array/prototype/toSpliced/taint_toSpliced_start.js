@@ -10,5 +10,6 @@ var s = 1;
 __set_taint__(s);
 var r = a.toSpliced(s, 1);
 
-__assert_taint__(r[0], true);
-__assert_taint__(r[1], true);
+// implicit branch: false
+__assert_taint__(r[0], false);
+__assert_taint__(r[1], false);
