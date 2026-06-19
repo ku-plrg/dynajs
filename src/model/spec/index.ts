@@ -87,6 +87,7 @@ export { INTRINSICS_String_prototype_padEnd } from "./INTRINSICS.String.prototyp
 export { INTRINSICS_String_prototype_padStart } from "./INTRINSICS.String.prototype.padStart.js";
 export { INTRINSICS_String_prototype_repeat } from "./INTRINSICS.String.prototype.repeat.js";
 export { INTRINSICS_String_prototype_replace } from "./INTRINSICS.String.prototype.replace.js";
+export { INTRINSICS_String_prototype_replaceAll } from "./INTRINSICS.String.prototype.replaceAll.js";
 export { INTRINSICS_String_prototype_search } from "./INTRINSICS.String.prototype.search.js";
 export { INTRINSICS_String_prototype_slice } from "./INTRINSICS.String.prototype.slice.js";
 export { INTRINSICS_String_prototype_split } from "./INTRINSICS.String.prototype.split.js";

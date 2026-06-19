@@ -14,12 +14,12 @@ export function INTRINSICS_Array_prototype_reduceRight ($ : SpecRuntime, $this :
   var initialValueIsPresent = arguments.length > 3;
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 169, $.is(AO__IsCallable($, (callback as Wrapped<unknown>)), $.base<boolean>(false, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 164, $.is(AO__IsCallable($, (callback as Wrapped<unknown>)), $.base<boolean>(false, []))))
   {
     throw new TypeError;
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 170, $.is(len, $.base<number>(0, []))) && !initialValueIsPresent)
+  if ($.condition(Number.MAX_SAFE_INTEGER - 165, $.is(len, $.base<number>(0, []))) && !initialValueIsPresent)
   {
     throw new TypeError;
   }
@@ -33,11 +33,11 @@ export function INTRINSICS_Array_prototype_reduceRight ($ : SpecRuntime, $this :
   else
   {
     var kPresent = $.base<boolean>(false, []);
-    while ($.condition(Number.MAX_SAFE_INTEGER - 171, $.is(kPresent, $.base<boolean>(false, []))) && $.condition(Number.MAX_SAFE_INTEGER - 172, $.greaterThanEqual(k, $.base<number>(0, []))))
+    while ($.condition(Number.MAX_SAFE_INTEGER - 166, $.is(kPresent, $.base<boolean>(false, []))) && $.condition(Number.MAX_SAFE_INTEGER - 167, $.greaterThanEqual(k, $.base<number>(0, []))))
     {
       var Pk = AO__ToString($, (k as Wrapped<unknown>));
       kPresent = AO__HasProperty($, (O as Wrapped<unknown>), (Pk as Wrapped<unknown>));
-      if ($.condition(Number.MAX_SAFE_INTEGER - 173, $.is(kPresent, $.base<boolean>(true, []))))
+      if ($.condition(Number.MAX_SAFE_INTEGER - 168, $.is(kPresent, $.base<boolean>(true, []))))
       {
         accumulator = AO__Get($, (O as Wrapped<unknown>), (Pk as Wrapped<unknown>));
       }
@@ -45,18 +45,18 @@ export function INTRINSICS_Array_prototype_reduceRight ($ : SpecRuntime, $this :
       k = $.subtract((k as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>));
     }
 
-    if ($.condition(Number.MAX_SAFE_INTEGER - 174, $.is(kPresent, $.base<boolean>(false, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 169, $.is(kPresent, $.base<boolean>(false, []))))
     {
       throw new TypeError;
     }
 
   }
 
-  while ($.condition(Number.MAX_SAFE_INTEGER - 175, $.greaterThanEqual(k, $.base<number>(0, []))))
+  while ($.condition(Number.MAX_SAFE_INTEGER - 170, $.greaterThanEqual(k, $.base<number>(0, []))))
   {
     var Pk = AO__ToString($, (k as Wrapped<unknown>));
     var kPresent = AO__HasProperty($, (O as Wrapped<unknown>), (Pk as Wrapped<unknown>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 176, $.is(kPresent, $.base<boolean>(true, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 171, $.is(kPresent, $.base<boolean>(true, []))))
     {
       var kValue = AO__Get($, (O as Wrapped<unknown>), (Pk as Wrapped<unknown>));
       accumulator = AO__Call($, (callback as Wrapped<unknown>), ($.base<undefined>(undefined, []) as Wrapped<unknown>), ([accumulator, kValue, k, O] as Wrapped<unknown>[]));

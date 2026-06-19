@@ -11,7 +11,7 @@ export function AO__Call($ : SpecRuntime, F : Wrapped<unknown>, V : Wrapped<unkn
     throw new TypeError("AO__Call : F is not callable");
 
   // 3. Return ? F.[[Call]](V, argumentsList).
-  // TODO hook this as invokeFun?
-  // @ts-ignore F can be called in this path condition.
-  return $.base($.peek(F).call(V, ...argumentsList), [F, V, ...argumentsList]);
+  // Delegated to the framework so a modeled builtin reached here (e.g. a regex's
+  // @@match) dispatches to its model rather than running opaquely on wrapped args.
+  return $.apply(F, V, argumentsList);
 }
