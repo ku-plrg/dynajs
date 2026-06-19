@@ -11,6 +11,7 @@ type TaintInfo = { bit: boolean; chars?: boolean[]; origin?: Site };
 function infoTainted(info: TaintInfo | undefined): boolean {
   if (info === undefined) return false;
   if (info.bit) return true;
+  // maybe we should not check chars to match NodeMedic's behaviour?
   return info.chars?.some((c) => c) ?? false;
 }
 
