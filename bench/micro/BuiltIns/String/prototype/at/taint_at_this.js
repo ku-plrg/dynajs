@@ -19,6 +19,8 @@ function test(x1) {
 
     // @witness always x.at(x.length)=undefined
     __assert_taint__(x.at(x.length), false);
+
+    __assert_taint__(x, false);
 }
 
 var x = 'hello';

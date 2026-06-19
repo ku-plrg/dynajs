@@ -11,10 +11,10 @@ function test(v) {
     // @witness always r[0]='a' from clean receiver
     __assert_taint__(r[0], false);
 
-    // @witness test('x') => r[1]='x' from tainted v
+    // @witness test('xx') => r[1]='x' from tainted v
     __assert_taint__(r[1], true);
 
-    // @witness test('x') => r[2]='x' from tainted v
+    // @witness test('xx') => r[2]='x' from tainted v
     __assert_taint__(r[2], true);
 
     // @witness always r[r.length-1]='c' clean suffix from receiver

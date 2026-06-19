@@ -3,12 +3,12 @@
 // @feature builtin length
 
 function test(x1) {
-    var x = 'h' + x1 + 'i';
+    var x = x1;
 
-    // @witness x.length is a count (metadata), not content
-    __assert_taint__(x.length, false);
+    // @witness test('x'.repeat(42)) => x.length=42 (attacker-controlled count)
+    __assert_taint__(x.length, true);
 }
 
-var x1 = 'x';
+var x1 = 'x'.repeat(42);
 __set_taint__(x1);
 test(x1);
