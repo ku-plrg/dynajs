@@ -119,7 +119,7 @@ const NODEMEDIC_REWRITE = path.join(NODEMEDIC_HOME, "src/rewrite.js");
 // (stock NodeMedic-wip has neither). Override via $NODEMEDIC_POLICIES for wip.
 const NODEMEDIC_ANALYSIS_ARGS = [
   "log_level=error",
-  `policies=${process.env.NODEMEDIC_POLICIES ?? "string:precise-no-flip,array:precise,object:precise"}`,
+  `policies=${process.env.NODEMEDIC_POLICIES ?? "string:precise,array:precise,object:precise"}`,
 ];
 
 // A CommonJS-scoped scratch dir so Jalangi's `.js` loader hook instruments the
