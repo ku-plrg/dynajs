@@ -340,6 +340,20 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     base: <T extends Unwrapped<unknown> | Primitive>(v: T, parents: Wrapped<unknown>[]): Wrapped<T> =>
       this.lift(v, this.baseInfo(v, parents.map((p) => this.valued(p)))),
     peek: <T>(wrapped: Wrapped<T>) => this.unwrap(wrapped),
+    apply: (f, thisArg, args) => {
+      const fn = this.unwrap(f as Wrapped<Function>); // caller (AO__Call) ensured IsCallable
+      // Route to the model when the callee is a known builtin — so a builtin
+      // reached through a spec AO (a regex's @@match, an iterator protocol, …)
+      // is modeled like a direct call, not run opaquely on wrapped args. Mirrors
+      // invokeFun's modeled-call dispatch (incl. the builtin site).
+      if (Model.support(fn)) {
+        const modelFn = Model.ofBuiltin(fn);
+        return this.withBuiltinSite(builtinName(fn), () => modelFn(this.$, thisArg, ...args)) as Wrapped<unknown>;
+      }
+      // Non-modeled (e.g. an instrumented user callback): plain call, provenance
+      // from callee/receiver/args — what AO__Call did before delegating here.
+      return this.$.base(fn.call(thisArg, ...args), [f, thisArg, ...args]);
+    },
     // Default for absent optional params (see SpecRuntime.undef / type.ts). `this`
     // here is the runtime object, so `this.base` is the op above. An absent arg
     // has no source, hence empty parents.

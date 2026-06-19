@@ -226,7 +226,10 @@ export function solveValidity(
   const vars = new Map<string, Sort>();
   const assertions = assertPath(pc, vars);
   assertions.push(`(assert (not ${symToSmt(assertSym, vars)}))`);
-  const out = runZ3(buildSmt(vars, assertions, '(check-sat)'));
+  const smt = buildSmt(vars, assertions, '(check-sat)');
+  // DEBUG=1: show the SMT-LIB problem we hand to z3 for this assert before solving.
+  if (process.env.DEBUG) console.error(`[concolic] SMT for assert:\n${smt}`);
+  const out = runZ3(smt);
   if (out.startsWith('unsat')) return 'valid';
   if (out.startsWith('sat')) return 'invalid';
   return 'unknown';

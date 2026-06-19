@@ -12,6 +12,12 @@ interface SpecOps extends StringOps, ArithmeticOps, CompareOps, MathOps, ListOps
   base: <T extends Unwrapped | Primitive>(v: T, parent: Wrapped[]) => Wrapped<T>;
   // wrapped -> unwrapped
   peek: <T>(wrapped: Wrapped<T>) => Unwrapped<T>;
+  // Invoke `f` (a callable) with receiver `thisArg` and `args`, routing to `f`'s
+  // model when it is a known builtin — so a builtin reached through a spec AO
+  // (e.g. a regex's @@match via AO__Call) is modeled, not run opaquely on
+  // wrapped args. Otherwise a plain call, provenance flowing from callee/
+  // receiver/args. The AO-level `[[Call]]` seam (AO__Call delegates here).
+  apply: (f: Wrapped<unknown>, thisArg: Wrapped<unknown>, args: Wrapped<unknown>[]) => Wrapped<unknown>;
 }
 
 interface StringOps {
