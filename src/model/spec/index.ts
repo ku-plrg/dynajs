@@ -81,6 +81,7 @@ export { INTRINSICS_String_prototype_isWellFormed } from "./INTRINSICS.String.pr
 export { INTRINSICS_String_prototype_lastIndexOf } from "./INTRINSICS.String.prototype.lastIndexOf.js";
 export { INTRINSICS_String_prototype_localeCompare } from "./INTRINSICS.String.prototype.localeCompare.js";
 export { INTRINSICS_String_prototype_match } from "./INTRINSICS.String.prototype.match.js";
+export { INTRINSICS_String_prototype_matchAll } from "./INTRINSICS.String.prototype.matchAll.js";
 export { INTRINSICS_String_prototype_normalize } from "./INTRINSICS.String.prototype.normalize.js";
 export { INTRINSICS_String_prototype_padEnd } from "./INTRINSICS.String.prototype.padEnd.js";
 export { INTRINSICS_String_prototype_padStart } from "./INTRINSICS.String.prototype.padStart.js";

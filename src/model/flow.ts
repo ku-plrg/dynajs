@@ -47,6 +47,20 @@ function asStringIndex(p: unknown, len: number): number | undefined {
   return n;
 }
 
+// `regex.exec(s)` whose result carries per-capture spans (`match.indices`): the
+// `d`/hasIndices flag (ES2022) is what produces them, so add it when absent —
+// on a temporary copy, since re-adding `d` is a SyntaxError — while preserving
+// lastIndex so /g//y iteration is unaffected. Spans let captures be recovered as
+// substrings of the subject (offset-precise provenance).
+function execWithIndices(regex: RegExp, s: string): RegExpExecArray | null {
+  if (regex.hasIndices) return regex.exec(s);
+  const withIndices = new RegExp(regex.source, regex.flags + 'd');
+  withIndices.lastIndex = regex.lastIndex;
+  const match = withIndices.exec(s);
+  regex.lastIndex = withIndices.lastIndex;
+  return match;
+}
+
 export abstract class FlowAnalysis<Info> implements Analysis {
 
   private primitiveWrapper = new WeakSet<object>();
@@ -223,23 +237,30 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       // Run `regex.exec(string)` concretely on the raw values (no wrapped
       // primitive leaks into the engine), then let the analysis supply the
       // symbolic match facts. The spec models assemble the observable result.
-      const rawRegex : Unwrapped<RegExp> = this.unwrap(regex as Wrapped<RegExp>);
+      const rawRegex = this.unwrap(regex as Wrapped<RegExp>);
       const rawString = this.unwrap(string);
-      const concrete = rawRegex.exec(rawString); // RegExpExecArray | null
+      // exec carrying capture spans, so the fallback can recover each capture as
+      // a substring of the subject (see execWithIndices).
+      const concrete = execWithIndices(rawRegex, rawString);
       const matched = concrete !== null;
       const info = this.regexExecInfo?.(this.valued(regex as Wrapped<RegExp>) as Valued<Info, RegExp>, this.valued(string), concrete);
       const elems = concrete === null ? [] : Array.from(concrete);
-      // Default (no regexExecInfo) provenance: the match RESULTS — the matched
-      // text (captures) and its position (index) — derive from the SUBJECT
-      // string, not the pattern (a tainted pattern is the query structure, not
-      // attacker data in the output). `matched` reflects both operands.
-      const subject = [this.valued(string)];
       return {
+        // Whether it matched depends on the pattern AND the subject; the match
+        // POSITION is structural (a number, not content) so it carries no taint
+        // by default; concolic supplies the symbolic start via regexExecInfo.
         matched: this.lift(matched, info?.matched ?? this.baseInfo(matched, [this.valued(regex), this.valued(string)])),
-        index: this.lift(concrete === null ? -1 : concrete.index, info?.index ?? this.baseInfo(-1, subject)),
+        index: this.lift(concrete === null ? -1 : concrete.index, info?.index ?? this.baseInfo(-1, [])),
         captures: elems.map((c, i) => {
           const v = c ?? '';
-          return this.lift(v, info?.captures?.[i] ?? this.baseInfo(v, subject));
+          if (info?.captures?.[i] !== undefined) return this.lift(v, info.captures[i]);
+          // No per-capture Info (e.g. taint): a capture's CONTENT is a substring
+          // of the subject, so recover it through `$.substring` at its span —
+          // offset-precise provenance flows (a tainted region of the subject
+          // taints only the captures that overlap it).
+          const span = concrete?.indices?.[i];
+          if (span) return this.$.substring(string, this.$.base(span[0], []), this.$.base(span[1], []));
+          return this.lift(v, this.baseInfo(v, [this.valued(string)]));
         }),
         input: string,
       };

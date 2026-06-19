@@ -39,6 +39,7 @@ export class Model {
     [RegExp.prototype.test, generated.INTRINSICS_RegExp_prototype_test],
     [RegExp.prototype.exec, generated.INTRINSICS_RegExp_prototype_exec],
     [String.prototype.match, generated.INTRINSICS_String_prototype_match],
+    [String.prototype.matchAll, generated.INTRINSICS_String_prototype_matchAll],
     [String.prototype.search, generated.INTRINSICS_String_prototype_search],
 
     [Array.prototype.at, generated.INTRINSICS_Array_prototype_at],
