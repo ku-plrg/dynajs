@@ -67,14 +67,17 @@ const INCLUDE = [
   // /^INTRINSICS\.Set\./,
   // /^INTRINSICS\.String\./,
   /^INTRINSICS\.String\.prototype\./,
+  // "RegExpExec",
+  /^INTRINSICS\.RegExp\.prototype\.(exec|test)/,
 ];
 
 const EXCLUDE = [
   // /Locale/,
-  "INTRINSICS.String.prototype.match",
-  "INTRINSICS.String.prototype.matchAll",
-  "INTRINSICS.String.prototype.replaceAll",
-  "INTRINSICS.String.prototype.search",
+  // match/search are provided as hand-authored symbolic-regex models
+  // (INTRINSICS.*.manual.ts -> $.regexOp); keep them out of esmeta extraction
+  // (the generated versions delegate to the spec matcher) but DO let their
+  // manual shims be barreled, so they are not excluded here.
+  // "INTRINSICS.String.prototype.matchAll",
 ];
 
 const NO_CHECK = [

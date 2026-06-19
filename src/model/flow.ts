@@ -112,6 +112,12 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   /* opaque call the analysis wants to model */
   protected opaqueCallInfo?(_f: unknown, _entries: unknown[], _result: unknown): Info
 
+  /* regex match (via the `$.regexExec` primitive): the symbolic projection of
+   * matching `regex` against `string`. `result` is the native exec result
+   * (array | null); return the per-field Info (matched / start index / per-
+   * capture), or undefined to fall through to baseInfo. */
+  protected regexExecInfo?(_regex: Valued<Info, RegExp>, _string: Valued<Info, string>, _result: unknown): { matched: Info; index: Info; captures: Info[] } | undefined
+
   // ---- Info storage helpers ----
 
   protected /* final */ getInfo(value: unknown): Info {
@@ -212,6 +218,31 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       // Result is a substring of `s`; propagate via baseInfo so taint/symbolic
       // provenance flows from the source string.
       return this.lift(r, this.baseInfo(r, [this.valued(s)]));
+    },
+    regexExec: (regex, string) => {
+      // Run `regex.exec(string)` concretely on the raw values (no wrapped
+      // primitive leaks into the engine), then let the analysis supply the
+      // symbolic match facts. The spec models assemble the observable result.
+      const rawRegex : Unwrapped<RegExp> = this.unwrap(regex as Wrapped<RegExp>);
+      const rawString = this.unwrap(string);
+      const concrete = rawRegex.exec(rawString); // RegExpExecArray | null
+      const matched = concrete !== null;
+      const info = this.regexExecInfo?.(this.valued(regex as Wrapped<RegExp>) as Valued<Info, RegExp>, this.valued(string), concrete);
+      const elems = concrete === null ? [] : Array.from(concrete);
+      // Default (no regexExecInfo) provenance: the match RESULTS — the matched
+      // text (captures) and its position (index) — derive from the SUBJECT
+      // string, not the pattern (a tainted pattern is the query structure, not
+      // attacker data in the output). `matched` reflects both operands.
+      const subject = [this.valued(string)];
+      return {
+        matched: this.lift(matched, info?.matched ?? this.baseInfo(matched, [this.valued(regex), this.valued(string)])),
+        index: this.lift(concrete === null ? -1 : concrete.index, info?.index ?? this.baseInfo(-1, subject)),
+        captures: elems.map((c, i) => {
+          const v = c ?? '';
+          return this.lift(v, info?.captures?.[i] ?? this.baseInfo(v, subject));
+        }),
+        input: string,
+      };
     },
 
     add: (l, r) => this.binOp('+', l, r, (this.unwrap(l) as number) + (this.unwrap(r) as number)),

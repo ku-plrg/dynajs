@@ -33,6 +33,14 @@ export class Model {
     [String.prototype.trimStart, generated.INTRINSICS_String_prototype_trimStart],
     [String.prototype.valueOf, generated.INTRINSICS_String_prototype_valueOf],
 
+    // Regex methods — substituted by the symbolic regex seam ($.regexOp). match
+    // and search are kept out of copy-polyfill's esmeta extraction (EXCLUDE), so
+    // these manual models are their only registration.
+    [RegExp.prototype.test, generated.INTRINSICS_RegExp_prototype_test],
+    [RegExp.prototype.exec, generated.INTRINSICS_RegExp_prototype_exec],
+    [String.prototype.match, generated.INTRINSICS_String_prototype_match],
+    [String.prototype.search, generated.INTRINSICS_String_prototype_search],
+
     [Array.prototype.at, generated.INTRINSICS_Array_prototype_at],
     [Array.prototype.concat, generated.INTRINSICS_Array_prototype_concat],
     [Array.prototype.copyWithin, generated.INTRINSICS_Array_prototype_copyWithin],

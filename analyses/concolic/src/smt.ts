@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { type Sym, type Sort, isSeqSort, UnsupportedSym } from '@shared/sym.js';
+import { type Sym, type Sort, type ReNode, isSeqSort, UnsupportedSym } from '@shared/sym.js';
 
 // ---------------------------------------------------------------------------
 // SMT-LIB translation + z3
@@ -52,14 +52,51 @@ const SMT_BINARY: Record<string, (a: string, b: string) => string> = {
     `(ite (>= ${a} 0) (mod ${a} (abs ${b})) (- (mod (- ${a}) (abs ${b}))))`,
   '&&': (a, b) => `(and ${a} ${b})`,
   '||': (a, b) => `(or ${a} ${b})`,
+  '=>': (a, b) => `(=> ${a} ${b})`,
   // No SMT-LIB primitive for min/max — encode via ite (used by clampInfo).
   max: (a, b) => `(ite (>= ${a} ${b}) ${a} ${b})`,
   min: (a, b) => `(ite (<= ${a} ${b}) ${a} ${b})`,
 };
 
 // SMT-LIB string literal: double quotes, with an embedded `"` escaped as `""`.
+// Non-printable / non-ASCII code units (regex char classes reach down to
+// `\u{0}`..`\u{ff}`) render as z3's `\u{HH}` escape — a bare control byte in a
+// quoted literal would break the SMT parser.
 function smtString(v: string): string {
-  return `"${v.replace(/"/g, '""')}"`;
+  let out = '"';
+  for (const ch of v) {
+    const c = ch.codePointAt(0)!;
+    if (ch === '"') out += '""';
+    else if (c >= 0x20 && c < 0x7f) out += ch;
+    else out += `\\u{${c.toString(16)}}`;
+  }
+  return out + '"';
+}
+
+// SMT-LIB rendering of a regex AST (z3 `re.*` theory).
+function reToSmt(re: ReNode): string {
+  switch (re.kind) {
+    case 'reLit':
+      return `(str.to_re ${smtString(re.value)})`;
+    case 'reRange':
+      return `(re.range ${smtString(re.lo)} ${smtString(re.hi)})`;
+    case 'reUnion':
+      return `(re.union ${reToSmt(re.left)} ${reToSmt(re.right)})`;
+    case 'reInter':
+      return `(re.inter ${reToSmt(re.left)} ${reToSmt(re.right)})`;
+    case 'reConcat':
+      return `(re.++ ${reToSmt(re.left)} ${reToSmt(re.right)})`;
+    case 'reStar':
+      return `(re.* ${reToSmt(re.body)})`;
+    case 'rePlus':
+      return `(re.+ ${reToSmt(re.body)})`;
+    case 'reOpt':
+      return `(re.opt ${reToSmt(re.body)})`;
+    case 'reComp':
+      return `(re.comp ${reToSmt(re.body)})`;
+    case 'reLoop':
+      return `((_ re.loop ${re.lo} ${re.hi}) ${reToSmt(re.body)})`;
+  }
 }
 
 function constToSmt(value: unknown): string {
@@ -113,6 +150,10 @@ function symToSmt(s: Sym, vars: Map<string, Sort>): string {
       return `(seq.indexof ${symToSmt(s.arr, vars)} ${symToSmt(s.sub, vars)} ${symToSmt(s.from, vars)})`;
     case 'seqContains':
       return `(seq.contains ${symToSmt(s.arr, vars)} ${symToSmt(s.sub, vars)})`;
+    case 'inRe':
+      return `(str.in_re ${symToSmt(s.str, vars)} ${reToSmt(s.re)})`;
+    case 'ite':
+      return `(ite ${symToSmt(s.cond, vars)} ${symToSmt(s.then, vars)} ${symToSmt(s.else, vars)})`;
     case 'lost':
       // Defensive: branches drop `lost` constraints and asserts concretize over
       // them, so a `lost` should never reach the solver — if one does, refuse to

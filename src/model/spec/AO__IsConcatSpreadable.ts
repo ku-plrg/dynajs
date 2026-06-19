@@ -12,7 +12,7 @@ export function AO__IsConcatSpreadable ($ : SpecRuntime, O : Wrapped<unknown>) {
   }
 
   var spreadable = AO__Get($, (O as Wrapped<unknown>), ($.base<symbol>(Symbol.isConcatSpreadable, []) as Wrapped<unknown>));
-  if (!$.condition(Number.MAX_SAFE_INTEGER - 467, $.is(spreadable, $.base<undefined>(undefined, []))))
+  if (!$.condition(Number.MAX_SAFE_INTEGER - 473, $.is(spreadable, $.base<undefined>(undefined, []))))
   {
     return AO__ToBoolean($, (spreadable as Wrapped<unknown>));
   }

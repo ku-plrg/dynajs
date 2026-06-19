@@ -7,7 +7,7 @@ export function AO__ToBoolean ($ : SpecRuntime, argument : Wrapped<unknown>) {
     return argument;
   }
 
-  if ((((((($.condition(Number.MAX_SAFE_INTEGER - 599, $.is(argument, $.base<undefined>(undefined, []))) || $.condition(Number.MAX_SAFE_INTEGER - 600, $.is(argument, $.base<null>(null, [])))) || $.condition(Number.MAX_SAFE_INTEGER - 601, $.is(argument, $.base<number>(0, [])))) || $.condition(Number.MAX_SAFE_INTEGER - 602, $.is(argument, $.base<number>(0, [])))) || $.isNaN(argument as Wrapped<number>)) || $.condition(Number.MAX_SAFE_INTEGER - 603, $.is(argument, $.base<bigint>(0n, [])))) || $.condition(Number.MAX_SAFE_INTEGER - 604, $.is(argument, $.base<string>("", [])))))
+  if ((((((($.condition(Number.MAX_SAFE_INTEGER - 629, $.is(argument, $.base<undefined>(undefined, []))) || $.condition(Number.MAX_SAFE_INTEGER - 630, $.is(argument, $.base<null>(null, [])))) || $.condition(Number.MAX_SAFE_INTEGER - 631, $.is(argument, $.base<number>(0, [])))) || $.condition(Number.MAX_SAFE_INTEGER - 632, $.is(argument, $.base<number>(0, [])))) || $.isNaN(argument as Wrapped<number>)) || $.condition(Number.MAX_SAFE_INTEGER - 633, $.is(argument, $.base<bigint>(0n, [])))) || $.condition(Number.MAX_SAFE_INTEGER - 634, $.is(argument, $.base<string>("", [])))))
   {
     return $.base<boolean>(false, []);
   }

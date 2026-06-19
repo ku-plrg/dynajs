@@ -1,6 +1,7 @@
 import { writeFileSync } from 'node:fs';
 import { FlowAnalysis, type Valued, type InfoDomain } from '@/model/index.js';
 import { type Sym, type Sort, seqElementSort, containsLost, sortOf, symToString } from '@shared/sym.js';
+import { encodeRegex, type EncodedRegex } from '@shared/regex.js';
 import { solveValidity, solveModel } from './smt.js';
 import { installPrelude } from './prelude.js';
 
@@ -19,6 +20,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
 
   private arrayMeta = new WeakMap<object, ArrayMeta>();
   private objectMeta = new WeakMap<object, ObjectMeta>();
+  private regexVarCounter = 0;
 
   protected transparentCalls = GHOSTS;
 
@@ -159,6 +161,62 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     if (f === Array.prototype.join) return this.joinSym(base, arr, entries[1], meta);
 
     return undefined;
+  }
+
+  // The symbolic projection of a regex match (`$.regexExec`), ported from
+  // ExpoSE RegexModels onto the Sym IR. `matched` is `str.in_re` over the
+  // encoded pattern; `index` the match start; `captures[i]` the i-th group as a
+  // fresh String var (capture[0] = whole match), pinned by EnableCaptures. The
+  // spec models build test/exec/search/match from these; the `in_re` BRANCH is
+  // recorded wherever a model (or user code) branches on `matched`, so we only
+  // push the capture binders here.
+  protected regexExecInfo(
+    regex: Valued<Sym>,
+    string: Valued<Sym, string>,
+    _result: unknown,
+  ): { matched: Sym; index: Sym; captures: Sym[] } | undefined {
+    const strSym = this.symOf(string);
+    const re = regex.value;
+    // ExpoSE shouldBeSymbolic: only model a symbolic string against a real RegExp.
+    if (strSym.kind === 'const' || !(re instanceof RegExp)) return undefined;
+
+    let enc: EncodedRegex;
+    try {
+      enc = encodeRegex(re.source, () => this.mintRegexVar());
+    } catch (e) {
+      console.error(`[concolic] regex unmodeled: ${String(e)}`);
+      return undefined; // -> baseInfo lifts to `lost`; the verdict concretizes
+    }
+
+    this.enableCaptures(enc, strSym);
+    return {
+      matched: { kind: 'inRe', str: strSym, re: enc.ast },
+      index: enc.startIndex,
+      captures: enc.captures,
+    };
+  }
+
+  // ExpoSE EnableCaptures: the capture vars are pinned by the regex's own
+  // assertions, and equal the regex's `implier` (anchors ++ captures) whenever
+  // the string matches. Both enter as binder constraints (never flipped).
+  private enableCaptures(enc: EncodedRegex, strSym: Sym): void {
+    for (const a of enc.assertions) this.pushConstraint(a, true);
+    this.pushConstraint(
+      {
+        kind: 'binary',
+        op: '=>',
+        left: { kind: 'inRe', str: strSym, re: enc.ast },
+        right: { kind: 'binary', op: '===', left: strSym, right: enc.implier },
+      },
+      true,
+    );
+  }
+
+  // A fresh String var for the regex encoder's fillers/anchors/captures. The
+  // counter is per-run (the analysis is reconstructed each process), so replay
+  // re-issues the same names. The `re$` prefix avoids user symbol-name clashes.
+  private mintRegexVar(): Sym {
+    return { kind: 'var', name: `re$${this.regexVarCounter++}`, sort: 'String' };
   }
 
   protected truncateInfo(x: Valued<Sym>): Sym | undefined {

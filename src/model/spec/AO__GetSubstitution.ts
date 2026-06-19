@@ -11,7 +11,7 @@ export function AO__GetSubstitution ($ : SpecRuntime, matched : Wrapped<string>,
   var stringLength = $.length(str);
   var result = $.base<string>("", []);
   var templateRemainder = replacementTemplate;
-  while (!$.condition(Number.MAX_SAFE_INTEGER - 57, $.is(templateRemainder, $.base<string>("", []))))
+  while (!$.condition(Number.MAX_SAFE_INTEGER - 62, $.is(templateRemainder, $.base<string>("", []))))
   {
     if ($.is($.substring(templateRemainder, $.base(0, []), $.base(2, [])), $.base("$$", [])))
     {
@@ -49,7 +49,7 @@ export function AO__GetSubstitution ($ : SpecRuntime, matched : Wrapped<string>,
               var digits = $.substring(templateRemainder, ($.base<number>(1, []) as Wrapped<number>), ($.add(($.base<number>(1, []) as Wrapped<number>), (digitCount as Wrapped<number>)) as Wrapped<number>));
               var index = AO__StringToNumber($, (digits as Wrapped<string>));
               var captureLen = $.base<number>(captures.length, []);
-              if ($.condition(Number.MAX_SAFE_INTEGER - 58, $.greaterThan(index, captureLen)) && $.condition(Number.MAX_SAFE_INTEGER - 59, $.is(digitCount, $.base<number>(2, []))))
+              if ($.condition(Number.MAX_SAFE_INTEGER - 63, $.greaterThan(index, captureLen)) && $.condition(Number.MAX_SAFE_INTEGER - 64, $.is(digitCount, $.base<number>(2, []))))
               {
                 digitCount = $.base<number>(1, []);
                 digits = $.substring(digits, ($.base<number>(0, []) as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>));
@@ -57,10 +57,10 @@ export function AO__GetSubstitution ($ : SpecRuntime, matched : Wrapped<string>,
               }
 
               var ref = $.substring(templateRemainder, ($.base<number>(0, []) as Wrapped<number>), ($.add(($.base<number>(1, []) as Wrapped<number>), (digitCount as Wrapped<number>)) as Wrapped<number>));
-              if (($.condition(Number.MAX_SAFE_INTEGER - 60, $.greaterThanEqual(index, $.base<number>(1, []))) && $.condition(Number.MAX_SAFE_INTEGER - 61, $.lessThanEqual(index, captureLen))))
+              if (($.condition(Number.MAX_SAFE_INTEGER - 65, $.greaterThanEqual(index, $.base<number>(1, []))) && $.condition(Number.MAX_SAFE_INTEGER - 66, $.lessThanEqual(index, captureLen))))
               {
                 var capture = captures[$.subtract((index as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>))];
-                if ($.condition(Number.MAX_SAFE_INTEGER - 62, $.is(capture, $.base<undefined>(undefined, []))))
+                if ($.condition(Number.MAX_SAFE_INTEGER - 67, $.is(capture, $.base<undefined>(undefined, []))))
                 {
                   var refReplacement = $.base<string>("", []);
                 }
@@ -81,7 +81,7 @@ export function AO__GetSubstitution ($ : SpecRuntime, matched : Wrapped<string>,
               if ($.is($.substring(templateRemainder, $.base(0, []), $.base(2, [])), $.base("$<", [])))
               {
                 var gtPos = AO__StringIndexOf($, (templateRemainder as Wrapped<string>), ($.base<string>(">", []) as Wrapped<string>), ($.base<number>(0, []) as Wrapped<number>));
-                if ($.condition(Number.MAX_SAFE_INTEGER - 63, $.is(gtPos, $.base<string>("not-found", []))) || $.condition(Number.MAX_SAFE_INTEGER - 64, $.is(namedCaptures, $.base<undefined>(undefined, []))))
+                if ($.condition(Number.MAX_SAFE_INTEGER - 68, $.is(gtPos, $.base<string>("not-found", []))) || $.condition(Number.MAX_SAFE_INTEGER - 69, $.is(namedCaptures, $.base<undefined>(undefined, []))))
                 {
                   var ref = $.base<string>("$<", []);
                   var refReplacement = ref;
@@ -91,7 +91,7 @@ export function AO__GetSubstitution ($ : SpecRuntime, matched : Wrapped<string>,
                   var ref = $.substring(templateRemainder, ($.base<number>(0, []) as Wrapped<number>), ($.add((gtPos as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>)) as Wrapped<number>));
                   var groupName = $.substring(templateRemainder, ($.base<number>(2, []) as Wrapped<number>), (gtPos as Wrapped<number>));
                   var capture = AO__Get($, (namedCaptures as Wrapped<unknown>), (groupName as Wrapped<unknown>));
-                  if ($.condition(Number.MAX_SAFE_INTEGER - 65, $.is(capture, $.base<undefined>(undefined, []))))
+                  if ($.condition(Number.MAX_SAFE_INTEGER - 70, $.is(capture, $.base<undefined>(undefined, []))))
                   {
                     var refReplacement = $.base<string>("", []);
                   }

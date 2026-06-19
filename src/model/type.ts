@@ -7,7 +7,7 @@ export type Unwrapped<T = unknown> = T & { readonly [WrappedValueBrand]: false; 
 // Primitives are (implicit) subtype of unwrapped, but unwrapped is not necessarily primitive (e.g. it can be an object that has been unwrapped)
 export type Primitive = string | number | boolean | bigint | symbol | null | undefined;
 
-interface SpecOps extends StringOps, ArithmeticOps, CompareOps, MathOps, ListOps, RangeOps {
+interface SpecOps extends StringOps, ArithmeticOps, CompareOps, MathOps, ListOps, RangeOps, RegexOps {
   // default propagation: unwrapped -> wrapped
   base: <T extends Unwrapped | Primitive>(v: T, parent: Wrapped[]) => Wrapped<T>;
   // wrapped -> unwrapped
@@ -21,6 +21,30 @@ interface StringOps {
   codeUnitAt: (s: Wrapped<string>, i: Wrapped<number>) => Wrapped<string>;
   trim: (s: Wrapped<string>, leading: boolean, trailing: boolean) => Wrapped<string>;
 };
+
+// The symbolic projection of matching `regex` against a subject string — the
+// single irreducible regex operation (the spec's `[[RegExpMatcher]]` is an
+// abstract closure esmeta cannot polyfill, and matching an arbitrary pattern
+// against a symbolic-length string is exactly what the z3 String theory's
+// `str.in_re` is for). The spec models assemble the observable test/exec/
+// search/match results from these fields using ordinary `$` string ops, so this
+// is the ONLY new regex primitive. Each field is Wrapped and carries the
+// analysis's Info (concolic: `str.in_re` / captures; taint: subject taint).
+export interface RegexMatch {
+  matched: Wrapped<boolean>; // did the subject match (str.in_re)
+  index: Wrapped<number>; // the match's start index
+  captures: Wrapped<string>[]; // [0] = whole match, [i] = capture group i
+  input: Wrapped<string>; // the subject string
+}
+
+interface RegexOps {
+  // Match `regex` against `string`. Concretely this is `regex.exec(string)`; the
+  // analysis attaches the symbolic match facts (see RegexMatch). The spec models
+  // (INTRINSICS.RegExp.prototype.{test,exec}, INTRINSICS.String.prototype.{match,
+  // search}) build the ECMAScript results from the returned projection — this is
+  // ExpoSE RegexModels' core, exposed as one primitive.
+  regexExec: (regex: Wrapped<unknown>, string: Wrapped<string>) => RegexMatch;
+}
 
 interface ArithmeticOps {
   add: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<number>;
