@@ -1,6 +1,7 @@
 // @type taint
 // @target es6+ String.prototype.at
 // @feature builtin at
+// @done
 
 function test(y) {
     var x = 'hello';

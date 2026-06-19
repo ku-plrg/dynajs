@@ -1,6 +1,7 @@
 // @type taint
 // @target es6+ String.prototype.charAt
 // @feature builtin charAt
+// @done
 
 function test(pos) {
     var x = 'hello';

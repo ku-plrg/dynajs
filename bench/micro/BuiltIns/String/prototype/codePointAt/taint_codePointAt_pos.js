@@ -1,6 +1,7 @@
 // @type taint
 // @target es6+ String.prototype.codePointAt
 // @feature builtin codePointAt
+// @done
 
 function test(pos) {
     var x = 'hello';

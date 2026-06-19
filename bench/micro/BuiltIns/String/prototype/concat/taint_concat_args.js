@@ -1,6 +1,7 @@
 // @type taint
 // @target es5 String.prototype.concat
 // @feature builtin concat
+// @done
 
 function test(a1) {
     var base = 'ab';
@@ -19,6 +20,6 @@ function test(a1) {
     __assert_taint__(r[r.length - 1], false);
 }
 
-var a1 = 'X';
+var a1 = 'hello';
 __set_taint__(a1);
 test(a1);

@@ -1,7 +1,7 @@
 // @type taint
 // @target es6+ String.prototype.at
 // @feature builtin at
-// done
+// @done
 
 function test(x1) {
     var x0 = 'h';
@@ -20,7 +20,11 @@ function test(x1) {
     // @witness always x.at(x.length)=undefined
     __assert_taint__(x.at(x.length), false);
 
-    __assert_taint__(x, false);
+    // @witness test('hello') => x.at(-2)='o'
+    __assert_taint__(x.at(-2), true);
+
+    // @witness always x.at(-1)='i'
+    __assert_taint__(x.at(-1), false);
 }
 
 var x = 'hello';

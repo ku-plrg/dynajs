@@ -240,6 +240,8 @@ function parseMeta(file) {
     type: t[1],
     target: tg ? tg[1].toLowerCase() : "", // first token only; rest are notes
     feature: ft ? ft[1].toLowerCase() : "", // first token only; rest are notes
+    // eye-verified marker: a `// @done` header line. `--done` restricts the run to only these.
+    done: /^\/\/\s*@done\b/m.test(head),
   };
 }
 
@@ -586,6 +588,7 @@ function parseArgs(argv) {
     check: false, // compare against the committed snapshot, exit non-zero on drift
     updateSnapshot: false, // (re)write the committed snapshot from this run
     repsSet: false, // whether --reps was passed (snapshot modes default reps to 1)
+    onlyDone: false, // run only benches marked `// @done` (eye-verified)
   };
   const need = (i, flag) => {
     if (i + 1 >= argv.length) die(`${flag} requires a value`);
@@ -605,12 +608,13 @@ function parseArgs(argv) {
       case "--output-dir": opts.outputDir = need(i, a); i++; break;
       case "--check": opts.check = true; break;
       case "--update-snapshot": opts.updateSnapshot = true; break;
+      case "--done": opts.onlyDone = true; break;
       case "--help":
         console.log(
           "Usage: node bench/run-micro-benchmark.mjs " +
             "[--runner NAME] [--bench NAME] [--analysis NAME] [--dynajs-flags STR] " +
             "[--reps N] [--warmup N] [--timeout SEC] [--output-dir DIR] " +
-            "[--check | --update-snapshot]",
+            "[--done] [--check | --update-snapshot]",
         );
         process.exit(0);
       default: die(`unknown option: ${a}`);
@@ -670,7 +674,10 @@ function main() {
   }
   if (opts.benchFilters.length)
     benches = benches.filter((b) => matchesAny(path.basename(b.file), opts.benchFilters));
-  if (!benches.length) die("no benchmarks with a @type header matched");
+  // `--done` keeps only eye-verified benches (those with a `// @done` header).
+  if (opts.onlyDone) benches = benches.filter((b) => b.done);
+  if (!benches.length)
+    die(opts.onlyDone ? "no `// @done`-marked benchmarks matched" : "no benchmarks with a @type header matched");
 
   let runners = makeRunners(opts);
   if (opts.runnerFilters.length)
