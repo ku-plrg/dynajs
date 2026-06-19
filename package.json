@@ -28,7 +28,8 @@
     "format": "prettier --write . | grep -v '(unchanged)$'",
     "test": "",
     "test:watch": "",
-    "test:taint": "npm run build && node ./scripts/run-taint-tests.mjs"
+    "test:taint": "npm run build && node ./scripts/run-taint-tests.mjs",
+    "test:concolic": "npm run build && node ./scripts/run-concolic-tests.mjs"
   },
   "repository": {
     "type": "git",
