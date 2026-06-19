@@ -40,7 +40,7 @@ export class TaintAnalysis extends FlowAnalysis<TaintInfo> {
   }
 
   protected substringInfo(src: Valued<TaintInfo, string>, start: Valued<TaintInfo, number>, end: Valued<TaintInfo, number>, resultLength: number): TaintInfo {
-    const indexTainted = infoTainted(start.info) || infoTainted(end.info);
+    const indexTainted = false; // drop this info
     const chars: boolean[] = [];
     for (let i = 0; i < resultLength; i++) {
       if (indexTainted) {
