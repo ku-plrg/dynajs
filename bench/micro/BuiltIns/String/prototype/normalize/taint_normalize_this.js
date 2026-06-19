@@ -2,13 +2,23 @@
 // @target es6+ String.prototype.normalize
 // @feature builtin normalize
 
-var x0 = "f";
-var x1 = "o";
-var x2 = "o";
-__set_taint__(x0);
-__set_taint__(x2);
-var x = x0 + x1 + x2;
-var r = x.normalize("NFC");
-__assert_taint__(r[0], true);
-__assert_taint__(r[1], false);
-__assert_taint__(r[2], true);
+function test(x1) {
+    var x0 = 'f';
+    var x2 = 'o';
+    var x = x0 + x1 + x2;
+    var r = x.normalize('NFC');
+
+    // @witness always r[0]='f'
+    __assert_taint__(r[0], false);
+
+    // @witness test('x') => r[1]='x'
+    __assert_taint__(r[1], true);
+
+    // @witness always r[r.length-1]='o'
+    __assert_taint__(r[r.length - 1], false);
+}
+
+var x1 = 'o';
+__set_taint__(x1);
+
+test(x1);

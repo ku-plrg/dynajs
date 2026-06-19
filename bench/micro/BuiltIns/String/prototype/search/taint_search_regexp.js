@@ -1,13 +1,16 @@
 // @type taint
 // @target es5 String.prototype.search
 // @feature builtin search
+// done
 
-var x = "hello123";
-var pat = "[0-9]";
+function test(pat) {
+    var x = 'hello123';
+    var re = new RegExp(pat);
+
+    // @witness tainted pat is only the regexp pattern; search returns a position number
+    __assert_taint__(x.search(re), false);
+}
+
+var pat = '[0-9]';
 __set_taint__(pat);
-var re = new RegExp(pat);
-__assert_taint__(x.search(re), true);
-var pat2 = "z";
-__set_taint__(pat2);
-var re2 = new RegExp(pat2);
-__assert_taint__(x.search(re2), false);
+test(pat);

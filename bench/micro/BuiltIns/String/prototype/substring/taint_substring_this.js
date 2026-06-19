@@ -2,18 +2,24 @@
 // @target es5 String.prototype.substring
 // @feature builtin substring
 
-var x0 = "f";
-var x1 = "o";
-var x2 = "o";
-var x3 = "b";
-var x4 = "a";
-__set_taint__(x0);
-__set_taint__(x2);
-__set_taint__(x4);
-var x = x0 + x1 + x2 + x3 + x4;
-var y = x.substring(1, 4);
-__assert_taint__(y[0], false);
-__assert_taint__(y[1], true);
-__assert_taint__(y[2], false);
-var z = x.substring(2, 2);
-__assert_taint__(z, false);
+function test(x1) {
+    var x0 = 'f';
+    var x2 = 'o';
+    var x3 = 'b';
+    var x4 = 'a';
+    var x = x0 + x1 + x2 + x3 + x4;
+
+    // @witness always x.substring(1,4)[0]='o' (clean)
+    __assert_taint__(x.substring(1, 4)[0], false);
+
+    // @witness test('x') => x.substring(1,4)[1]='x' (tainted)
+    __assert_taint__(x.substring(1, 4)[1], true);
+
+    // @witness always x.substring(2,2)='' empty
+    __assert_taint__(x.substring(2, 2), false);
+}
+
+var x1 = 'o';
+__set_taint__(x1);
+
+test(x1);

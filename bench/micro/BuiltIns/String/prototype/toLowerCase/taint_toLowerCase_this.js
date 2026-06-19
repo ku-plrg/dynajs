@@ -2,13 +2,23 @@
 // @target es5 String.prototype.toLowerCase
 // @feature builtin toLowerCase
 
-var x0 = "A";
-var x1 = "b";
-var x2 = "C";
-__set_taint__(x0);
-__set_taint__(x2);
-var x = x0 + x1 + x2;
-var r = x.toLowerCase();
-__assert_taint__(r.charAt(0), true);
-__assert_taint__(r.charAt(1), false);
-__assert_taint__(r.charAt(2), true);
+function test(x1) {
+    var x0 = 'A';
+    var x2 = 'C';
+    var x = x0 + x1 + x2;
+    var r = x.toLowerCase();
+
+    // @witness always r[0]='a'
+    __assert_taint__(r[0], false);
+
+    // @witness test('x') => r[1]='x'
+    __assert_taint__(r[1], true);
+
+    // @witness always r[r.length-1]='c'
+    __assert_taint__(r[r.length - 1], false);
+}
+
+var x1 = 'B';
+__set_taint__(x1);
+
+test(x1);

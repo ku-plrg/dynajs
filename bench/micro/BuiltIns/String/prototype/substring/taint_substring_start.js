@@ -2,13 +2,13 @@
 // @target es5 String.prototype.substring
 // @feature builtin substring
 
-var x = "hello";
-var s0 = 1;
-__set_taint__(s0);
-var y = x.substring(s0, 4);
-__assert_taint__(y, true);
+function test(s) {
+    var x = 'hello';
 
-var s1 = 5;
-__set_taint__(s1);
-var z = x.substring(s1, 5);
-__assert_taint__(z, false);
+    // @witness 'hello' clean; tainted s is only the start bound
+    __assert_taint__(x.substring(s, 4), false);
+}
+
+var s = 1;
+__set_taint__(s);
+test(s);

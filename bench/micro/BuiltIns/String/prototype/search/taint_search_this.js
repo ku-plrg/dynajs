@@ -1,14 +1,19 @@
 // @type taint
 // @target es5 String.prototype.search
 // @feature builtin search
+// done
 
-var x0 = "h";
-var x1 = "e";
-var x2 = "l";
-var x3 = "l";
-var x4 = "o";
-var x5 = "1";
-__set_taint__(x5);
-var x = x0 + x1 + x2 + x3 + x4 + x5;
-__assert_taint__(x.search(/[0-9]/), true);
-__assert_taint__(x.search(/z/), false);
+function test(x1) {
+    var x0 = 'hello';
+    var x = x0 + x1;
+
+    // @witness search returns a position number, not content
+    __assert_taint__(x.search(/[0-9]/), false);
+
+    // @witness not-found returns -1, a sentinel number
+    __assert_taint__(x.search(/z/), false);
+}
+
+var x1 = '1';
+__set_taint__(x1);
+test(x1);

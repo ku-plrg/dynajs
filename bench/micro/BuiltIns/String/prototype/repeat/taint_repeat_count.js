@@ -2,13 +2,13 @@
 // @target es6+ String.prototype.repeat
 // @feature builtin repeat
 
-var x = "ab";
-var c0 = 3;
-__set_taint__(c0);
-var y = x.repeat(c0);
-__assert_taint__(y, true);
+function test(c) {
+    var x = 'ab';
 
-var c1 = 0;
-__set_taint__(c1);
-var z = x.repeat(c1);
-__assert_taint__(z, false);
+    // @witness 'ab' clean; tainted c is only the count bound
+    __assert_taint__(x.repeat(c), false);
+}
+
+var c = 3;
+__set_taint__(c);
+test(c);

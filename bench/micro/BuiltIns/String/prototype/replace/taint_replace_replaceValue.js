@@ -1,12 +1,27 @@
 // @type taint
 // @target es5 String.prototype.replace
 // @feature builtin replace
+// done
 
-var x = "abc";
-var v = "YZ";
+function test(v) {
+    var x = 'abc';
+
+    var r = x.replace('b', v);
+
+    // @witness always r[0]='a' from clean receiver
+    __assert_taint__(r[0], false);
+
+    // @witness test('x') => r[1]='x' from tainted v
+    __assert_taint__(r[1], true);
+
+    // @witness test('x') => r[2]='x' from tainted v
+    __assert_taint__(r[2], true);
+
+    // @witness always r[r.length-1]='c' clean suffix from receiver
+    __assert_taint__(r[r.length-1], false);
+}
+
+var v = 'YZ';
 __set_taint__(v);
-var r = x.replace("b", v);
-__assert_taint__(r[0], false);
-__assert_taint__(r[1], true);
-__assert_taint__(r[2], true);
-__assert_taint__(r[3], false);
+
+test(v);

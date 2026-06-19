@@ -1,11 +1,15 @@
 // @type taint
 // @target es5 String.prototype.indexOf
 // @feature builtin indexOf
+// done
 
-var x = "foobar";
-var s = "bar";
+function test(s) {
+    var x = 'foobar';
+
+    // @witness tainted s is only the search key; indexOf returns a position number
+    __assert_taint__(x.indexOf(s), false);
+}
+
+var s = 'bar';
 __set_taint__(s);
-__assert_taint__(x.indexOf(s), true);
-var s2 = "zzz";
-__set_taint__(s2);
-__assert_taint__(x.indexOf(s2), false);
+test(s);

@@ -1,19 +1,27 @@
 // @type taint
 // @target es6+ String.prototype.at
 // @feature builtin at
+// done
 
-var x0 = "f";
-var x1 = "o";
-var x2 = "o";
-__set_taint__(x0);
-__set_taint__(x2);
-var x = x0 + x1 + x2;
-var y0 = x.at(0);
-var y1 = x.at(1);
-var y2 = x.at(2);
-var y3 = x.at(999);
+function test(x1) {
+    var x0 = 'h';
+    var x2 = 'i';
+    var x = x0 + x1 + x2;
 
-__assert_taint__(y0, true);
-__assert_taint__(y1, false);
-__assert_taint__(y2, true);
-__assert_taint__(y3, false);
+    // @witness always x.at(0)='h'
+    __assert_taint__(x.at(0), false);
+
+    // @witness test('x') => x.at(1)='x'
+    __assert_taint__(x.at(1), true);
+
+    // @witness test('ax') => x.at(2)='x'
+    __assert_taint__(x.at(2), true);
+
+    // @witness always x.at(x.length)=undefined
+    __assert_taint__(x.at(x.length), false);
+}
+
+var x = 'hello';
+__set_taint__(x);
+
+test(x);

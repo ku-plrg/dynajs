@@ -1,11 +1,15 @@
 // @type taint
 // @target es6+ String.prototype.includes
 // @feature builtin includes
+// done
 
-var x = "foobar";
+function test(p) {
+    var x = 'foobar';
+
+    // @witness tainted p is only the position index; includes returns a boolean
+    __assert_taint__(x.includes('bar', p), false);
+}
+
 var p = 3;
 __set_taint__(p);
-__assert_taint__(x.includes("bar", p), false);
-var p2 = 99;
-__set_taint__(p2);
-__assert_taint__(x.includes("bar", p2), false);
+test(p);

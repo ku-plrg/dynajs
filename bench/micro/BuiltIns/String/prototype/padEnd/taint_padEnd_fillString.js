@@ -2,14 +2,28 @@
 // @target es6+ String.prototype.padEnd
 // @feature builtin padEnd
 
-var f = "*";
+function test(f) {
+    var x = 'hi';
+
+    // @witness always x.padEnd(4,f)[0]='h' (clean receiver)
+    __assert_taint__(x.padEnd(4, f)[0], false);
+
+    // @witness always x.padEnd(4,f)[1]='i' (clean receiver)
+    __assert_taint__(x.padEnd(4, f)[1], false);
+
+    // @witness test('x') => x.padEnd(4,f)[2]='x' (tainted fill)
+    __assert_taint__(x.padEnd(4, f)[2], true);
+
+    // @witness test('x') => x.padEnd(4,f)[3]='x' (tainted fill)
+    __assert_taint__(x.padEnd(4, f)[3], true);
+
+    // @witness always x.padEnd(2,f)[0]='h' (no pad; clean receiver)
+    __assert_taint__(x.padEnd(2, f)[0], false);
+
+    // @witness always x.padEnd(2,f)[1]='i' (no pad; clean receiver)
+    __assert_taint__(x.padEnd(2, f)[1], false);
+}
+
+var f = '*';
 __set_taint__(f);
-var x = "hi";
-var y = x.padEnd(4, f);
-__assert_taint__(y[0], false);
-__assert_taint__(y[1], false);
-__assert_taint__(y[2], true);
-__assert_taint__(y[3], true);
-var z = x.padEnd(2, f);
-__assert_taint__(z[0], false);
-__assert_taint__(z[1], false);
+test(f);
