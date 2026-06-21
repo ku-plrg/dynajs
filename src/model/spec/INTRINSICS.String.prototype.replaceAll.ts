@@ -20,7 +20,6 @@ export function INTRINSICS_String_prototype_replaceAll ($ : SpecRuntime, $this :
     {
       var flags = AO__Get($, (searchValue as Wrapped<unknown>), ($.base<string>("flags", []) as Wrapped<unknown>));
       AO__RequireObjectCoercible($, flags);
-      // @ts-ignore temporary ignore, as this is a type error in the spec but not in actual implementations
       if (!$.contains(AO__ToString($, (flags as Wrapped<unknown>)), $.base<string>("g", [])))
       {
         throw new TypeError;

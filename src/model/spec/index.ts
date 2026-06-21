@@ -35,7 +35,6 @@ export { AO__StringLastIndexOf } from "./AO__StringLastIndexOf.js";
 export { AO__StringPad } from "./AO__StringPad.js";
 export { AO__StringPaddingBuiltinsImpl } from "./AO__StringPaddingBuiltinsImpl.js";
 export { AO__StringToBigInt } from "./AO__StringToBigInt.js";
-export { AO__StringToCodePoints } from "./AO__StringToCodePoints.js";
 export { AO__StringToNumber } from "./AO__StringToNumber.js";
 export { AO__ThisStringValue } from "./AO__ThisStringValue.js";
 export { AO__ToBoolean } from "./AO__ToBoolean.js";
@@ -95,6 +94,7 @@ export { INTRINSICS_String_prototype_startsWith } from "./INTRINSICS.String.prot
 export { INTRINSICS_String_prototype_substring } from "./INTRINSICS.String.prototype.substring.js";
 export { INTRINSICS_String_prototype_toLowerCase } from "./INTRINSICS.String.prototype.toLowerCase.js";
 export { INTRINSICS_String_prototype_toString } from "./INTRINSICS.String.prototype.toString.js";
+export { INTRINSICS_String_prototype_toUpperCase } from "./INTRINSICS.String.prototype.toUpperCase.js";
 export { INTRINSICS_String_prototype_toWellFormed } from "./INTRINSICS.String.prototype.toWellFormed.js";
 export { INTRINSICS_String_prototype_trim } from "./INTRINSICS.String.prototype.trim.js";
 export { INTRINSICS_String_prototype_trimEnd } from "./INTRINSICS.String.prototype.trimEnd.js";
