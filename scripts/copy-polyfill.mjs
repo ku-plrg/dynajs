@@ -69,6 +69,7 @@ const INCLUDE = [
   /^INTRINSICS\.String\.prototype\./,
   // "RegExpExec",
   /^INTRINSICS\.RegExp\.prototype\.(exec|test)/,
+  "AO__CanonicalNumericIndexString",
 ];
 
 const EXCLUDE = [

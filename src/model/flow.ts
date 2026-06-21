@@ -5,6 +5,7 @@ import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "./type.js";
 import { Model } from "./model.js";
 import { type Site, UNKNOWN_SITE, resolveCodeSite, builtinName } from "./site.js";
 import { BoundaryEscape, type EscapeRecord } from "./escape.js";
+import { AO__CanonicalNumericIndexString } from './spec/index.js';
 
 type ValuedGeneral<Shape extends {}, Value = unknown> = Shape & { value: Value };
 
@@ -32,19 +33,6 @@ export type InfoDomain<Info> = {
 
 export type CallPolicy = {
   isOpaque: (f: unknown) => boolean;
-}
-
-// Returns the canonical char-access index when `p` is a property key that JS would
-// resolve to `s[i]` (i.e. a non-negative integer in range whose string form matches).
-function asStringIndex(p: unknown, len: number): number | undefined {
-  let n: number;
-  if (typeof p === 'number') n = p;
-  else if (typeof p === 'string') {
-    n = Number(p);
-    if (String(n) !== p) return undefined;
-  } else return undefined;
-  if (!Number.isInteger(n) || n < 0 || n >= len) return undefined;
-  return n;
 }
 
 // `regex.exec(s)` whose result carries per-capture spans (`match.indices`): the
@@ -439,37 +427,38 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     this.currentId = _id;
     const transformed = (() => {
       const f = frame as GetFieldFrame;
-    const b: unknown = this.$.peek(f.base);
-    const p: unknown = this.$.peek(f.prop);
-    if (typeof b === 'string') {
-      const i = asStringIndex(p, b.length);
-      if (i !== undefined) {
-        // Carry the prop's info into the offsets so an index-flow (s[taintedIndex])
-        // reaches substringInfo; a plain literal index propagates nothing.
-        return this.$.substring(
-          f.base as Wrapped<string>,
-          this.$.base(i, [f.prop]),
-          this.$.base(i + 1, [f.prop]),
-        );
-      }
-      // `s.length` is the one field read with op-aware meaning (strlen);
-      // route it through lengthInfo, else baseInfo flow-through.
-      if (p === 'length') {
-        if (this.$.isType(f.base, 'string')) {
-          return this.lift(result, this.lengthOfStringInfo?.(this.valued(f.base as Wrapped<string>)) ?? this.baseInfo(result, [this.valued(f.base)]));
-        } else {
-          return this.lift(result, this.baseInfo(result, [this.valued(f.base)]));
+      const b: unknown = this.$.peek(f.base);
+      const p: unknown = this.$.peek(f.prop);
+      if (typeof b === 'string') {
+        const i: number | undefined =
+            this.$.peek(AO__CanonicalNumericIndexString(this.$, this.$.base((p as any).toString(), [f.prop])));
+        if (i !== undefined) {
+          // Carry the prop's info into the offsets so an index-flow (s[taintedIndex])
+          // reaches substringInfo; a plain literal index propagates nothing.
+          return this.$.substring(
+            f.base as Wrapped<string>,
+            this.$.base(i, [f.prop]),
+            this.$.base(i + 1, [f.prop]),
+          );
+        }
+        // `s.length` is the one field read with op-aware meaning (strlen);
+        // route it through lengthInfo, else baseInfo flow-through.
+        if (p === 'length') {
+          if (this.$.isType(f.base, 'string')) {
+            return this.lift(result, this.lengthOfStringInfo?.(this.valued(f.base as Wrapped<string>)) ?? this.baseInfo(result, [this.valued(f.base)]));
+          } else {
+            return this.lift(result, this.baseInfo(result, [this.valued(f.base)]));
+          }
         }
       }
-    }
-    if (this.isWrapped(result) && !this.domain.isBottom(this.getInfo(result))) {
-      return result as Wrapped<unknown>;
-    }
-    return this.lift(
-      result,
-      this.getFieldInfo?.(this.valued(f.base), this.valued(f.prop), this.valued(result))
-        ?? this.baseInfo(result, [this.valued(f.base), this.valued(f.prop)]),
-    );
+      if (this.isWrapped(result) && !this.domain.isBottom(this.getInfo(result))) {
+        return result as Wrapped<unknown>;
+      }
+      return this.lift(
+        result,
+        this.getFieldInfo?.(this.valued(f.base), this.valued(f.prop), this.valued(result))
+          ?? this.baseInfo(result, [this.valued(f.base), this.valued(f.prop)]),
+      );
     })();
     return { result: transformed };
   }

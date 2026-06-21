@@ -2,6 +2,7 @@
 export { AO__ArrayCreate } from "./AO__ArrayCreate.js";
 export { AO__ArraySpeciesCreate } from "./AO__ArraySpeciesCreate.js";
 export { AO__Call } from "./AO__Call.js";
+export { AO__CanonicalNumericIndexString } from "./AO__CanonicalNumericIndexString.js";
 export { AO__CodePointAt } from "./AO__CodePointAt.js";
 export { AO__CodePointsToString } from "./AO__CodePointsToString.js";
 export { AO__Construct } from "./AO__Construct.js";

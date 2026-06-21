@@ -9,12 +9,12 @@ export function AO__StringPaddingBuiltinsImpl ($ : SpecRuntime, O : Wrapped<unkn
   var S = AO__ToString($, (O as Wrapped<unknown>));
   var intMaxLength = AO__ToLength($, (maxLength as Wrapped<unknown>));
   var stringLength = $.length(S);
-  if ($.condition(Number.MAX_SAFE_INTEGER - 596, $.lessThanEqual(intMaxLength, stringLength)))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 598, $.lessThanEqual(intMaxLength, stringLength)))
   {
     return S;
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 597, $.is(fillString, $.base<undefined>(undefined, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 599, $.is(fillString, $.base<undefined>(undefined, []))))
   {
     fillString = $.base<string>(" ", []);
   }
