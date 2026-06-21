@@ -66,13 +66,8 @@ export { INTRINSICS_Array_prototype_reduce } from "./INTRINSICS.Array.prototype.
 export { INTRINSICS_Array_prototype_reduceRight } from "./INTRINSICS.Array.prototype.reduceRight.js";
 export { INTRINSICS_Array_prototype_shift } from "./INTRINSICS.Array.prototype.shift.js";
 export { INTRINSICS_Array_prototype_slice } from "./INTRINSICS.Array.prototype.slice.js";
-export { INTRINSICS_Map_prototype_get } from "./INTRINSICS.Map.prototype.get.js";
-export { INTRINSICS_Map_prototype_set } from "./INTRINSICS.Map.prototype.set.js";
-export { INTRINSICS_Object_defineProperty } from "./INTRINSICS.Object.defineProperty.js";
 export { INTRINSICS_RegExp_prototype_exec } from "./INTRINSICS.RegExp.prototype.exec.js";
 export { INTRINSICS_RegExp_prototype_test } from "./INTRINSICS.RegExp.prototype.test.js";
-export { INTRINSICS_Set_prototype_add } from "./INTRINSICS.Set.prototype.add.js";
-export { INTRINSICS_Set_prototype_values } from "./INTRINSICS.Set.prototype.values.js";
 export { INTRINSICS_String_prototype_at } from "./INTRINSICS.String.prototype.at.js";
 export { INTRINSICS_String_prototype_charAt } from "./INTRINSICS.String.prototype.charAt.js";
 export { INTRINSICS_String_prototype_charCodeAt } from "./INTRINSICS.String.prototype.charCodeAt.js";
