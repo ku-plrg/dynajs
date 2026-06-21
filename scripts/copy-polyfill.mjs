@@ -83,6 +83,7 @@ const EXCLUDE = [
 const NO_CHECK = [
   "INTRINSICS.Array.prototype.reduce",
   "INTRINSICS.Array.prototype.reduceRight",
+  "INTRINSICS.String.prototype.replaceAll",
   "AO__GetSubstitution",
 ];
 
