@@ -91,6 +91,7 @@ export { INTRINSICS_String_prototype_search } from "./INTRINSICS.String.prototyp
 export { INTRINSICS_String_prototype_slice } from "./INTRINSICS.String.prototype.slice.js";
 export { INTRINSICS_String_prototype_split } from "./INTRINSICS.String.prototype.split.js";
 export { INTRINSICS_String_prototype_startsWith } from "./INTRINSICS.String.prototype.startsWith.js";
+export { INTRINSICS_String_prototype_substr } from "./INTRINSICS.String.prototype.substr.js";
 export { INTRINSICS_String_prototype_substring } from "./INTRINSICS.String.prototype.substring.js";
 export { INTRINSICS_String_prototype_toLowerCase } from "./INTRINSICS.String.prototype.toLowerCase.js";
 export { INTRINSICS_String_prototype_toString } from "./INTRINSICS.String.prototype.toString.js";
