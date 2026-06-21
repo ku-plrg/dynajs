@@ -16,6 +16,7 @@ export function INTRINSICS_String_prototype_toUpperCase ($ : SpecRuntime, $this 
       var iNW = $.base(i + 1, []);
       var S_i = $.substring(S, iW, iNW);
       base = $.concatenate(base, S_i);
+    }
+    return base;
   }
-  return base;
 }
