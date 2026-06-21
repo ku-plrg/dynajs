@@ -100,14 +100,6 @@ export class TaintAnalysis extends FlowAnalysis<TaintInfo> {
     console.log(`@@DJX_VERDICT ${actual} ${expected}`);
   }
 
-  protected markSourceCall(f: unknown, args: unknown[]): unknown[] | undefined {
-    if (typeof f === "function" && (f as { name?: unknown }).name === "__test_taint__" && args.length > 0) {
-      this.setTaint(args[0], true);
-      return args;
-    }
-    return undefined;
-  }
-
   setTaint(value: unknown, tainted: boolean): void {
     const info = this.getOrCreateInfo(value, () => ({ bit: false }));
     if (info === undefined) return;

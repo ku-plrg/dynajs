@@ -2,8 +2,9 @@ import type { TaintAnalysis } from "./index.js";
 
 declare const D$: { analysis: TaintAnalysis } & Record<string, any>;
 
-function __set_taint__(v: unknown): void {
+function __set_taint__(v: unknown): unknown {
   D$.analysis.setTaint(v, true);
+  return v;
 }
 
 function __is_tainted__(v: unknown): boolean {
