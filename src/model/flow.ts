@@ -123,6 +123,8 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
   protected escapedInfo?(_f: unknown, _escaped: Valued<Info>[]): void {}
 
+  protected markSourceCall?(_f: unknown, _args: unknown[]): unknown[] | undefined
+
   /* opaque call the analysis wants to model */
   protected opaqueCallInfo?(_f: unknown, _entries: unknown[], _result: unknown): Info
 
@@ -506,6 +508,11 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       const esc = this.escaper.escape(_base, argArr, entries);
       if (esc.crossed.length > 0) this.escapedInfo?.(_f, esc.crossed.map((w) => this.valued(w)));
       return { skip: false, f: _f, base: esc.base, args: esc.args, frame: { ty: 'opaque', f: _f, modeled: false, entries, escaped: esc.log } };
+    }
+    const marked = this.markSourceCall?.(_f, argArr);
+    if (marked !== undefined) {
+      const markedEntries = (_isMethod ? [_base as Wrapped, ...marked] : marked) as Wrapped[];
+      return { skip: false, f: _f, base: _base, args: marked, frame: { ty: 'transparent', entries: markedEntries } };
     }
     return { skip: false, f: _f, base: _base, args, frame: { ty: 'transparent', entries } };
   }

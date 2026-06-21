@@ -387,6 +387,13 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     return this.make(concrete, { kind: 'var', name: varName, sort: this.scalarSort(concrete) });
   }
 
+  protected markSourceCall(f: unknown, args: unknown[]): unknown[] | undefined {
+    if (typeof f === 'function' && (f as { name?: unknown }).name === '__test_symbolic__' && args.length > 0) {
+      return [this.makeSymbolic('input', args[0]), ...args.slice(1)];
+    }
+    return undefined;
+  }
+
   symbolicAssert(condArg: unknown, expectedArg: unknown): void {
     // `expected` is the per-assert ground truth (true = should be detected). We
     // print `@@DJX_VERDICT <actual> <expected>` so the runner classifies each
