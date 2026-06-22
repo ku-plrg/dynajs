@@ -8,18 +8,18 @@ import { AO__ToBoolean } from "./AO__ToBoolean.js";
 import { AO__ToString } from "./AO__ToString.js";
 
 export function AO__FindViaPredicate ($ : SpecRuntime, O : Wrapped<unknown>, len : Wrapped<number>, direction : Wrapped<unknown>, predicate : Wrapped<unknown>, thisArg : Wrapped<unknown>) {
-  if ($.condition(Number.MAX_SAFE_INTEGER - 40, $.is(AO__IsCallable($, (predicate as Wrapped<unknown>)), $.base<boolean>(false, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 41, $.is(AO__IsCallable($, (predicate as Wrapped<unknown>)), $.base<boolean>(false, []))))
   {
     throw new TypeError;
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 41, $.is(direction, $.base<string>("ascending", []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 42, $.is(direction, $.base<string>("ascending", []))))
   {
-    var indices = $.range($.base<number>(0, []), true, len, false, true, Number.MAX_SAFE_INTEGER - 42);
+    var indices = $.range($.base<number>(0, []), true, len, false, true, Number.MAX_SAFE_INTEGER - 43);
   }
   else
   {
-    var indices = $.range($.base<number>(0, []), true, len, false, false, Number.MAX_SAFE_INTEGER - 43);
+    var indices = $.range($.base<number>(0, []), true, len, false, false, Number.MAX_SAFE_INTEGER - 44);
   }
 
   for (var k of indices)
@@ -27,7 +27,7 @@ export function AO__FindViaPredicate ($ : SpecRuntime, O : Wrapped<unknown>, len
     var Pk = AO__ToString($, (k as Wrapped<unknown>));
     var kValue = AO__Get($, (O as Wrapped<unknown>), (Pk as Wrapped<unknown>));
     var testResult = AO__Call($, (predicate as Wrapped<unknown>), (thisArg as Wrapped<unknown>), ([kValue, k, O] as Wrapped<unknown>[]));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 44, $.is(AO__ToBoolean($, (testResult as Wrapped<unknown>)), $.base<boolean>(true, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 45, $.is(AO__ToBoolean($, (testResult as Wrapped<unknown>)), $.base<boolean>(true, []))))
     {
       return {"Index": k, "Value": kValue};
     }

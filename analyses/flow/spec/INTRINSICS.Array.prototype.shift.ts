@@ -12,7 +12,7 @@ import { AO__ToString } from "./AO__ToString.js";
 export function INTRINSICS_Array_prototype_shift ($ : SpecRuntime, $this : Wrapped<unknown>) {
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 192, $.is(len, $.base<number>(0, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 193, $.is(len, $.base<number>(0, []))))
   {
     AO__Set($, (O as Wrapped<unknown>), ($.base<string>("length", []) as Wrapped<unknown>), ($.base<number>(0, []) as Wrapped<unknown>), ($.base<boolean>(true, []) as Wrapped<boolean>));
     return $.base<undefined>(undefined, []);
@@ -20,12 +20,12 @@ export function INTRINSICS_Array_prototype_shift ($ : SpecRuntime, $this : Wrapp
 
   var first = AO__Get($, (O as Wrapped<unknown>), ($.base<string>("0", []) as Wrapped<unknown>));
   var k = $.base<number>(1, []);
-  while ($.condition(Number.MAX_SAFE_INTEGER - 193, $.lessThan(k, len)))
+  while ($.condition(Number.MAX_SAFE_INTEGER - 194, $.lessThan(k, len)))
   {
     var from = AO__ToString($, (k as Wrapped<unknown>));
     var to = AO__ToString($, ($.subtract((k as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>)) as Wrapped<unknown>));
     var fromPresent = AO__HasProperty($, (O as Wrapped<unknown>), (from as Wrapped<unknown>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 194, $.is(fromPresent, $.base<boolean>(true, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 195, $.is(fromPresent, $.base<boolean>(true, []))))
     {
       var fromValue = AO__Get($, (O as Wrapped<unknown>), (from as Wrapped<unknown>));
       AO__Set($, (O as Wrapped<unknown>), (to as Wrapped<unknown>), (fromValue as Wrapped<unknown>), ($.base<boolean>(true, []) as Wrapped<boolean>));

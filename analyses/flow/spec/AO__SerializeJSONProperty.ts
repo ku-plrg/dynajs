@@ -18,14 +18,14 @@ export function AO__SerializeJSONProperty ($ : SpecRuntime, state : Wrapped<unkn
   if (($.isType(value, "object")) || ($.isType(value, "bigint")))
   {
     var toJSON = AO__GetV($, (value as Wrapped<unknown>), ($.base<string>("toJSON", []) as Wrapped<unknown>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 588, $.is(AO__IsCallable($, (toJSON as Wrapped<unknown>)), $.base<boolean>(true, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 592, $.is(AO__IsCallable($, (toJSON as Wrapped<unknown>)), $.base<boolean>(true, []))))
     {
       value = AO__Call($, (toJSON as Wrapped<unknown>), (value as Wrapped<unknown>), ([key] as Wrapped<unknown>[]));
     }
 
   }
 
-  if (!$.condition(Number.MAX_SAFE_INTEGER - 589, $.is(state["ReplacerFunction" /* TODO INTERNAL : internal access */], $.base<undefined>(undefined, []))))
+  if (!$.condition(Number.MAX_SAFE_INTEGER - 593, $.is(state["ReplacerFunction" /* TODO INTERNAL : internal access */], $.base<undefined>(undefined, []))))
   {
     value = AO__Call($, (state["ReplacerFunction" /* TODO INTERNAL : internal access */] as Wrapped<unknown>), (holder as Wrapped<unknown>), ([key, value] as Wrapped<unknown>[]));
   }
@@ -63,17 +63,17 @@ export function AO__SerializeJSONProperty ($ : SpecRuntime, state : Wrapped<unkn
 
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 590, $.is(value, $.base<null>(null, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 594, $.is(value, $.base<null>(null, []))))
   {
     return $.base<string>("null", []);
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 591, $.is(value, $.base<boolean>(true, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 595, $.is(value, $.base<boolean>(true, []))))
   {
     return $.base<string>("true", []);
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 592, $.is(value, $.base<boolean>(false, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 596, $.is(value, $.base<boolean>(false, []))))
   {
     return $.base<string>("false", []);
   }
@@ -98,10 +98,10 @@ export function AO__SerializeJSONProperty ($ : SpecRuntime, state : Wrapped<unkn
     throw new TypeError;
   }
 
-  if (($.isType(value, "object")) && $.condition(Number.MAX_SAFE_INTEGER - 593, $.is(AO__IsCallable($, (value as Wrapped<unknown>)), $.base<boolean>(false, []))))
+  if (($.isType(value, "object")) && $.condition(Number.MAX_SAFE_INTEGER - 597, $.is(AO__IsCallable($, (value as Wrapped<unknown>)), $.base<boolean>(false, []))))
   {
     var isArray = AO__IsArray($, (value as Wrapped<unknown>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 594, $.is(isArray, $.base<boolean>(true, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 598, $.is(isArray, $.base<boolean>(true, []))))
     {
       return AO__SerializeJSONArray($, (state as Wrapped<unknown>), (value as Wrapped<unknown>));
     }
