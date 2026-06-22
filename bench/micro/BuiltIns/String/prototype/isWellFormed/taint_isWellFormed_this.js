@@ -1,14 +1,13 @@
 // @type taint
-// @target es2024 String.prototype.isWellFormed
+// @target es6+ String.prototype.isWellFormed
 // @feature builtin isWellFormed
+// @done
 
-function test(x1) {
-    var x = 'h' + x1 + 'i';
+function __test_taint__(tainted) {
+    var x = 'h' + tainted + 'i';
 
     // @witness isWellFormed returns a boolean
     __assert_taint__(x.isWellFormed(), false);
 }
 
-var x1 = 'x';
-__set_taint__(x1);
-test(x1);
+__test_taint__(__set_taint__('hello'));

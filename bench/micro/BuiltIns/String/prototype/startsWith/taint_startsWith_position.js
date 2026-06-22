@@ -1,15 +1,13 @@
 // @type taint
 // @target es6+ String.prototype.startsWith
 // @feature builtin startsWith
-// done
+// @done
 
-function test(p) {
+function __test_taint__(tainted) {
     var x = 'foobar';
 
-    // @witness tainted p is only the position index; startsWith returns a boolean
-    __assert_taint__(x.startsWith('bar', p), false);
+    // @witness tainted is only the position index; startsWith returns a boolean
+    __assert_taint__(x.startsWith('bar', tainted), false);
 }
 
-var p = 3;
-__set_taint__(p);
-test(p);
+__test_taint__(__set_taint__(3));

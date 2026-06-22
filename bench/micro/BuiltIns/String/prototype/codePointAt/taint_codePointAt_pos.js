@@ -3,13 +3,11 @@
 // @feature builtin codePointAt
 // @done
 
-function test(pos) {
+function __test_taint__(tainted) {
     var x = 'hello';
 
-    // @witness 'hello' clean; tainted pos is only the index
-    __assert_taint__(x.codePointAt(pos), false);
+    // @witness 'hello' clean; tainted is only the index
+    __assert_taint__(x.codePointAt(tainted), false);
 }
 
-var pos0 = 3;
-__set_taint__(pos0);
-test(pos0);
+__test_taint__(__set_taint__(3));

@@ -3,21 +3,18 @@
 // @feature builtin concat
 // @done
 
-function test(x1) {
-    var x = x1 + 'oo';
-    var r = x.concat('bar');
+function __test_taint__(tainted) {
+    var x = tainted + 'wo';
+    var r = x.concat('rld');
 
-    // @witness test('x') => r[0]='x' (tainted receiver char)
+    // @witness __test_taint__('x') => r[0]='x' (tainted receiver char)
     __assert_taint__(r[0], true);
 
-    // @witness always r[r.length-1]='r' (clean suffix of 'bar')
+    // @witness always d[r.length-1]='d' (clean suffix of 'bar')
     __assert_taint__(r[r.length - 1], false);
 
-    // @witness 'bar' is clean (clean suffix of 'bar')
+    // @witness 'world' is clean
     __assert_taint__(r, false);
 }
 
-var x1 = 'hello';
-__set_taint__(x1);
-
-test(x1);
+__test_taint__(__set_taint__('hello'));

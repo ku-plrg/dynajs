@@ -1,10 +1,10 @@
 // @type taint
 // @target es6+ String.raw
 // @feature builtin raw-static
-// done
+// @done
 
-function test(s) {
-    var r = String.raw`ab${s}cd`;
+function __test_taint__(tainted) {
+    var r = String.raw`ab${tainted}cd`;
 
     // @witness always r[0]='a' from literal template
     __assert_taint__(r[0], false);
@@ -12,14 +12,11 @@ function test(s) {
     // @witness always r[1]='b' from literal template
     __assert_taint__(r[1], false);
 
-    // @witness test('x') => r[2]='x' from tainted substitution s
+    // @witness __test_taint__('x') => r[2]='x' from tainted substitution
     __assert_taint__(r[2], true);
 
     // @witness always r[r.length-1]='d' clean suffix from literal template
     __assert_taint__(r[r.length-1], false);
 }
 
-var s = 'X';
-__set_taint__(s);
-
-test(s);
+__test_taint__(__set_taint__('hello'));

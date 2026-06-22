@@ -1,19 +1,16 @@
 // @type taint
 // @target es5 String.prototype.match
 // @feature builtin match
-// done
+// @done
 
-function test(pat) {
+function __test_taint__(tainted) {
     var x = 'hello123';
-    var re = new RegExp(pat);
+    var re = new RegExp(tainted);
 
     var m = x.match(re);
 
-    // @witness 'hello123' clean; tainted pat is only the regexp (pattern not in result)
+    // @witness 'hello123' clean; tainted is only the regexp (pattern not in result)
     __assert_taint__(m[0], false);
 }
 
-var pat = '\\d+';
-__set_taint__(pat);
-
-test(pat);
+__test_taint__(__set_taint__('\\d+'));

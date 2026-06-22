@@ -3,9 +3,9 @@
 // @feature builtin concat
 // @done
 
-function test(a1) {
+function __test_taint__(tainted) {
     var base = 'ab';
-    var r = base.concat(a1, 'Y');
+    var r = base.concat(tainted, 'Y');
 
     // @witness always r[0]='a' (clean receiver)
     __assert_taint__(r[0], false);
@@ -13,13 +13,11 @@ function test(a1) {
     // @witness always r[1]='b' (clean receiver)
     __assert_taint__(r[1], false);
 
-    // @witness test('x') => r[2]='x' (tainted arg)
+    // @witness __test_taint__('x') => r[2]='x' (tainted arg)
     __assert_taint__(r[2], true);
 
     // @witness always r[r.length-1]='Y' (clean suffix)
     __assert_taint__(r[r.length - 1], false);
 }
 
-var a1 = 'hello';
-__set_taint__(a1);
-test(a1);
+__test_taint__(__set_taint__('hello'));

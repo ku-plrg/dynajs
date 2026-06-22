@@ -1,14 +1,14 @@
 // @type taint
 // @target es6+ String.prototype.replaceAll
 // @feature builtin replaceAll
-// done
+// @done
 
-function test(s) {
+function __test_taint__(tainted) {
     var x = 'a-b-c';
 
-    var r = x.replaceAll(s, '+');
+    var r = x.replaceAll(tainted, '+');
 
-    // @witness 'a-b-c' clean; tainted s is the searchValue (removed, not in result)
+    // @witness 'a-b-c' clean; tainted is the searchValue (removed, not in result)
     __assert_taint__(r[0], false);
 
     // @witness always r[1]='+' from literal replacement
@@ -18,7 +18,4 @@ function test(s) {
     __assert_taint__(r[3], false);
 }
 
-var s = '-';
-__set_taint__(s);
-
-test(s);
+__test_taint__(__set_taint__('-'));

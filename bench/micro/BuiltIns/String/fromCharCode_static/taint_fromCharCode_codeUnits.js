@@ -1,17 +1,16 @@
 // @type taint
 // @target es5 String.fromCharCode
 // @feature builtin fromCharCode
+// @done
 
-function test(code) {
-    var r = String.fromCharCode(72, code);
+function __test_taint__(tainted) {
+    var r = String.fromCharCode(72, tainted);
 
     // @witness always r[0]='H' (from clean code 72)
     __assert_taint__(r[0], false);
 
-    // @witness test(120) => r[1]='x' (char content from tainted code)
+    // @witness __test_taint__(120) => r[1]='x' (char content from tainted code)
     __assert_taint__(r[1], true);
 }
 
-var code = 120;
-__set_taint__(code);
-test(code);
+__test_taint__(__set_taint__(113));

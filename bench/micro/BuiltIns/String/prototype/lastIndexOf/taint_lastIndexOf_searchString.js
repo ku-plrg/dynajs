@@ -1,15 +1,13 @@
 // @type taint
 // @target es5 String.prototype.lastIndexOf
 // @feature builtin lastIndexOf
-// done
+// @done
 
-function test(s) {
+function __test_taint__(tainted) {
     var x = 'foobar';
 
-    // @witness tainted s is only the search key; lastIndexOf returns a position number
-    __assert_taint__(x.lastIndexOf(s), false);
+    // @witness tainted is only the search key; lastIndexOf returns a position number
+    __assert_taint__(x.lastIndexOf(tainted), false);
 }
 
-var s = 'bar';
-__set_taint__(s);
-test(s);
+__test_taint__(__set_taint__('bar'));

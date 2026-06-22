@@ -1,14 +1,13 @@
 // @type taint
 // @target es5 String.prototype.slice
 // @feature builtin slice
+// @done
 
-function test(s) {
+function __test_taint__(tainted) {
     var x = 'hello';
 
-    // @witness 'hello' clean; tainted s is only the start bound
-    __assert_taint__(x.slice(s, 4), false);
+    // @witness 'hello' clean; tainted is only the start bound
+    __assert_taint__(x.slice(tainted, 4), false);
 }
 
-var s = 1;
-__set_taint__(s);
-test(s);
+__test_taint__(__set_taint__(1));

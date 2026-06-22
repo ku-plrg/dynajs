@@ -1,21 +1,18 @@
 // @type taint
 // @target es5 String.prototype.replace
 // @feature builtin replace
-// done
+// @done
 
-function test(s) {
+function __test_taint__(tainted) {
     var x = 'hello world';
 
-    var r = x.replace(s, 'there');
+    var r = x.replace(tainted, 'there');
 
-    // @witness 'hello world' clean; tainted s is the searchValue (removed, not in result)
+    // @witness 'hello world' clean; tainted is the searchValue (removed, not in result)
     __assert_taint__(r[0], false);
 
     // @witness always r[r.length-1]='e' clean suffix from literal replacement
     __assert_taint__(r[r.length-1], false);
 }
 
-var s = 'world';
-__set_taint__(s);
-
-test(s);
+__test_taint__(__set_taint__('world'));
