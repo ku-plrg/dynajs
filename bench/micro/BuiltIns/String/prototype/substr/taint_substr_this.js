@@ -1,25 +1,33 @@
 // @type taint
 // @target es5 String.prototype.substr
 // @feature builtin substr
+// @done
 
-function test(x1) {
+function __test_taint__(tainted) {
     var x0 = 'f';
     var x2 = 'o';
     var x3 = 'b';
     var x4 = 'a';
-    var x = x0 + x1 + x2 + x3 + x4;
+    var x = x0 + tainted + x2 + x3 + x4;
 
-    // @witness always x.substr(1,3)[0]='o' (clean)
-    __assert_taint__(x.substr(1, 3)[0], false);
+    // @witness __test_taint__('x') => x.substr(1,3)[0]='x' (tainted char at index 1)
+    __assert_taint__(x.substr(1, 3)[0], true);
 
-    // @witness test('x') => x.substr(1,3)[1]='x' (tainted)
-    __assert_taint__(x.substr(1, 3)[1], true);
+    // @witness always x.substr(1,x.length)[x.length-2]='a' (clean literal)
+    __assert_taint__(x.substr(1, x.length)[x.length - 2], false);
 
-    // @witness always x.substr(2,0)='' empty
+    // @witness always x.substr(2,0)=''
     __assert_taint__(x.substr(2, 0), false);
+
+    // @witness __test_taint__('x') => x.substr(4,1)[0]='a' (clean literal)
+    __assert_taint__(x.substr(4, 1)[0], false);
+
+    // @witness always x.substr(-2, 2)[1]='a' (clean literal)
+    __assert_taint__(x.substr(-2, 2)[1], false);
+
+    // @witness __test_taint__('x') => x.substr(-4, 3)[0]='x'
+    __assert_taint__(x.substr(-4, 3)[0], true);
+
 }
 
-var x1 = 'o';
-__set_taint__(x1);
-
-test(x1);
+__test_taint__(__set_taint__('q'));

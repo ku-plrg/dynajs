@@ -1,21 +1,14 @@
 // @type taint
 // @target es5 String.prototype.toLocaleUpperCase
 // @feature builtin toLocaleUpperCase
+// @done
 
-function test(loc) {
+function __test_taint__(tainted) {
     var x = 'abc';
 
-    // @witness 'abc' clean; tainted loc is only the locale selector
-    __assert_taint__(x.toLocaleUpperCase(loc)[0], false);
-
-    // @witness 'abc' clean; tainted loc is only the locale selector
-    __assert_taint__(x.toLocaleUpperCase(loc)[1], false);
-
-    // @witness 'abc' clean; tainted loc is only the locale selector
-    __assert_taint__(x.toLocaleUpperCase(loc)[2], false);
+    // @witness 'abc' clean; tainted is only the locale selector, never content.
+    // One whole-string check suffices — per-position asserts only restate it.
+    __assert_taint__(x.toLocaleUpperCase(tainted), false);
 }
 
-var loc = 'tr';
-__set_taint__(loc);
-
-test(loc);
+__test_taint__(__set_taint__('tr'));
