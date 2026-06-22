@@ -503,7 +503,7 @@ function makeRunners(opts) {
       // GhostFunction.ts must be updated to the renamed __assert_taint__(v,
       // expected) and emit the 2-token marker for this runner to score. Only
       // taint benches apply. See the NODEMEDIC_* config block above.
-      name: "nodemedic-jalangi",
+      name: "nodemedic",
       applies: (b) => b.type === "taint",
       available: () =>
         existsSync(NODEMEDIC_JALANGI_CMD) && existsSync(NODEMEDIC_REWRITE),
