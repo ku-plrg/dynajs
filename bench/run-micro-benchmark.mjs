@@ -15,7 +15,7 @@
 //      several asserts; each marker is one independently-scored case. A run that
 //      emits no marker at all (crash/timeout before any assert) is one `error`.
 //   4. builds a confusion matrix per runner (counting cases, not files) and
-//      reports precision / recall.
+//      reports precision / recall / F1 / accuracy.
 //
 // Scoring (per case, from its marker's expected token):
 //   expected=detected (positive): detected -> TP    clean|error -> FN
@@ -348,7 +348,9 @@ function buildMatrix(recs) {
 }
 
 // One confusion-matrix row: `label` then TP/FP/FN/TN/err/t-o, precision,
-// recall, F1, mean_ms. Shared by the overall table and the grouped breakdowns.
+// recall, F1, accuracy, mean_ms. Shared by the overall table and the grouped
+// breakdowns. accuracy = (TP+TN)/(TP+TN+FP+FN): the share of all cases scored
+// right (errors land in FP/FN per classify(), so they drag it down too).
 function matrixRow(label, m) {
   const precision = ratio(m.TP, m.TP + m.FP);
   const recall = ratio(m.TP, m.TP + m.FN);
@@ -356,13 +358,14 @@ function matrixRow(label, m) {
     precision === null || recall === null || precision + recall === 0
       ? null
       : (2 * precision * recall) / (precision + recall);
+  const accuracy = ratio(m.TP + m.TN, m.TP + m.TN + m.FP + m.FN);
   return (
     label.padEnd(22) +
     green(String(m.TP).padStart(5)) + red(String(m.FP).padStart(5)) +
     red(String(m.FN).padStart(5)) + green(String(m.TN).padStart(5)) +
     [m.err, m.timeout].map((x) => String(x).padStart(5)).join("") +
     fmtRatio(precision).padStart(11) + fmtRatio(recall).padStart(9) +
-    fmtRatio(f1).padStart(8) +
+    fmtRatio(f1).padStart(8) + fmtRatio(accuracy).padStart(10) +
     (m.files ? (m.meanSum / m.files).toFixed(1) : "0").padStart(10)
   );
 }
@@ -372,7 +375,8 @@ const matrixHeader = (lead) =>
   green("TP".padStart(5)) + red("FP".padStart(5)) +
   red("FN".padStart(5)) + green("TN".padStart(5)) +
   ["err", "t/o"].map((h) => h.padStart(5)).join("") +
-  "precision".padStart(11) + "recall".padStart(9) + "F1".padStart(8) + "mean_ms".padStart(10);
+  "precision".padStart(11) + "recall".padStart(9) + "F1".padStart(8) +
+  "accuracy".padStart(10) + "mean_ms".padStart(10);
 
 // Resolve dynajs analysis + flags for a bench: a CLI override wins, otherwise
 // the bench's `@type` selects a row from TYPE_CONFIG. Returns null if neither.
