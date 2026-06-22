@@ -36,6 +36,21 @@ export class Model {
     [String.prototype.trimStart, generated.INTRINSICS_String_prototype_trimStart],
     [String.prototype.valueOf, generated.INTRINSICS_String_prototype_valueOf],
 
+    // Annex B HTML wrapper methods.
+    [String.prototype.anchor, generated.INTRINSICS_String_prototype_anchor],
+    [String.prototype.big, generated.INTRINSICS_String_prototype_big],
+    [String.prototype.blink, generated.INTRINSICS_String_prototype_blink],
+    [String.prototype.bold, generated.INTRINSICS_String_prototype_bold],
+    [String.prototype.fixed, generated.INTRINSICS_String_prototype_fixed],
+    [String.prototype.fontcolor, generated.INTRINSICS_String_prototype_fontcolor],
+    [String.prototype.fontsize, generated.INTRINSICS_String_prototype_fontsize],
+    [String.prototype.italics, generated.INTRINSICS_String_prototype_italics],
+    [String.prototype.link, generated.INTRINSICS_String_prototype_link],
+    [String.prototype.small, generated.INTRINSICS_String_prototype_small],
+    [String.prototype.strike, generated.INTRINSICS_String_prototype_strike],
+    [String.prototype.sub, generated.INTRINSICS_String_prototype_sub],
+    [String.prototype.sup, generated.INTRINSICS_String_prototype_sup],
+
     // Regex methods — substituted by the symbolic regex seam ($.regexOp). match
     // and search are kept out of copy-polyfill's esmeta extraction (EXCLUDE), so
     // these manual models are their only registration.
