@@ -13,7 +13,7 @@ function __test_taint__(tainted) {
     // @witness __test_taint__('x') => x.substring(1,4)[0]='x' (tainted char at index 1)
     __assert_taint__(x.substring(1, 4)[0], true);
 
-    // @witness always x.substring(1,x.length-1)[x.length-2]='a' (clean literal)
+    // @witness always x.substring(1,x.length)[x.length-2]='a' (clean literal)
     __assert_taint__(x.substring(1, x.length)[x.length - 2], false);
 
     // @witness always x.substring(2,2)=''

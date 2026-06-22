@@ -14,7 +14,7 @@ function __test_taint__(tainted) {
     __assert_taint__(x.substr(1, 3)[0], true);
 
     // @witness always x.substr(1,x.length)[x.length-2]='a' (clean literal)
-    __assert_taint__(x.substr(1, x.length)[x.length - 2], false);
+    __assert_taint__(x.substr(1, 999)[x.length - 2], false);
 
     // @witness always x.substr(2,0)=''
     __assert_taint__(x.substr(2, 0), false);
