@@ -9,12 +9,12 @@ export function INTRINSICS_String_fromCodePoint ($ : SpecRuntime, $this : Wrappe
   for (var next of codePoints)
   {
     var nextCP = AO__ToNumber($, (next as Wrapped<unknown>));
-    if (!($.condition(Number.MAX_SAFE_INTEGER - 367, $.isInteger(nextCP))))
+    if (!($.peek($.isInteger(nextCP))))
     {
       throw new RangeError;
     }
 
-    if ($.condition(Number.MAX_SAFE_INTEGER - 368, $.lessThan(nextCP, $.base<number>(0, []))) || $.condition(Number.MAX_SAFE_INTEGER - 369, $.greaterThan(nextCP, $.base<string>("￿", []))))
+    if ($.peek($.lessThan(nextCP, $.base<number>(0, []))) || $.peek($.greaterThan(nextCP, $.base<number>("￿".charCodeAt(0), []))))
     {
       throw new RangeError;
     }

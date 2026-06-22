@@ -8,7 +8,7 @@ export function INTRINSICS_String_fromCharCode ($ : SpecRuntime, $this : Wrapped
   for (var next of codeUnits)
   {
     var nextCU = AO__ToUint16($, (next as Wrapped<unknown>));
-    result = $.concatenate(result, nextCU);
+    result = $.concatenate(result, $.base<string>(String.fromCharCode($.peek(nextCU)), [nextCU]));
   }
 
   return result;

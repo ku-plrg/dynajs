@@ -79,8 +79,8 @@ export { INTRINSICS_Array_prototype_slice } from "./INTRINSICS.Array.prototype.s
 export { INTRINSICS_JSON_stringify } from "./INTRINSICS.JSON.stringify.js";
 export { INTRINSICS_RegExp_prototype_exec } from "./INTRINSICS.RegExp.prototype.exec.js";
 export { INTRINSICS_RegExp_prototype_test } from "./INTRINSICS.RegExp.prototype.test.js";
-export { INTRINSICS_String_fromCharCode } from "./INTRINSICS.String.fromCharCode.js";
-export { INTRINSICS_String_fromCodePoint } from "./INTRINSICS.String.fromCodePoint.js";
+export { INTRINSICS_String_fromCharCode } from "./INTRINSICS.String.fromCharCode.manual.js";
+export { INTRINSICS_String_fromCodePoint } from "./INTRINSICS.String.fromCodePoint.manual.js";
 export { INTRINSICS_String_prototype_anchor } from "./INTRINSICS.String.prototype.anchor.js";
 export { INTRINSICS_String_prototype_at } from "./INTRINSICS.String.prototype.at.js";
 export { INTRINSICS_String_prototype_big } from "./INTRINSICS.String.prototype.big.js";
