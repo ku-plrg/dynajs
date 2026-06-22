@@ -174,6 +174,14 @@ function symToSmt(s: Sym, vars: Map<string, Sort>): string {
       vars.set(s.name, s.sort);
       return s.name;
     case 'unary': {
+      // IsIntegralNumber: x is integral iff flooring it (to_int) and lifting back
+      // (to_real) recovers x. Coerce to Real first so an Int operand is trivially
+      // integral and a Real one is tested. Uses only to_int/to_real (always in the
+      // logic the Real coercions already require).
+      if (s.op === 'isInteger') {
+        const r = operand(s.operand, vars, 'Real');
+        return `(= (to_real (to_int ${r})) ${r})`;
+      }
       const x = symToSmt(s.operand, vars);
       if (s.op === '!') return `(not ${x})`;
       if (s.op === '-') return `(- ${x})`;

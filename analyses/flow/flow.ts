@@ -276,6 +276,10 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       this.cmpOp('!==', l, r, this.unwrap(l) !== this.unwrap(r)),
     isNaN: (x) => Number.isNaN(this.unwrap(x) as number),
     isFinite: (x) => Number.isFinite(this.unwrap(x) as number),
+    isInteger: (x) => {
+      const v = Number.isInteger(this.unwrap(x) as number);
+      return this.lift(v, this.unaryInfo?.('isInteger', this.valued(x)) ?? this.baseInfo(v, [this.valued(x)]));
+    },
     isType: (x, ty) => {
       const v = this.unwrap(x);
       switch (ty) {

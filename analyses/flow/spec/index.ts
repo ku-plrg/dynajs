@@ -53,6 +53,7 @@ export { AO__ToNumeric } from "./AO__ToNumeric.js";
 export { AO__ToObject } from "./AO__ToObject.js";
 export { AO__ToPrimitive } from "./AO__ToPrimitive.js";
 export { AO__ToString } from "./AO__ToString.js";
+export { AO__ToUint16 } from "./AO__ToUint16.js";
 export { AO__ToUint32 } from "./AO__ToUint32.js";
 export { AO__TrimString } from "./AO__TrimString.js";
 export { AO__UTF16EncodeCodePoint } from "./AO__UTF16EncodeCodePoint.js";
@@ -78,6 +79,8 @@ export { INTRINSICS_Array_prototype_slice } from "./INTRINSICS.Array.prototype.s
 export { INTRINSICS_JSON_stringify } from "./INTRINSICS.JSON.stringify.js";
 export { INTRINSICS_RegExp_prototype_exec } from "./INTRINSICS.RegExp.prototype.exec.js";
 export { INTRINSICS_RegExp_prototype_test } from "./INTRINSICS.RegExp.prototype.test.js";
+export { INTRINSICS_String_fromCharCode } from "./INTRINSICS.String.fromCharCode.js";
+export { INTRINSICS_String_fromCodePoint } from "./INTRINSICS.String.fromCodePoint.js";
 export { INTRINSICS_String_prototype_anchor } from "./INTRINSICS.String.prototype.anchor.js";
 export { INTRINSICS_String_prototype_at } from "./INTRINSICS.String.prototype.at.js";
 export { INTRINSICS_String_prototype_big } from "./INTRINSICS.String.prototype.big.js";
@@ -124,5 +127,6 @@ export { INTRINSICS_String_prototype_trim } from "./INTRINSICS.String.prototype.
 export { INTRINSICS_String_prototype_trimEnd } from "./INTRINSICS.String.prototype.trimEnd.js";
 export { INTRINSICS_String_prototype_trimStart } from "./INTRINSICS.String.prototype.trimStart.js";
 export { INTRINSICS_String_prototype_valueOf } from "./INTRINSICS.String.prototype.valueOf.js";
+export { INTRINSICS_String_raw } from "./INTRINSICS.String.raw.js";
 export { NUM__sameValueZero } from "./NUM__sameValueZero.js";
 export { SYNTAX__add } from "./SYNTAX__add.js";

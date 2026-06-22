@@ -11,10 +11,10 @@ import { AO__ToUint32 } from "./AO__ToUint32.js";
 
 export function INTRINSICS_String_prototype_split ($ : SpecRuntime, $this : Wrapped<unknown>, separator : Wrapped<unknown>, limit : Wrapped<unknown>) {
   var O = AO__RequireObjectCoercible($, $this);
-  if (!($.condition(Number.MAX_SAFE_INTEGER - 423, $.is(separator, $.base<undefined>(undefined, []))) || $.condition(Number.MAX_SAFE_INTEGER - 424, $.is(separator, $.base<null>(null, [])))))
+  if (!($.condition(Number.MAX_SAFE_INTEGER - 427, $.is(separator, $.base<undefined>(undefined, []))) || $.condition(Number.MAX_SAFE_INTEGER - 428, $.is(separator, $.base<null>(null, [])))))
   {
     var splitter = AO__GetMethod($, (separator as Wrapped<unknown>), ($.base<symbol>(Symbol.split, []) as Wrapped<unknown>));
-    if (!$.condition(Number.MAX_SAFE_INTEGER - 425, $.is(splitter, $.base<undefined>(undefined, []))))
+    if (!$.condition(Number.MAX_SAFE_INTEGER - 429, $.is(splitter, $.base<undefined>(undefined, []))))
     {
       return AO__Call($, (splitter as Wrapped<unknown>), (separator as Wrapped<unknown>), ([O, limit] as Wrapped<unknown>[]));
     }
@@ -22,7 +22,7 @@ export function INTRINSICS_String_prototype_split ($ : SpecRuntime, $this : Wrap
   }
 
   var S = AO__ToString($, (O as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 426, $.is(limit, $.base<undefined>(undefined, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 430, $.is(limit, $.base<undefined>(undefined, []))))
   {
     var lim = $.subtract(($.exponentiate($.base<number>(2, []), $.base<number>(32, [])) as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>));
   }
@@ -32,18 +32,18 @@ export function INTRINSICS_String_prototype_split ($ : SpecRuntime, $this : Wrap
   }
 
   var R = AO__ToString($, (separator as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 427, $.is(lim, $.base<number>(0, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 431, $.is(lim, $.base<number>(0, []))))
   {
     return AO__CreateArrayFromList($, ([] as Wrapped<unknown>[]));
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 428, $.is(separator, $.base<undefined>(undefined, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 432, $.is(separator, $.base<undefined>(undefined, []))))
   {
     return AO__CreateArrayFromList($, ([S] as Wrapped<unknown>[]));
   }
 
   var separatorLength = $.length(R);
-  if ($.condition(Number.MAX_SAFE_INTEGER - 429, $.is(separatorLength, $.base<number>(0, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 433, $.is(separatorLength, $.base<number>(0, []))))
   {
     var strLen = $.length(S);
     var outLen = $.clamp(lim, $.base<number>(0, []), strLen);
@@ -52,7 +52,7 @@ export function INTRINSICS_String_prototype_split ($ : SpecRuntime, $this : Wrap
     return AO__CreateArrayFromList($, (codeUnits as Wrapped<unknown>[]));
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 430, $.is(S, $.base<string>("", []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 434, $.is(S, $.base<string>("", []))))
   {
     return AO__CreateArrayFromList($, ([S] as Wrapped<unknown>[]));
   }
@@ -60,11 +60,11 @@ export function INTRINSICS_String_prototype_split ($ : SpecRuntime, $this : Wrap
   var substrings = [] as Wrapped<never>[];
   var i = $.base<number>(0, []);
   var j = AO__StringIndexOf($, (S as Wrapped<string>), (R as Wrapped<string>), ($.base<number>(0, []) as Wrapped<number>));
-  while (!$.condition(Number.MAX_SAFE_INTEGER - 431, $.is(j, $.base<string>("not-found", []))))
+  while (!$.condition(Number.MAX_SAFE_INTEGER - 435, $.is(j, $.base<string>("not-found", []))))
   {
     var T = $.substring(S, (i as Wrapped<number>), (j as Wrapped<number>));
     $.append(substrings, T)
-    if ($.condition(Number.MAX_SAFE_INTEGER - 432, $.is($.base<number>(substrings.length, []), lim)))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 436, $.is($.base<number>(substrings.length, []), lim)))
     {
       return AO__CreateArrayFromList($, (substrings as Wrapped<unknown>[]));
     }

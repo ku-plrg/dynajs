@@ -23,14 +23,14 @@ export function INTRINSICS_String_prototype_lastIndexOf ($ : SpecRuntime, $this 
 
   var len = $.length(S);
   var searchLen = $.length(searchStr);
-  if ($.condition(Number.MAX_SAFE_INTEGER - 383, $.lessThan(len, searchLen)))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 387, $.lessThan(len, searchLen)))
   {
     return $.base<number>(-1, []);
   }
 
   var start = $.clamp(pos, $.base<number>(0, []), $.subtract((len as Wrapped<number>), (searchLen as Wrapped<number>)));
   var result = AO__StringLastIndexOf($, (S as Wrapped<string>), (searchStr as Wrapped<string>), (start as Wrapped<number>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 384, $.is(result, $.base<string>("not-found", []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 388, $.is(result, $.base<string>("not-found", []))))
   {
     return $.base<number>(-1, []);
   }

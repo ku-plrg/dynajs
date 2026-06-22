@@ -10,7 +10,7 @@ export function INTRINSICS_String_prototype_substring ($ : SpecRuntime, $this : 
   var S = AO__ToString($, (O as Wrapped<unknown>));
   var len = $.length(S);
   var intStart = AO__ToIntegerOrInfinity($, (start as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 441, $.is(end, $.base<undefined>(undefined, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 445, $.is(end, $.base<undefined>(undefined, []))))
   {
     var intEnd = len;
   }

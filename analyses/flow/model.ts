@@ -5,6 +5,9 @@ export class Model {
 
   // --- static properties and methods ---
   static BUILTINS = new Map<Function, Function>([
+    [String.fromCharCode, generated.INTRINSICS_String_fromCharCode],
+    [String.fromCodePoint, generated.INTRINSICS_String_fromCodePoint],
+    [String.raw, generated.INTRINSICS_String_raw],
     [String.prototype.at, generated.INTRINSICS_String_prototype_at],
     [String.prototype.charAt, generated.INTRINSICS_String_prototype_charAt],
     [String.prototype.charCodeAt, generated.INTRINSICS_String_prototype_charCodeAt],

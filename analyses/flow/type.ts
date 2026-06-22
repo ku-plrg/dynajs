@@ -82,6 +82,11 @@ interface CompareOps {
   isNot: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(l: L, r: R) => Wrapped<boolean /* l is Exclude<L, R> */>;
   isNaN: (x: Wrapped<number>) => boolean;
   isFinite: (x: Wrapped<number>) => boolean;
+  // Spec "IsIntegralNumber"/"an integral Number". Unlike isNaN/isFinite (raw
+  // booleans), this returns a Wrapped<boolean> — the integrality decision is the
+  // Int/Real seam, so generated code funnels it through `condition(...)` to record
+  // a flippable path constraint. Carries `unaryInfo('isInteger', x)`.
+  isInteger: (x: Wrapped<number>) => Wrapped<boolean>;
   // "object" excludes null, and includes functions. "function" check is done via `AO__IsCallable`.
   isType: (x: Wrapped<unknown>, ty: 'object' | 'null' | 'undefined' | 'string' | 'number' | 'boolean' | 'symbol' | 'bigint') => boolean;
 }

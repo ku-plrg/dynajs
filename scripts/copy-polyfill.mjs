@@ -64,7 +64,7 @@ const INCLUDE = [
   // /^INTRINSICS\.Object\./,
   // /^INTRINSICS\.RegExp\./,
   // /^INTRINSICS\.Set\./,
-  // /^INTRINSICS\.String\./,
+  /^INTRINSICS\.String\./,
   /^INTRINSICS\.String\.prototype\./,
   // "RegExpExec",
   /^INTRINSICS\.RegExp\.prototype\.(exec|test)/,
@@ -78,7 +78,7 @@ const EXCLUDE = [
   // (INTRINSICS.*.manual.ts -> $.regexOp); keep them out of esmeta extraction
   // (the generated versions delegate to the spec matcher) but DO let their
   // manual shims be barreled, so they are not excluded here.
-  // "INTRINSICS.String.prototype.matchAll",
+  "INTRINSICS.String.prototypeLeftBracketPercentSymbol.iteratorPercentRightBracket",
 ];
 
 const NO_CHECK = [
