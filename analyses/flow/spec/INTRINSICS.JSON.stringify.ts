@@ -20,19 +20,19 @@ export function INTRINSICS_JSON_stringify ($ : SpecRuntime, $this : Wrapped<unkn
   var ReplacerFunction = $.base<undefined>(undefined, []);
   if (($.isType(replacer, "object")))
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 236, $.is(AO__IsCallable($, (replacer as Wrapped<unknown>)), $.base<boolean>(true, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 245, $.is(AO__IsCallable($, (replacer as Wrapped<unknown>)), $.base<boolean>(true, []))))
     {
       ReplacerFunction = replacer;
     }
     else
     {
       var isArray = AO__IsArray($, (replacer as Wrapped<unknown>));
-      if ($.condition(Number.MAX_SAFE_INTEGER - 237, $.is(isArray, $.base<boolean>(true, []))))
+      if ($.condition(Number.MAX_SAFE_INTEGER - 246, $.is(isArray, $.base<boolean>(true, []))))
       {
         PropertyList = [] as Wrapped<never>[];
         var len = AO__LengthOfArrayLike($, (replacer as Wrapped<unknown>));
         var k = $.base<number>(0, []);
-        while ($.condition(Number.MAX_SAFE_INTEGER - 238, $.lessThan(k, len)))
+        while ($.condition(Number.MAX_SAFE_INTEGER - 247, $.lessThan(k, len)))
         {
           var prop = AO__ToString($, (k as Wrapped<unknown>));
           var v = AO__Get($, (replacer as Wrapped<unknown>), (prop as Wrapped<unknown>));
@@ -58,7 +58,7 @@ export function INTRINSICS_JSON_stringify ($ : SpecRuntime, $this : Wrapped<unkn
 
           }
 
-          if (!$.condition(Number.MAX_SAFE_INTEGER - 239, $.is(item, $.base<undefined>(undefined, []))) && !$.contains(PropertyList, item))
+          if (!$.condition(Number.MAX_SAFE_INTEGER - 248, $.is(item, $.base<undefined>(undefined, []))) && !$.contains(PropertyList, item))
           {
             $.append(PropertyList, item)
           }
@@ -93,7 +93,7 @@ export function INTRINSICS_JSON_stringify ($ : SpecRuntime, $this : Wrapped<unkn
   {
     var spaceMV = AO__ToIntegerOrInfinity($, (space as Wrapped<unknown>));
     spaceMV = $.min($.base<number>(10, []), spaceMV);
-    if ($.condition(Number.MAX_SAFE_INTEGER - 240, $.lessThan(spaceMV, $.base<number>(1, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 249, $.lessThan(spaceMV, $.base<number>(1, []))))
     {
       var gap = $.base<string>("", []);
     }
@@ -107,7 +107,7 @@ export function INTRINSICS_JSON_stringify ($ : SpecRuntime, $this : Wrapped<unkn
   {
     if (($.isType(space, "string")))
     {
-      if ($.condition(Number.MAX_SAFE_INTEGER - 241, $.lessThanEqual($.length(space), $.base<number>(10, []))))
+      if ($.condition(Number.MAX_SAFE_INTEGER - 250, $.lessThanEqual($.length(space), $.base<number>(10, []))))
       {
         var gap = space;
       }

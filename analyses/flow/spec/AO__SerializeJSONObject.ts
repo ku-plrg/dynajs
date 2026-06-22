@@ -15,7 +15,7 @@ export function AO__SerializeJSONObject ($ : SpecRuntime, state : Wrapped<unknow
   $.append(state["Stack" /* TODO INTERNAL : internal access */], value)
   var stepBack = state["Indent" /* TODO INTERNAL : internal access */];
   state["Indent" /* TODO INTERNAL : internal access */] = $.concatenate(state["Indent" /* TODO INTERNAL : internal access */], state["Gap" /* TODO INTERNAL : internal access */]);
-  if (!$.condition(Number.MAX_SAFE_INTEGER - 563, $.is(state["PropertyList" /* TODO INTERNAL : internal access */], $.base<undefined>(undefined, []))))
+  if (!$.condition(Number.MAX_SAFE_INTEGER - 584, $.is(state["PropertyList" /* TODO INTERNAL : internal access */], $.base<undefined>(undefined, []))))
   {
     var K = state["PropertyList" /* TODO INTERNAL : internal access */];
   }
@@ -28,11 +28,11 @@ export function AO__SerializeJSONObject ($ : SpecRuntime, state : Wrapped<unknow
   for (var P of K)
   {
     var strP = AO__SerializeJSONProperty($, (state as Wrapped<unknown>), (P as Wrapped<string>), (value as Wrapped<unknown>));
-    if (!$.condition(Number.MAX_SAFE_INTEGER - 564, $.is(strP, $.base<undefined>(undefined, []))))
+    if (!$.condition(Number.MAX_SAFE_INTEGER - 585, $.is(strP, $.base<undefined>(undefined, []))))
     {
       var member = AO__QuoteJSONString($, (P as Wrapped<string>));
       member = $.concatenate(member, $.base<string>(":", []));
-      if (!$.condition(Number.MAX_SAFE_INTEGER - 565, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.base<string>("", []))))
+      if (!$.condition(Number.MAX_SAFE_INTEGER - 586, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.base<string>("", []))))
       {
         member = $.concatenate(member, $.base<string>(" ", []));
       }
@@ -49,7 +49,7 @@ export function AO__SerializeJSONObject ($ : SpecRuntime, state : Wrapped<unknow
   }
   else
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 566, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.base<string>("", []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 587, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.base<string>("", []))))
     {
       var properties = (partial as Wrapped<string>[]).reduce((a, b) => $.concatenate(a, $.concatenate($.base<string>(",", []), b)));
       var final = $.concatenate($.concatenate($.base<string>("{", []), properties), $.base<string>("}", []));

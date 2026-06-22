@@ -7,13 +7,13 @@ import { AO__ToString } from "./AO__ToString.js";
 export function AO__TrimString ($ : SpecRuntime, string : Wrapped<unknown>, where : Wrapped<unknown>) {
   var str = AO__RequireObjectCoercible($, string);
   var S = AO__ToString($, (str as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 626, $.is(where, $.base<string>("start", []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 647, $.is(where, $.base<string>("start", []))))
   {
     var T = $.trim(S, true, false);
   }
   else
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 627, $.is(where, $.base<string>("end", []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 648, $.is(where, $.base<string>("end", []))))
     {
       var T = $.trim(S, false, true);
     }

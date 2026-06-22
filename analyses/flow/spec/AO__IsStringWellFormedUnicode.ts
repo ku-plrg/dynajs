@@ -6,10 +6,10 @@ import { AO__CodePointAt } from "./AO__CodePointAt.js";
 export function AO__IsStringWellFormedUnicode ($ : SpecRuntime, string : Wrapped<string>) {
   var len = $.length(string);
   var k = $.base<number>(0, []);
-  while ($.condition(Number.MAX_SAFE_INTEGER - 489, $.lessThan(k, len)))
+  while ($.condition(Number.MAX_SAFE_INTEGER - 510, $.lessThan(k, len)))
   {
     var cp = AO__CodePointAt($, (string as Wrapped<string>), (k as Wrapped<number>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 490, $.is(cp["IsUnpairedSurrogate" /* TODO INTERNAL : internal access */], $.base<boolean>(true, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 511, $.is(cp["IsUnpairedSurrogate" /* TODO INTERNAL : internal access */], $.base<boolean>(true, []))))
     {
       return $.base<boolean>(false, []);
     }
