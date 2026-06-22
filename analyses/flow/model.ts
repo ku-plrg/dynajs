@@ -21,6 +21,7 @@ export class Model {
     [String.prototype.padStart, generated.INTRINSICS_String_prototype_padStart],
     [String.prototype.repeat, generated.INTRINSICS_String_prototype_repeat],
     [String.prototype.replace, generated.INTRINSICS_String_prototype_replace],
+    [String.prototype.replaceAll, generated.INTRINSICS_String_prototype_replaceAll],
     [String.prototype.slice, generated.INTRINSICS_String_prototype_slice],
     [String.prototype.split, generated.INTRINSICS_String_prototype_split],
     [String.prototype.startsWith, generated.INTRINSICS_String_prototype_startsWith],
