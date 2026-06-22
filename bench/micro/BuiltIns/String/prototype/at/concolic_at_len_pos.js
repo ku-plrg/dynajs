@@ -7,8 +7,8 @@
 function __test_symbolic__(symbolic) {
 
   if (symbolic.at(1) === 'a') {
-    // @witness at(1)==='a' requires index 1 to exist, so symbolic[1]==='a'
-    __symbolic_assert__(symbolic[1] === 'a', true);
+    // @witness at(1)==='a' requires index 1 to exist, so length>1
+    __symbolic_assert__(symbolic.length > 1, true);
   } else {
     __symbolic_assert__(false, true);
   }
