@@ -4,7 +4,7 @@
 // offset-precise), iterated natively for the match positions. Returns an array
 // of match arrays (iterable; the common `[...s.matchAll(re)]` spread works). A
 // non-RegExp pattern falls back to the native result.
-import type { Wrapped, SpecRuntime } from "@/model/type.js";
+import type { Wrapped, SpecRuntime } from "../type.js";
 
 import { AO__ArrayCreate } from "./AO__ArrayCreate.js";
 import { AO__CreateDataPropertyOrThrow } from "./AO__CreateDataPropertyOrThrow.js";

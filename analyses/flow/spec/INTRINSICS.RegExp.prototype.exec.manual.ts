@@ -4,7 +4,7 @@
 // match at [0] and group i at [i] (each carrying its capture Sym), plus the
 // `index`/`input` properties; on no match it is null. This is the tail of the
 // spec's RegExpBuiltinExec, built from the one regex primitive.
-import type { Wrapped, SpecRuntime } from "@/model/type.js";
+import type { Wrapped, SpecRuntime } from "../type.js";
 
 import { AO__ArrayCreate } from "./AO__ArrayCreate.js";
 import { AO__CreateDataPropertyOrThrow } from "./AO__CreateDataPropertyOrThrow.js";

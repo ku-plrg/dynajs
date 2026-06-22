@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "@/model/type.js";
+import type { Wrapped, SpecRuntime } from "../type.js";
 
 import { AO__IsStringWellFormedUnicode } from "./AO__IsStringWellFormedUnicode.js";
 import { AO__RequireObjectCoercible } from "./AO__RequireObjectCoercible.js";

@@ -1,6 +1,6 @@
 
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "@/model/type.js";
+import type { Wrapped, SpecRuntime } from "../type.js";
 
 export function AO__DeletePropertyOrThrow ($ : SpecRuntime, O : Wrapped<unknown>, P : Wrapped<unknown>) {
   "use strict";

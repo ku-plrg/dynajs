@@ -1,4 +1,4 @@
-import type { Wrapped, SpecRuntime } from "@/model/type.js";
+import type { Wrapped, SpecRuntime } from "../type.js";
 
 export function AO__ToString($: SpecRuntime, argument: Wrapped<unknown>): Wrapped<string> {
   "use strict";

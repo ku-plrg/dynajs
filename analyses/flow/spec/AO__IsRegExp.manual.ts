@@ -1,5 +1,5 @@
 
-import type { Wrapped, SpecRuntime } from "@/model/type.js";
+import type { Wrapped, SpecRuntime } from "../type.js";
 
 export function AO__IsRegExp ($ : SpecRuntime, argument : Wrapped<unknown>) {
   if (!($.isType(argument, "object")))

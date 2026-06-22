@@ -4,7 +4,7 @@
 // (all matches, no captures) or a string pattern (RegExp coercion) is not yet
 // modeled symbolically; fall back to the native result so the concrete value
 // stays correct.
-import type { Wrapped, SpecRuntime } from "@/model/type.js";
+import type { Wrapped, SpecRuntime } from "../type.js";
 
 import { AO__ArrayCreate } from "./AO__ArrayCreate.js";
 import { AO__CreateDataPropertyOrThrow } from "./AO__CreateDataPropertyOrThrow.js";

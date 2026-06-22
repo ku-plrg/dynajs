@@ -1,5 +1,5 @@
 import { CAPTURED } from '@/captured.js';
-import type { Wrapped, SpecRuntime } from "@/model/type.js";
+import type { Wrapped, SpecRuntime } from "../type.js";
 
 export function AO__IsConstructor ($ : SpecRuntime, argument : Wrapped<unknown>) {
   // this is incorrect because side-effect happens?

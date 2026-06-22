@@ -1,6 +1,6 @@
 // @ts-nocheck
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "@/model/type.js";
+import type { Wrapped, SpecRuntime } from "../type.js";
 
 import { AO__EnumerableOwnProperties } from "./AO__EnumerableOwnProperties.js";
 import { AO__QuoteJSONString } from "./AO__QuoteJSONString.js";

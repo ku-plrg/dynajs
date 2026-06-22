@@ -1,6 +1,6 @@
 
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "@/model/type.js";
+import type { Wrapped, SpecRuntime } from "../type.js";
 
 import { AO__SameType } from "./AO__SameType.js";
 import { AO__SameValueNonNumber } from "./AO__SameValueNonNumber.js";

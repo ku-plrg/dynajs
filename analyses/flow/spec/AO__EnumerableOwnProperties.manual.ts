@@ -7,7 +7,7 @@
 // `Object.keys` yields. Keys are structural property names, so they are reborn
 // clean (`$.base(k, [])`); only the per-property VALUES (read through AO__Get)
 // carry the holder's provenance.
-import type { Wrapped, SpecRuntime } from "@/model/type.js";
+import type { Wrapped, SpecRuntime } from "../type.js";
 
 import { AO__CreateArrayFromList } from "./AO__CreateArrayFromList.js";
 import { AO__Get } from "./AO__Get.js";

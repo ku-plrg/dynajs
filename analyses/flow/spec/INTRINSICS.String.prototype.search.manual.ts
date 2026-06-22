@@ -3,7 +3,7 @@
 // else -1. Built from the symbolic match projection: branch on `matched`
 // (records the path condition), returning the match start index or -1. ExpoSE
 // uses a no-fork ite here as an optimization; a fork is equivalent for coverage.
-import type { Wrapped, SpecRuntime } from "@/model/type.js";
+import type { Wrapped, SpecRuntime } from "../type.js";
 
 import { AO__ToString } from "./AO__ToString.js";
 
