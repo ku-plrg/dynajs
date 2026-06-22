@@ -24,7 +24,9 @@ export class Model {
     [String.prototype.slice, generated.INTRINSICS_String_prototype_slice],
     [String.prototype.split, generated.INTRINSICS_String_prototype_split],
     [String.prototype.startsWith, generated.INTRINSICS_String_prototype_startsWith],
+    [String.prototype.substr, generated.INTRINSICS_String_prototype_substr],
     [String.prototype.substring, generated.INTRINSICS_String_prototype_substring],
+    [String.prototype.toUpperCase, generated.INTRINSICS_String_prototype_toUpperCase],
     [String.prototype.toLowerCase, generated.INTRINSICS_String_prototype_toLowerCase],
     [String.prototype.toString, generated.INTRINSICS_String_prototype_toString],
     [String.prototype.toWellFormed, generated.INTRINSICS_String_prototype_toWellFormed],
@@ -59,6 +61,8 @@ export class Model {
     [Array.prototype.reduceRight, generated.INTRINSICS_Array_prototype_reduceRight],
     [Array.prototype.shift, generated.INTRINSICS_Array_prototype_shift],
     [Array.prototype.slice, generated.INTRINSICS_Array_prototype_slice],
+
+    [JSON.stringify, generated.INTRINSICS_JSON_stringify],
   ]);
 
   static SYNTAX = new Map<string, Function>([

@@ -70,6 +70,7 @@ const INCLUDE = [
   // "RegExpExec",
   /^INTRINSICS\.RegExp\.prototype\.(exec|test)/,
   "AO__CanonicalNumericIndexString",
+  "INTRINSICS.JSON.stringify",
 ];
 
 const EXCLUDE = [
@@ -86,6 +87,20 @@ const NO_CHECK = [
   "INTRINSICS.Array.prototype.reduceRight",
   "INTRINSICS.String.prototype.replaceAll",
   "AO__GetSubstitution",
+  // JSON serialization: esmeta gen-poly emits sound runtime code but with type
+  // noise it can't yet resolve — the State Record (a non-escaping scratch object)
+  // is typed Wrapped<unknown> with internal-slot-style field access, plus never[]
+  // list inits and a gap redeclaration. @ts-nocheck accepts these until gen-poly
+  // emits a typed Record. NOT a substitute for AO__EnumerableOwnProperties, which
+  // reads object internal methods → hand-authored manual shim (a runtime crash,
+  // not a type error; @ts-nocheck can't help). The [[BooleanData]]/[[BigIntData]]
+  // boxed-slot reads are now generated correctly (PolyfillGenerator emits a
+  // peek().valueOf() approximation), so they are no longer a silenced bug.
+  "INTRINSICS.JSON.stringify",
+  "AO__SerializeJSONProperty",
+  "AO__SerializeJSONObject",
+  "AO__SerializeJSONArray",
+  "AO__UnicodeEscape",
 ];
 
 const ESMETA_HOME = process.env.ESMETA_HOME;

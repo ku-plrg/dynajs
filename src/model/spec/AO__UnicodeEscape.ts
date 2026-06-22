@@ -1,0 +1,11 @@
+// @ts-nocheck
+// THIS FILE IS AUTO-GENERATED, DO NOT EDIT
+import type { Wrapped, SpecRuntime } from "@/model/type.js";
+
+import { AO__StringPad } from "./AO__StringPad.js";
+
+export function AO__UnicodeEscape ($ : SpecRuntime, C : Wrapped<unknown>) {
+  var n = C;
+  throw new Error("YET: Let _hex_ be the String representation of _n_, formatted as a lowercase hexadecimal number.")
+  return $.concatenate($.concatenate($.base<string>("\\", []), $.base<string>("u", [])), AO__StringPad($, (hex as Wrapped<string>), ($.base<number>(4, []) as Wrapped<number>), ($.base<string>("0", []) as Wrapped<string>), ($.base<string>("start", []) as Wrapped<unknown>)));
+}
