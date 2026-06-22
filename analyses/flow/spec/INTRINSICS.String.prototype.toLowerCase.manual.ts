@@ -8,13 +8,11 @@ export function INTRINSICS_String_prototype_toLowerCase ($ : SpecRuntime, $this 
   var S = AO__ToString($, (O as Wrapped<unknown>));
   var lower = $.base($.peek(S).toLowerCase(), [S]);
   var base: Wrapped<string> = $.base('', [S]);
-  if ($.length(S) !== $.length(lower)) {
+  if ($.peek($.isNot($.length(S), $.length(lower)))) /* TODO cond */ {
     return lower;
   } else {
-    for (var i = 0; i < $.length(S); i++) {
-      var iW = $.base(i, []);
-      var iNW = $.base(i + 1, []);
-      var S_i = $.substring(S, iW, iNW);
+    for (var i = $.base<number>(0, []); i < $.length(S); i = $.add(i, $.base(1, []))) {
+      var S_i = $.substring(S, i, $.add(i, $.base(1, [])));
       base = $.concatenate(base, S_i);
     }
     return base;
