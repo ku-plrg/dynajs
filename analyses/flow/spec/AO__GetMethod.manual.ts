@@ -1,3 +1,5 @@
+import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+
 import { AO__GetV } from "./AO__GetV.js";
 import { AO__IsCallable } from "./AO__IsCallable.js";
 

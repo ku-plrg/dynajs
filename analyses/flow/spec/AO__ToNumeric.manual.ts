@@ -1,3 +1,5 @@
+import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+
 import { AO__ToNumber } from './AO__ToNumber.js';
 import { AO__ToPrimitive } from './AO__ToPrimitive.js';
 

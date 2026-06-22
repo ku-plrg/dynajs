@@ -1,3 +1,5 @@
+import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+
 export function AO__RequireObjectCoercible(__runtime__: SpecRuntime, argument: Wrapped<unknown>): Wrapped<unknown> {
   "use strict";
 

@@ -1,3 +1,4 @@
+import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
 
 export function AO__ToPrimitive($: SpecRuntime, arg: Wrapped<unknown>, preferredType: Wrapped<'string' | 'number'> | undefined = undefined): Wrapped<Primitive> {
   // 1. If input is an Object, then

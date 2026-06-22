@@ -5,6 +5,8 @@
 // with `charCodeAt` and test the surrogate ranges directly. The surrogate-range
 // branches are intentionally concrete (native `if`) — UTF-16 decoding is not a
 // path constraint we track symbolically — while the values stay Wrapped.
+import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+
 import { AO__UTF16SurrogatePairToCodePoint } from "./AO__UTF16SurrogatePairToCodePoint.js";
 
 export function AO__CodePointAt(

@@ -5,10 +5,11 @@
     "noEmit": true,
     "paths": {
       "@/*": ["../src/*"],
+      // no "@flow/*" since it is a "libary" for users;
+      // taint and conclic are "demo" showing how to use flow analysis.
       "@taint/*": ["./taint/src/*"],
       "@concolic/*": ["./concolic/src/*"],
-      "@shared/*": ["./shared/*"],
-      "@flow/*": ["./flow/src/*"]
+      "@shared/*": ["./shared/*"]
     }
   },
   "include": [".", "../src/global.d.ts"]

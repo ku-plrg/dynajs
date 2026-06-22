@@ -1,3 +1,5 @@
+import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+
 export function AO__ToNumber($: SpecRuntime, arg: Wrapped<unknown>): Wrapped<number> {
   const argument = $.peek(arg);
   if (typeof argument === 'number') {

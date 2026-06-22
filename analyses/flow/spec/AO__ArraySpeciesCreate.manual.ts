@@ -1,3 +1,5 @@
+import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+
 import { AO__Get } from "./AO__Get.js";
 import { AO__IsConstructor } from "./AO__IsConstructor.js";
 import { AO__ArrayCreate } from "./AO__ArrayCreate.js";

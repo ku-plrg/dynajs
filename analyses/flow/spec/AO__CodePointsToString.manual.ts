@@ -3,6 +3,8 @@
 // recognized as a ForEachStep, so the whole loop collapsed to a single YET and
 // the concatenation step vanished. `text` is a List of code points (numbers),
 // so this is plain array iteration delegating each element to UTF16EncodeCodePoint.
+import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+
 import { AO__UTF16EncodeCodePoint } from "./AO__UTF16EncodeCodePoint.js";
 
 export function AO__CodePointsToString($: SpecRuntime, text: Wrapped<unknown>): Wrapped<string> {

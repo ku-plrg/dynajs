@@ -1,3 +1,5 @@
+import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+
 import { AO__RequireObjectCoercible } from "./AO__RequireObjectCoercible.js";
 import { AO__ToString } from "./AO__ToString.js";
 import { AO__ToIntegerOrInfinity } from "./AO__ToIntegerOrInfinity.js";

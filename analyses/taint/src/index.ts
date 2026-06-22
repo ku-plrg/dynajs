@@ -1,5 +1,5 @@
 import type { Analysis } from "@/types/analysis.js";
-import { FlowAnalysis, type Valued, type InfoDomain, type Site } from "@/model/index.js";
+import { FlowAnalysis, type Valued, type InfoDomain, type Site } from "../../flow/index.js";
 import { installPrelude } from "./prelude.js";
 
 declare const D$: { analysis: Analysis } & Record<string, any>;

@@ -1,3 +1,5 @@
+import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+
 export function AO__UTF16SurrogatePairToCodePoint(
   $: SpecRuntime,
   lead: Wrapped<string>,

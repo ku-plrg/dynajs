@@ -1,3 +1,5 @@
+import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+
 export function AO__Construct($ : SpecRuntime, F : Wrapped<unknown>, argumentsList ?: Wrapped<unknown[]>, newTarget ?: Wrapped<unknown>) {
   const Fu = $.peek(F);
   const argumentsListu = argumentsList ? $.peek(argumentsList) : [];

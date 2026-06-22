@@ -1,5 +1,5 @@
 import util from "node:util";
-import { required } from "@/utils.js";
+import { required } from "./utils.js";
 import type { Analysis } from "@/types/analysis.js";
 import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "./type.js";
 import { Model } from "./model.js";

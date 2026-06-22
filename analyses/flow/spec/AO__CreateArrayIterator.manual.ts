@@ -1,3 +1,5 @@
+import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+
 export function AO__CreateArrayIterator ($ : SpecRuntime, array : Wrapped<unknown>, kind : Wrapped<string>) {
   // error: typed array not supported
   // TODO array only...

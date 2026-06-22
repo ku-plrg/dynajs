@@ -1,3 +1,5 @@
+import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+
 export function NUM__sameValueZero($: SpecRuntime, xW: Wrapped<number>, yW: Wrapped<number>) {
   const x = $.peek(xW);
   const y = $.peek(yW);

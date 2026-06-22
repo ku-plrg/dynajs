@@ -1,5 +1,5 @@
 import { writeFileSync } from 'node:fs';
-import { FlowAnalysis, type Valued, type InfoDomain } from '@/model/index.js';
+import { FlowAnalysis, type Valued, type InfoDomain } from '../../flow/index.js';
 import { type Sym, type Sort, seqElementSort, containsLost, sortOf, symToString } from '@shared/sym.js';
 import { encodeRegex, type EncodedRegex } from '@shared/regex.js';
 import { solveValidity, solveModel } from './smt.js';

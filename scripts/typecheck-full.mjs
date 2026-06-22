@@ -19,16 +19,17 @@ function findNoCheck(dir, out = []) {
 }
 
 const originals = new Map(
-  findNoCheck(join(root, "src")).map((f) => [f, readFileSync(f, "utf8")]),
+  findNoCheck(join(root, "analyses", "flow", "spec")).map((f) => [f, readFileSync(f, "utf8")]),
 );
 console.log(chalk.cyan(`▶ Forcing type-check on ${originals.size} @ts-nocheck file(s)`));
 
 let failed = false;
 try {
   for (const [f, c] of originals) writeFileSync(f, c.replace(NOCHECK_RE, ""));
-  // The root tsconfig includes all of src/, so it covers every NO_CHECK file.
+  // The NO_CHECK files are the generated spec polyfills under analyses/flow/spec,
+  // which the analyses tsconfig includes.
   try {
-    execSync("npx tsc -p ./tsconfig.json", { cwd: root, stdio: "inherit" });
+    execSync("npx tsc -p ./analyses/tsconfig.json", { cwd: root, stdio: "inherit" });
   } catch {
     failed = true;
   }

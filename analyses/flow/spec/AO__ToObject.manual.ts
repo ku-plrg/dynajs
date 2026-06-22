@@ -1,3 +1,5 @@
+import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+
 export function AO__ToObject($: SpecRuntime, argument: Wrapped<unknown>): Wrapped<object> {
   "use strict";
 
