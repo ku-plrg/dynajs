@@ -56,15 +56,17 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..
 const BENCH_DIR = path.join(REPO_ROOT, "bench/micro");
 
 // Committed correctness baseline (--update-snapshot writes it, --check compares
-// against it). Only the runners listed here are snapshotted: `dynajs` is the
-// engine we own and the only one whose verdict is deterministic in CI; the
-// external analyzers (expose/nodemedic-jalangi) depend on out-of-tree installs
-// ($EXPOSE_HOME/$NODEMEDIC_HOME) and aren't gated. Timing is deliberately NOT
-// recorded — mean_ms is machine-dependent and would make every diff noisy; the
-// snapshot pins only the verdict/result, so it catches detection regressions
-// (a TP that became FN) and surfaces progressions (a known FN that became TP).
+// against it). Only the runners listed here are snapshotted: the `dynajs-*`
+// runners are the engine we own and the only ones whose verdict is
+// deterministic in CI; the external analyzers (expose/nodemedic-jalangi) depend
+// on out-of-tree installs ($EXPOSE_HOME/$NODEMEDIC_HOME) and aren't gated.
+// Timing is deliberately NOT recorded — mean_ms is machine-dependent and would
+// make every diff noisy; the snapshot pins only the verdict/result, so it
+// catches detection regressions (a TP that became FN) and surfaces progressions
+// (a known FN that became TP). One key per dynajs runner; keep in sync with the
+// `dynajs-<short>` names TYPE_CONFIG generates.
 const SNAPSHOT_FILE = path.join(REPO_ROOT, "bench/micro-snapshot.json");
-const SNAPSHOT_RUNNERS = ["dynajs"];
+const SNAPSHOT_RUNNERS = ["dynajs-ta", "dynajs-co"];
 
 // Preloaded by the `baseline` runner: stubs the taint prelude globals
 // (`__set_taint__`/`__assert_taint__`) to no-ops so a bench runs as plain
@@ -83,9 +85,12 @@ const VERDICT_RE = /@@DJX_VERDICT\s+(detected|clean|error)\s+(detected|clean)\b/
 // the analysis + flags listed here — no need to pass them on the CLI.
 // `analysis` is resolved relative to the repo root. Add a row per analysis kind.
 // `--analysis` / `--dynajs-flags` on the CLI override this for every bench.
+// `short` names the per-type dynajs runner (`dynajs-<short>`, see makeRunners),
+// so each `@type` is scored as its own runner that still shares the `dynajs`
+// group (the confusion matrix prints them apart and combined).
 const TYPE_CONFIG = {
-  taint: { analysis: "analyses/dist/Taint.mjs", flags: "--partial --pos persist" },
-  concolic: { analysis: "analyses/dist/Concolic.mjs", flags: "--partial" },
+  taint: { short: "ta", analysis: "analyses/dist/Taint.mjs", flags: "--partial --pos persist" },
+  concolic: { short: "co", analysis: "analyses/dist/Concolic.mjs", flags: "--partial" },
 };
 
 // --- NodeMedic (Jalangi instrumentation mode) -------------------------------
@@ -360,7 +365,7 @@ function matrixRow(label, m) {
       : (2 * precision * recall) / (precision + recall);
   const accuracy = ratio(m.TP + m.TN, m.TP + m.TN + m.FP + m.FN);
   return (
-    label.padEnd(22) +
+    label.padEnd(24) +
     green(String(m.TP).padStart(5)) + red(String(m.FP).padStart(5)) +
     red(String(m.FN).padStart(5)) + green(String(m.TN).padStart(5)) +
     [m.err, m.timeout].map((x) => String(x).padStart(5)).join("") +
@@ -371,12 +376,30 @@ function matrixRow(label, m) {
 }
 
 const matrixHeader = (lead) =>
-  lead.padEnd(22) +
+  lead.padEnd(24) +
   green("TP".padStart(5)) + red("FP".padStart(5)) +
   red("FN".padStart(5)) + green("TN".padStart(5)) +
   ["err", "t/o"].map((h) => h.padStart(5)).join("") +
   "precision".padStart(11) + "recall".padStart(9) + "F1".padStart(8) +
   "accuracy".padStart(10) + "mean_ms".padStart(10);
+
+// The rows the report prints, in order: one per active runner, then one per
+// `group` that has >1 active runner — a combined slice pooling all that group's
+// records (e.g. dynajs-ta + dynajs-co -> `dynajs (all)`). Each is { label, recs }
+// and feeds buildMatrix unchanged, so the overall table and every grouped
+// breakdown show both the split and the combined view from a single list.
+function matrixSources(active, records) {
+  const sources = active.map((r) => ({ label: r.name, recs: records[r.name] }));
+  const groups = new Map();
+  for (const r of active) {
+    if (!r.group) continue;
+    (groups.get(r.group) ?? groups.set(r.group, []).get(r.group)).push(r);
+  }
+  for (const [g, rs] of groups)
+    if (rs.length > 1)
+      sources.push({ label: `${g} (all)`, recs: rs.flatMap((r) => records[r.name]) });
+  return sources;
+}
 
 // Resolve dynajs analysis + flags for a bench: a CLI override wins, otherwise
 // the bench's `@type` selects a row from TYPE_CONFIG. Returns null if neither.
@@ -453,13 +476,15 @@ function diffSnapshot(records, snap, fullRun) {
 // ---------------------------------------------------------------------------
 // runners
 //
-// Each runner: { name, available(), exec(bench, out, err, timeoutMs), applies?, cases? }
+// Each runner: { name, group?, available(), exec(bench, out, err, timeoutMs), applies?, cases? }
 //   - exec(bench, ...) gets the bench object ({ file, name, type, target, feature });
 //     it returns the timeRun() result object.
 //   - applies(bench) -> bool: skip this bench for this runner (default true).
 //   - cases(run, bench) -> [{ actual, expected }, ...], one per assert. Defaults
 //     to defaultCases, which reads the @@DJX_VERDICT stdout markers. Override only
 //     for an external analyzer whose native output you'd rather parse directly.
+//   - group?: runners sharing a group are also reported as one combined matrix
+//     row (e.g. dynajs-ta + dynajs-co -> `dynajs (all)`). See matrixSources.
 // A runner whose available() is false is skipped with a notice.
 // ---------------------------------------------------------------------------
 
@@ -476,15 +501,19 @@ function makeRunners(opts) {
       exec: (b, out, err, t) =>
         timeRun(["node", "--import", BASELINE_IMPORT, b.file], {}, out, err, t),
     },
-    {
-      // this project's analyzer. Analysis + flags are picked per bench from its
-      // `@type` (see TYPE_CONFIG), unless overridden by --analysis/--dynajs-flags.
-      // The chosen analysis must print `@@DJX_VERDICT <actual> <expected>` per
-      // assert (e.g. the taint prelude's __assert_taint__); else every run reads
-      // as a single error.
-      name: "dynajs",
+    // this project's analyzer, split one runner per `@type`: `dynajs-ta` scores
+    // only taint benches, `dynajs-co` only concolic ones (the `short` from
+    // TYPE_CONFIG names each). They share the `dynajs` group, so the confusion
+    // matrix reports them apart AND combined. Analysis + flags come from the
+    // bench's `@type` (see TYPE_CONFIG) unless overridden by
+    // --analysis/--dynajs-flags. The chosen analysis must print
+    // `@@DJX_VERDICT <actual> <expected>` per assert (e.g. the taint prelude's
+    // __assert_taint__); else every run reads as a single error.
+    ...Object.entries(TYPE_CONFIG).map(([type, cfg]) => ({
+      name: `dynajs-${cfg.short}`,
+      group: "dynajs",
       available: () => existsSync(path.join(REPO_ROOT, "dynajs")),
-      applies: (b) => resolveDynajs(b, opts) != null,
+      applies: (b) => b.type === type && resolveDynajs(b, opts) != null,
       exec: (b, out, err, t) => {
         const { analysis, flags } = resolveDynajs(b, opts);
         return timeRun(
@@ -496,7 +525,7 @@ function makeRunners(opts) {
           out, err, t,
         );
       },
-    },
+    })),
 
     // --- external analyzers ------------------------------------------------
     {
@@ -817,24 +846,28 @@ function main() {
     return;
   }
 
+  // Sources = each runner plus the combined `dynajs (all)` group row; the
+  // overall table and every breakdown below iterate the same list.
+  const sources = matrixSources(active, records);
+
   console.log("\nConfusion matrix & precision/recall (errors counted as FN/FP):");
   console.log(matrixHeader("runner"));
-  for (const r of active) console.log(matrixRow(r.name, buildMatrix(records[r.name])));
+  for (const s of sources) console.log(matrixRow(s.label, buildMatrix(s.recs)));
 
-  // Same matrix sliced by classification dimension. For each runner we group
+  // Same matrix sliced by classification dimension. For each source we group
   // its records by @target (then @feature, then @type) and print a sub-row per
   // value, so you can read off detection quality on, e.g., es5 vs es6+ benches.
   for (const [dim, label] of [["target", "@target"], ["feature", "@feature"], ["type", "@type"]]) {
     console.log(`\nBy ${label}:`);
     console.log(matrixHeader("runner / " + label));
-    for (const r of active) {
+    for (const s of sources) {
       const groups = new Map();
-      for (const rec of records[r.name]) {
+      for (const rec of s.recs) {
         const key = rec.bench[dim] || "(none)";
         (groups.get(key) ?? groups.set(key, []).get(key)).push(rec);
       }
       for (const key of [...groups.keys()].sort())
-        console.log(matrixRow(`  ${r.name} / ${key}`, buildMatrix(groups.get(key))));
+        console.log(matrixRow(`  ${s.label} / ${key}`, buildMatrix(groups.get(key))));
     }
   }
 
