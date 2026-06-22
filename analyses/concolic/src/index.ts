@@ -1,6 +1,18 @@
 import { writeFileSync } from 'node:fs';
-import { FlowAnalysis, type Valued, type InfoDomain } from '../../flow/index.js';
-import { type Sym, type Sort, seqElementSort, containsLost, sortOf, symToString } from '@shared/sym.js';
+import {
+  FlowAnalysis,
+  type Valued,
+  type InfoDomain,
+} from '../../flow/index.js';
+import {
+  type Sym,
+  type Sort,
+  seqElementSort,
+  containsLost,
+  sortOf,
+  sortsComparable,
+  symToString,
+} from '@shared/sym.js';
 import { encodeRegex, type EncodedRegex } from '@shared/regex.js';
 import { solveValidity, solveModel } from './smt.js';
 import { installPrelude } from './prelude.js';
@@ -9,7 +21,12 @@ declare const D$: { analysis: ConcolicAnalysis } & Record<string, any>;
 
 const GHOSTS = installPrelude();
 
-type PathConstraint = { id: number; constraint: Sym; taken: boolean; binder?: boolean };
+type PathConstraint = {
+  id: number;
+  constraint: Sym;
+  taken: boolean;
+  binder?: boolean;
+};
 type ArrayMeta = { elemSort: Sort };
 type ObjectMeta = { name: string; counter: number; fields: Map<string, Sym> };
 
@@ -30,7 +47,9 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   };
 
   protected baseInfo(_value: unknown, parents: Valued<Sym>[]): Sym | undefined {
-    return parents.some((p) => p.info !== undefined) ? { kind: 'lost' } : undefined;
+    return parents.some((p) => p.info !== undefined)
+      ? { kind: 'lost' }
+      : undefined;
   }
 
   protected substringInfo(
@@ -40,7 +59,12 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     resultLength: number,
   ): Sym | undefined {
     if (src.info === undefined) return undefined;
-    return { kind: 'substr', src: src.info, start: start.value, length: resultLength };
+    return {
+      kind: 'substr',
+      src: src.info,
+      start: start.value,
+      length: resultLength,
+    };
   }
 
   protected concatenateInfo(
@@ -56,18 +80,24 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   }
 
   private static readonly EQUALITY_OPS = new Set(['===', '==', '!==', '!=']);
-  protected binaryInfo(op: string, l: Valued<Sym>, r: Valued<Sym>): Sym | undefined {
+  protected binaryInfo(
+    op: string,
+    l: Valued<Sym>,
+    r: Valued<Sym>,
+  ): Sym | undefined {
     const left = this.symOf(l);
     const right = this.symOf(r);
     if (left.kind === 'const' && right.kind === 'const') return undefined;
     // Cross-sort equality is concretely decided (a value is one definite sort per
     // path): e.g. a numeric StringIndexOf result vs the "not-found" string sentinel
     // — discriminating a union arm. It carries no symbolic info and would emit
-    // ill-typed SMT (`(= Int String)` -> z3 unknown), so leave it concrete.
+    // ill-typed SMT (`(= Int String)` -> z3 unknown), so leave it concrete. Int/Real
+    // stay symbolic, though — both are numbers, bridged by a coercion in smt.ts.
     if (ConcolicAnalysis.EQUALITY_OPS.has(op)) {
       const ls = sortOf(left);
       const rs = sortOf(right);
-      if (ls !== undefined && rs !== undefined && ls !== rs) return undefined;
+      if (ls !== undefined && rs !== undefined && !sortsComparable(ls, rs))
+        return undefined;
     }
     return { kind: 'binary', op, left, right };
   }
@@ -84,7 +114,11 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     return { kind: 'strlen', src };
   }
 
-  protected getFieldInfo(base: Valued<Sym>, prop: Valued<Sym>, result: Valued<Sym>): Sym | undefined {
+  protected getFieldInfo(
+    base: Valued<Sym>,
+    prop: Valued<Sym>,
+    result: Valued<Sym>,
+  ): Sym | undefined {
     const container = base.value;
     if (container === null || typeof container !== 'object') return undefined;
 
@@ -93,14 +127,19 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
       const key = String(prop.value);
       let sym = obj.fields.get(key);
       if (sym === undefined) {
-        sym = { kind: 'var', name: `${obj.name}_${key}_${obj.counter++}`, sort: this.scalarSort(result.value) };
+        sym = {
+          kind: 'var',
+          name: `${obj.name}_${key}_${obj.counter++}`,
+          sort: this.scalarSort(result.value),
+        };
         obj.fields.set(key, sym);
       }
       return sym;
     }
 
+    const meta = this.arrayMeta.get(container);
     const arr = base.info;
-    if (this.arrayMeta.has(container) && arr !== undefined) {
+    if (meta !== undefined && arr !== undefined) {
       if (prop.value === 'length') return { kind: 'arrlen', arr };
       const index = this.arrayIndex(prop);
       if (index !== undefined) {
@@ -109,18 +148,32 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
           {
             kind: 'binary',
             op: '&&',
-            left: { kind: 'binary', op: '>=', left: index, right: { kind: 'const', value: 0 } },
+            left: {
+              kind: 'binary',
+              op: '>=',
+              left: index,
+              right: { kind: 'const', value: 0 },
+            },
             right: { kind: 'binary', op: '<', left: index, right: length },
           },
           true,
         );
-        return { kind: 'select', arr, index };
+        return {
+          kind: 'select',
+          arr,
+          index,
+          elemSort: seqElementSort(meta.elemSort) ?? 'Int',
+        };
       }
     }
     return undefined;
   }
 
-  protected opaqueCallInfo(f: unknown, entries: unknown[], _result: unknown): Sym | undefined {
+  protected opaqueCallInfo(
+    f: unknown,
+    entries: unknown[],
+    _result: unknown,
+  ): Sym | undefined {
     const base = entries[0];
     if (base === null || typeof base !== 'object') return undefined;
     const meta = this.arrayMeta.get(base);
@@ -137,28 +190,59 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
         this.arrayMeta.delete(base);
         return undefined;
       }
-      const grown: Sym = { kind: 'seqConcat', left: arr, right: { kind: 'seqUnit', elem: this.symOf(arg) } };
+      const grown: Sym = {
+        kind: 'seqConcat',
+        left: arr,
+        right: { kind: 'seqUnit', elem: this.symOf(arg) },
+      };
       this.setInfo(base, grown);
       return { kind: 'arrlen', arr: grown }; // push returns the new length
     }
 
     if (f === Array.prototype.pop) {
-      const lastIndex: Sym = { kind: 'binary', op: '-', left: { kind: 'arrlen', arr }, right: { kind: 'const', value: 1 } };
-      this.setInfo(base, { kind: 'seqExtract', src: arr, offset: { kind: 'const', value: 0 }, length: lastIndex });
-      return { kind: 'select', arr, index: lastIndex }; // the removed last element
+      const lastIndex: Sym = {
+        kind: 'binary',
+        op: '-',
+        left: { kind: 'arrlen', arr },
+        right: { kind: 'const', value: 1 },
+      };
+      this.setInfo(base, {
+        kind: 'seqExtract',
+        src: arr,
+        offset: { kind: 'const', value: 0 },
+        length: lastIndex,
+      });
+      return {
+        kind: 'select',
+        arr,
+        index: lastIndex,
+        elemSort: seqElementSort(meta.elemSort) ?? 'Int',
+      }; // the removed last element
     }
 
     if (f === Array.prototype.indexOf) {
-      const sub: Sym = { kind: 'seqUnit', elem: this.symOf(this.valued(entries[1])) };
-      return { kind: 'seqIndexOf', arr, sub, from: { kind: 'const', value: 0 } };
+      const sub: Sym = {
+        kind: 'seqUnit',
+        elem: this.symOf(this.valued(entries[1])),
+      };
+      return {
+        kind: 'seqIndexOf',
+        arr,
+        sub,
+        from: { kind: 'const', value: 0 },
+      };
     }
 
     if (f === Array.prototype.includes) {
-      const sub: Sym = { kind: 'seqUnit', elem: this.symOf(this.valued(entries[1])) };
+      const sub: Sym = {
+        kind: 'seqUnit',
+        elem: this.symOf(this.valued(entries[1])),
+      };
       return { kind: 'seqContains', arr, sub };
     }
 
-    if (f === Array.prototype.join) return this.joinSym(base, arr, entries[1], meta);
+    if (f === Array.prototype.join)
+      return this.joinSym(base, arr, entries[1], meta);
 
     return undefined;
   }
@@ -216,7 +300,11 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   // counter is per-run (the analysis is reconstructed each process), so replay
   // re-issues the same names. The `re$` prefix avoids user symbol-name clashes.
   private mintRegexVar(): Sym {
-    return { kind: 'var', name: `re$${this.regexVarCounter++}`, sort: 'String' };
+    return {
+      kind: 'var',
+      name: `re$${this.regexVarCounter++}`,
+      sort: 'String',
+    };
   }
 
   protected truncateInfo(x: Valued<Sym>): Sym | undefined {
@@ -229,12 +317,22 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   // so a clamp over a symbolic bound — e.g. a search loop's start index clamped to
   // a symbolic length — stays a real Sym instead of a `lost` that would drop the
   // loop-bound constraint. min/max render to ite in smt.ts.
-  protected clampInfo(x: Valued<Sym>, lower: Valued<Sym>, upper: Valued<Sym>): Sym | undefined {
+  protected clampInfo(
+    x: Valued<Sym>,
+    lower: Valued<Sym>,
+    upper: Valued<Sym>,
+  ): Sym | undefined {
     const xs = this.symOf(x);
     const lo = this.symOf(lower);
     const hi = this.symOf(upper);
-    if (xs.kind === 'const' && lo.kind === 'const' && hi.kind === 'const') return undefined;
-    return { kind: 'binary', op: 'max', left: lo, right: { kind: 'binary', op: 'min', left: xs, right: hi } };
+    if (xs.kind === 'const' && lo.kind === 'const' && hi.kind === 'const')
+      return undefined;
+    return {
+      kind: 'binary',
+      op: 'max',
+      left: lo,
+      right: { kind: 'binary', op: 'min', left: xs, right: hi },
+    };
   }
 
   // A branch (user-code `if`/`&&`/… via D$.C, or a model-internal bound check via
@@ -271,20 +369,30 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   private scalarSort(v: unknown): Sort {
     if (typeof v === 'string') return 'String';
     if (typeof v === 'boolean') return 'Bool';
+    // A symbolic `number` variable is Real: its sort is fixed at declaration and
+    // the program may use it in real division, even when seeded with an integer
+    // (ExpoSE _getSort). Integer *constants* still stay Int — see sortOf.
+    if (typeof v === 'number') return 'Real';
     return 'Int';
   }
   private seqSortOf(elem: unknown): Sort {
     switch (this.scalarSort(elem)) {
-      case 'String': return 'StringSeq';
-      case 'Bool': return 'BoolSeq';
-      default: return 'IntSeq';
+      case 'String':
+        return 'StringSeq';
+      case 'Bool':
+        return 'BoolSeq';
+      default:
+        return 'IntSeq';
     }
   }
   private elemTypeof(seqSort: Sort): string {
     switch (seqElementSort(seqSort)) {
-      case 'String': return 'string';
-      case 'Bool': return 'boolean';
-      default: return 'number';
+      case 'String':
+        return 'string';
+      case 'Bool':
+        return 'boolean';
+      default:
+        return 'number';
     }
   }
 
@@ -307,16 +415,34 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   // length into nested string concatenations of the (symbolic) elements and the
   // separator (ExpoSE join). Only string-element arrays are modeled; others
   // concretize (undefined). `sepArg` is the separator argument (undefined -> ",").
-  private joinSym(base: object, arr: Sym, sepArg: unknown, meta: ArrayMeta): Sym | undefined {
+  private joinSym(
+    base: object,
+    arr: Sym,
+    sepArg: unknown,
+    meta: ArrayMeta,
+  ): Sym | undefined {
     if (seqElementSort(meta.elemSort) !== 'String') return undefined;
     const n = (base as unknown[]).length;
     if (n === 0) return { kind: 'const', value: '' };
-    const sepValue = sepArg === undefined ? undefined : this.valued(sepArg).value;
-    const sep: Sym = { kind: 'const', value: sepValue === undefined ? ',' : String(sepValue) };
-    const at = (i: number): Sym => ({ kind: 'select', arr, index: { kind: 'const', value: i } });
+    const sepValue =
+      sepArg === undefined ? undefined : this.valued(sepArg).value;
+    const sep: Sym = {
+      kind: 'const',
+      value: sepValue === undefined ? ',' : String(sepValue),
+    };
+    const at = (i: number): Sym => ({
+      kind: 'select',
+      arr,
+      index: { kind: 'const', value: i },
+      elemSort: 'String',
+    });
     let acc = at(0);
     for (let i = 1; i < n; i++) {
-      acc = { kind: 'concat', left: { kind: 'concat', left: acc, right: sep }, right: at(i) };
+      acc = {
+        kind: 'concat',
+        left: { kind: 'concat', left: acc, right: sep },
+        right: at(i),
+      };
     }
     return acc;
   }
@@ -340,7 +466,10 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   // renaming keeps replay sound — a child run re-issues the same calls, so the
   // same renamed names line up with the child input's keys.
   symbolNamed(name: unknown, seed: unknown): unknown /* Wrapped */ {
-    return this.makeSymbolic(this.rename(String(this.valued(name).value)), seed);
+    return this.makeSymbolic(
+      this.rename(String(this.valued(name).value)),
+      seed,
+    );
   }
 
   // `S$.pureSymbol(name)`: a typeless symbol with no seed. Real type-forking
@@ -366,25 +495,41 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   makeSymbolic(name: unknown, seed: unknown): unknown /* Wrapped */ {
     const varName = String(this.valued(name).value);
     const input = this.seedInput();
-    const concrete = varName in input ? input[varName] : this.valued(seed).value;
+    const concrete =
+      varName in input ? input[varName] : this.valued(seed).value;
 
     if (Array.isArray(concrete)) {
       // Array elements are still individually wrapped (only the array itself was
       // unwrapped), so project the first through `valued` to read its type.
-      const sort = this.seqSortOf(concrete.length ? this.valued(concrete[0]).value : undefined);
+      const sort = this.seqSortOf(
+        concrete.length ? this.valued(concrete[0]).value : undefined,
+      );
       const arrSym: Sym = { kind: 'var', name: varName, sort };
       this.arrayMeta.set(concrete, { elemSort: sort });
       this.pushConstraint(
-        { kind: 'binary', op: '>=', left: { kind: 'arrlen', arr: arrSym }, right: { kind: 'const', value: 0 } },
+        {
+          kind: 'binary',
+          op: '>=',
+          left: { kind: 'arrlen', arr: arrSym },
+          right: { kind: 'const', value: 0 },
+        },
         true,
       );
       return this.make(concrete, arrSym);
     }
     if (concrete !== null && typeof concrete === 'object') {
-      this.objectMeta.set(concrete, { name: varName, counter: 0, fields: new Map() });
+      this.objectMeta.set(concrete, {
+        name: varName,
+        counter: 0,
+        fields: new Map(),
+      });
       return this.make(concrete);
     }
-    return this.make(concrete, { kind: 'var', name: varName, sort: this.scalarSort(concrete) });
+    return this.make(concrete, {
+      kind: 'var',
+      name: varName,
+      sort: this.scalarSort(concrete),
+    });
   }
 
   symbolicAssert(condArg: unknown, expectedArg: unknown): void {
@@ -428,7 +573,10 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     const v: unknown = this.valued(e).value;
     const NotAnError = (globalThis as Record<string, unknown>).__NotAnError__;
     if (typeof NotAnError === 'function' && v instanceof NotAnError) return;
-    this.errors.push({ error: String(v), stack: v instanceof Error ? v.stack : undefined });
+    this.errors.push({
+      error: String(v),
+      stack: v instanceof Error ? v.stack : undefined,
+    });
   }
 
   endExecution() {
@@ -471,8 +619,12 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
 
   // Readable path-condition rendering (ExpoSE _stringPC analogue; only the `pc`
   // display field, not parsed by the Distributor).
-  private pcToString(cs: readonly { constraint: Sym; taken: boolean }[]): string {
-    return cs.map((p) => `${p.taken ? '' : '¬'}${symToString(p.constraint)}`).join(', ');
+  private pcToString(
+    cs: readonly { constraint: Sym; taken: boolean }[],
+  ): string {
+    return cs
+      .map((p) => `${p.taken ? '' : '¬'}${symToString(p.constraint)}`)
+      .join(', ');
   }
 
   // Child inputs for the unexplored side of each branch (ExpoSE
@@ -482,9 +634,15 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   // prefix and explores past i). The Distributor re-queues these
   // (Center._expandAlternatives) — that is how multi-path search proceeds. A
   // branch we can't translate or that is infeasible is skipped, not fatal.
-  private alternatives(): { input: Record<string, unknown>; pc: string; forkIid: number }[] {
+  private alternatives(): {
+    input: Record<string, unknown>;
+    pc: string;
+    forkIid: number;
+  }[] {
     const bound =
-      typeof this.seedInput()._bound === 'number' ? (this.seedInput()._bound as number) : 0;
+      typeof this.seedInput()._bound === 'number'
+        ? (this.seedInput()._bound as number)
+        : 0;
     const pcs = this.pathConstraints;
     // Replay divergence (ExpoSE SymbolicState.js:299): the seed pinned `_bound`
     // branches, but this run reached fewer — the child input failed to steer
@@ -496,10 +654,17 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     if (bound > pcs.length) {
       throw `Bound ${bound} > ${pcs.length}, divergence has occured`;
     }
-    const out: { input: Record<string, unknown>; pc: string; forkIid: number }[] = [];
+    const out: {
+      input: Record<string, unknown>;
+      pc: string;
+      forkIid: number;
+    }[] = [];
     for (let i = bound; i < pcs.length; i++) {
       if (pcs[i].binder) continue; // engine-introduced (bounds/length>=0): never flipped
-      const branches = [...pcs.slice(0, i), { constraint: pcs[i].constraint, taken: !pcs[i].taken }];
+      const branches = [
+        ...pcs.slice(0, i),
+        { constraint: pcs[i].constraint, taken: !pcs[i].taken },
+      ];
       let model;
       try {
         model = solveModel(branches);
@@ -524,7 +689,8 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     const raw = process.argv[process.argv.length - 1];
     try {
       const parsed = raw ? JSON.parse(raw) : null;
-      if (parsed && typeof parsed === 'object') seed = parsed as Record<string, unknown>;
+      if (parsed && typeof parsed === 'object')
+        seed = parsed as Record<string, unknown>;
     } catch {
       /* not JSON -> fresh seed */
     }

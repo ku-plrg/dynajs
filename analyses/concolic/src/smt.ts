@@ -1,5 +1,14 @@
 import { spawnSync } from 'node:child_process';
-import { type Sym, type Sort, type ReNode, isSeqSort, UnsupportedSym } from '@shared/sym.js';
+import {
+  type Sym,
+  type Sort,
+  type ReNode,
+  isSeqSort,
+  isNumericSort,
+  arithSort,
+  sortOf,
+  UnsupportedSym,
+} from '@shared/sym.js';
 
 // ---------------------------------------------------------------------------
 // SMT-LIB translation + z3
@@ -29,12 +38,8 @@ const SORT_SMT: Record<Sort, string> = {
 };
 
 // op -> SMT-LIB builder. Comparisons/arith map almost 1:1; equality and
-// inequality need (=)/(not (=)); integer / becomes div. `%` can't reuse SMT's
-// `mod`: SMT-LIB `mod` is Euclidean (result always in [0, |b|)), whereas JS `%`
-// is truncated (the remainder takes the sign of the *dividend*, so e.g.
-// -2 % 3 === -2, not 1). We encode the JS rule as sign(a) * (|a| mod |b|) — the
-// truncated remainder — so negative-dividend modulo solves faithfully instead
-// of producing a spurious counterexample.
+// inequality need (=)/(not (=)); `/` is real division (JS `/` is always real:
+// 7/2 === 3.5). `%` is not here — it needs a sort-aware encoding (intMod/realMod).
 const SMT_BINARY: Record<string, (a: string, b: string) => string> = {
   '===': (a, b) => `(= ${a} ${b})`,
   '==': (a, b) => `(= ${a} ${b})`,
@@ -47,9 +52,7 @@ const SMT_BINARY: Record<string, (a: string, b: string) => string> = {
   '+': (a, b) => `(+ ${a} ${b})`,
   '-': (a, b) => `(- ${a} ${b})`,
   '*': (a, b) => `(* ${a} ${b})`,
-  '/': (a, b) => `(div ${a} ${b})`,
-  '%': (a, b) =>
-    `(ite (>= ${a} 0) (mod ${a} (abs ${b})) (- (mod (- ${a}) (abs ${b}))))`,
+  '/': (a, b) => `(/ ${a} ${b})`,
   '&&': (a, b) => `(and ${a} ${b})`,
   '||': (a, b) => `(or ${a} ${b})`,
   '=>': (a, b) => `(=> ${a} ${b})`,
@@ -57,6 +60,47 @@ const SMT_BINARY: Record<string, (a: string, b: string) => string> = {
   max: (a, b) => `(ite (>= ${a} ${b}) ${a} ${b})`,
   min: (a, b) => `(ite (<= ${a} ${b}) ${a} ${b})`,
 };
+
+// Operator families that operate on numbers (and so coerce operands to a common
+// Int/Real sort). `+ - * max min` and comparisons take the join of their
+// operands' sorts; `/` is always Real; `%` is encoded below.
+const ARITH_OPS = new Set(['+', '-', '*', 'max', 'min']);
+const COMPARE_OPS = new Set(['<', '<=', '>', '>=']);
+const EQUALITY_OPS = new Set(['===', '==', '!==', '!=']);
+
+// JS `%` can't reuse SMT-LIB `mod`: `mod` is Euclidean (result in [0,|b|)),
+// whereas JS `%` is truncated — the remainder takes the sign of the *dividend*
+// (-2 % 3 === -2, not 1). Over the integers we encode sign(a) * (|a| mod |b|);
+// over the reals, a - b * trunc(a/b) (the same truncated remainder).
+function intMod(a: string, b: string): string {
+  return `(ite (>= ${a} 0) (mod ${a} (abs ${b})) (- (mod (- ${a}) (abs ${b}))))`;
+}
+// trunc-toward-zero of a Real, as a Real: sign(x) * floor(|x|). SMT-LIB `to_int`
+// is floor (toward -∞), so the sign trick recovers truncation for negatives.
+function realTrunc(x: string): string {
+  return `(ite (>= ${x} 0.0) (to_real (to_int ${x})) (to_real (- (to_int (- ${x})))))`;
+}
+function realMod(a: string, b: string): string {
+  return `(- ${a} (* ${b} ${realTrunc(`(/ ${a} ${b})`)}))`;
+}
+
+// Wrap an already-rendered term so it reads as `to`. Only Int<->Real bridges; a
+// matching or non-numeric `from` passes through. (Numeric *literals* never reach
+// here — `operand` skips `const`, since z3 promotes them in either context.)
+function coerce(smt: string, from: Sort | undefined, to: Sort): string {
+  if (from === to) return smt;
+  if (to === 'Real' && from === 'Int') return `(to_real ${smt})`;
+  if (to === 'Int' && from === 'Real') return `(to_int ${smt})`;
+  return smt;
+}
+
+// Render an operand and coerce it to the sort its position expects. A `const` is
+// emitted bare: an integer literal is sort-polymorphic to z3, so wrapping it
+// would only add noise.
+function operand(s: Sym, vars: Map<string, Sort>, to: Sort): string {
+  const smt = symToSmt(s, vars);
+  return s.kind === 'const' ? smt : coerce(smt, sortOf(s), to);
+}
 
 // SMT-LIB string literal: double quotes, with an embedded `"` escaped as `""`.
 // Non-printable / non-ASCII code units (regex char classes reach down to
@@ -101,11 +145,25 @@ function reToSmt(re: ReNode): string {
 
 function constToSmt(value: unknown): string {
   if (typeof value === 'boolean') return value ? 'true' : 'false';
-  if (typeof value === 'number' && Number.isInteger(value)) {
-    return value < 0 ? `(- ${-value})` : `${value}`;
-  }
+  if (typeof value === 'number') return numberToSmt(value);
   if (typeof value === 'string') return smtString(value);
   throw new UnsupportedSym(`unsupported constant: ${JSON.stringify(value)}`);
+}
+
+// A JS number as an SMT numeral. Integer-valued numbers stay bare integer
+// literals (z3 promotes them to Real wherever a Real is expected); a genuine
+// fraction renders as a Real decimal. NaN/±Infinity have no SMT image, and
+// exponential forms (1e-7) aren't SMT-LIB Real syntax — both become `error`.
+function numberToSmt(v: number): string {
+  if (!Number.isFinite(v)) throw new UnsupportedSym(`non-finite number: ${v}`);
+  if (Number.isInteger(v)) return v < 0 ? `(- ${-v})` : `${v}`;
+  const mag = String(Math.abs(v));
+  if (mag.includes('e') || mag.includes('E')) {
+    throw new UnsupportedSym(
+      `number not representable as an SMT Real literal: ${v}`,
+    );
+  }
+  return v < 0 ? `(- ${mag})` : mag;
 }
 
 function symToSmt(s: Sym, vars: Map<string, Sort>): string {
@@ -123,9 +181,29 @@ function symToSmt(s: Sym, vars: Map<string, Sort>): string {
       throw new UnsupportedSym(`unsupported unary op: ${s.op}`);
     }
     case 'binary': {
+      const ls = sortOf(s.left);
+      const rs = sortOf(s.right);
+      if (s.op === '%') {
+        const to = arithSort(ls, rs);
+        const a = operand(s.left, vars, to);
+        const b = operand(s.right, vars, to);
+        return to === 'Real' ? realMod(a, b) : intMod(a, b);
+      }
       const build = SMT_BINARY[s.op];
       if (!build) throw new UnsupportedSym(`unsupported binary op: ${s.op}`);
-      return build(symToSmt(s.left, vars), symToSmt(s.right, vars));
+      // The sort the operands meet at: Real for `/`; the numeric join for
+      // arithmetic/comparisons; for equality only when both sides are numeric
+      // (a non-numeric `===` keeps each side's own sort). Logic ops (&& || =>)
+      // act on Bools — no coercion.
+      let to: Sort | undefined;
+      if (s.op === '/') to = 'Real';
+      else if (ARITH_OPS.has(s.op) || COMPARE_OPS.has(s.op))
+        to = arithSort(ls, rs);
+      else if (EQUALITY_OPS.has(s.op) && isNumericSort(ls) && isNumericSort(rs))
+        to = arithSort(ls, rs);
+      const a = to ? operand(s.left, vars, to) : symToSmt(s.left, vars);
+      const b = to ? operand(s.right, vars, to) : symToSmt(s.right, vars);
+      return build(a, b);
     }
     case 'concat':
       return `(str.++ ${symToSmt(s.left, vars)} ${symToSmt(s.right, vars)})`;
@@ -134,10 +212,9 @@ function symToSmt(s: Sym, vars: Map<string, Sort>): string {
     case 'strlen':
       return `(str.len ${symToSmt(s.src, vars)})`;
     case 'truncate':
-      // concolic models numbers as Int, so truncate-toward-zero is identity.
-      return symToSmt(s.src, vars);
+      return realTrunc(coerce(symToSmt(s.src, vars), sortOf(s.src), 'Real'));
     case 'select':
-      return `(seq.nth ${symToSmt(s.arr, vars)} ${symToSmt(s.index, vars)})`;
+      return `(seq.nth ${symToSmt(s.arr, vars)} ${operand(s.index, vars, 'Int')})`;
     case 'arrlen':
       return `(seq.len ${symToSmt(s.arr, vars)})`;
     case 'seqUnit':
@@ -145,9 +222,9 @@ function symToSmt(s: Sym, vars: Map<string, Sort>): string {
     case 'seqConcat':
       return `(seq.++ ${symToSmt(s.left, vars)} ${symToSmt(s.right, vars)})`;
     case 'seqExtract':
-      return `(seq.extract ${symToSmt(s.src, vars)} ${symToSmt(s.offset, vars)} ${symToSmt(s.length, vars)})`;
+      return `(seq.extract ${symToSmt(s.src, vars)} ${operand(s.offset, vars, 'Int')} ${operand(s.length, vars, 'Int')})`;
     case 'seqIndexOf':
-      return `(seq.indexof ${symToSmt(s.arr, vars)} ${symToSmt(s.sub, vars)} ${symToSmt(s.from, vars)})`;
+      return `(seq.indexof ${symToSmt(s.arr, vars)} ${symToSmt(s.sub, vars)} ${operand(s.from, vars, 'Int')})`;
     case 'seqContains':
       return `(seq.contains ${symToSmt(s.arr, vars)} ${symToSmt(s.sub, vars)})`;
     case 'inRe':
@@ -158,7 +235,9 @@ function symToSmt(s: Sym, vars: Map<string, Sort>): string {
       // Defensive: branches drop `lost` constraints and asserts concretize over
       // them, so a `lost` should never reach the solver — if one does, refuse to
       // translate rather than fabricate (caller -> `error`).
-      throw new UnsupportedSym('information lost: symbolic value through an unmodeled op');
+      throw new UnsupportedSym(
+        'information lost: symbolic value through an unmodeled op',
+      );
   }
 }
 
@@ -171,14 +250,22 @@ export type Polarized = { constraint: Sym; taken: boolean };
 // A satisfying assignment: each symbolic variable -> its concrete model value.
 export type Solution = Map<string, unknown>;
 
-// Assemble the SMT-LIB problem. The String/Sequence theories need an explicit
-// logic; the all-Int path stays bare so existing integer benches translate
-// byte-for-byte.
-function buildSmt(vars: Map<string, Sort>, assertions: string[], tail: string): string {
-  const needsLogic = [...vars.values()].some((s) => s === 'String' || isSeqSort(s));
+// Assemble the SMT-LIB problem. The String/Sequence/Real theories (and the
+// to_int/to_real coercions Reals pull in) need an explicit logic; the all-Int
+// path stays bare so pure-integer benches translate byte-for-byte.
+function buildSmt(
+  vars: Map<string, Sort>,
+  assertions: string[],
+  tail: string,
+): string {
+  const needsLogic = [...vars.values()].some(
+    (s) => s === 'String' || s === 'Real' || isSeqSort(s),
+  );
   return (
     (needsLogic ? '(set-logic ALL)\n' : '') +
-    [...vars].map(([v, sort]) => `(declare-const ${v} ${SORT_SMT[sort]})`).join('\n') +
+    [...vars]
+      .map(([v, sort]) => `(declare-const ${v} ${SORT_SMT[sort]})`)
+      .join('\n') +
     '\n' +
     assertions.join('\n') +
     '\n' +
@@ -198,16 +285,22 @@ function runZ3(smt: string): string {
     encoding: 'utf8',
     maxBuffer: 16 * 1024 * 1024,
   });
-  if (r.error) throw new UnsupportedSym(`z3 invocation failed: ${r.error.message}`);
+  if (r.error)
+    throw new UnsupportedSym(`z3 invocation failed: ${r.error.message}`);
   const out = (r.stdout ?? '').trim();
   if (out.length === 0) {
-    throw new UnsupportedSym(`z3 produced no output: ${(r.stderr ?? '').trim()}`);
+    throw new UnsupportedSym(
+      `z3 produced no output: ${(r.stderr ?? '').trim()}`,
+    );
   }
   return out;
 }
 
 // Translate a path condition to polarized assertions, collecting its variables.
-function assertPath(pc: readonly Polarized[], vars: Map<string, Sort>): string[] {
+function assertPath(
+  pc: readonly Polarized[],
+  vars: Map<string, Sort>,
+): string[] {
   return pc.map((p) => {
     const c = symToSmt(p.constraint, vars);
     return `(assert ${p.taken ? c : `(not ${c})`})`;
@@ -253,12 +346,15 @@ export function solveModel(pc: readonly Polarized[]): Solution | null {
 
 // --- z3 (get-value) response parser ----------------------------------------
 // z3 answers `(get-value (v...))` with `((v1 val1) (v2 val2) ...)` where each
-// val is a leaf form we emit (constToSmt's inverse): an Int atom (`5`) or its
-// negation (`(- 3)`), a String literal (`"x"`, `""`-escaped), or a Bool
-// (`true`/`false`). Tokenize (strings atomic, `""` -> `"`), parse to nested
+// val is a leaf form: an Int atom (`5`) or its negation (`(- 3)`), a Real decimal
+// (`1.5`) or rational (`(/ 1 3)`), a String literal (`"x"`, `""`-escaped), or a
+// Bool (`true`/`false`). Tokenize (strings atomic, `""` -> `"`), parse to nested
 // lists, then read each (name value) pair.
 
-type Tok = { t: '(' | ')' } | { t: 'str'; v: string } | { t: 'atom'; v: string };
+type Tok =
+  | { t: '(' | ')' }
+  | { t: 'str'; v: string }
+  | { t: 'atom'; v: string };
 
 function lex(s: string): Tok[] {
   const out: Tok[] = [];
@@ -293,7 +389,8 @@ function lex(s: string): Tok[] {
       continue;
     }
     let v = '';
-    while (i < s.length && s[i] > ' ' && s[i] !== '(' && s[i] !== ')') v += s[i++];
+    while (i < s.length && s[i] > ' ' && s[i] !== '(' && s[i] !== ')')
+      v += s[i++];
     out.push({ t: 'atom', v });
   }
   return out;
@@ -332,6 +429,12 @@ function valueOf(node: SExp): unknown {
       const inner = valueOf(node[1]);
       return typeof inner === 'number' ? -inner : inner;
     }
+    // (/ p q) -> a Real model value, returned by z3 as an exact rational.
+    if (node.length === 3 && node[0] === '/') {
+      const num = valueOf(node[1]);
+      const den = valueOf(node[2]);
+      if (typeof num === 'number' && typeof den === 'number') return num / den;
+    }
     return undefined; // structured value we don't model
   }
   return node.str; // string literal
@@ -342,7 +445,11 @@ function parseGetValue(body: string): Solution {
   const model: Solution = new Map();
   if (Array.isArray(top)) {
     for (const pair of top) {
-      if (Array.isArray(pair) && pair.length === 2 && typeof pair[0] === 'string') {
+      if (
+        Array.isArray(pair) &&
+        pair.length === 2 &&
+        typeof pair[0] === 'string'
+      ) {
         model.set(pair[0], valueOf(pair[1]));
       }
     }
