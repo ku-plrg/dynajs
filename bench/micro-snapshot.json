@@ -1987,8 +1987,8 @@
     "BuiltIns__String__prototype__substr__taint_substr_this": [
       {
         "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
+        "actual": "detected",
+        "result": "TP"
       },
       {
         "expected": "clean",
@@ -1997,8 +1997,8 @@
       },
       {
         "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
+        "actual": "clean",
+        "result": "TN"
       },
       {
         "expected": "clean",
@@ -2007,13 +2007,13 @@
       },
       {
         "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
+        "actual": "clean",
+        "result": "TN"
       },
       {
         "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
+        "actual": "detected",
+        "result": "TP"
       }
     ],
     "BuiltIns__String__prototype__substring__taint_substring_end": [
