@@ -1986,19 +1986,34 @@
     ],
     "BuiltIns__String__prototype__substr__taint_substr_this": [
       {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
         "expected": "clean",
         "actual": "clean",
         "result": "TN"
       },
       {
-        "expected": "detected",
+        "expected": "clean",
         "actual": "detected",
-        "result": "TP"
+        "result": "FP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
       },
       {
         "expected": "clean",
         "actual": "detected",
         "result": "FP"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
       }
     ],
     "BuiltIns__String__prototype__substring__taint_substring_end": [
@@ -2017,19 +2032,29 @@
     ],
     "BuiltIns__String__prototype__substring__taint_substring_this": [
       {
-        "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
-      },
-      {
         "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
+        "actual": "detected",
+        "result": "TP"
       },
       {
         "expected": "clean",
         "actual": "clean",
         "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
       }
     ],
     "BuiltIns__String__prototype__symbol_iterator__taint_symbol_iterator_this": [
@@ -2040,16 +2065,6 @@
       }
     ],
     "BuiltIns__String__prototype__toLocaleLowerCase__taint_toLocaleLowerCase_locales": [
-      {
-        "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
-      },
-      {
-        "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
-      },
       {
         "expected": "clean",
         "actual": "detected",
@@ -2074,16 +2089,6 @@
       }
     ],
     "BuiltIns__String__prototype__toLocaleUpperCase__taint_toLocaleUpperCase_locales": [
-      {
-        "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
-      },
-      {
-        "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
-      },
       {
         "expected": "clean",
         "actual": "detected",
