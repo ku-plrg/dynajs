@@ -2547,6 +2547,167 @@
         "actual": "detected",
         "result": "TP"
       }
+    ],
+    "BuiltIns__String__prototype__replaceAll__concolic_replaceAll_basic_neg": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__replaceAll__concolic_replaceAll_basic_pos": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__String__prototype__search__concolic_search_basic_neg": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__search__concolic_search_basic_pos": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__String__prototype__slice__concolic_slice_basic_neg": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__slice__concolic_slice_basic_pos": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__String__prototype__split__concolic_split_basic_neg": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__split__concolic_split_basic_pos": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__String__prototype__startsWith__concolic_startsWith_basic_neg": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__String__prototype__startsWith__concolic_startsWith_basic_pos": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__String__prototype__toWellFormed__concolic_toWellFormed_basic_pos": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
+    ],
+    "BuiltIns__String__prototype__trim__concolic_trim_basic_neg": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__String__prototype__trim__concolic_trim_basic_pos": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      }
+    ],
+    "BuiltIns__String__prototype__trimEnd__concolic_trimEnd_basic_neg": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__String__prototype__trimEnd__concolic_trimEnd_basic_pos": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      }
+    ],
+    "BuiltIns__String__prototype__trimLeft__concolic_trimLeft_basic_neg": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__String__prototype__trimLeft__concolic_trimLeft_basic_pos": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      }
+    ],
+    "BuiltIns__String__prototype__trimRight__concolic_trimRight_basic_neg": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__String__prototype__trimRight__concolic_trimRight_basic_pos": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      }
+    ],
+    "BuiltIns__String__prototype__trimStart__concolic_trimStart_basic_neg": [
+      {
+        "expected": "clean",
+        "actual": "detected",
+        "result": "FP"
+      }
+    ],
+    "BuiltIns__String__prototype__trimStart__concolic_trimStart_basic_pos": [
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      }
+    ],
+    "BuiltIns__String__prototype__valueOf__concolic_valueOf_basic_neg": [
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      }
+    ],
+    "BuiltIns__String__prototype__valueOf__concolic_valueOf_basic_pos": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      }
     ]
   }
 }
