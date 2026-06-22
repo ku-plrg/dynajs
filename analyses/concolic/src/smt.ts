@@ -364,6 +364,36 @@ type Tok =
   | { t: 'str'; v: string }
   | { t: 'atom'; v: string };
 
+// Decode z3's SMT-LIB string escapes back to the actual characters. z3 prints a
+// non-printable / non-ASCII code point in a model string as `\u{HEX}` (1–6
+// lowercase hex digits) — the inverse of `smtString`. It is the ONLY escape we
+// can meet: a literal backslash that would otherwise begin such a sequence is
+// itself emitted as `\u{5c}` (z3 escapes `\` exactly when leaving it raw would
+// look like an escape), so any `\` not opening a valid `\u{HEX}` is a literal
+// backslash and passes through untouched. The scan is single-pass left-to-right
+// so a decoded `\u{5c}` is never re-scanned as the start of a fresh escape.
+// Without this the child-input string carries the literal escape text (`\u{8a}`
+// as six characters), diverges from the path the model intended on replay, and
+// the post-match branch is never taken — silently under-reporting errors.
+function decodeSmtString(s: string): string {
+  if (!s.includes('\\u{')) return s;
+  let out = '';
+  for (let i = 0; i < s.length; ) {
+    if (s[i] === '\\' && s[i + 1] === 'u' && s[i + 2] === '{') {
+      const close = s.indexOf('}', i + 3);
+      const hex = close > i + 3 ? s.slice(i + 3, close) : '';
+      const cp = /^[0-9a-fA-F]{1,6}$/.test(hex) ? parseInt(hex, 16) : NaN;
+      if (cp <= 0x10ffff) {
+        out += String.fromCodePoint(cp);
+        i = close + 1;
+        continue;
+      }
+    }
+    out += s[i++];
+  }
+  return out;
+}
+
 function lex(s: string): Tok[] {
   const out: Tok[] = [];
   let i = 0;
@@ -393,7 +423,7 @@ function lex(s: string): Tok[] {
         }
         v += s[i++];
       }
-      out.push({ t: 'str', v });
+      out.push({ t: 'str', v: decodeSmtString(v) });
       continue;
     }
     let v = '';
