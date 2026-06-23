@@ -1,8 +1,10 @@
 declare const WrappedValueBrand: unique symbol;
 
-export type Wrapped<T = unknown> = T & { readonly [WrappedValueBrand]: true; };
+type WrapBrand<B extends boolean> = { readonly [WrappedValueBrand]: B; };
 
-export type Unwrapped<T = unknown> = T & { readonly [WrappedValueBrand]: false; };
+export type Wrapped<T = unknown> = T & WrapBrand<true>;
+
+export type Unwrapped<T = unknown> = T & WrapBrand<false>;
 
 /** Primitives <: Unwrapped, but not vice versa (e.g. it can be an object that has been unwrapped) */
 export type Primitive = string | number | boolean | bigint | symbol | null | undefined;
