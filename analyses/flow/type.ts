@@ -30,14 +30,6 @@ interface StringOps {
   toUpper: (s: Wrapped<string>) => Wrapped<string>;
 };
 
-// The symbolic projection of matching `regex` against a subject string — the
-// single irreducible regex operation (the spec's `[[RegExpMatcher]]` is an
-// abstract closure esmeta cannot polyfill, and matching an arbitrary pattern
-// against a symbolic-length string is exactly what the z3 String theory's
-// `str.in_re` is for). The spec models assemble the observable test/exec/
-// search/match results from these fields using ordinary `$` string ops, so this
-// is the ONLY new regex primitive. Each field is Wrapped and carries the
-// analysis's Info (concolic: `str.in_re` / captures; taint: subject taint).
 export interface RegexMatch {
   matched: Wrapped<boolean>; // did the subject match (str.in_re)
   index: Wrapped<number>; // the match's start index
