@@ -458,20 +458,42 @@ function valueOf(node: SExp): unknown {
   if (typeof node === 'string') {
     if (node === 'true') return true;
     if (node === 'false') return false;
+    if (node === 'seq.empty') return []; // bare empty sequence
     const n = Number(node);
     return Number.isNaN(n) ? node : n;
   }
   if (Array.isArray(node)) {
+    const head = node[0];
     // (- N) -> negative number
-    if (node.length === 2 && node[0] === '-') {
+    if (node.length === 2 && head === '-') {
       const inner = valueOf(node[1]);
       return typeof inner === 'number' ? -inner : inner;
     }
     // (/ p q) -> a Real model value, returned by z3 as an exact rational.
-    if (node.length === 3 && node[0] === '/') {
+    if (node.length === 3 && head === '/') {
       const num = valueOf(node[1]);
       const den = valueOf(node[2]);
       if (typeof num === 'number' && typeof den === 'number') return num / den;
+    }
+    // Sequence (symbolic array) model values — z3's image of ExpoSE's symbolic
+    // arrays. Decode them to a concrete JS array, the text-side equivalent of
+    // z3javascript's `asConstant` (which ExpoSE's getSolution calls natively):
+    // without this, an array child input is dropped (JSON.stringify omits the
+    // `undefined`), so a negated-branch replay falls back to the program's seed
+    // array and can never steer the array's shape.
+    //   (as seq.empty (Seq T))  -> []
+    //   (seq.unit V)            -> [V]
+    //   (seq.++ a b ...)        -> concatenation of the parts
+    if (head === 'as' && node[1] === 'seq.empty') return [];
+    if (head === 'seq.unit' && node.length === 2) return [valueOf(node[1])];
+    if (head === 'seq.++') {
+      const out: unknown[] = [];
+      for (let i = 1; i < node.length; i++) {
+        const part = valueOf(node[i]);
+        if (!Array.isArray(part)) return undefined; // unexpected non-seq operand
+        out.push(...part);
+      }
+      return out;
     }
     return undefined; // structured value we don't model
   }
