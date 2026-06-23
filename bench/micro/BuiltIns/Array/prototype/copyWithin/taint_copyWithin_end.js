@@ -1,6 +1,7 @@
 // @type taint
 // @target es6+ Array.prototype.copyWithin
 // @feature builtin array-copyWithin
+// @done
 
 function __test_taint__(tainted) {
     var a = ["a", "b", "c", "d"];

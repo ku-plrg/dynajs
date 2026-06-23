@@ -1,0 +1,15 @@
+// @type concolic
+// @target es5 increment-decrement
+// @feature syntax increment-decrement
+
+function __test_symbolic__(symbolic) {
+    if (symbolic === 5) {
+      --symbolic;
+      // @witness the symbolic === 5 guard forces symbolic === 4
+      __IS_SAT__(symbolic !== 4, false);
+    } else {
+      __IS_SAT__(true, false);
+    }
+}
+
+__test_symbolic__(__symbolic__('s', 5));
