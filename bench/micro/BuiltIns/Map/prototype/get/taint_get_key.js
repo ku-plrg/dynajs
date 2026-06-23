@@ -6,7 +6,7 @@ function __test_taint__(tainted) {
     var m = new Map();
     m.set(tainted, 'v');
 
-    // @witness tainted key selects clean value 'v'
+    // @witness 'hello' clean; tainted is only the lookup key, value 'v' is clean
     __assert_taint__(m.get(tainted), false);
 }
 

@@ -4,14 +4,14 @@
 
 function __test_taint__(tainted) {
     var tnc_z = tainted;
-    // @witness whole tainted string
+    // @witness __test_taint__("Hello, World!") => tnc_z = "Hello, World!" tainted
     __assert_taint__(tnc_z, true);
-    // @witness char of a tainted string
+    // @witness __test_taint__("Hello, World!") => tnc_z[1] = 'e' tainted
     __assert_taint__(tnc_z[1], true);
 
     var tnc_w = {};
     tnc_w.a = tnc_z[1];
-    // @witness tainted char stored into an object field stays tainted
+    // @witness __test_taint__("Hello, World!") => tnc_w.a = 'e' tainted
     __assert_taint__(tnc_w.a, true);
 }
 

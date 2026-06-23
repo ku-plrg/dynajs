@@ -7,28 +7,28 @@ function __test_taint__(tainted) {
     // JSON.stringify({k:'ab'}) => '{"k":"ab"}' (10 chars)
     var r = JSON.stringify({ k: tainted });
 
-    // @witness always r[0]='{' — structural brace
+    // @witness r[0] = '{' structural brace inserted by stringify, clean
     __assert_taint__(r[0], false);
 
-    // @witness always r[1]='"' — structural key quote
+    // @witness r[1] = '"' structural key-open quote inserted by stringify, clean
     __assert_taint__(r[1], false);
 
-    // @witness always r[2]='k' — clean key char
+    // @witness r[2] = 'k' clean key char, clean
     __assert_taint__(r[2], false);
 
-    // @witness always r[4]=':' — structural colon
+    // @witness r[4] = ':' structural colon inserted by stringify, clean
     __assert_taint__(r[4], false);
 
-    // @witness always r[5]='"' — structural value open quote
+    // @witness r[5] = '"' structural value-open quote inserted by stringify, clean
     __assert_taint__(r[5], false);
 
-    // @witness __test_taint__('x') => r[6]='x' — content char from tainted value
+    // @witness __test_taint__('ab') => r[6] = 'a' tainted
     __assert_taint__(r[6], true);
 
-    // @witness always r[r.length - 2]='"' — structural value close quote
+    // @witness r[r.length-2] = '"' structural value-close quote inserted by stringify, clean
     __assert_taint__(r[r.length - 2], false);
 
-    // @witness always r[r.length - 1]='}' — structural brace
+    // @witness r[r.length-1] = '}' structural brace inserted by stringify, clean
     __assert_taint__(r[r.length - 1], false);
 }
 

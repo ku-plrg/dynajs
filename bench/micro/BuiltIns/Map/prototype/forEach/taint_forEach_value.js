@@ -8,7 +8,7 @@ function __test_taint__(tainted) {
     var got;
     m.forEach(function(v) { got = v; });
 
-    // @witness __test_taint__('hello') => got='hello' (tainted value passed to callback)
+    // @witness __test_taint__('hello') => got = 'hello' tainted
     __assert_taint__(got, true);
 }
 

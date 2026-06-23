@@ -5,10 +5,10 @@
 function __test_taint__(tainted) {
     var r = encodeURI('a' + tainted);
 
-    // @witness always r[0]='a' (clean prefix)
+    // @witness always r[0] = 'a', clean
     __assert_taint__(r[0], false);
 
-    // @witness __test_taint__('b') => r[1]='b' (tainted content char)
+    // @witness __test_taint__('hello') => r[1] = 'h' tainted
     __assert_taint__(r[1], true);
 }
 

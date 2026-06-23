@@ -4,11 +4,11 @@
 
 function __test_taint__(tainted) {
     // tainted = {b:{c:1}}; the whole nested object is the source
-    // @witness whole nested object tainted
+    // @witness __test_taint__({b: {c: 1}}) => tainted = {b:{c:1}} tainted
     __assert_taint__(tainted, true);
-    // @witness nested object tainted by whole-object taint (coarse down)
+    // @witness __test_taint__({b: {c: 1}}) => tainted.b = {c:1} tainted
     __assert_taint__(tainted.b, true);
-    // @witness deeply nested value tainted (coarse down)
+    // @witness __test_taint__({b: {c: 1}}) => tainted.b.c = 1 tainted
     __assert_taint__(tainted.b.c, true);
 }
 

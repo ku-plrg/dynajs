@@ -5,10 +5,10 @@
 function __test_taint__(tainted) {
     var str = 'a' + tainted + 'c';
 
-    // @witness always /b/.test(...) returns boolean
+    // @witness boolean result, clean
     __assert_taint__(/b/.test(str), false);
 
-    // @witness always /a/.test(...) returns boolean (clean prefix region)
+    // @witness boolean result, clean
     __assert_taint__(/a/.test(str), false);
 }
 

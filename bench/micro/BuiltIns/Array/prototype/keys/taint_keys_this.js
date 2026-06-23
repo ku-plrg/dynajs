@@ -5,9 +5,11 @@
 function __test_taint__(tainted) {
     var a = [tainted, "b", "c"];
     var r = [...a.keys()];
-    // @witness keys() yields indices => clean even with tainted "x"
+    // @witness index/position, not content => clean
     __assert_taint__(r[0], false);
+    // @witness index/position, not content => clean
     __assert_taint__(r[1], false);
+    // @witness index/position, not content => clean
     __assert_taint__(r[2], false);
 }
 

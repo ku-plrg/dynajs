@@ -6,7 +6,7 @@ function __test_taint__(tainted) {
     var m = new Map();
     m.set('k', tainted);
 
-    // @witness size is count, attacker controls entry count via tainted value
+    // @witness __test_taint__('hello') => m.size = 1 tainted
     __assert_taint__(m.size, true);
 }
 

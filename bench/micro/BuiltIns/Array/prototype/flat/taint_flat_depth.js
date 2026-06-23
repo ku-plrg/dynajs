@@ -5,9 +5,11 @@
 function __test_taint__(tainted) {
     var a = ["a", ["b", ["c"]]];
     var r = a.flat(tainted);
-    // @witness tainted depth argument does not taint flattened elements
+    // @witness depth is index/position, not content => clean
     __assert_taint__(r[0], false);
+    // @witness depth is index/position, not content => clean
     __assert_taint__(r[1], false);
+    // @witness depth is index/position, not content => clean
     __assert_taint__(r[2], false);
 }
 

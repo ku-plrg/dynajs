@@ -4,9 +4,10 @@
 
 function __test_taint__(tainted) {
     var o = {p: tainted};
-    // @witness Object.isExtensible returns boolean regardless of tainted property
+    // @witness boolean result, clean
     __assert_taint__(Object.isExtensible(o), false);
     Object.preventExtensions(o);
+    // @witness boolean result, clean
     __assert_taint__(Object.isExtensible(o), false);
 }
 

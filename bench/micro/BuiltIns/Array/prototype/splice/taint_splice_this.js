@@ -5,9 +5,11 @@
 function __test_taint__(tainted) {
     var a = [tainted, "b", "c", "d", "e"];
     a.splice(1, 2);
-    // @witness splice removes indices 1..2; tainted "x" survives at index 0
+    // @witness __test_taint__('hello') => a[0] = 'hello' tainted
     __assert_taint__(a[0], true);
+    // @witness always a[1] = "d", clean
     __assert_taint__(a[1], false);
+    // @witness always a[2] = "e", clean
     __assert_taint__(a[2], false);
 }
 

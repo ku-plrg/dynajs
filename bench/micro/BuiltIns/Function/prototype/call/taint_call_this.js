@@ -6,7 +6,7 @@ function __test_taint__(tainted) {
     // Object.prototype.toString.call(tainted) => "[object String]" — structural, not data content
     var r = Object.prototype.toString.call(tainted);
 
-    // @witness always r='[object String]' regardless of tainted value
+    // @witness always r = '[object String]', clean
     __assert_taint__(r, false);
 }
 

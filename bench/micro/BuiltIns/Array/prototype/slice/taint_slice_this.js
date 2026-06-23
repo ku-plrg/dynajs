@@ -5,8 +5,9 @@
 function __test_taint__(tainted) {
     var a = ["a", "b", tainted, "d"];
     var r = a.slice(1, 3);
-    // @witness slice keeps tainted "x" (originally index 2) at result [1]
+    // @witness always r[0] = "b", clean
     __assert_taint__(r[0], false);
+    // @witness __test_taint__('hello') => r[1] = 'hello' tainted
     __assert_taint__(r[1], true);
 }
 

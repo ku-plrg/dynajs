@@ -5,8 +5,9 @@
 function __test_taint__(tainted) {
     var proto = {p: tainted};
     var child = Object.create(proto);
-    // @witness isPrototypeOf returns boolean; tainted proto value does not taint result
+    // @witness boolean result, clean
     __assert_taint__(proto.isPrototypeOf(child), false);
+    // @witness boolean result, clean
     __assert_taint__(proto.isPrototypeOf({}), false);
 }
 

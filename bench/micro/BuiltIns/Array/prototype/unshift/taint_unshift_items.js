@@ -5,11 +5,13 @@
 function __test_taint__(tainted) {
     var a = ["a", "b"];
     var len = a.unshift(tainted);
-    // @witness unshift returns a length (number) => clean
+    // @witness unshift returns a length (number), clean
     __assert_taint__(len, false);
-    // @witness unshifted tainted item "x" lands at index 0
+    // @witness __test_taint__('hello') => a[0] = 'hello' tainted
     __assert_taint__(a[0], true);
+    // @witness always a[1] = "a", clean
     __assert_taint__(a[1], false);
+    // @witness always a[2] = "b", clean
     __assert_taint__(a[2], false);
 }
 

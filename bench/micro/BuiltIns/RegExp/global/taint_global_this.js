@@ -6,7 +6,7 @@ function __test_taint__(tainted) {
     // .global is a boolean property — rule 1 boolean => false
     var re = /b/g;
 
-    // @witness always re.global is a boolean (not tainted content)
+    // @witness boolean result, clean
     __assert_taint__(re.global, false);
 }
 

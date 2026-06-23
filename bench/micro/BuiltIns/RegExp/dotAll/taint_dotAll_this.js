@@ -6,7 +6,7 @@ function __test_taint__(tainted) {
     // .dotAll is a boolean property — rule 1 boolean => false
     var re = /b/s;
 
-    // @witness always re.dotAll is a boolean (not tainted content)
+    // @witness boolean result, clean
     __assert_taint__(re.dotAll, false);
 }
 

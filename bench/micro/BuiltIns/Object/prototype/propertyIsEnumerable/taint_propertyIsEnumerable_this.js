@@ -4,8 +4,9 @@
 
 function __test_taint__(tainted) {
     var o = {p: tainted};
-    // @witness propertyIsEnumerable returns boolean; tainted value does not taint result
+    // @witness boolean result, clean
     __assert_taint__(o.propertyIsEnumerable('p'), false);
+    // @witness boolean result, clean
     __assert_taint__(o.propertyIsEnumerable('absent'), false);
 }
 

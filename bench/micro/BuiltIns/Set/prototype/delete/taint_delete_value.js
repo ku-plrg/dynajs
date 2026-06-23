@@ -6,10 +6,10 @@ function __test_taint__(tainted) {
     var s = new Set();
     s.add(tainted);
 
-    // @witness delete() returns a boolean => always clean
+    // @witness boolean result, clean
     __assert_taint__(s.delete(tainted), false);
 
-    // @witness delete() on absent key => boolean false => clean
+    // @witness boolean result, clean
     __assert_taint__(s.delete('absent'), false);
 }
 

@@ -7,19 +7,19 @@ function __test_taint__(tainted) {
     // 'a' -> 'a', ' ' -> '%20', 'b' -> 'b'; all chars derive from tainted input
     var r = encodeURIComponent(tainted);
 
-    // @witness __test_taint__('a b') => r[0]='a' (tainted content)
+    // @witness __test_taint__('a b') => r[0] = 'a' tainted
     __assert_taint__(r[0], true);
 
-    // @witness __test_taint__('a b') => r[1]='%' (escape from tainted space)
+    // @witness __test_taint__('a b') => r[1] = '%' tainted
     __assert_taint__(r[1], true);
 
-    // @witness __test_taint__('a b') => r[2]='2' (escape from tainted space)
+    // @witness __test_taint__('a b') => r[2] = '2' tainted
     __assert_taint__(r[2], true);
 
-    // @witness __test_taint__('a b') => r[3]='0' (escape from tainted space)
+    // @witness __test_taint__('a b') => r[3] = '0' tainted
     __assert_taint__(r[3], true);
 
-    // @witness __test_taint__('a b') => r[4]='b' (tainted content)
+    // @witness __test_taint__('a b') => r[4] = 'b' tainted
     __assert_taint__(r[4], true);
 }
 

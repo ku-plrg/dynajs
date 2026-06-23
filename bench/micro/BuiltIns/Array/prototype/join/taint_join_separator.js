@@ -5,11 +5,15 @@
 function __test_taint__(tainted) {
     var a = ["a", "b", "c"];
     var r = a.join(tainted);
-    // @witness ["a","b","c"].join("x") => "axbxc", tainted separators at 1,3
+    // @witness always r[0] = 'a', clean
     __assert_taint__(r[0], false);
+    // @witness __test_taint__('-') => r[1] = '-' tainted
     __assert_taint__(r[1], true);
+    // @witness always r[2] = 'b', clean
     __assert_taint__(r[2], false);
+    // @witness __test_taint__('-') => r[3] = '-' tainted
     __assert_taint__(r[3], true);
+    // @witness always r[4] = 'c', clean
     __assert_taint__(r[4], false);
 }
 

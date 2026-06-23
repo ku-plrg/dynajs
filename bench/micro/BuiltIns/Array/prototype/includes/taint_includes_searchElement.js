@@ -4,7 +4,7 @@
 
 function __test_taint__(tainted) {
     var a = ["a", "hello", "c"];
-    // @witness includes() with a tainted search element returns a boolean => clean
+    // @witness boolean result, clean; tainted is only the search element
     __assert_taint__(a.includes(tainted), false);
 }
 

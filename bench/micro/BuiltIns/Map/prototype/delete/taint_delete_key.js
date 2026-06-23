@@ -6,7 +6,7 @@ function __test_taint__(tainted) {
     var m = new Map();
     m.set('k', tainted);
 
-    // @witness delete returns boolean => false
+    // @witness boolean result, clean
     __assert_taint__(m.delete('k'), false);
 }
 

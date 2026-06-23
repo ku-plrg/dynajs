@@ -8,13 +8,13 @@ function __test_taint__(tainted) {
     var str = 'p' + tainted + 'q';
     var parts = str.split(/-/);
 
-    // @witness always parts[0][0]='p' (clean prefix char)
+    // @witness always parts[0][0] = 'p', clean (clean prefix char)
     __assert_taint__(parts[0][0], false);
 
-    // @witness __test_taint__('b') => parts[0][1]='b' (tainted middle char)
+    // @witness __test_taint__('b') => parts[0][1] = 'b' tainted
     __assert_taint__(parts[0][1], true);
 
-    // @witness always parts[0][2]='q' (clean suffix char)
+    // @witness always parts[0][2] = 'q', clean (clean suffix char)
     __assert_taint__(parts[0][2], false);
 
     // split that separates tainted middle field
@@ -22,13 +22,13 @@ function __test_taint__(tainted) {
     var str2 = 'p-' + tainted + '-q';
     var seg = str2.split(/-/);
 
-    // @witness always seg[0]='p' (clean field)
+    // @witness always seg[0] = 'p', clean (clean field)
     __assert_taint__(seg[0], false);
 
-    // @witness __test_taint__('b') => seg[1]='b' (tainted field)
+    // @witness __test_taint__('b') => seg[1] = 'b' tainted
     __assert_taint__(seg[1], true);
 
-    // @witness always seg[2]='q' (clean field)
+    // @witness always seg[2] = 'q', clean (clean field)
     __assert_taint__(seg[2], false);
 }
 

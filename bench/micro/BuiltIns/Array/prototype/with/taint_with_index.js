@@ -5,9 +5,11 @@
 function __test_taint__(tainted) {
     var a = ["a", "b", "c"];
     var r = a.with(tainted, "Z");
-    // @witness tainted index does not taint the resulting elements
+    // @witness index/position, not content => clean
     __assert_taint__(r[0], false);
+    // @witness index/position, not content => clean
     __assert_taint__(r[1], false);
+    // @witness index/position, not content => clean
     __assert_taint__(r[2], false);
 }
 

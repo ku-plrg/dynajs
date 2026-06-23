@@ -6,10 +6,10 @@ function __test_taint__(tainted) {
     // tainted is 'hello%20world'; decoded chars come from tainted input
     var r = decodeURI(tainted);
 
-    // @witness __test_taint__('hello%20world') => r[0]='h' (tainted content)
+    // @witness __test_taint__('hello%20world') => r[0] = 'h' tainted
     __assert_taint__(r[0], true);
 
-    // @witness __test_taint__('hello%20world') => r[5]=' ' (decoded from tainted %20)
+    // @witness __test_taint__('hello%20world') => r[5] = ' ' tainted
     __assert_taint__(r[5], true);
 }
 

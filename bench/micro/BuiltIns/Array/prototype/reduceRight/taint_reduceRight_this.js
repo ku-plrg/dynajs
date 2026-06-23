@@ -5,7 +5,7 @@
 function __test_taint__(tainted) {
     var a = ["a", tainted, "c"];
     var r = a.reduceRight(function (acc, v) { return acc + v; });
-    // @witness reduceRight concatenates tainted "x" into the accumulator => tainted
+    // @witness __test_taint__('hello') => r contains 'hello', tainted
     __assert_taint__(r, true);
 }
 

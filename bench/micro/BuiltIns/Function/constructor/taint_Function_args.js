@@ -5,10 +5,10 @@
 function __test_taint__(tainted) {
     var fn = new Function('a', 'return a');
 
-    // @witness __test_taint__('hello') => fn(tainted)='hello' (data flows through call)
+    // @witness __test_taint__('hello') => fn(tainted) = 'hello' tainted
     __assert_taint__(fn(tainted), true);
 
-    // @witness clean arg => fn('c')='c' (not tainted)
+    // @witness clean literal arg 'c', not tainted
     __assert_taint__(fn('c'), false);
 }
 

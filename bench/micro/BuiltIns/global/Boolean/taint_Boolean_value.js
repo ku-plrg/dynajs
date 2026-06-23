@@ -5,7 +5,7 @@
 function __test_taint__(tainted) {
     var r = Boolean(tainted);
 
-    // @witness boolean result; tainted input only configures the check
+    // @witness boolean result, clean
     __assert_taint__(r, false);
 }
 

@@ -16,19 +16,19 @@ TNC_Teacher.prototype = Object.create(TNC_Person.prototype);
 
 function __test_taint__(tainted) {
     var tnc_p = new TNC_Person(tainted, 'b');
-    // @witness __test_taint__('a') => p.name.first='a' (tainted ctor arg into nested field)
+    // @witness __test_taint__('a') => tnc_p.name.first = 'a' tainted
     __assert_taint__(tnc_p.name.first, true);
-    // @witness always p.name.last='b' (clean ctor arg)
+    // @witness clean ctor arg 'b', clean
     __assert_taint__(tnc_p.name.last, false);
-    // @witness prototype method returns the tainted field
+    // @witness __test_taint__('a') => tnc_p.greeting() = 'a' tainted
     __assert_taint__(tnc_p.greeting(), true);
 
     var tnc_t = new TNC_Teacher(tainted, 'b', 'sec');
-    // @witness inherited field via Person.call stays tainted
+    // @witness __test_taint__('a') => tnc_t.name.first = 'a' tainted
     __assert_taint__(tnc_t.name.first, true);
-    // @witness clean sibling field
+    // @witness clean ctor arg 'sec', clean
     __assert_taint__(tnc_t.subject, false);
-    // @witness inherited prototype method (Object.create chain)
+    // @witness __test_taint__('a') => tnc_t.greeting() = 'a' tainted
     __assert_taint__(tnc_t.greeting(), true);
 }
 

@@ -4,10 +4,10 @@
 
 function __test_taint__(tainted) {
     var r = Object.fromEntries([['k', tainted]]);
-    // @witness __test_taint__('hello') => r.k='hello' (tainted value)
+    // @witness __test_taint__('hello') => r.k = 'hello' tainted
     __assert_taint__(r.k, true);
 
-    // @witness always Object.fromEntries([['k','c']]).k='c' (clean value)
+    // @witness always r.k = 'c', clean
     __assert_taint__(Object.fromEntries([['k', 'c']]).k, false);
 }
 

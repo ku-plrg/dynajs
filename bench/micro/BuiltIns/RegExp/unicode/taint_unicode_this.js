@@ -6,7 +6,7 @@ function __test_taint__(tainted) {
     // .unicode is a boolean property — rule 1 boolean => false
     var re = /b/u;
 
-    // @witness always re.unicode is a boolean (not tainted content)
+    // @witness boolean result, clean
     __assert_taint__(re.unicode, false);
 }
 

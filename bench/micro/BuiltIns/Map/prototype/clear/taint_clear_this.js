@@ -6,7 +6,7 @@ function __test_taint__(tainted) {
     var m = new Map();
     m.set('k', tainted);
 
-    // @witness clear() returns undefined => false
+    // @witness m.clear() = undefined, clean
     __assert_taint__(m.clear(), false);
 }
 

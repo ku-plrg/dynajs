@@ -4,10 +4,10 @@
 
 function __test_taint__(tainted) {
     var r = Object.assign({}, {p: tainted});
-    // @witness __test_taint__('hello') => r.p='hello' (tainted value copied)
+    // @witness __test_taint__('hello') => r.p = 'hello' tainted
     __assert_taint__(r.p, true);
 
-    // @witness always Object.assign({},{p:'c'}).p='c' (clean value)
+    // @witness always r.p = 'c', clean
     __assert_taint__(Object.assign({}, {p: 'c'}).p, false);
 }
 

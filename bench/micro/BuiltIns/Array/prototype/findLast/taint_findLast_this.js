@@ -4,11 +4,11 @@
 
 function __test_taint__(tainted) {
     var a = ["a", "b", tainted];
-    // @witness findLast returns the tainted element "x"
+    // @witness __test_taint__('hello') => a.findLast(v==='hello') = 'hello' tainted
     __assert_taint__(a.findLast(function (v) { return v === "hello"; }), true);
-    // @witness findLast returns a clean element
+    // @witness always 'b' clean element returned
     __assert_taint__(a.findLast(function (v) { return v === "b"; }), false);
-    // @witness findLast returns undefined => clean
+    // @witness findLast returns undefined (not found), clean
     __assert_taint__(a.findLast(function (v) { return v === "z"; }), false);
 }
 

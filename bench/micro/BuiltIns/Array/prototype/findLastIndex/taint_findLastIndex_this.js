@@ -4,10 +4,13 @@
 
 function __test_taint__(tainted) {
     var a = ["a", "b", tainted];
-    // @witness findLastIndex locating tainted "x" yields a tainted index
+    // @witness __test_taint__('hello') => a.findLastIndex(v==='hello') = 2 tainted
     __assert_taint__(a.findLastIndex(function (v) { return v === "hello"; }), true);
+    // @witness index/position, not content => clean
     __assert_taint__(a.findLastIndex(function (v) { return v === "b"; }), false);
+    // @witness index/position, not content => clean
     __assert_taint__(a.findLastIndex(function (v) { return v === "a"; }), false);
+    // @witness findLastIndex returns -1 (not found), clean
     __assert_taint__(a.findLastIndex(function (v) { return v === "z"; }), false);
 }
 

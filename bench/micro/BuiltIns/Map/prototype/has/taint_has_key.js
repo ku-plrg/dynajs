@@ -6,10 +6,10 @@ function __test_taint__(tainted) {
     var m = new Map();
     m.set('k', tainted);
 
-    // @witness has() returns boolean => false
+    // @witness boolean result, clean
     __assert_taint__(m.has('k'), false);
 
-    // @witness tainted key used as search key only => boolean false
+    // @witness boolean result, clean
     __assert_taint__(m.has(tainted), false);
 }
 

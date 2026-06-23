@@ -5,11 +5,11 @@
 function __test_taint__(tainted) {
     // tainted = {c:1}; only the inner object is the source (taint flows down, not up)
     var tol_a = {b: tainted, d: 0};
-    // @witness inner-only taint => outer not all-tainted => clean
+    // @witness mixed (tainted + clean) => not all-tainted, clean
     __assert_taint__(tol_a, false);
-    // @witness the tainted inner object
+    // @witness __test_taint__({c: 1}) => tol_a.b = {c:1} tainted
     __assert_taint__(tol_a.b, true);
-    // @witness value inside the tainted inner object (coarse down)
+    // @witness __test_taint__({c: 1}) => tol_a.b.c = 1 tainted
     __assert_taint__(tol_a.b.c, true);
 }
 

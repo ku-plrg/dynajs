@@ -9,13 +9,13 @@ function __test_taint__(tainted) {
     var str = 'a' + tainted + 'c';
     var r = str.replace(/b/, 'X');
 
-    // @witness always r[0]='a' (clean prefix)
+    // @witness always r[0] = 'a', clean (clean prefix)
     __assert_taint__(r[0], false);
 
-    // @witness always r[1]='X' (literal replacement string, not tainted)
+    // @witness always r[1] = 'X', clean (literal replacement, not tainted)
     __assert_taint__(r[1], false);
 
-    // @witness always r[2]='c' (clean suffix)
+    // @witness always r[2] = 'c', clean (clean suffix)
     __assert_taint__(r[2], false);
 
     // tainted region outside matched span stays tainted
@@ -23,13 +23,13 @@ function __test_taint__(tainted) {
     var str2 = 'p' + tainted + 'q';
     var r2 = str2.replace(/X/, 'Y');
 
-    // @witness always r2[0]='p' (clean prefix)
+    // @witness always r2[0] = 'p', clean (clean prefix)
     __assert_taint__(r2[0], false);
 
-    // @witness __test_taint__('b') => r2[1]='b' (tainted, not matched, passes through)
+    // @witness __test_taint__('b') => r2[1] = 'b' tainted
     __assert_taint__(r2[1], true);
 
-    // @witness always r2[2]='q' (clean suffix)
+    // @witness always r2[2] = 'q', clean (clean suffix)
     __assert_taint__(r2[2], false);
 }
 

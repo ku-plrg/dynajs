@@ -8,12 +8,12 @@ function __test_taint__(tainted) {
     var str = 'a' + tainted + 'c';
     var idx = str.search(/b/);
 
-    // @witness always search() returns a position index, not content
+    // @witness index/position, not content => clean
     __assert_taint__(idx, false);
 
     // clean prefix search also position
     var idx2 = str.search(/a/);
-    // @witness always search() returns a position index
+    // @witness index/position, not content => clean
     __assert_taint__(idx2, false);
 }
 

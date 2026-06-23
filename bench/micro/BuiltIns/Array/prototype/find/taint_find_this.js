@@ -4,11 +4,11 @@
 
 function __test_taint__(tainted) {
     var a = [tainted, "b", "c"];
-    // @witness find returns the tainted element "x"
+    // @witness __test_taint__('hello') => a.find(v==='hello') = 'hello' tainted
     __assert_taint__(a.find(function (v) { return v === "hello"; }), true);
-    // @witness find returns a clean element
+    // @witness always 'b' clean element returned
     __assert_taint__(a.find(function (v) { return v === "b"; }), false);
-    // @witness find returns undefined => clean
+    // @witness find returns undefined (not found), clean
     __assert_taint__(a.find(function (v) { return v === "z"; }), false);
 }
 

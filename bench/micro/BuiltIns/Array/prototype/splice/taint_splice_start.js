@@ -5,8 +5,9 @@
 function __test_taint__(tainted) {
     var a = ["a", "b", "c", "d"];
     var r = a.splice(tainted, 2);
-    // @witness tainted start index does not taint removed elements
+    // @witness index/position, not content => clean
     __assert_taint__(r[0], false);
+    // @witness index/position, not content => clean
     __assert_taint__(r[1], false);
 }
 

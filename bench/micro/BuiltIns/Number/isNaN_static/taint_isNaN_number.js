@@ -5,7 +5,7 @@
 function __test_taint__(tainted) {
     var r = Number.isNaN(tainted);
 
-    // @witness boolean predicate; tainted input cannot propagate into a boolean result
+    // @witness boolean result, clean
     __assert_taint__(r, false);
 }
 

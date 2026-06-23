@@ -5,7 +5,7 @@
 function __test_taint__(tainted) {
     var r = Number.parseFloat(tainted);
 
-    // @witness __test_taint__('3.5') => parseFloat returns tainted numeric content
+    // @witness __test_taint__('3.5') => r = 3.5 tainted
     __assert_taint__(r, true);
 }
 

@@ -6,13 +6,13 @@ function __test_taint__(tainted) {
     var m = new Map();
     m.set(tainted, 'v');
 
-    // @witness __test_taint__('hello') => tainted key propagates through iterator
+    // @witness __test_taint__('hello') => [...m.keys()][0] = 'hello' tainted
     __assert_taint__([...m.keys()][0], true);
 
     var m2 = new Map();
     m2.set('cleanKey', 'v');
 
-    // @witness clean key => false
+    // @witness always [...m2.keys()][0] = 'cleanKey', clean
     __assert_taint__([...m2.keys()][0], false);
 }
 

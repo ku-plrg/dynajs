@@ -8,15 +8,15 @@ function __test_taint__(tainted) {
     var str = 'a' + tainted + 'c';
     var m = str.match(/b/);
 
-    // @witness __test_taint__('b') => m[0]='b' (from tainted region)
+    // @witness __test_taint__('b') => m[0] = 'b' tainted
     __assert_taint__(m[0], true);
 
-    // @witness __test_taint__('b') => m[0][0]='b' (char-level)
+    // @witness __test_taint__('b') => m[0][0] = 'b' tainted
     __assert_taint__(m[0][0], true);
 
     // clean prefix match stays clean
     var m2 = str.match(/a/);
-    // @witness always m2[0]='a' (from clean prefix)
+    // @witness always m2[0] = 'a', clean (from clean prefix)
     __assert_taint__(m2[0], false);
 }
 

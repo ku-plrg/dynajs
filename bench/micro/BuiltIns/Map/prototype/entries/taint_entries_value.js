@@ -7,10 +7,10 @@ function __test_taint__(tainted) {
     m.set('k', tainted);
     var e = [...m.entries()][0];
 
-    // @witness e[1] is tainted value
+    // @witness __test_taint__('hello') => e[1] = 'hello' tainted
     __assert_taint__(e[1], true);
 
-    // @witness e[0] is clean key 'k'
+    // @witness e[0] = 'k' clean key, clean
     __assert_taint__(e[0], false);
 }
 

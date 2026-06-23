@@ -4,9 +4,10 @@
 
 function __test_taint__(tainted) {
     var o = {p: tainted};
-    // @witness Object.isSealed returns boolean regardless of tainted property
+    // @witness boolean result, clean
     __assert_taint__(Object.isSealed(o), false);
     Object.seal(o);
+    // @witness boolean result, clean
     __assert_taint__(Object.isSealed(o), false);
 }
 

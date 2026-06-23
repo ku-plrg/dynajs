@@ -7,10 +7,10 @@ function __test_taint__(tainted) {
     var re = /ab/gi;
     var f = re.flags;
 
-    // @witness always f[0] is a flag char from clean literal (not tainted)
+    // @witness always f[0] = 'g', clean (flag from literal, not tainted)
     __assert_taint__(f[0], false);
 
-    // @witness always f[1] is a flag char from clean literal (not tainted)
+    // @witness always f[1] = 'i', clean (flag from literal, not tainted)
     __assert_taint__(f[1], false);
 }
 

@@ -6,10 +6,10 @@ function __test_taint__(tainted) {
     // String(tainted) where tainted is a string: content chars flow through
     var r = String(tainted);
 
-    // @witness __test_taint__('ab') => r[0]='a' (tainted content)
+    // @witness __test_taint__('ab') => r[0] = 'a' tainted
     __assert_taint__(r[0], true);
 
-    // @witness __test_taint__('ab') => r[1]='b' (tainted content)
+    // @witness __test_taint__('ab') => r[1] = 'b' tainted
     __assert_taint__(r[1], true);
 
     // String(taintedObj) => "[object Object]" structural; taint does not flow
@@ -17,7 +17,7 @@ function __test_taint__(tainted) {
     __set_taint__(obj);
     var s2 = String(obj);
 
-    // @witness String({}) => "[object Object]" structural, not content
+    // @witness "[object Object]" is a structural string inserted by String(), clean
     __assert_taint__(s2, false);
 }
 

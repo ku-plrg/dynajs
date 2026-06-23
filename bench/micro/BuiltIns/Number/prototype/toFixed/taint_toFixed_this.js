@@ -6,16 +6,16 @@ function __test_taint__(tainted) {
     var r = tainted.toFixed(1);
     // r = "12.0" for seed 12
 
-    // @witness __test_taint__(12) => r[0]='1' (content digit)
+    // @witness __test_taint__(12) => r[0] = '1' tainted
     __assert_taint__(r[0], true);
 
-    // @witness __test_taint__(12) => r[1]='2' (content digit)
+    // @witness __test_taint__(12) => r[1] = '2' tainted
     __assert_taint__(r[1], true);
 
-    // @witness always r[2]='.' (structural separator inserted by toFixed)
+    // @witness r[2] = '.' structural separator inserted by toFixed, clean
     __assert_taint__(r[2], false);
 
-    // @witness always r[3]='0' (padding digit, not from tainted value)
+    // @witness r[3] = '0' padding digit, not from tainted value, clean
     __assert_taint__(r[3], false);
 }
 

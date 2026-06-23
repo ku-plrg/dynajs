@@ -6,7 +6,7 @@ function __test_taint__(tainted) {
     var s = new Set();
     s.add(tainted);
 
-    // @witness clear() returns undefined => always clean
+    // @witness clear() returns undefined, clean
     __assert_taint__(s.clear(), false);
 }
 

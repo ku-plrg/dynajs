@@ -7,15 +7,15 @@ function __test_taint__(tainted) {
     var str = 'a' + tainted + 'c';
     var r = /b/.exec(str);
 
-    // @witness __test_taint__('b') => r[0]='b' (matched from tainted region)
+    // @witness __test_taint__('b') => r[0] = 'b' tainted
     __assert_taint__(r[0], true);
 
-    // @witness __test_taint__('b') => r[0][0]='b' (char-level)
+    // @witness __test_taint__('b') => r[0][0] = 'b' tainted
     __assert_taint__(r[0][0], true);
 
     // clean prefix never tainted
     var r2 = /a/.exec(str);
-    // @witness always r2[0]='a' (clean prefix)
+    // @witness always r2[0] = 'a', clean (clean prefix)
     __assert_taint__(r2[0], false);
 }
 

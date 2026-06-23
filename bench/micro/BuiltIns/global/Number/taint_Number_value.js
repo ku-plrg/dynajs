@@ -6,7 +6,7 @@ function __test_taint__(tainted) {
     // Number(tainted) where tainted is '34'; content number flows through
     var r = Number(tainted);
 
-    // @witness __test_taint__('34') => r=34 (content number from tainted string)
+    // @witness __test_taint__('34') => r = 34 tainted
     __assert_taint__(r, true);
 }
 

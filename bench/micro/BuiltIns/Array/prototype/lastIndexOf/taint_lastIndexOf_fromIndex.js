@@ -4,9 +4,9 @@
 
 function __test_taint__(tainted) {
     var a = ["b", "a", "b", "c"];
-    // @witness found index inherits taint from the tainted fromIndex
+    // @witness __test_taint__(2) => a.lastIndexOf("b", tainted) = 2 tainted
     __assert_taint__(a.lastIndexOf("b", tainted), true);
-    // @witness negative fromIndex finds nothing => -1, clean
+    // @witness lastIndexOf returns -1 (not found), clean
     __assert_taint__(a.lastIndexOf("b", tainted - 12), false);
 }
 

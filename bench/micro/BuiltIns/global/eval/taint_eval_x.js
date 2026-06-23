@@ -6,7 +6,7 @@ function __test_taint__(tainted) {
     // tainted is '1+1'; eval computes result derived from tainted source expression
     var r = eval(tainted);
 
-    // @witness __test_taint__('1+1') => r=2 (content derived from tainted expression)
+    // @witness __test_taint__('1+1') => r = 2 tainted
     __assert_taint__(r, true);
 }
 

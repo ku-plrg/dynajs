@@ -4,13 +4,14 @@
 
 function __test_taint__(tainted) {
     var a = [tainted, "b", "c"];
-    // @witness shift returns the tainted element "x"
+    // @witness __test_taint__('hello') => a.shift() = 'hello' tainted
     __assert_taint__(a.shift(), true);
-    // @witness shift returns a clean element
+    // @witness always a.shift() = "b", clean
     __assert_taint__(a.shift(), false);
+    // @witness always a.shift() = "c", clean
     __assert_taint__(a.shift(), false);
     var empty = [];
-    // @witness shift on empty array => undefined, clean
+    // @witness a.shift() on empty array = undefined (OOB), clean
     __assert_taint__(empty.shift(), false);
 }
 

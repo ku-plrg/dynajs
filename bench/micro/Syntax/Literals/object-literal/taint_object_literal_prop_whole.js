@@ -4,9 +4,9 @@
 
 function __test_taint__(tainted) {
     // tainted = {test:"Hello"}; the whole object is the source
-    // @witness whole object tainted
+    // @witness __test_taint__({test: "Hello"}) => tainted = {test:"Hello"} tainted
     __assert_taint__(tainted, true);
-    // @witness existing prop tainted by whole-object taint (coarse down)
+    // @witness __test_taint__({test: "Hello"}) => tainted.test = "Hello" tainted
     __assert_taint__(tainted.test, true);
 }
 

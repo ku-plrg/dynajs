@@ -5,8 +5,9 @@
 function __test_taint__(tainted) {
     var a = ["a", "b", "c", "d"];
     var r = a.slice(1, tainted);
-    // @witness tainted end index does not taint sliced elements
+    // @witness 'hello' clean; tainted is only the end index
     __assert_taint__(r[0], false);
+    // @witness 'hello' clean; tainted is only the end index
     __assert_taint__(r[1], false);
 }
 

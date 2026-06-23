@@ -10,16 +10,16 @@ function __test_taint__(tainted) {
     var r = parsed.k;
     var u = parsed.u;
 
-    // @witness parsed has untainted property
+    // @witness parsed object is mixed (tainted + clean), clean
     __assert_taint__(parsed, false);
 
-    // @witness __test_taint__('x') => r[0]='x' — content char from tainted nested value
+    // @witness __test_taint__('ab') => r[0] = 'a' tainted
     __assert_taint__(r[0], true);
 
-    // @witness __test_taint__('xx') => r[1]='x' — content char from tainted nested value
+    // @witness __test_taint__('ab') => r[1] = 'b' tainted
     __assert_taint__(r[1], true);
 
-    // @witness untainted property remains untainted
+    // @witness u = 'ab' from clean literal, clean
     __assert_taint__(u, false);
 }
 

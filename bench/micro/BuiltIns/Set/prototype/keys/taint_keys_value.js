@@ -8,7 +8,7 @@ function __test_taint__(tainted) {
 
     var arr = Array.from(s.keys());
 
-    // @witness Set.keys===Set.values; tainted element flows through => tainted
+    // @witness __test_taint__('hello') => arr[0] = 'hello' tainted
     __assert_taint__(arr[0], true);
 
     var s2 = new Set();
@@ -16,7 +16,7 @@ function __test_taint__(tainted) {
 
     var arr2 = Array.from(s2.keys());
 
-    // @witness clean element through keys() => clean
+    // @witness clean element through keys(), clean
     __assert_taint__(arr2[0], false);
 }
 

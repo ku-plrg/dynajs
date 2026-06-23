@@ -5,11 +5,11 @@
 function __test_taint__(tainted) {
     // both operands tainted => every result char tracks a tainted source
     var tsp_a = tainted + tainted;
-    // @witness __test_taint__('h') => a[0]='h' (left operand)
+    // @witness __test_taint__("h") => tsp_a[0] = 'h' tainted
     __assert_taint__(tsp_a[0], true);
-    // @witness __test_taint__('h') => a[1]='h' (right operand)
+    // @witness __test_taint__("h") => tsp_a[1] = 'h' tainted
     __assert_taint__(tsp_a[1], true);
-    // @witness every char tainted => whole string tainted
+    // @witness __test_taint__("h") => tsp_a = "hh" tainted
     __assert_taint__(tsp_a, true);
 }
 

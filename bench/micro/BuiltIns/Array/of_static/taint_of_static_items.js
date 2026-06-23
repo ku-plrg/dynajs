@@ -7,5 +7,7 @@ var e1 = "b";
 __set_taint__(e0);
 var r = Array.of(e0, e1);
 
+// @witness e0 = "a" tainted => r[0] = "a" tainted
 __assert_taint__(r[0], true);
+// @witness always r[1] = "b", clean
 __assert_taint__(r[1], false);

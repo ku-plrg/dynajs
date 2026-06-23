@@ -6,7 +6,7 @@ function __test_taint__(tainted) {
     // .sticky is a boolean property — rule 1 boolean => false
     var re = /b/y;
 
-    // @witness always re.sticky is a boolean (not tainted content)
+    // @witness boolean result, clean
     __assert_taint__(re.sticky, false);
 }
 

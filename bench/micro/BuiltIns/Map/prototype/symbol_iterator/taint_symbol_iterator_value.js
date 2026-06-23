@@ -7,7 +7,7 @@ function __test_taint__(tainted) {
     m.set('k', tainted);
     var e = [...m][0];
 
-    // @witness e[1] is tainted value from spread of map iterator
+    // @witness __test_taint__('hello') => e[1] = 'hello' tainted
     __assert_taint__(e[1], true);
 }
 

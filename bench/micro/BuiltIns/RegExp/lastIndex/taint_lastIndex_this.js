@@ -9,7 +9,7 @@ function __test_taint__(tainted) {
     re.exec(str);
     var li = re.lastIndex;
 
-    // @witness always lastIndex is a position number, not content
+    // @witness index/position, not content => clean
     __assert_taint__(li, false);
 }
 

@@ -6,19 +6,19 @@ function __test_taint__(tainted) {
     // seed 34, toExponential(1) => "3.4e+1"
     var r = tainted.toExponential(1);
 
-    // @witness __test_taint__(34) => r[0]='3' (leading content digit)
+    // @witness __test_taint__(34) => r[0] = '3' tainted
     __assert_taint__(r[0], true);
 
-    // @witness always r[1]='.' (structural separator)
+    // @witness r[1] = '.' structural separator inserted by toExponential, clean
     __assert_taint__(r[1], false);
 
-    // @witness __test_taint__(34) => r[2]='4' (content digit)
+    // @witness __test_taint__(34) => r[2] = '4' tainted
     __assert_taint__(r[2], true);
 
-    // @witness always r[3]='e' (structural exponent marker)
+    // @witness r[3] = 'e' structural exponent marker, clean
     __assert_taint__(r[3], false);
 
-    // @witness always r[4]='+' (structural sign)
+    // @witness r[4] = '+' structural sign, clean
     __assert_taint__(r[4], false);
 }
 

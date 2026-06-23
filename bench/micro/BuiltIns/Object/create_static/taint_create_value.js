@@ -5,10 +5,10 @@
 function __test_taint__(tainted) {
     var proto = {p: tainted};
     var r = Object.create(proto);
-    // @witness __test_taint__('hello') => r.p inherited from proto is tainted
+    // @witness __test_taint__('hello') => r.p = 'hello' tainted
     __assert_taint__(r.p, true);
 
-    // @witness always Object.create({p:'c'}).p='c' (clean inherited)
+    // @witness always r.p = 'c', clean
     __assert_taint__(Object.create({p: 'c'}).p, false);
 }
 

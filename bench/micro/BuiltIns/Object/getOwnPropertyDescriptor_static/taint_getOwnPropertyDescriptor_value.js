@@ -5,12 +5,12 @@
 function __test_taint__(tainted) {
     var o = {p: tainted};
     var desc = Object.getOwnPropertyDescriptor(o, 'p');
-    // @witness __test_taint__('hello') => descriptor.value='hello' (tainted property value)
+    // @witness __test_taint__('hello') => desc.value = 'hello' tainted
     __assert_taint__(desc.value, true);
 
     var o2 = {p: 'clean'};
     var desc2 = Object.getOwnPropertyDescriptor(o2, 'p');
-    // @witness always descriptor2.value='clean' (clean property value)
+    // @witness always desc2.value = 'clean', clean
     __assert_taint__(desc2.value, false);
 }
 

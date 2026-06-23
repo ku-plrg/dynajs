@@ -8,10 +8,10 @@ function __test_taint__(tainted) {
     var j = '"' + tainted + '"';
     var r = JSON.parse(j);
 
-    // @witness __test_taint__('x') => r[0]='x' — content char from tainted input
+    // @witness __test_taint__('ab') => r[0] = 'a' tainted
     __assert_taint__(r[0], true);
 
-    // @witness __test_taint__('xx') => r[1]='x' — content char from tainted input
+    // @witness __test_taint__('ab') => r[1] = 'b' tainted
     __assert_taint__(r[1], true);
 }
 

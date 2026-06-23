@@ -4,9 +4,11 @@
 
 function __test_taint__(tainted) {
     var a = [tainted, "b", "c"];
-    // @witness includes() returns a boolean => clean even when "x" is present
+    // @witness boolean result, clean
     __assert_taint__(a.includes("hello"), false);
+    // @witness boolean result, clean
     __assert_taint__(a.includes("b"), false);
+    // @witness boolean result, clean
     __assert_taint__(a.includes("z"), false);
 }
 

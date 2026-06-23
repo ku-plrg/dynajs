@@ -5,10 +5,10 @@
 function __test_taint__(tainted) {
     var id = function(x) { return x; };
 
-    // @witness __test_taint__('hello') => id.apply(null,[tainted])='hello'
+    // @witness __test_taint__('hello') => id.apply(null, [tainted]) = 'hello' tainted
     __assert_taint__(id.apply(null, [tainted]), true);
 
-    // @witness clean arg => id.apply(null,['c'])='c' (not tainted)
+    // @witness clean literal arg 'c', not tainted
     __assert_taint__(id.apply(null, ['c']), false);
 }
 

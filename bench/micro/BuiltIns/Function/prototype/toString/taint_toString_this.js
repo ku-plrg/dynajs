@@ -8,7 +8,7 @@ function __test_taint__(tainted) {
     var bound = id.bind(null, tainted);
     var r = bound.toString();
 
-    // @witness source-code string is structural; tainted data does not flow into it
+    // @witness source-code string is structural, tainted data does not appear in it, clean
     __assert_taint__(r, false);
 }
 

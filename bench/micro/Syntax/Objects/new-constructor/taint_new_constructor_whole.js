@@ -4,17 +4,17 @@
 
 function __test_taint__(tainted) {
     // tainted = {a:1}; the whole object is the taint source (prop 'a' present at taint time)
-    // @witness whole object is the source => container tainted
+    // @witness __test_taint__({a: 1}) => tainted = {a:1} tainted
     __assert_taint__(tainted, true);
-    // @witness existing prop tainted by whole-object taint (coarse down-propagation)
+    // @witness __test_taint__({a: 1}) => tainted.a = 1 tainted
     __assert_taint__(tainted.a, true);
 
     // copying the tainted field into a clean object taints only that field
     var tnc_r = {a: 0, b: 0};
     tnc_r.a = tainted.a;
-    // @witness clean container, mixed props => not all-tainted
+    // @witness mixed (tainted + clean) => not all-tainted, clean
     __assert_taint__(tnc_r, false);
-    // @witness copied field carries the taint
+    // @witness __test_taint__({a: 1}) => tnc_r.a = 1 tainted
     __assert_taint__(tnc_r.a, true);
 }
 

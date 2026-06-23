@@ -4,8 +4,9 @@
 
 function __test_taint__(tainted) {
     var o = {p: tainted};
-    // @witness hasOwnProperty returns boolean; tainted value in object does not taint result
+    // @witness boolean result, clean
     __assert_taint__(o.hasOwnProperty('p'), false);
+    // @witness boolean result, clean
     __assert_taint__(o.hasOwnProperty('absent'), false);
 }
 

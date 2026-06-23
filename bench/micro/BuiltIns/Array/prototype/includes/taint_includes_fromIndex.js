@@ -4,8 +4,9 @@
 
 function __test_taint__(tainted) {
     var a = ["a", "b", "c"];
-    // @witness includes() with a tainted fromIndex returns a boolean => clean
+    // @witness boolean result, clean; tainted is only the fromIndex
     __assert_taint__(a.includes("a", tainted), false);
+    // @witness boolean result, clean; tainted is only the fromIndex
     __assert_taint__(a.includes("c", tainted), false);
 }
 

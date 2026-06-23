@@ -5,10 +5,10 @@
 function __test_taint__(tainted) {
     var o = {};
     o[tainted] = 'v';
-    // @witness __test_taint__('hello') => Object.keys(o)[0]='hello' (tainted key)
+    // @witness __test_taint__('hello') => Object.keys(o)[0] = 'hello' tainted
     __assert_taint__(Object.keys(o)[0], true);
 
-    // @witness always Object.keys({p:'v'})[0]='p' (clean key)
+    // @witness always Object.keys({p:'v'})[0] = 'p', clean
     __assert_taint__(Object.keys({p: 'v'})[0], false);
 }
 

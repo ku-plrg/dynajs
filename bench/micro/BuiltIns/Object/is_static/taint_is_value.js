@@ -3,8 +3,9 @@
 // @feature builtin is
 
 function __test_taint__(tainted) {
-    // @witness Object.is returns boolean; tainted args produce no tainted boolean
+    // @witness boolean result, clean
     __assert_taint__(Object.is(tainted, tainted), false);
+    // @witness boolean result, clean
     __assert_taint__(Object.is(tainted, 'other'), false);
 }
 

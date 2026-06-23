@@ -4,8 +4,9 @@
 
 function __test_taint__(tainted) {
     var a = [tainted, "b", "c"];
-    // @witness some() returns a boolean => clean even with tainted "x"
+    // @witness boolean result, clean
     __assert_taint__(a.some(function (v) { return v === "hello"; }), false);
+    // @witness boolean result, clean
     __assert_taint__(a.some(function (v) { return v === "z"; }), false);
 }
 
