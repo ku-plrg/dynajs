@@ -11,7 +11,7 @@ export function INTRINSICS_Array_prototype_at ($ : SpecRuntime, $this : Wrapped<
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Wrapped<unknown>));
   var relativeIndex = AO__ToIntegerOrInfinity($, (index as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 107, $.greaterThanEqual(relativeIndex, $.base<number>(0, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 107, $.greaterThanEqual(relativeIndex, $.lit<number>(0))))
   {
     var k = relativeIndex;
   }
@@ -20,9 +20,9 @@ export function INTRINSICS_Array_prototype_at ($ : SpecRuntime, $this : Wrapped<
     var k = $.add((len as Wrapped<number>), (relativeIndex as Wrapped<number>));
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 108, $.lessThan(k, $.base<number>(0, []))) || $.condition(Number.MAX_SAFE_INTEGER - 109, $.greaterThanEqual(k, len)))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 108, $.lessThan(k, $.lit<number>(0))) || $.condition(Number.MAX_SAFE_INTEGER - 109, $.greaterThanEqual(k, len)))
   {
-    return $.base<undefined>(undefined, []);
+    return $.lit<undefined>(undefined);
   }
 
   return AO__Get($, (O as Wrapped<unknown>), (AO__ToString($, (k as Wrapped<unknown>)) as Wrapped<unknown>));

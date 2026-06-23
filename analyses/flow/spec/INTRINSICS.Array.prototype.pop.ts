@@ -11,18 +11,18 @@ import { AO__ToString } from "./AO__ToString.js";
 export function INTRINSICS_Array_prototype_pop ($ : SpecRuntime, $this : Wrapped<unknown>) {
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 175, $.is(len, $.base<number>(0, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 175, $.is(len, $.lit<number>(0))))
   {
-    AO__Set($, (O as Wrapped<unknown>), ($.base<string>("length", []) as Wrapped<unknown>), ($.base<number>(0, []) as Wrapped<unknown>), ($.base<boolean>(true, []) as Wrapped<boolean>));
-    return $.base<undefined>(undefined, []);
+    AO__Set($, (O as Wrapped<unknown>), ($.lit<string>("length") as Wrapped<unknown>), ($.lit<number>(0) as Wrapped<unknown>), ($.lit<boolean>(true) as Wrapped<boolean>));
+    return $.lit<undefined>(undefined);
   }
   else
   {
-    var newLen = $.subtract((len as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>));
+    var newLen = $.subtract((len as Wrapped<number>), ($.lit<number>(1) as Wrapped<number>));
     var index = AO__ToString($, (newLen as Wrapped<unknown>));
     var element = AO__Get($, (O as Wrapped<unknown>), (index as Wrapped<unknown>));
     AO__DeletePropertyOrThrow($, (O as Wrapped<unknown>), (index as Wrapped<unknown>));
-    AO__Set($, (O as Wrapped<unknown>), ($.base<string>("length", []) as Wrapped<unknown>), (newLen as Wrapped<unknown>), ($.base<boolean>(true, []) as Wrapped<boolean>));
+    AO__Set($, (O as Wrapped<unknown>), ($.lit<string>("length") as Wrapped<unknown>), (newLen as Wrapped<unknown>), ($.lit<boolean>(true) as Wrapped<boolean>));
     return element;
   }
 

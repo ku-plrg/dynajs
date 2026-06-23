@@ -9,32 +9,32 @@ import { AO__ToString } from "./AO__ToString.js";
 export function INTRINSICS_Array_prototype_join ($ : SpecRuntime, $this : Wrapped<unknown>, separator : Wrapped<unknown>) {
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 161, $.is(separator, $.base<undefined>(undefined, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 161, $.is(separator, $.lit<undefined>(undefined))))
   {
-    var sep = $.base<string>(",", []);
+    var sep = $.lit<string>(",");
   }
   else
   {
     var sep = AO__ToString($, (separator as Wrapped<unknown>));
   }
 
-  var R = $.base<string>("", []);
-  var k = $.base<number>(0, []);
+  var R = $.lit<string>("");
+  var k = $.lit<number>(0);
   while ($.condition(Number.MAX_SAFE_INTEGER - 162, $.lessThan(k, len)))
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 163, $.greaterThan(k, $.base<number>(0, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 163, $.greaterThan(k, $.lit<number>(0))))
     {
       R = $.concatenate(R, sep);
     }
 
     var element = AO__Get($, (O as Wrapped<unknown>), (AO__ToString($, (k as Wrapped<unknown>)) as Wrapped<unknown>));
-    if (!($.condition(Number.MAX_SAFE_INTEGER - 164, $.is(element, $.base<undefined>(undefined, []))) || $.condition(Number.MAX_SAFE_INTEGER - 165, $.is(element, $.base<null>(null, [])))))
+    if (!($.condition(Number.MAX_SAFE_INTEGER - 164, $.is(element, $.lit<undefined>(undefined))) || $.condition(Number.MAX_SAFE_INTEGER - 165, $.is(element, $.lit<null>(null)))))
     {
       var S = AO__ToString($, (element as Wrapped<unknown>));
       R = $.concatenate(R, S);
     }
 
-    k = $.add((k as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>));
+    k = $.add((k as Wrapped<number>), ($.lit<number>(1) as Wrapped<number>));
   }
 
   return R;

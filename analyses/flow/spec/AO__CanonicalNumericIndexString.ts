@@ -5,9 +5,9 @@ import { AO__ToNumber } from "./AO__ToNumber.js";
 import { AO__ToString } from "./AO__ToString.js";
 
 export function AO__CanonicalNumericIndexString ($ : SpecRuntime, argument : Wrapped<string>) {
-  if ($.condition(Number.MAX_SAFE_INTEGER - 10, $.is(argument, $.base<string>("-0", []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 10, $.is(argument, $.lit<string>("-0"))))
   {
-    return $.base<number>(0, []);
+    return $.lit<number>(0);
   }
 
   var n = AO__ToNumber($, (argument as Wrapped<unknown>));
@@ -16,5 +16,5 @@ export function AO__CanonicalNumericIndexString ($ : SpecRuntime, argument : Wra
     return n;
   }
 
-  return $.base<undefined>(undefined, []);
+  return $.lit<undefined>(undefined);
 }

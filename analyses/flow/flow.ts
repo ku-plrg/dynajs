@@ -708,6 +708,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     get undef(): Wrapped<undefined> {
       return this.base(undefined, []);
     },
+    lit: <T extends Unwrapped | Primitive>(v: T) => this.$.base(v, []),
   } satisfies SpecRuntime;
 
   literal(_id: number, value: unknown) {

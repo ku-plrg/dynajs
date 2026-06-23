@@ -15,26 +15,26 @@ export function AO__SerializeJSONObject ($ : SpecRuntime, state : Wrapped<unknow
   $.append(state["Stack" /* TODO INTERNAL : internal access */], value)
   var stepBack = state["Indent" /* TODO INTERNAL : internal access */];
   state["Indent" /* TODO INTERNAL : internal access */] = $.concatenate(state["Indent" /* TODO INTERNAL : internal access */], state["Gap" /* TODO INTERNAL : internal access */]);
-  if (!$.condition(Number.MAX_SAFE_INTEGER - 656, $.is(state["PropertyList" /* TODO INTERNAL : internal access */], $.base<undefined>(undefined, []))))
+  if (!$.condition(Number.MAX_SAFE_INTEGER - 656, $.is(state["PropertyList" /* TODO INTERNAL : internal access */], $.lit<undefined>(undefined))))
   {
     var K = state["PropertyList" /* TODO INTERNAL : internal access */];
   }
   else
   {
-    var K = AO__EnumerableOwnProperties($, (value as Wrapped<unknown>), ($.base<string>("key", []) as Wrapped<unknown>));
+    var K = AO__EnumerableOwnProperties($, (value as Wrapped<unknown>), ($.lit<string>("key") as Wrapped<unknown>));
   }
 
   var partial = [] as Wrapped<never>[];
   for (var P of K)
   {
     var strP = AO__SerializeJSONProperty($, (state as Wrapped<unknown>), (P as Wrapped<string>), (value as Wrapped<unknown>));
-    if (!$.condition(Number.MAX_SAFE_INTEGER - 657, $.is(strP, $.base<undefined>(undefined, []))))
+    if (!$.condition(Number.MAX_SAFE_INTEGER - 657, $.is(strP, $.lit<undefined>(undefined))))
     {
       var member = AO__QuoteJSONString($, (P as Wrapped<string>));
-      member = $.concatenate(member, $.base<string>(":", []));
-      if (!$.condition(Number.MAX_SAFE_INTEGER - 658, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.base<string>("", []))))
+      member = $.concatenate(member, $.lit<string>(":"));
+      if (!$.condition(Number.MAX_SAFE_INTEGER - 658, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.lit<string>(""))))
       {
-        member = $.concatenate(member, $.base<string>(" ", []));
+        member = $.concatenate(member, $.lit<string>(" "));
       }
 
       member = $.concatenate(member, strP);
@@ -45,20 +45,20 @@ export function AO__SerializeJSONObject ($ : SpecRuntime, state : Wrapped<unknow
 
   if ((partial.length === 0))
   {
-    var final = $.base<string>("{}", []);
+    var final = $.lit<string>("{}");
   }
   else
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 659, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.base<string>("", []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 659, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.lit<string>(""))))
     {
       var properties = (partial as Wrapped<string>[]).reduce((a, b) => $.concatenate(a, $.concatenate($.base<string>(",", []), b)));
-      var final = $.concatenate($.concatenate($.base<string>("{", []), properties), $.base<string>("}", []));
+      var final = $.concatenate($.concatenate($.lit<string>("{"), properties), $.lit<string>("}"));
     }
     else
     {
-      var separator = $.concatenate($.concatenate($.base<string>(",", []), $.base<string>("\n", [])), state["Indent" /* TODO INTERNAL : internal access */]);
+      var separator = $.concatenate($.concatenate($.lit<string>(","), $.lit<string>("\n")), state["Indent" /* TODO INTERNAL : internal access */]);
       var properties = (partial as Wrapped<string>[]).reduce((a, b) => $.concatenate(a, $.concatenate(separator, b)));
-      var final = $.concatenate($.concatenate($.concatenate($.concatenate($.concatenate($.concatenate($.base<string>("{", []), $.base<string>("\n", [])), state["Indent" /* TODO INTERNAL : internal access */]), properties), $.base<string>("\n", [])), stepBack), $.base<string>("}", []));
+      var final = $.concatenate($.concatenate($.concatenate($.concatenate($.concatenate($.concatenate($.lit<string>("{"), $.lit<string>("\n")), state["Indent" /* TODO INTERNAL : internal access */]), properties), $.lit<string>("\n")), stepBack), $.lit<string>("}"));
     }
 
   }

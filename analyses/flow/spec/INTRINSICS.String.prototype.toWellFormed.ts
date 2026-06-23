@@ -10,14 +10,14 @@ export function INTRINSICS_String_prototype_toWellFormed ($ : SpecRuntime, $this
   var O = AO__RequireObjectCoercible($, $this);
   var S = AO__ToString($, (O as Wrapped<unknown>));
   var strLen = $.length(S);
-  var k = $.base<number>(0, []);
-  var result = $.base<string>("", []);
+  var k = $.lit<number>(0);
+  var result = $.lit<string>("");
   while ($.condition(Number.MAX_SAFE_INTEGER - 469, $.lessThan(k, strLen)))
   {
     var cp = AO__CodePointAt($, (S as Wrapped<string>), (k as Wrapped<number>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 470, $.is(cp["IsUnpairedSurrogate" /* TODO INTERNAL : internal access */], $.base<boolean>(true, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 470, $.is(cp["IsUnpairedSurrogate" /* TODO INTERNAL : internal access */], $.lit<boolean>(true))))
     {
-      result = $.concatenate(result, $.base<string>("�", []));
+      result = $.concatenate(result, $.lit<string>("�"));
     }
     else
     {

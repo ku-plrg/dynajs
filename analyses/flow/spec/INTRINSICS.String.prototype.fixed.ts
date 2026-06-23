@@ -5,5 +5,5 @@ import { AO__CreateHTML } from "./AO__CreateHTML.js";
 
 export function INTRINSICS_String_prototype_fixed ($ : SpecRuntime, $this : Wrapped<unknown>) {
   var S = $this;
-  return AO__CreateHTML($, (S as Wrapped<unknown>), ($.base<string>("tt", []) as Wrapped<string>), ($.base<string>("", []) as Wrapped<string>), ($.base<string>("", []) as Wrapped<unknown>));
+  return AO__CreateHTML($, (S as Wrapped<unknown>), ($.lit<string>("tt") as Wrapped<string>), ($.lit<string>("") as Wrapped<string>), ($.lit<string>("") as Wrapped<unknown>));
 }

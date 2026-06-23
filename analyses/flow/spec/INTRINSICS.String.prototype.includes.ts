@@ -11,7 +11,7 @@ export function INTRINSICS_String_prototype_includes ($ : SpecRuntime, $this : W
   var O = AO__RequireObjectCoercible($, $this);
   var S = AO__ToString($, (O as Wrapped<unknown>));
   var isRegExp = AO__IsRegExp($, (searchString as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 406, $.is(isRegExp, $.base<boolean>(true, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 406, $.is(isRegExp, $.lit<boolean>(true))))
   {
     throw new TypeError;
   }
@@ -19,12 +19,12 @@ export function INTRINSICS_String_prototype_includes ($ : SpecRuntime, $this : W
   var searchStr = AO__ToString($, (searchString as Wrapped<unknown>));
   var pos = AO__ToIntegerOrInfinity($, (position as Wrapped<unknown>));
   var len = $.length(S);
-  var start = $.clamp(pos, $.base<number>(0, []), len);
+  var start = $.clamp(pos, $.lit<number>(0), len);
   var index = AO__StringIndexOf($, (S as Wrapped<string>), (searchStr as Wrapped<string>), (start as Wrapped<number>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 407, $.is(index, $.base<string>("not-found", []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 407, $.is(index, $.lit<string>("not-found"))))
   {
-    return $.base<boolean>(false, []);
+    return $.lit<boolean>(false);
   }
 
-  return $.base<boolean>(true, []);
+  return $.lit<boolean>(true);
 }

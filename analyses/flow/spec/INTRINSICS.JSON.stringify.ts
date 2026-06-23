@@ -15,28 +15,28 @@ import { AO__ToString } from "./AO__ToString.js";
 
 export function INTRINSICS_JSON_stringify ($ : SpecRuntime, $this : Wrapped<unknown>, value : Wrapped<unknown>, replacer : Wrapped<unknown> = $.undef, space : Wrapped<unknown> = $.undef) {
   var stack = [] as Wrapped<never>[];
-  var indent = $.base<string>("", []);
-  var PropertyList = $.base<undefined>(undefined, []);
-  var ReplacerFunction = $.base<undefined>(undefined, []);
+  var indent = $.lit<string>("");
+  var PropertyList = $.lit<undefined>(undefined);
+  var ReplacerFunction = $.lit<undefined>(undefined);
   if (($.condition(Number.MAX_SAFE_INTEGER - 255, $.isType(replacer, "object"))))
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 256, $.is(AO__IsCallable($, (replacer as Wrapped<unknown>)), $.base<boolean>(true, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 256, $.is(AO__IsCallable($, (replacer as Wrapped<unknown>)), $.lit<boolean>(true))))
     {
       ReplacerFunction = replacer;
     }
     else
     {
       var isArray = AO__IsArray($, (replacer as Wrapped<unknown>));
-      if ($.condition(Number.MAX_SAFE_INTEGER - 257, $.is(isArray, $.base<boolean>(true, []))))
+      if ($.condition(Number.MAX_SAFE_INTEGER - 257, $.is(isArray, $.lit<boolean>(true))))
       {
         PropertyList = [] as Wrapped<never>[];
         var len = AO__LengthOfArrayLike($, (replacer as Wrapped<unknown>));
-        var k = $.base<number>(0, []);
+        var k = $.lit<number>(0);
         while ($.condition(Number.MAX_SAFE_INTEGER - 258, $.lessThan(k, len)))
         {
           var prop = AO__ToString($, (k as Wrapped<unknown>));
           var v = AO__Get($, (replacer as Wrapped<unknown>), (prop as Wrapped<unknown>));
-          var item = $.base<undefined>(undefined, []);
+          var item = $.lit<undefined>(undefined);
           if (($.condition(Number.MAX_SAFE_INTEGER - 259, $.isType(v, "string"))))
           {
             item = v;
@@ -58,12 +58,12 @@ export function INTRINSICS_JSON_stringify ($ : SpecRuntime, $this : Wrapped<unkn
 
           }
 
-          if (!$.condition(Number.MAX_SAFE_INTEGER - 262, $.is(item, $.base<undefined>(undefined, []))) && !$.contains(PropertyList, item))
+          if (!$.condition(Number.MAX_SAFE_INTEGER - 262, $.is(item, $.lit<undefined>(undefined))) && !$.contains(PropertyList, item))
           {
             $.append(PropertyList, item)
           }
 
-          k = $.add((k as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>));
+          k = $.add((k as Wrapped<number>), ($.lit<number>(1) as Wrapped<number>));
         }
 
       }
@@ -92,10 +92,10 @@ export function INTRINSICS_JSON_stringify ($ : SpecRuntime, $this : Wrapped<unkn
   if (($.condition(Number.MAX_SAFE_INTEGER - 264, $.isType(space, "number"))))
   {
     var spaceMV = AO__ToIntegerOrInfinity($, (space as Wrapped<unknown>));
-    spaceMV = $.min($.base<number>(10, []), spaceMV);
-    if ($.condition(Number.MAX_SAFE_INTEGER - 265, $.lessThan(spaceMV, $.base<number>(1, []))))
+    spaceMV = $.min($.lit<number>(10), spaceMV);
+    if ($.condition(Number.MAX_SAFE_INTEGER - 265, $.lessThan(spaceMV, $.lit<number>(1))))
     {
-      var gap = $.base<string>("", []);
+      var gap = $.lit<string>("");
     }
     else
     {
@@ -107,25 +107,25 @@ export function INTRINSICS_JSON_stringify ($ : SpecRuntime, $this : Wrapped<unkn
   {
     if (($.condition(Number.MAX_SAFE_INTEGER - 266, $.isType(space, "string"))))
     {
-      if ($.condition(Number.MAX_SAFE_INTEGER - 267, $.lessThanEqual($.length(space), $.base<number>(10, []))))
+      if ($.condition(Number.MAX_SAFE_INTEGER - 267, $.lessThanEqual($.length(space), $.lit<number>(10))))
       {
         var gap = space;
       }
       else
       {
-        var gap = $.substring(space, ($.base<number>(0, []) as Wrapped<number>), ($.base<number>(10, []) as Wrapped<number>));
+        var gap = $.substring(space, ($.lit<number>(0) as Wrapped<number>), ($.lit<number>(10) as Wrapped<number>));
       }
 
     }
     else
     {
-      var gap = $.base<string>("", []);
+      var gap = $.lit<string>("");
     }
 
   }
 
   var wrapper = AO__OrdinaryObjectCreate($, (Object.prototype as Wrapped<unknown>));
-  AO__CreateDataPropertyOrThrow($, (wrapper as Wrapped<unknown>), ($.base<string>("", []) as Wrapped<unknown>), (value as Wrapped<unknown>));
+  AO__CreateDataPropertyOrThrow($, (wrapper as Wrapped<unknown>), ($.lit<string>("") as Wrapped<unknown>), (value as Wrapped<unknown>));
   var state = {"ReplacerFunction": ReplacerFunction, "Stack": stack, "Indent": indent, "Gap": gap, "PropertyList": PropertyList};
-  return AO__SerializeJSONProperty($, (state as Wrapped<unknown>), ($.base<string>("", []) as Wrapped<string>), (wrapper as Wrapped<unknown>));
+  return AO__SerializeJSONProperty($, (state as Wrapped<unknown>), ($.lit<string>("") as Wrapped<string>), (wrapper as Wrapped<unknown>));
 }

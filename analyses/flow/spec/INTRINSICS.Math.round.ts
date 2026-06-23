@@ -10,14 +10,14 @@ export function INTRINSICS_Math_round ($ : SpecRuntime, $this : Wrapped<unknown>
     return n;
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 297, $.lessThan(n, $.base<number>(0.5, []))) && $.condition(Number.MAX_SAFE_INTEGER - 298, $.greaterThan(n, $.base<number>(0, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 297, $.lessThan(n, $.lit<number>(0.5))) && $.condition(Number.MAX_SAFE_INTEGER - 298, $.greaterThan(n, $.lit<number>(0))))
   {
-    return $.base<number>(0, []);
+    return $.lit<number>(0);
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 299, $.lessThan(n, $.base<number>(0, []))) && $.condition(Number.MAX_SAFE_INTEGER - 300, $.greaterThanEqual(n, $.base<number>(-0.5, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 299, $.lessThan(n, $.lit<number>(0))) && $.condition(Number.MAX_SAFE_INTEGER - 300, $.greaterThanEqual(n, $.lit<number>(-0.5))))
   {
-    return $.base<number>(0, []);
+    return $.lit<number>(0);
   }
 
   return $.round(n);

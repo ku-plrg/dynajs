@@ -17,15 +17,15 @@ export function AO__SerializeJSONProperty ($ : SpecRuntime, state : Wrapped<unkn
   var value = AO__Get($, (holder as Wrapped<unknown>), (key as Wrapped<unknown>));
   if (($.condition(Number.MAX_SAFE_INTEGER - 660, $.isType(value, "object"))) || ($.condition(Number.MAX_SAFE_INTEGER - 661, $.isType(value, "bigint"))))
   {
-    var toJSON = AO__GetV($, (value as Wrapped<unknown>), ($.base<string>("toJSON", []) as Wrapped<unknown>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 662, $.is(AO__IsCallable($, (toJSON as Wrapped<unknown>)), $.base<boolean>(true, []))))
+    var toJSON = AO__GetV($, (value as Wrapped<unknown>), ($.lit<string>("toJSON") as Wrapped<unknown>));
+    if ($.condition(Number.MAX_SAFE_INTEGER - 662, $.is(AO__IsCallable($, (toJSON as Wrapped<unknown>)), $.lit<boolean>(true))))
     {
       value = AO__Call($, (toJSON as Wrapped<unknown>), (value as Wrapped<unknown>), ([key] as Wrapped<unknown>[]));
     }
 
   }
 
-  if (!$.condition(Number.MAX_SAFE_INTEGER - 663, $.is(state["ReplacerFunction" /* TODO INTERNAL : internal access */], $.base<undefined>(undefined, []))))
+  if (!$.condition(Number.MAX_SAFE_INTEGER - 663, $.is(state["ReplacerFunction" /* TODO INTERNAL : internal access */], $.lit<undefined>(undefined))))
   {
     value = AO__Call($, (state["ReplacerFunction" /* TODO INTERNAL : internal access */] as Wrapped<unknown>), (holder as Wrapped<unknown>), ([key, value] as Wrapped<unknown>[]));
   }
@@ -63,19 +63,19 @@ export function AO__SerializeJSONProperty ($ : SpecRuntime, state : Wrapped<unkn
 
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 665, $.is(value, $.base<null>(null, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 665, $.is(value, $.lit<null>(null))))
   {
-    return $.base<string>("null", []);
+    return $.lit<string>("null");
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 666, $.is(value, $.base<boolean>(true, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 666, $.is(value, $.lit<boolean>(true))))
   {
-    return $.base<string>("true", []);
+    return $.lit<string>("true");
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 667, $.is(value, $.base<boolean>(false, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 667, $.is(value, $.lit<boolean>(false))))
   {
-    return $.base<string>("false", []);
+    return $.lit<string>("false");
   }
 
   if (($.condition(Number.MAX_SAFE_INTEGER - 668, $.isType(value, "string"))))
@@ -90,7 +90,7 @@ export function AO__SerializeJSONProperty ($ : SpecRuntime, state : Wrapped<unkn
       return AO__ToString($, (value as Wrapped<unknown>));
     }
 
-    return $.base<string>("null", []);
+    return $.lit<string>("null");
   }
 
   if (($.condition(Number.MAX_SAFE_INTEGER - 671, $.isType(value, "bigint"))))
@@ -98,10 +98,10 @@ export function AO__SerializeJSONProperty ($ : SpecRuntime, state : Wrapped<unkn
     throw new TypeError;
   }
 
-  if (($.condition(Number.MAX_SAFE_INTEGER - 672, $.isType(value, "object"))) && $.condition(Number.MAX_SAFE_INTEGER - 673, $.is(AO__IsCallable($, (value as Wrapped<unknown>)), $.base<boolean>(false, []))))
+  if (($.condition(Number.MAX_SAFE_INTEGER - 672, $.isType(value, "object"))) && $.condition(Number.MAX_SAFE_INTEGER - 673, $.is(AO__IsCallable($, (value as Wrapped<unknown>)), $.lit<boolean>(false))))
   {
     var isArray = AO__IsArray($, (value as Wrapped<unknown>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 674, $.is(isArray, $.base<boolean>(true, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 674, $.is(isArray, $.lit<boolean>(true))))
     {
       return AO__SerializeJSONArray($, (state as Wrapped<unknown>), (value as Wrapped<unknown>));
     }
@@ -109,5 +109,5 @@ export function AO__SerializeJSONProperty ($ : SpecRuntime, state : Wrapped<unkn
     return AO__SerializeJSONObject($, (state as Wrapped<unknown>), (value as Wrapped<unknown>));
   }
 
-  return $.base<undefined>(undefined, []);
+  return $.lit<undefined>(undefined);
 }

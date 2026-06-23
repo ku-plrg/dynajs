@@ -10,7 +10,7 @@ export function INTRINSICS_String_prototype_substring ($ : SpecRuntime, $this : 
   var S = AO__ToString($, (O as Wrapped<unknown>));
   var len = $.length(S);
   var intStart = AO__ToIntegerOrInfinity($, (start as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 468, $.is(end, $.base<undefined>(undefined, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 468, $.is(end, $.lit<undefined>(undefined))))
   {
     var intEnd = len;
   }
@@ -19,8 +19,8 @@ export function INTRINSICS_String_prototype_substring ($ : SpecRuntime, $this : 
     var intEnd = AO__ToIntegerOrInfinity($, (end as Wrapped<unknown>));
   }
 
-  var finalStart = $.clamp(intStart, $.base<number>(0, []), len);
-  var finalEnd = $.clamp(intEnd, $.base<number>(0, []), len);
+  var finalStart = $.clamp(intStart, $.lit<number>(0), len);
+  var finalEnd = $.clamp(intEnd, $.lit<number>(0), len);
   var from = $.min(finalStart, finalEnd);
   var to = $.max(finalStart, finalEnd);
   return $.substring(S, (from as Wrapped<number>), (to as Wrapped<number>));

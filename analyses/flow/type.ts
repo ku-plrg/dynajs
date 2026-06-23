@@ -157,4 +157,5 @@ interface RangeOps {
 export interface SpecRuntime extends SpecOps {
   // constant
   undef: Wrapped<undefined>;
+  lit: <T extends Unwrapped | Primitive>(v: T) => Wrapped<T>;
 }

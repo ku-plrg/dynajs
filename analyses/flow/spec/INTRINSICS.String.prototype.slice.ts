@@ -10,15 +10,15 @@ export function INTRINSICS_String_prototype_slice ($ : SpecRuntime, $this : Wrap
   var S = AO__ToString($, (O as Wrapped<unknown>));
   var len = $.length(S);
   var intStart = AO__ToIntegerOrInfinity($, (start as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 444, $.is(intStart, $.base<number>(-Infinity, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 444, $.is(intStart, $.lit<number>(-Infinity))))
   {
-    var from = $.base<number>(0, []);
+    var from = $.lit<number>(0);
   }
   else
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 445, $.lessThan(intStart, $.base<number>(0, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 445, $.lessThan(intStart, $.lit<number>(0))))
     {
-      var from = $.max($.add((len as Wrapped<number>), (intStart as Wrapped<number>)), $.base<number>(0, []));
+      var from = $.max($.add((len as Wrapped<number>), (intStart as Wrapped<number>)), $.lit<number>(0));
     }
     else
     {
@@ -27,7 +27,7 @@ export function INTRINSICS_String_prototype_slice ($ : SpecRuntime, $this : Wrap
 
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 446, $.is(end, $.base<undefined>(undefined, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 446, $.is(end, $.lit<undefined>(undefined))))
   {
     var intEnd = len;
   }
@@ -36,15 +36,15 @@ export function INTRINSICS_String_prototype_slice ($ : SpecRuntime, $this : Wrap
     var intEnd = AO__ToIntegerOrInfinity($, (end as Wrapped<unknown>));
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 447, $.is(intEnd, $.base<number>(-Infinity, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 447, $.is(intEnd, $.lit<number>(-Infinity))))
   {
-    var to = $.base<number>(0, []);
+    var to = $.lit<number>(0);
   }
   else
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 448, $.lessThan(intEnd, $.base<number>(0, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 448, $.lessThan(intEnd, $.lit<number>(0))))
     {
-      var to = $.max($.add((len as Wrapped<number>), (intEnd as Wrapped<number>)), $.base<number>(0, []));
+      var to = $.max($.add((len as Wrapped<number>), (intEnd as Wrapped<number>)), $.lit<number>(0));
     }
     else
     {
@@ -55,7 +55,7 @@ export function INTRINSICS_String_prototype_slice ($ : SpecRuntime, $this : Wrap
 
   if ($.condition(Number.MAX_SAFE_INTEGER - 449, $.greaterThanEqual(from, to)))
   {
-    return $.base<string>("", []);
+    return $.lit<string>("");
   }
 
   return $.substring(S, (from as Wrapped<number>), (to as Wrapped<number>));

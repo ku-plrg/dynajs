@@ -14,9 +14,9 @@ export function AO__StringPaddingBuiltinsImpl ($ : SpecRuntime, O : Wrapped<unkn
     return S;
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 703, $.is(fillString, $.base<undefined>(undefined, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 703, $.is(fillString, $.lit<undefined>(undefined))))
   {
-    fillString = $.base<string>(" ", []);
+    fillString = $.lit<string>(" ");
   }
   else
   {

@@ -12,11 +12,11 @@ export function INTRINSICS_String_prototype_indexOf ($ : SpecRuntime, $this : Wr
   var searchStr = AO__ToString($, (searchString as Wrapped<unknown>));
   var pos = AO__ToIntegerOrInfinity($, (position as Wrapped<unknown>));
   var len = $.length(S);
-  var start = $.clamp(pos, $.base<number>(0, []), len);
+  var start = $.clamp(pos, $.lit<number>(0), len);
   var result = AO__StringIndexOf($, (S as Wrapped<string>), (searchStr as Wrapped<string>), (start as Wrapped<number>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 408, $.is(result, $.base<string>("not-found", []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 408, $.is(result, $.lit<string>("not-found"))))
   {
-    return $.base<number>(-1, []);
+    return $.lit<number>(-1);
   }
 
   return result;

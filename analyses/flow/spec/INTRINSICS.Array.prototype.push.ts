@@ -10,17 +10,17 @@ export function INTRINSICS_Array_prototype_push ($ : SpecRuntime, $this : Wrappe
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Wrapped<unknown>));
   var argCount = $.base<number>(items.length, []);
-  if ($.condition(Number.MAX_SAFE_INTEGER - 176, $.greaterThan($.add((len as Wrapped<number>), (argCount as Wrapped<number>)), $.subtract(($.exponentiate($.base<number>(2, []), $.base<number>(53, [])) as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>)))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 176, $.greaterThan($.add((len as Wrapped<number>), (argCount as Wrapped<number>)), $.subtract(($.exponentiate($.lit<number>(2), $.lit<number>(53)) as Wrapped<number>), ($.lit<number>(1) as Wrapped<number>)))))
   {
     throw new TypeError;
   }
 
   for (var E of items)
   {
-    AO__Set($, (O as Wrapped<unknown>), (AO__ToString($, (len as Wrapped<unknown>)) as Wrapped<unknown>), (E as Wrapped<unknown>), ($.base<boolean>(true, []) as Wrapped<boolean>));
-    len = $.add((len as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>));
+    AO__Set($, (O as Wrapped<unknown>), (AO__ToString($, (len as Wrapped<unknown>)) as Wrapped<unknown>), (E as Wrapped<unknown>), ($.lit<boolean>(true) as Wrapped<boolean>));
+    len = $.add((len as Wrapped<number>), ($.lit<number>(1) as Wrapped<number>));
   }
 
-  AO__Set($, (O as Wrapped<unknown>), ($.base<string>("length", []) as Wrapped<unknown>), (len as Wrapped<unknown>), ($.base<boolean>(true, []) as Wrapped<boolean>));
+  AO__Set($, (O as Wrapped<unknown>), ($.lit<string>("length") as Wrapped<unknown>), (len as Wrapped<unknown>), ($.lit<boolean>(true) as Wrapped<boolean>));
   return len;
 }

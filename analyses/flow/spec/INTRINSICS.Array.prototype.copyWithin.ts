@@ -14,15 +14,15 @@ export function INTRINSICS_Array_prototype_copyWithin ($ : SpecRuntime, $this : 
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Wrapped<unknown>));
   var relativeTarget = AO__ToIntegerOrInfinity($, (target as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 115, $.is(relativeTarget, $.base<number>(-Infinity, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 115, $.is(relativeTarget, $.lit<number>(-Infinity))))
   {
-    var to = $.base<number>(0, []);
+    var to = $.lit<number>(0);
   }
   else
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 116, $.lessThan(relativeTarget, $.base<number>(0, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 116, $.lessThan(relativeTarget, $.lit<number>(0))))
     {
-      var to = $.max($.add((len as Wrapped<number>), (relativeTarget as Wrapped<number>)), $.base<number>(0, []));
+      var to = $.max($.add((len as Wrapped<number>), (relativeTarget as Wrapped<number>)), $.lit<number>(0));
     }
     else
     {
@@ -32,15 +32,15 @@ export function INTRINSICS_Array_prototype_copyWithin ($ : SpecRuntime, $this : 
   }
 
   var relativeStart = AO__ToIntegerOrInfinity($, (start as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 117, $.is(relativeStart, $.base<number>(-Infinity, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 117, $.is(relativeStart, $.lit<number>(-Infinity))))
   {
-    var from = $.base<number>(0, []);
+    var from = $.lit<number>(0);
   }
   else
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 118, $.lessThan(relativeStart, $.base<number>(0, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 118, $.lessThan(relativeStart, $.lit<number>(0))))
     {
-      var from = $.max($.add((len as Wrapped<number>), (relativeStart as Wrapped<number>)), $.base<number>(0, []));
+      var from = $.max($.add((len as Wrapped<number>), (relativeStart as Wrapped<number>)), $.lit<number>(0));
     }
     else
     {
@@ -49,7 +49,7 @@ export function INTRINSICS_Array_prototype_copyWithin ($ : SpecRuntime, $this : 
 
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 119, $.is(end, $.base<undefined>(undefined, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 119, $.is(end, $.lit<undefined>(undefined))))
   {
     var relativeEnd = len;
   }
@@ -58,15 +58,15 @@ export function INTRINSICS_Array_prototype_copyWithin ($ : SpecRuntime, $this : 
     var relativeEnd = AO__ToIntegerOrInfinity($, (end as Wrapped<unknown>));
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 120, $.is(relativeEnd, $.base<number>(-Infinity, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 120, $.is(relativeEnd, $.lit<number>(-Infinity))))
   {
-    var final = $.base<number>(0, []);
+    var final = $.lit<number>(0);
   }
   else
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 121, $.lessThan(relativeEnd, $.base<number>(0, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 121, $.lessThan(relativeEnd, $.lit<number>(0))))
     {
-      var final = $.max($.add((len as Wrapped<number>), (relativeEnd as Wrapped<number>)), $.base<number>(0, []));
+      var final = $.max($.add((len as Wrapped<number>), (relativeEnd as Wrapped<number>)), $.lit<number>(0));
     }
     else
     {
@@ -78,24 +78,24 @@ export function INTRINSICS_Array_prototype_copyWithin ($ : SpecRuntime, $this : 
   var count = $.min($.subtract((final as Wrapped<number>), (from as Wrapped<number>)), $.subtract((len as Wrapped<number>), (to as Wrapped<number>)));
   if ($.condition(Number.MAX_SAFE_INTEGER - 122, $.lessThan(from, to)) && $.condition(Number.MAX_SAFE_INTEGER - 123, $.lessThan(to, $.add((from as Wrapped<number>), (count as Wrapped<number>)))))
   {
-    var direction = $.negate(($.base<number>(1, []) as Wrapped<number>));
-    from = $.subtract(($.add((from as Wrapped<number>), (count as Wrapped<number>)) as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>));
-    to = $.subtract(($.add((to as Wrapped<number>), (count as Wrapped<number>)) as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>));
+    var direction = $.negate(($.lit<number>(1) as Wrapped<number>));
+    from = $.subtract(($.add((from as Wrapped<number>), (count as Wrapped<number>)) as Wrapped<number>), ($.lit<number>(1) as Wrapped<number>));
+    to = $.subtract(($.add((to as Wrapped<number>), (count as Wrapped<number>)) as Wrapped<number>), ($.lit<number>(1) as Wrapped<number>));
   }
   else
   {
-    var direction = $.base<number>(1, []);
+    var direction = $.lit<number>(1);
   }
 
-  while ($.condition(Number.MAX_SAFE_INTEGER - 124, $.greaterThan(count, $.base<number>(0, []))))
+  while ($.condition(Number.MAX_SAFE_INTEGER - 124, $.greaterThan(count, $.lit<number>(0))))
   {
     var fromKey = AO__ToString($, (from as Wrapped<unknown>));
     var toKey = AO__ToString($, (to as Wrapped<unknown>));
     var fromPresent = AO__HasProperty($, (O as Wrapped<unknown>), (fromKey as Wrapped<unknown>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 125, $.is(fromPresent, $.base<boolean>(true, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 125, $.is(fromPresent, $.lit<boolean>(true))))
     {
       var fromValue = AO__Get($, (O as Wrapped<unknown>), (fromKey as Wrapped<unknown>));
-      AO__Set($, (O as Wrapped<unknown>), (toKey as Wrapped<unknown>), (fromValue as Wrapped<unknown>), ($.base<boolean>(true, []) as Wrapped<boolean>));
+      AO__Set($, (O as Wrapped<unknown>), (toKey as Wrapped<unknown>), (fromValue as Wrapped<unknown>), ($.lit<boolean>(true) as Wrapped<boolean>));
     }
     else
     {
@@ -104,7 +104,7 @@ export function INTRINSICS_Array_prototype_copyWithin ($ : SpecRuntime, $this : 
 
     from = $.add((from as Wrapped<number>), (direction as Wrapped<number>));
     to = $.add((to as Wrapped<number>), (direction as Wrapped<number>));
-    count = $.subtract((count as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>));
+    count = $.subtract((count as Wrapped<number>), ($.lit<number>(1) as Wrapped<number>));
   }
 
   return O;

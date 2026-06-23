@@ -8,6 +8,6 @@ import { AO__ToObject } from "./AO__ToObject.js";
 export function INTRINSICS_Array_prototype_find ($ : SpecRuntime, $this : Wrapped<unknown>, predicate : Wrapped<unknown>, thisArg : Wrapped<unknown> = $.undef) {
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Wrapped<unknown>));
-  var findRec = AO__FindViaPredicate($, (O as Wrapped<unknown>), (len as Wrapped<number>), ($.base<string>("ascending", []) as Wrapped<unknown>), (predicate as Wrapped<unknown>), (thisArg as Wrapped<unknown>));
+  var findRec = AO__FindViaPredicate($, (O as Wrapped<unknown>), (len as Wrapped<number>), ($.lit<string>("ascending") as Wrapped<unknown>), (predicate as Wrapped<unknown>), (thisArg as Wrapped<unknown>));
   return findRec["Value" /* TODO INTERNAL : internal access */];
 }

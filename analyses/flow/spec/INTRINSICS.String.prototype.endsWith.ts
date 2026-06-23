@@ -10,14 +10,14 @@ export function INTRINSICS_String_prototype_endsWith ($ : SpecRuntime, $this : W
   var O = AO__RequireObjectCoercible($, $this);
   var S = AO__ToString($, (O as Wrapped<unknown>));
   var isRegExp = AO__IsRegExp($, (searchString as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 401, $.is(isRegExp, $.base<boolean>(true, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 401, $.is(isRegExp, $.lit<boolean>(true))))
   {
     throw new TypeError;
   }
 
   var searchStr = AO__ToString($, (searchString as Wrapped<unknown>));
   var len = $.length(S);
-  if ($.condition(Number.MAX_SAFE_INTEGER - 402, $.is(endPosition, $.base<undefined>(undefined, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 402, $.is(endPosition, $.lit<undefined>(undefined))))
   {
     var pos = len;
   }
@@ -26,24 +26,24 @@ export function INTRINSICS_String_prototype_endsWith ($ : SpecRuntime, $this : W
     var pos = AO__ToIntegerOrInfinity($, (endPosition as Wrapped<unknown>));
   }
 
-  var end = $.clamp(pos, $.base<number>(0, []), len);
+  var end = $.clamp(pos, $.lit<number>(0), len);
   var searchLength = $.length(searchStr);
-  if ($.condition(Number.MAX_SAFE_INTEGER - 403, $.is(searchLength, $.base<number>(0, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 403, $.is(searchLength, $.lit<number>(0))))
   {
-    return $.base<boolean>(true, []);
+    return $.lit<boolean>(true);
   }
 
   var start = $.subtract((end as Wrapped<number>), (searchLength as Wrapped<number>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 404, $.lessThan(start, $.base<number>(0, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 404, $.lessThan(start, $.lit<number>(0))))
   {
-    return $.base<boolean>(false, []);
+    return $.lit<boolean>(false);
   }
 
   var substring = $.substring(S, (start as Wrapped<number>), (end as Wrapped<number>));
   if ($.condition(Number.MAX_SAFE_INTEGER - 405, $.is(substring, searchStr)))
   {
-    return $.base<boolean>(true, []);
+    return $.lit<boolean>(true);
   }
 
-  return $.base<boolean>(false, []);
+  return $.lit<boolean>(false);
 }

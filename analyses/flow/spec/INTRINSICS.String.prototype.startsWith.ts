@@ -10,40 +10,40 @@ export function INTRINSICS_String_prototype_startsWith ($ : SpecRuntime, $this :
   var O = AO__RequireObjectCoercible($, $this);
   var S = AO__ToString($, (O as Wrapped<unknown>));
   var isRegExp = AO__IsRegExp($, (searchString as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 460, $.is(isRegExp, $.base<boolean>(true, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 460, $.is(isRegExp, $.lit<boolean>(true))))
   {
     throw new TypeError;
   }
 
   var searchStr = AO__ToString($, (searchString as Wrapped<unknown>));
   var len = $.length(S);
-  if ($.condition(Number.MAX_SAFE_INTEGER - 461, $.is(position, $.base<undefined>(undefined, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 461, $.is(position, $.lit<undefined>(undefined))))
   {
-    var pos = $.base<number>(0, []);
+    var pos = $.lit<number>(0);
   }
   else
   {
     var pos = AO__ToIntegerOrInfinity($, (position as Wrapped<unknown>));
   }
 
-  var start = $.clamp(pos, $.base<number>(0, []), len);
+  var start = $.clamp(pos, $.lit<number>(0), len);
   var searchLength = $.length(searchStr);
-  if ($.condition(Number.MAX_SAFE_INTEGER - 462, $.is(searchLength, $.base<number>(0, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 462, $.is(searchLength, $.lit<number>(0))))
   {
-    return $.base<boolean>(true, []);
+    return $.lit<boolean>(true);
   }
 
   var end = $.add((start as Wrapped<number>), (searchLength as Wrapped<number>));
   if ($.condition(Number.MAX_SAFE_INTEGER - 463, $.greaterThan(end, len)))
   {
-    return $.base<boolean>(false, []);
+    return $.lit<boolean>(false);
   }
 
   var substring = $.substring(S, (start as Wrapped<number>), (end as Wrapped<number>));
   if ($.condition(Number.MAX_SAFE_INTEGER - 464, $.is(substring, searchStr)))
   {
-    return $.base<boolean>(true, []);
+    return $.lit<boolean>(true);
   }
 
-  return $.base<boolean>(false, []);
+  return $.lit<boolean>(false);
 }

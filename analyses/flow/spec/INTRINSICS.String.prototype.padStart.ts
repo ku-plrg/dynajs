@@ -6,5 +6,5 @@ import { AO__StringPaddingBuiltinsImpl } from "./AO__StringPaddingBuiltinsImpl.j
 
 export function INTRINSICS_String_prototype_padStart ($ : SpecRuntime, $this : Wrapped<unknown>, maxLength : Wrapped<unknown>, fillString : Wrapped<unknown> = $.undef) {
   var O = AO__RequireObjectCoercible($, $this);
-  return AO__StringPaddingBuiltinsImpl($, (O as Wrapped<unknown>), (maxLength as Wrapped<unknown>), (fillString as Wrapped<unknown>), ($.base<string>("start", []) as Wrapped<unknown>));
+  return AO__StringPaddingBuiltinsImpl($, (O as Wrapped<unknown>), (maxLength as Wrapped<unknown>), (fillString as Wrapped<unknown>), ($.lit<string>("start") as Wrapped<unknown>));
 }

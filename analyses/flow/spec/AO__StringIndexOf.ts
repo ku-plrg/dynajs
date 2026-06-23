@@ -3,7 +3,7 @@ import type { Wrapped, SpecRuntime } from "../type.js";
 
 export function AO__StringIndexOf ($ : SpecRuntime, string : Wrapped<string>, searchValue : Wrapped<string>, fromIndex : Wrapped<number>) {
   var len = $.length(string);
-  if ($.condition(Number.MAX_SAFE_INTEGER - 693, $.is(searchValue, $.base<string>("", []))) && $.condition(Number.MAX_SAFE_INTEGER - 694, $.lessThanEqual(fromIndex, len)))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 693, $.is(searchValue, $.lit<string>(""))) && $.condition(Number.MAX_SAFE_INTEGER - 694, $.lessThanEqual(fromIndex, len)))
   {
     return fromIndex;
   }
@@ -19,5 +19,5 @@ export function AO__StringIndexOf ($ : SpecRuntime, string : Wrapped<string>, se
 
   }
 
-  return $.base<string>("not-found", []);
+  return $.lit<string>("not-found");
 }

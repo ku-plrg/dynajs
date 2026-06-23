@@ -5,5 +5,5 @@ import { AO__CreateHTML } from "./AO__CreateHTML.js";
 
 export function INTRINSICS_String_prototype_link ($ : SpecRuntime, $this : Wrapped<unknown>, url : Wrapped<unknown>) {
   var S = $this;
-  return AO__CreateHTML($, (S as Wrapped<unknown>), ($.base<string>("a", []) as Wrapped<string>), ($.base<string>("href", []) as Wrapped<string>), (url as Wrapped<unknown>));
+  return AO__CreateHTML($, (S as Wrapped<unknown>), ($.lit<string>("a") as Wrapped<string>), ($.lit<string>("href") as Wrapped<string>), (url as Wrapped<unknown>));
 }

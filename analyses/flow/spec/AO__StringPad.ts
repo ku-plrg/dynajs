@@ -8,14 +8,14 @@ export function AO__StringPad ($ : SpecRuntime, S : Wrapped<string>, maxLength :
     return S;
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 700, $.is(fillString, $.base<string>("", []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 700, $.is(fillString, $.lit<string>(""))))
   {
     return S;
   }
 
   var fillLen = $.subtract((maxLength as Wrapped<number>), (stringLength as Wrapped<number>));
   var truncatedStringFiller = $.base(String($.peek(fillString)).repeat(Math.ceil($.peek(fillLen) / String($.peek(fillString)).length)).slice(0, $.peek(fillLen)), [fillString, fillLen]);
-  if ($.condition(Number.MAX_SAFE_INTEGER - 701, $.is(placement, $.base<string>("start", []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 701, $.is(placement, $.lit<string>("start"))))
   {
     return $.concatenate(truncatedStringFiller, S);
   }

@@ -14,55 +14,55 @@ export function INTRINSICS_Array_prototype_reduceRight ($ : SpecRuntime, $this :
   var initialValueIsPresent = arguments.length > 3;
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 185, $.is(AO__IsCallable($, (callback as Wrapped<unknown>)), $.base<boolean>(false, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 185, $.is(AO__IsCallable($, (callback as Wrapped<unknown>)), $.lit<boolean>(false))))
   {
     throw new TypeError;
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 186, $.is(len, $.base<number>(0, []))) && !initialValueIsPresent)
+  if ($.condition(Number.MAX_SAFE_INTEGER - 186, $.is(len, $.lit<number>(0))) && !initialValueIsPresent)
   {
     throw new TypeError;
   }
 
-  var k = $.subtract((len as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>));
-  var accumulator = $.base<undefined>(undefined, []);
+  var k = $.subtract((len as Wrapped<number>), ($.lit<number>(1) as Wrapped<number>));
+  var accumulator = $.lit<undefined>(undefined);
   if (initialValueIsPresent)
   {
     accumulator = initialValue;
   }
   else
   {
-    var kPresent = $.base<boolean>(false, []);
-    while ($.condition(Number.MAX_SAFE_INTEGER - 187, $.is(kPresent, $.base<boolean>(false, []))) && $.condition(Number.MAX_SAFE_INTEGER - 188, $.greaterThanEqual(k, $.base<number>(0, []))))
+    var kPresent = $.lit<boolean>(false);
+    while ($.condition(Number.MAX_SAFE_INTEGER - 187, $.is(kPresent, $.lit<boolean>(false))) && $.condition(Number.MAX_SAFE_INTEGER - 188, $.greaterThanEqual(k, $.lit<number>(0))))
     {
       var Pk = AO__ToString($, (k as Wrapped<unknown>));
       kPresent = AO__HasProperty($, (O as Wrapped<unknown>), (Pk as Wrapped<unknown>));
-      if ($.condition(Number.MAX_SAFE_INTEGER - 189, $.is(kPresent, $.base<boolean>(true, []))))
+      if ($.condition(Number.MAX_SAFE_INTEGER - 189, $.is(kPresent, $.lit<boolean>(true))))
       {
         accumulator = AO__Get($, (O as Wrapped<unknown>), (Pk as Wrapped<unknown>));
       }
 
-      k = $.subtract((k as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>));
+      k = $.subtract((k as Wrapped<number>), ($.lit<number>(1) as Wrapped<number>));
     }
 
-    if ($.condition(Number.MAX_SAFE_INTEGER - 190, $.is(kPresent, $.base<boolean>(false, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 190, $.is(kPresent, $.lit<boolean>(false))))
     {
       throw new TypeError;
     }
 
   }
 
-  while ($.condition(Number.MAX_SAFE_INTEGER - 191, $.greaterThanEqual(k, $.base<number>(0, []))))
+  while ($.condition(Number.MAX_SAFE_INTEGER - 191, $.greaterThanEqual(k, $.lit<number>(0))))
   {
     var Pk = AO__ToString($, (k as Wrapped<unknown>));
     var kPresent = AO__HasProperty($, (O as Wrapped<unknown>), (Pk as Wrapped<unknown>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 192, $.is(kPresent, $.base<boolean>(true, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 192, $.is(kPresent, $.lit<boolean>(true))))
     {
       var kValue = AO__Get($, (O as Wrapped<unknown>), (Pk as Wrapped<unknown>));
-      accumulator = AO__Call($, (callback as Wrapped<unknown>), ($.base<undefined>(undefined, []) as Wrapped<unknown>), ([accumulator, kValue, k, O] as Wrapped<unknown>[]));
+      accumulator = AO__Call($, (callback as Wrapped<unknown>), ($.lit<undefined>(undefined) as Wrapped<unknown>), ([accumulator, kValue, k, O] as Wrapped<unknown>[]));
     }
 
-    k = $.subtract((k as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>));
+    k = $.subtract((k as Wrapped<number>), ($.lit<number>(1) as Wrapped<number>));
   }
 
   return accumulator;

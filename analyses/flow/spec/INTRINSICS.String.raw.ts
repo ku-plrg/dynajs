@@ -9,21 +9,21 @@ import { AO__ToString } from "./AO__ToString.js";
 export function INTRINSICS_String_raw ($ : SpecRuntime, $this : Wrapped<unknown>, template : Wrapped<unknown>, ...substitutions : Wrapped<unknown>[]) {
   var substitutionCount = $.base<number>(substitutions.length, []);
   var cooked = AO__ToObject($, template);
-  var literals = AO__ToObject($, AO__Get($, (cooked as Wrapped<unknown>), ($.base<string>("raw", []) as Wrapped<unknown>)));
+  var literals = AO__ToObject($, AO__Get($, (cooked as Wrapped<unknown>), ($.lit<string>("raw") as Wrapped<unknown>)));
   var literalCount = AO__LengthOfArrayLike($, (literals as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 472, $.lessThanEqual(literalCount, $.base<number>(0, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 472, $.lessThanEqual(literalCount, $.lit<number>(0))))
   {
-    return $.base<string>("", []);
+    return $.lit<string>("");
   }
 
-  var R = $.base<string>("", []);
-  var nextIndex = $.base<number>(0, []);
+  var R = $.lit<string>("");
+  var nextIndex = $.lit<number>(0);
   while (true)
   {
     var nextLiteralVal = AO__Get($, (literals as Wrapped<unknown>), (AO__ToString($, (nextIndex as Wrapped<unknown>)) as Wrapped<unknown>));
     var nextLiteral = AO__ToString($, (nextLiteralVal as Wrapped<unknown>));
     R = $.concatenate(R, nextLiteral);
-    if ($.condition(Number.MAX_SAFE_INTEGER - 473, $.is($.add((nextIndex as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>)), literalCount)))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 473, $.is($.add((nextIndex as Wrapped<number>), ($.lit<number>(1) as Wrapped<number>)), literalCount)))
     {
       return R;
     }
@@ -35,7 +35,7 @@ export function INTRINSICS_String_raw ($ : SpecRuntime, $this : Wrapped<unknown>
       R = $.concatenate(R, nextSub);
     }
 
-    nextIndex = $.add((nextIndex as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>));
+    nextIndex = $.add((nextIndex as Wrapped<number>), ($.lit<number>(1) as Wrapped<number>));
   }
 
 }

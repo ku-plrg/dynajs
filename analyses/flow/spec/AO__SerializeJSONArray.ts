@@ -17,38 +17,38 @@ export function AO__SerializeJSONArray ($ : SpecRuntime, state : Wrapped<unknown
   state["Indent" /* TODO INTERNAL : internal access */] = $.concatenate(state["Indent" /* TODO INTERNAL : internal access */], state["Gap" /* TODO INTERNAL : internal access */]);
   var partial = [] as Wrapped<never>[];
   var len = AO__LengthOfArrayLike($, (value as Wrapped<unknown>));
-  var index = $.base<number>(0, []);
+  var index = $.lit<number>(0);
   while ($.condition(Number.MAX_SAFE_INTEGER - 653, $.lessThan(index, len)))
   {
     var strP = AO__SerializeJSONProperty($, (state as Wrapped<unknown>), (AO__ToString($, (index as Wrapped<unknown>)) as Wrapped<string>), (value as Wrapped<unknown>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 654, $.is(strP, $.base<undefined>(undefined, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 654, $.is(strP, $.lit<undefined>(undefined))))
     {
-      $.append(partial, $.base<string>("null", []))
+      $.append(partial, $.lit<string>("null"))
     }
     else
     {
       $.append(partial, strP)
     }
 
-    index = $.add((index as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>));
+    index = $.add((index as Wrapped<number>), ($.lit<number>(1) as Wrapped<number>));
   }
 
   if ((partial.length === 0))
   {
-    var final = $.base<string>("[]", []);
+    var final = $.lit<string>("[]");
   }
   else
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 655, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.base<string>("", []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 655, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.lit<string>(""))))
     {
       var properties = (partial as Wrapped<string>[]).reduce((a, b) => $.concatenate(a, $.concatenate($.base<string>(",", []), b)));
-      var final = $.concatenate($.concatenate($.base<string>("[", []), properties), $.base<string>("]", []));
+      var final = $.concatenate($.concatenate($.lit<string>("["), properties), $.lit<string>("]"));
     }
     else
     {
-      var separator = $.concatenate($.concatenate($.base<string>(",", []), $.base<string>("\n", [])), state["Indent" /* TODO INTERNAL : internal access */]);
+      var separator = $.concatenate($.concatenate($.lit<string>(","), $.lit<string>("\n")), state["Indent" /* TODO INTERNAL : internal access */]);
       var properties = (partial as Wrapped<string>[]).reduce((a, b) => $.concatenate(a, $.concatenate(separator, b)));
-      var final = $.concatenate($.concatenate($.concatenate($.concatenate($.concatenate($.concatenate($.base<string>("[", []), $.base<string>("\n", [])), state["Indent" /* TODO INTERNAL : internal access */]), properties), $.base<string>("\n", [])), stepBack), $.base<string>("]", []));
+      var final = $.concatenate($.concatenate($.concatenate($.concatenate($.concatenate($.concatenate($.lit<string>("["), $.lit<string>("\n")), state["Indent" /* TODO INTERNAL : internal access */]), properties), $.lit<string>("\n")), stepBack), $.lit<string>("]"));
     }
 
   }

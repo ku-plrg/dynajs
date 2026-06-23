@@ -11,15 +11,15 @@ export function INTRINSICS_Array_prototype_fill ($ : SpecRuntime, $this : Wrappe
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Wrapped<unknown>));
   var relativeStart = AO__ToIntegerOrInfinity($, (start as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 130, $.is(relativeStart, $.base<number>(-Infinity, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 130, $.is(relativeStart, $.lit<number>(-Infinity))))
   {
-    var k = $.base<number>(0, []);
+    var k = $.lit<number>(0);
   }
   else
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 131, $.lessThan(relativeStart, $.base<number>(0, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 131, $.lessThan(relativeStart, $.lit<number>(0))))
     {
-      var k = $.max($.add((len as Wrapped<number>), (relativeStart as Wrapped<number>)), $.base<number>(0, []));
+      var k = $.max($.add((len as Wrapped<number>), (relativeStart as Wrapped<number>)), $.lit<number>(0));
     }
     else
     {
@@ -28,7 +28,7 @@ export function INTRINSICS_Array_prototype_fill ($ : SpecRuntime, $this : Wrappe
 
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 132, $.is(end, $.base<undefined>(undefined, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 132, $.is(end, $.lit<undefined>(undefined))))
   {
     var relativeEnd = len;
   }
@@ -37,15 +37,15 @@ export function INTRINSICS_Array_prototype_fill ($ : SpecRuntime, $this : Wrappe
     var relativeEnd = AO__ToIntegerOrInfinity($, (end as Wrapped<unknown>));
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 133, $.is(relativeEnd, $.base<number>(-Infinity, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 133, $.is(relativeEnd, $.lit<number>(-Infinity))))
   {
-    var final = $.base<number>(0, []);
+    var final = $.lit<number>(0);
   }
   else
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 134, $.lessThan(relativeEnd, $.base<number>(0, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 134, $.lessThan(relativeEnd, $.lit<number>(0))))
     {
-      var final = $.max($.add((len as Wrapped<number>), (relativeEnd as Wrapped<number>)), $.base<number>(0, []));
+      var final = $.max($.add((len as Wrapped<number>), (relativeEnd as Wrapped<number>)), $.lit<number>(0));
     }
     else
     {
@@ -57,8 +57,8 @@ export function INTRINSICS_Array_prototype_fill ($ : SpecRuntime, $this : Wrappe
   while ($.condition(Number.MAX_SAFE_INTEGER - 135, $.lessThan(k, final)))
   {
     var Pk = AO__ToString($, (k as Wrapped<unknown>));
-    AO__Set($, (O as Wrapped<unknown>), (Pk as Wrapped<unknown>), (value as Wrapped<unknown>), ($.base<boolean>(true, []) as Wrapped<boolean>));
-    k = $.add((k as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>));
+    AO__Set($, (O as Wrapped<unknown>), (Pk as Wrapped<unknown>), (value as Wrapped<unknown>), ($.lit<boolean>(true) as Wrapped<boolean>));
+    k = $.add((k as Wrapped<number>), ($.lit<number>(1) as Wrapped<number>));
   }
 
   return O;
