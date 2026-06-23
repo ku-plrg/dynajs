@@ -28,6 +28,12 @@
 //   --runner NAME     run only the named runner (repeatable)
 //   --bench NAME      run only benchmarks matching NAME or NAME.js (repeatable)
 //   --dir SUB         run only benches under bench/micro/SUB (repeatable)
+//   --count           print how many benches match (taint counted by assert,
+//                     concolic by file), with a @type/@target/@feature
+//                     breakdown, and exit; no runner, no build, no execution
+//   --lint            check the concolic "exactly 1 assert fires per seeded
+//                     path" invariant; lists over/under-firing files, exits 1
+//                     on any violation; no build, no dynajs
 //   --analysis NAME   analysis dynajs runs with (default: samples/EmptyAnalysis.js)
 //   --reps N          measured iterations per (runner, bench)   (default: 1)
 //   --warmup N        discarded warmup iterations               (default: 0)
@@ -79,7 +85,11 @@ const BASELINE_IMPORT = pathToFileURL(
 
 // Per-assert marker: `@@DJX_VERDICT <actual> <expected>`. The 1st token is the
 // outcome the analyzer computed; the 2nd is the assert's declared ground truth.
-const VERDICT_RE = /@@DJX_VERDICT\s+(detected|clean|error)\s+(detected|clean)\b/g;
+// Two vocabularies share the marker: taint/validity asserts emit detected|clean,
+// SAT-query (`__IS_SAT__`) asserts emit sat|unsat. `error` is an actual-only
+// outcome. classify() treats detected≡sat (positive) and clean≡unsat (negative).
+const VERDICT_RE =
+  /@@DJX_VERDICT\s+(detected|clean|sat|unsat|error)\s+(detected|clean|sat|unsat)\b/g;
 
 // Per-`@type` dynajs configuration. A bench tagged `// @type taint` runs under
 // the analysis + flags listed here — no need to pass them on the CLI.
@@ -184,13 +194,22 @@ const EXPOSE_PRELUDE =
   "globalThis.__symbolic__ = function (name, seed) { return S$.symbol(name, seed); };\n" +
   "globalThis.__symbolic_assert__ = function (cond, expected) {\n" +
   '  return Object._expose.assertSymbolic(cond, expected ? "detected" : "clean");\n' +
+  "};\n" +
+  // `__IS_SAT__(cond, exp)` asks whether `cond` is SAT under the seed PC. ExpoSE's
+  // assertSymbolic solves `PC ∧ ¬arg` (violable when SAT), so pass `!cond`:
+  // violable <=> PC ∧ cond SAT <=> sat; holds <=> unsat. desc carries the sat/unsat
+  // ground truth so cases() pairs each line without re-reading the source.
+  "globalThis.__IS_SAT__ = function (cond, expected) {\n" +
+  '  return Object._expose.assertSymbolic(!cond, expected ? "sat" : "unsat");\n' +
   "};\n";
 // ExpoSE prints this summary line once a target finishes; its presence means the
 // per-assert lines above it are complete (they print in the same done callback,
 // just before it), so cases() trusts the verdict stream only when it's seen.
 const EXPOSE_DONE_RE = /ExpoSE Finished\.\s+\d+ paths,\s+\d+ errors/;
-// One per-assert verdict line: `[!] Assertion violable|holds: <expected>`.
-const EXPOSE_ASSERT_RE = /\[!\] Assertion (violable|holds): (detected|clean)\b/g;
+// One per-assert verdict line: `[!] Assertion violable|holds: <expected>`. The
+// expected token is detected|clean for validity asserts, sat|unsat for IS_SAT.
+const EXPOSE_ASSERT_RE =
+  /\[!\] Assertion (violable|holds): (detected|clean|sat|unsat)\b/g;
 
 // A scratch dir for the prelude-prepended bench copies ExpoSE analyses.
 let exposeDir = null;
@@ -256,7 +275,7 @@ function parseMeta(file) {
 // ground truth when a run crashes before emitting any verdict marker (toCases).
 function assertOracles(file) {
   const src = readFileSync(file, "utf8");
-  const re = /__(?:symbolic_assert|assert_taint)__\s*\(/g;
+  const re = /__(?:symbolic_assert|assert_taint|IS_SAT)__\s*\(/g;
   const out = [];
   let m;
   while ((m = re.exec(src))) {
@@ -315,10 +334,14 @@ function defaultCases(run) {
   return cases;
 }
 
-// expected (detected=positive/clean=negative) x actual -> TP|FP|FN|TN
+// expected (positive/negative) x actual -> TP|FP|FN|TN. Positive = detected (a
+// taint finding) or sat (a satisfying witness); negative = clean or unsat. `error`
+// is never positive, so it scores FN against a positive oracle, FP against a
+// negative one.
 function classify(expected, actual) {
-  if (expected === "detected") return actual === "detected" ? "TP" : "FN"; // clean|error -> FN
-  return actual === "clean" ? "TN" : "FP"; //                  detected|error -> FP
+  const pos = (x) => x === "detected" || x === "sat";
+  if (pos(expected)) return pos(actual) ? "TP" : "FN"; // clean|unsat|error -> FN
+  return actual === "clean" || actual === "unsat" ? "TN" : "FP"; // sat|detected|error -> FP
 }
 
 const ratio = (num, den) => (den === 0 ? null : num / den);
@@ -594,8 +617,16 @@ function makeRunners(opts) {
         const cases = [];
         let m;
         EXPOSE_ASSERT_RE.lastIndex = 0;
-        while ((m = EXPOSE_ASSERT_RE.exec(text)))
-          cases.push({ actual: m[1] === "violable" ? "clean" : "detected", expected: m[2] });
+        while ((m = EXPOSE_ASSERT_RE.exec(text))) {
+          const expected = m[2];
+          // IS_SAT asserts (sat/unsat oracle) pass `!cond`, so violable <=> sat;
+          // validity asserts (detected/clean) keep violable <=> clean.
+          const satVocab = expected === "sat" || expected === "unsat";
+          const actual = satVocab
+            ? m[1] === "violable" ? "sat" : "unsat"
+            : m[1] === "violable" ? "clean" : "detected";
+          cases.push({ actual, expected });
+        }
         return cases;
       },
     },
@@ -622,6 +653,8 @@ function parseArgs(argv) {
     updateSnapshot: false, // (re)write the committed snapshot from this run
     repsSet: false, // whether --reps was passed (snapshot modes default reps to 1)
     onlyDone: false, // run only benches marked `// @done` (eye-verified)
+    count: false, // just report how many benches match (+ breakdown), then exit
+    lint: false, // check the concolic "1 assert fires per seeded path" invariant
   };
   const need = (i, flag) => {
     if (i + 1 >= argv.length) die(`${flag} requires a value`);
@@ -642,12 +675,14 @@ function parseArgs(argv) {
       case "--check": opts.check = true; break;
       case "--update-snapshot": opts.updateSnapshot = true; break;
       case "--done": opts.onlyDone = true; break;
+      case "--count": opts.count = true; break;
+      case "--lint": opts.lint = true; break;
       case "--help":
         console.log(
           "Usage: node bench/run-micro-benchmark.mjs " +
-            "[--runner NAME] [--bench NAME] [--analysis NAME] [--dynajs-flags STR] " +
+            "[--runner NAME] [--bench NAME] [--dir SUB] [--analysis NAME] [--dynajs-flags STR] " +
             "[--reps N] [--warmup N] [--timeout SEC] [--output-dir DIR] " +
-            "[--done] [--check | --update-snapshot]",
+            "[--done] [--count] [--lint] [--check | --update-snapshot]",
         );
         process.exit(0);
       default: die(`unknown option: ${a}`);
@@ -709,6 +744,81 @@ function main() {
     benches = benches.filter((b) => matchesAny(path.basename(b.file), opts.benchFilters));
   // `--done` keeps only eye-verified benches (those with a `// @done` header).
   if (opts.onlyDone) benches = benches.filter((b) => b.done);
+
+  // --count: report how many benches match (honoring --dir/--bench/--done) with a
+  // breakdown by @type/@target/@feature, then exit. The counting unit differs by
+  // @type: a taint file chains several asserts, each an independently-scored case
+  // (see VERDICT_RE/toCases), so taint is measured in ASSERTS; a concolic file is
+  // a single path with exactly one assert, so concolic is measured in FILES (its
+  // assert count is redundant — and is exactly what the invariant scan checks).
+  // assertsOf therefore counts asserts for taint benches only. Reads only sources
+  // — no runner, no build, no execution — a fast, side-effect-free census.
+  if (opts.count) {
+    const assertsOf = new Map(); // bench -> taint asserts (0 for non-taint)
+    for (const b of benches)
+      assertsOf.set(b, b.type === "taint" ? assertOracles(b.file).length : 0);
+    const totalAsserts = [...assertsOf.values()].reduce((a, c) => a + c, 0);
+    console.log(`benchmarks: ${benches.length} files (taint asserts: ${totalAsserts})`);
+    for (const [dim, label] of [["type", "@type"], ["target", "@target"], ["feature", "@feature"]]) {
+      const files = new Map(), asserts = new Map();
+      for (const b of benches) {
+        const k = b[dim] || "(none)";
+        files.set(k, (files.get(k) ?? 0) + 1);
+        asserts.set(k, (asserts.get(k) ?? 0) + assertsOf.get(b));
+      }
+      console.log(`\nby ${label}:`);
+      for (const k of [...files.keys()].sort()) {
+        const a = asserts.get(k); // taint asserts; concolic-only groups show none
+        console.log(
+          `  ${k.padEnd(16)}${String(files.get(k)).padStart(6)} files` +
+            (a ? `${String(a).padStart(7)} asserts` : ""),
+        );
+      }
+    }
+    return;
+  }
+
+  // --lint: check the concolic invariant "exactly one assert fires per seeded
+  // path". Runs each concolic bench under bench/concolic-lint-helper.mjs (which
+  // makes __symbolic__ return its seed and tallies the asserts reached on that
+  // concrete path), then flags files where 0 fire (seed never reaches the assert
+  // — re-seed it) or >1 fire (several asserts on one path — split into one file
+  // per assert). Needs no build (it never invokes dynajs) and exits non-zero on
+  // any violation, so either session can gate on it. Honors --dir/--bench/--done.
+  if (opts.lint) {
+    const helperImport = pathToFileURL(
+      path.join(REPO_ROOT, "bench/concolic-lint-helper.mjs"),
+    ).href;
+    const concolic = benches.filter((b) => b.type === "concolic");
+    const over = [], under = [], errs = [];
+    for (const b of concolic) {
+      const run = timeRun(["node", "--import", helperImport, b.file], {}, null, null, timeoutMs);
+      const m = `${run.stdout}\n${run.stderr}`.match(/@@FIRED\s+(\d+)/);
+      if (run.timedOut || !m) { errs.push(b.name); continue; }
+      const n = Number(m[1]);
+      if (n > 1) over.push({ name: b.name, n });
+      else if (n === 0) under.push(b.name);
+    }
+    const bad = over.length + under.length + errs.length;
+    console.log("concolic lint — exactly 1 assert must fire per seeded path");
+    console.log(
+      `  checked ${concolic.length}   ok ${concolic.length - bad}   ` +
+        `over ${over.length}   under ${under.length}   error ${errs.length}`,
+    );
+    const section = (title, lines) => {
+      if (!lines.length) return;
+      console.log(`\n${title}:`);
+      for (const l of lines) console.log(`  ${l}`);
+    };
+    section(
+      "OVER-firing (>1 assert on the path — split into one file per assert)",
+      over.sort((a, b) => b.n - a.n || a.name.localeCompare(b.name)).map((o) => `[${o.n}] ${o.name}`),
+    );
+    section("UNDER-firing (0 asserts fire — re-seed so the guard is reachable)", under.sort());
+    section("errored / timed out", errs.sort());
+    process.exit(bad ? 1 : 0);
+  }
+
   if (!benches.length)
     die(opts.onlyDone ? "no `// @done`-marked benchmarks matched" : "no benchmarks with a @type header matched");
 
@@ -751,10 +861,18 @@ function main() {
   // Each marker is one assert case; a run with no marker (crash/timeout before
   // any assert fires) collapses to a single `error` case so it isn't silently
   // dropped — its expected is recovered from the bench's first declared oracle.
-  const toCases = (raw, b) =>
-    raw.length
-      ? raw
-      : [{ actual: "error", expected: assertOracles(b.file)[0] === false ? "clean" : "detected" }];
+  const toCases = (raw, b) => {
+    if (raw.length) return raw;
+    // No marker (crash/timeout before any assert): synthesize one error case,
+    // recovering the expected from the bench's first declared oracle. An IS_SAT
+    // bench reports it in the sat/unsat vocabulary; everything else detected/clean.
+    const first = assertOracles(b.file)[0];
+    const satVocab = /\b__IS_SAT__\s*\(/.test(readFileSync(b.file, "utf8"));
+    const expected = satVocab
+      ? first === false ? "unsat" : "sat"
+      : first === false ? "clean" : "detected";
+    return [{ actual: "error", expected }];
+  };
   const sig = (cs) => cs.map((c) => `${c.actual}/${c.expected}`).join(",");
 
   for (const r of active) {

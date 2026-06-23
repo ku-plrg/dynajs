@@ -22,6 +22,16 @@ function __symbolic_assert__(cond: unknown, expected: unknown): void {
   D$.analysis.symbolicAssert(cond, expected);
 }
 
+// SAT-query assertion: the dual of `__symbolic_assert__`. Hand z3 the conjunction
+// of the path conditions taken to reach here together with `cond`, and ask
+// whether that is *satisfiable* (a witness input exists) rather than whether
+// `cond` is necessarily true. `expected` is the bench's ground truth for THIS
+// query (true = should be SAT). Prints the same `@@DJX_VERDICT` marker the runner
+// reads, over the sat/unsat vocabulary.
+function __IS_SAT__(cond: unknown, expected: unknown): void {
+  D$.analysis.isSat(cond, expected);
+}
+
 // The ExpoSE `S$` corpus seams (analyses/concolic/expose/S$). `S$.symbol(name,
 // seed)` and `S$.pureSymbol(name)` route here; unlike `__symbolic__` (the
 // microbench seam) these per-run *unique* the name first, so two `S$.symbol("X",
@@ -42,7 +52,14 @@ export function installPrelude(): ReadonlySet<unknown> {
   const g = globalThis as Record<string, unknown>;
   g.__symbolic__ = __symbolic__;
   g.__symbolic_assert__ = __symbolic_assert__;
+  g.__IS_SAT__ = __IS_SAT__;
   g.__s_symbol__ = __s_symbol__;
   g.__s_pure__ = __s_pure__;
-  return new Set<unknown>([__symbolic__, __symbolic_assert__, __s_symbol__, __s_pure__]);
+  return new Set<unknown>([
+    __symbolic__,
+    __symbolic_assert__,
+    __IS_SAT__,
+    __s_symbol__,
+    __s_pure__,
+  ]);
 }

@@ -14,7 +14,7 @@ import {
   symToString,
 } from '@shared/sym.js';
 import { encodeRegex, type EncodedRegex } from '@shared/regex.js';
-import { solveValidity, solveModel } from './smt.js';
+import { solveValidity, solveModel, solveSat } from './smt.js';
 import { installPrelude } from './prelude.js';
 
 declare const D$: { analysis: ConcolicAnalysis } & Record<string, any>;
@@ -593,6 +593,41 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
         `constraint(s) -> ${verdict}`,
     );
     emit(verdict === 'valid' ? 'detected' : 'clean');
+  }
+
+  // SAT-query assertion (`__IS_SAT__`): the dual of symbolicAssert. Instead of
+  // asking whether `cond` is necessarily valid (`PC ∧ ¬cond` UNSAT), hand z3
+  // `PC ∧ cond` and ask whether a witness exists. `expected` is the per-assert
+  // ground truth (true = should be SAT). We print `@@DJX_VERDICT <actual>
+  // <expected>` over the sat/unsat vocabulary so the runner classifies each
+  // query independently (sat = positive/finding, unsat = negative).
+  isSat(condArg: unknown, expectedArg: unknown): void {
+    const expected = this.valued(expectedArg).value ? 'sat' : 'unsat';
+    const emit = (actual: 'sat' | 'unsat' | 'error') =>
+      console.log(`@@DJX_VERDICT ${actual} ${expected}`);
+
+    const cond = this.valued(condArg);
+    const sym = this.symOf(cond);
+    if (sym.kind === 'const' || containsLost(sym)) {
+      // No symbolic dependency, OR a value lost to an unmodeled op. A constant
+      // query is satisfiable iff it is concretely true on this path; we fall
+      // back to that truth value (as ExpoSE does), never erroring on loss.
+      emit(cond.value ? 'sat' : 'unsat');
+      return;
+    }
+    let verdict: 'sat' | 'unsat' | 'unknown';
+    try {
+      verdict = solveSat(this.pathConstraints, sym);
+    } catch (e) {
+      console.error(`[concolic] IS_SAT unsolved: ${(e as Error).message}`);
+      emit('error'); // unsolved is its own verdict; classifies as FN/FP by expected
+      return;
+    }
+    console.error(
+      `[concolic] IS_SAT ${symToString(sym)} under ${this.pathConstraints.length} ` +
+        `constraint(s) -> ${verdict}`,
+    );
+    emit(verdict === 'sat' ? 'sat' : 'unsat'); // unknown -> unsat (no witness found)
   }
 
   // An uncaught throw escaping the program (ExpoSE SymbolicExecution._uncaughtException).

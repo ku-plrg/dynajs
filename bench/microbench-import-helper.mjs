@@ -2,7 +2,9 @@ function noop() {}
 
 // taint prelude: under plain node, sources/sinks are inert so the bench runs as
 // ordinary JS (the assert's `expected` arg is ignored; no verdict is emitted).
-globalThis.__set_taint__ = noop;
+// __set_taint__ returns its argument so `__test_taint__(__set_taint__(seed))`
+// threads the real seed value through under plain node.
+globalThis.__set_taint__ = (v) => v;
 globalThis.__assert_taint__ = noop;
 
 // concolic prelude: under plain node a symbolic var is just its concrete seed,
