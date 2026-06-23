@@ -79,6 +79,37 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     return { kind: 'concat', left: l, right: r };
   }
 
+  // String.prototype.toLowerCase, modeled as in ExpoSE's StringModels.js: case
+  // conversion has no z3 string operator, so we do NOT encode the mapping.
+  // Instead we restrict the path to subjects already free of uppercase
+  // (`str ∈ /^[^A-Z]+$/`), where the fold is the identity, and return the
+  // subject's own Sym. toUpperCase is the symmetric extension (ExpoSE models only
+  // toLowerCase). The constraint enters as a binder (never flipped); on a
+  // mixed-case subject it is concretely violated, exactly as in ExpoSE — the
+  // concrete re-execution of any alternative input self-corrects.
+  protected toLowerInfo(s: Valued<Sym>): Sym | undefined {
+    return this.caseFoldIdentity(s, '^[^A-Z]+$');
+  }
+
+  protected toUpperInfo(s: Valued<Sym>): Sym | undefined {
+    return this.caseFoldIdentity(s, '^[^a-z]+$');
+  }
+
+  private caseFoldIdentity(s: Valued<Sym>, singleCasePattern: string): Sym | undefined {
+    const src = this.symOf(s);
+    if (src.kind === 'const') return undefined;
+    let enc: EncodedRegex;
+    try {
+      enc = encodeRegex(singleCasePattern, () => this.mintRegexVar());
+    } catch (e) {
+      console.error(`[concolic] case-fold regex unmodeled: ${String(e)}`);
+      return undefined; // -> baseInfo lifts to `lost`; the verdict concretizes
+    }
+    for (const a of enc.assertions) this.pushConstraint(a, true);
+    this.pushConstraint({ kind: 'inRe', str: src, re: enc.ast }, true);
+    return src;
+  }
+
   private static readonly EQUALITY_OPS = new Set(['===', '==', '!==', '!=']);
   protected binaryInfo(
     op: string,

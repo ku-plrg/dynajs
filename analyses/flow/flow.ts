@@ -93,6 +93,12 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   protected substringInfo?(_src: Valued<Info, string>, _start: Valued<Info, number>, _end: Valued<Info, number>, _resultLength: number): Info
   protected concatenateInfo?(_left: Valued<Info, string>, _leftLength: number, _right: Valued<Info, string>, _rightLength: number): Info
   protected lengthOfStringInfo?(_src: Valued<Info, string>): Info
+  /* case folding (`$.toLower`/`$.toUpper`): no z3 string operator maps case, so an
+   * analysis cannot encode the per-character mapping — return a model under which
+   * the fold is observable (concolic: identity on a single-case path), or undefined
+   * to fall through to baseInfo. */
+  protected toLowerInfo?(_src: Valued<Info, string>): Info
+  protected toUpperInfo?(_src: Valued<Info, string>): Info
 
   protected binaryInfo?(_op: string, _left: Valued<Info>, _right: Valued<Info>): Info
   protected unaryInfo?(_op: string, _operand: Valued<Info>): Info
@@ -220,6 +226,14 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       // Result is a substring of `s`; propagate via baseInfo so taint/symbolic
       // provenance flows from the source string.
       return this.lift(r, this.baseInfo(r, [this.valued(s)]));
+    },
+    toLower: (s) => {
+      const r = (this.unwrap(s) as string).toLowerCase();
+      return this.lift(r, this.toLowerInfo?.(this.valued(s)) ?? this.baseInfo(r, [this.valued(s)]));
+    },
+    toUpper: (s) => {
+      const r = (this.unwrap(s) as string).toUpperCase();
+      return this.lift(r, this.toUpperInfo?.(this.valued(s)) ?? this.baseInfo(r, [this.valued(s)]));
     },
     regexExec: (regex, string) => {
       // Run `regex.exec(string)` concretely on the raw values (no wrapped

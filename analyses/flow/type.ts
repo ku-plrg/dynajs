@@ -26,6 +26,8 @@ interface StringOps {
   length: (s: Wrapped<string>) => Wrapped<number>;
   codeUnitAt: (s: Wrapped<string>, i: Wrapped<number>) => Wrapped<string>;
   trim: (s: Wrapped<string>, leading: boolean, trailing: boolean) => Wrapped<string>;
+  toLower: (s: Wrapped<string>) => Wrapped<string>;
+  toUpper: (s: Wrapped<string>) => Wrapped<string>;
 };
 
 // The symbolic projection of matching `regex` against a subject string — the
