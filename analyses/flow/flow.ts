@@ -194,7 +194,8 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     return { result: raw };
   }
 
-  $: SpecRuntime = {
+  $: SpecRuntime =  {
+    // StringOps
     length: (s) => {
       const v = (this.unwrap(s) as string).length;
       if (this.$.isType(s, 'string')) {
@@ -235,6 +236,8 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       const r = (this.unwrap(s) as string).toUpperCase();
       return this.lift(r, this.toUpperInfo?.(this.valued(s)) ?? this.baseInfo(r, [this.valued(s)]));
     },
+
+    // RegexOps
     regexExec: (regex, string) => {
       // Run `regex.exec(string)` concretely on the raw values (no wrapped
       // primitive leaks into the engine), then let the analysis supply the
@@ -268,6 +271,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       };
     },
 
+    // ArithmeticOps
     add: (l, r) => this.binOp('+', l, r, (this.unwrap(l) as number) + (this.unwrap(r) as number)),
     subtract: (l, r) => this.binOp('-', l, r, (this.unwrap(l) as number) - (this.unwrap(r) as number)),
     multiply: (l, r) => this.binOp('*', l, r, (this.unwrap(l) as number) * (this.unwrap(r) as number)),
@@ -279,6 +283,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     bitwiseOR: (l, r) => this.binOp('|', l, r, (this.unwrap(l) as number) | (this.unwrap(r) as number)),
     bitwiseXOR: (l, r) => this.binOp('^', l, r, (this.unwrap(l) as number) ^ (this.unwrap(r) as number)),
 
+    // CompareOps
     lessThan: (l, r) => this.cmpOp('<', l, r, (this.unwrap(l) as number) < (this.unwrap(r) as number)),
     lessThanEqual: (l, r) => this.cmpOp('<=', l, r, (this.unwrap(l) as number) <= (this.unwrap(r) as number)),
     greaterThan: (l, r) => this.cmpOp('>', l, r, (this.unwrap(l) as number) > (this.unwrap(r) as number)),
@@ -306,6 +311,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       }
     },
 
+    // MathOps
     min: (...xs) => this.numOp(Math.min(...xs.map((x) => this.unwrap(x) as number)), xs),
     max: (...xs) => this.numOp(Math.max(...xs.map((x) => this.unwrap(x) as number)), xs),
     abs: (x) => this.numOp(Math.abs(this.unwrap(x) as number), [x]),
@@ -324,6 +330,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       );
     },
 
+    // ListOps
     append: <T>(list: T[], x: T): T[] => { this.escaper.markEscapable(x); list.push(x); return list; },
     prepend: <T>(list: T[], x: T): T[] => { this.escaper.markEscapable(x); list.unshift(x); return list; },
     contains: <T>(list: T[], x: T): boolean => list.includes(x),
@@ -345,6 +352,9 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       if (!ascending) out.reverse();
       return out;
     },
+
+
+    // SpecOps
     base: <T extends Unwrapped<unknown> | Primitive>(v: T, parents: Wrapped<unknown>[]): Wrapped<T> =>
       this.lift(v, this.baseInfo(v, parents.map((p) => this.valued(p)))),
     peek: <T>(wrapped: Wrapped<T>) => this.unwrap(wrapped),
@@ -365,10 +375,8 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     // Default for absent optional params (see SpecRuntime.undef / type.ts). `this`
     // here is the runtime object, so `this.base` is the op above. An absent arg
     // has no source, hence empty parents.
-    get undef(): Wrapped<undefined> {
-      return this.base(undefined, []);
-    },
-  };
+    get undef(): Wrapped<undefined> { return this.base(undefined, []); },
+  } satisfies SpecRuntime;
 
   literal(_id: number, value: unknown) {
     this.currentId = _id;
