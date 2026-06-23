@@ -2,7 +2,7 @@ export function ToString(x: any): string {
   return String(new String(x));
 }
 
-function IsCallable(x: any): x is (...args: unknown[]) => unknown { 
+function IsCallable(x: any): x is (...args: unknown[]) => unknown {
   return typeof x === 'function';
 }
 
@@ -24,7 +24,7 @@ function OrdinaryToPrimitive(O: any, hint: 'string' | 'number'): any {
         return result;
       }
     }
-  };
+  }
 
   {
     const method = O[entry2];
@@ -34,13 +34,15 @@ function OrdinaryToPrimitive(O: any, hint: 'string' | 'number'): any {
         return result;
       }
     }
-  };
-  
+  }
+
   throw new TypeError('Cannot convert object to primitive value');
 }
-    
 
-export function ToPrimitive(input: any, preferredType: 'string' | 'number' | undefined = undefined): any {
+export function ToPrimitive(
+  input: any,
+  preferredType: 'string' | 'number' | undefined = undefined,
+): any {
   if (typeof input === 'object' && input !== null) {
     // a. Let exoticToPrim be ? GetMethod(input, %Symbol.toPrimitive%).
     const exoticToPrim = input[Symbol.toPrimitive];
@@ -53,7 +55,12 @@ export function ToPrimitive(input: any, preferredType: 'string' | 'number' | und
       // iii. Else,
       //      1. Assert: preferredType is NUMBER.
       //      2. Let hint be "number".
-      const hint = preferredType === undefined ? 'default' : preferredType === 'string' ? 'string' : 'number';
+      const hint =
+        preferredType === undefined
+          ? 'default'
+          : preferredType === 'string'
+            ? 'string'
+            : 'number';
       // iv. Let result be ? Call(exoticToPrim, input, « hint »).
       const result = exoticToPrim.call(input, hint);
       // v. If result is not an Object, return result.

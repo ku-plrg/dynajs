@@ -1,4 +1,4 @@
-import { execSync } from "node:child_process";
+import { execSync } from 'node:child_process';
 import {
   existsSync,
   mkdirSync,
@@ -6,43 +6,43 @@ import {
   readdirSync,
   rmSync,
   writeFileSync,
-} from "node:fs";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import chalk from "chalk";
+} from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import chalk from 'chalk';
 
 // To use with different ESMETA_HOME: ESMETA_HOME=~/path/to/esmeta npm run copy
 const INCLUDE = [
   // Bulk-select with a RegExp, then carve out exceptions in EXCLUDE below, e.g.:
   // /^INTRINSICS\.Array\./,
   // /^INTRINSICS\.Array\.prototype\./,
-  "INTRINSICS.Array.prototype.at",
-  "INTRINSICS.Array.prototype.concat",
-  "INTRINSICS.Array.prototype.copyWithin",
+  'INTRINSICS.Array.prototype.at',
+  'INTRINSICS.Array.prototype.concat',
+  'INTRINSICS.Array.prototype.copyWithin',
   // "INTRINSICS.Array.prototype.entries",s
   // "INTRINSICS.Array.prototype.every",
-  "INTRINSICS.Array.prototype.fill",
-  "INTRINSICS.Array.prototype.filter",
-  "INTRINSICS.Array.prototype.find",
-  "INTRINSICS.Array.prototype.findIndex",
-  "INTRINSICS.Array.prototype.findLast",
-  "INTRINSICS.Array.prototype.findLastIndex",
+  'INTRINSICS.Array.prototype.fill',
+  'INTRINSICS.Array.prototype.filter',
+  'INTRINSICS.Array.prototype.find',
+  'INTRINSICS.Array.prototype.findIndex',
+  'INTRINSICS.Array.prototype.findLast',
+  'INTRINSICS.Array.prototype.findLastIndex',
   // "INTRINSICS.Array.prototype.flat",
   // "INTRINSICS.Array.prototype.flatMap",
   // "INTRINSICS.Array.prototype.forEach",
   // "INTRINSICS.Array.prototype.includes",
   // "INTRINSICS.Array.prototype.indexOf",
-  "INTRINSICS.Array.prototype.join",
+  'INTRINSICS.Array.prototype.join',
   // "INTRINSICS.Array.prototype.keys",
   // "INTRINSICS.Array.prototype.lastIndexOf",
-  "INTRINSICS.Array.prototype.map",
-  "INTRINSICS.Array.prototype.pop",
-  "INTRINSICS.Array.prototype.push",
-  "INTRINSICS.Array.prototype.reduce",
-  "INTRINSICS.Array.prototype.reduceRight",
+  'INTRINSICS.Array.prototype.map',
+  'INTRINSICS.Array.prototype.pop',
+  'INTRINSICS.Array.prototype.push',
+  'INTRINSICS.Array.prototype.reduce',
+  'INTRINSICS.Array.prototype.reduceRight',
   // "INTRINSICS.Array.prototype.reverse",
-  "INTRINSICS.Array.prototype.shift",
-  "INTRINSICS.Array.prototype.slice",
+  'INTRINSICS.Array.prototype.shift',
+  'INTRINSICS.Array.prototype.slice',
   // "INTRINSICS.Array.prototype.some",
   // "INTRINSICS.Array.prototype.sort",
   // "INTRINSICS.Array.prototype.splice",
@@ -54,7 +54,7 @@ const INCLUDE = [
   // "INTRINSICS.Array.prototype.unshift",
   // "INTRINSICS.Array.prototype.values",
   // "INTRINSICS.Array.prototype.with",
-  
+
   // /^INTRINSICS\.Boolean\./,
   // /^INTRINSICS\.Function\./,
   // "INTRINSICS.JSON.stringify",
@@ -68,8 +68,8 @@ const INCLUDE = [
   /^INTRINSICS\.String\.prototype\./,
   // "RegExpExec",
   /^INTRINSICS\.RegExp\.prototype\.(exec|test)/,
-  "AO__CanonicalNumericIndexString",
-  "INTRINSICS.JSON.stringify",
+  'AO__CanonicalNumericIndexString',
+  'INTRINSICS.JSON.stringify',
 ];
 
 const EXCLUDE = [
@@ -78,14 +78,14 @@ const EXCLUDE = [
   // (INTRINSICS.*.manual.ts -> $.regexOp); keep them out of esmeta extraction
   // (the generated versions delegate to the spec matcher) but DO let their
   // manual shims be barreled, so they are not excluded here.
-  "INTRINSICS.String.prototypeLeftBracketPercentSymbol.iteratorPercentRightBracket",
+  'INTRINSICS.String.prototypeLeftBracketPercentSymbol.iteratorPercentRightBracket',
 ];
 
 const NO_CHECK = [
-  "INTRINSICS.Array.prototype.reduce",
-  "INTRINSICS.Array.prototype.reduceRight",
-  "INTRINSICS.String.prototype.replaceAll",
-  "AO__GetSubstitution",
+  'INTRINSICS.Array.prototype.reduce',
+  'INTRINSICS.Array.prototype.reduceRight',
+  'INTRINSICS.String.prototype.replaceAll',
+  'AO__GetSubstitution',
   // JSON serialization: esmeta gen-poly emits sound runtime code but with type
   // noise it can't yet resolve — the State Record (a non-escaping scratch object)
   // is typed Wrapped<unknown> with internal-slot-style field access, plus never[]
@@ -95,23 +95,23 @@ const NO_CHECK = [
   // not a type error; @ts-nocheck can't help). The [[BooleanData]]/[[BigIntData]]
   // boxed-slot reads are now generated correctly (PolyfillGenerator emits a
   // peek().valueOf() approximation), so they are no longer a silenced bug.
-  "INTRINSICS.JSON.stringify",
-  "AO__SerializeJSONProperty",
-  "AO__SerializeJSONObject",
-  "AO__SerializeJSONArray",
-  "AO__UnicodeEscape",
+  'INTRINSICS.JSON.stringify',
+  'AO__SerializeJSONProperty',
+  'AO__SerializeJSONObject',
+  'AO__SerializeJSONArray',
+  'AO__UnicodeEscape',
 ];
 
 const ESMETA_HOME = process.env.ESMETA_HOME;
 if (!ESMETA_HOME) {
-  console.error(chalk.red("✗ ESMETA_HOME is not set."));
+  console.error(chalk.red('✗ ESMETA_HOME is not set.'));
   process.exit(1);
 }
 
 if (INCLUDE.length === 0) {
   console.error(
     chalk.yellow(
-      "No files specified. Fill in the INCLUDE array in scripts/copy-polyfill.mjs.",
+      'No files specified. Fill in the INCLUDE array in scripts/copy-polyfill.mjs.',
     ),
   );
   process.exit(1);
@@ -123,14 +123,14 @@ function makeMatcher(patterns) {
   const regexes = [];
   for (const p of patterns) {
     if (p instanceof RegExp) regexes.push(p);
-    else exact.add(p.endsWith(".ts") ? p.slice(0, -3) : p);
+    else exact.add(p.endsWith('.ts') ? p.slice(0, -3) : p);
   }
   return (name) => exact.has(name) || regexes.some((re) => re.test(name));
 }
 const isExcluded = makeMatcher(EXCLUDE);
 const isNoCheck = makeMatcher(NO_CHECK);
 
-const srcDir = join(ESMETA_HOME, "logs", "polyfill");
+const srcDir = join(ESMETA_HOME, 'logs', 'polyfill');
 
 // Clear stale gen-poly output so a builtin removed or renamed upstream doesn't
 // linger and get pulled back in by the dependency walk below.
@@ -140,7 +140,7 @@ rmSync(srcDir, { recursive: true, force: true });
 console.log(chalk.cyan(`▶ Running gen-poly (${ESMETA_HOME})`));
 execSync('sbt "run gen-poly -silent -gen-poly:log"', {
   cwd: ESMETA_HOME,
-  stdio: "inherit",
+  stdio: 'inherit',
 });
 
 if (!existsSync(srcDir)) {
@@ -150,17 +150,17 @@ if (!existsSync(srcDir)) {
 
 const destDir = resolve(
   dirname(fileURLToPath(import.meta.url)),
-  "..",
-  "analyses",
-  "flow",
-  "spec",
+  '..',
+  'analyses',
+  'flow',
+  'spec',
 );
 mkdirSync(destDir, { recursive: true });
 
 // Hand-authored implementations are named `<base>.manual.ts` and tracked in git.
 // Map each base to its manual file so the dependency walk knows which builtins
 // are provided locally (and must not be fetched from ESMETA).
-const MANUAL_SUFFIX = ".manual.ts";
+const MANUAL_SUFFIX = '.manual.ts';
 const manualBases = new Map();
 for (const entry of readdirSync(destDir)) {
   if (!entry.endsWith(MANUAL_SUFFIX)) continue;
@@ -171,7 +171,7 @@ for (const entry of readdirSync(destDir)) {
 // stale output never lingers. Hand-authored `*.manual.ts` and non-.ts files
 // (.gitignore, .gitkeep) are left untouched.
 for (const entry of readdirSync(destDir)) {
-  if (!entry.endsWith(".ts") || entry.endsWith(MANUAL_SUFFIX)) continue;
+  if (!entry.endsWith('.ts') || entry.endsWith(MANUAL_SUFFIX)) continue;
   rmSync(join(destDir, entry));
 }
 
@@ -205,7 +205,7 @@ const visited = new Set();
 // if absent (so they surface in the missing report below).
 const universe = new Set([
   ...readdirSync(srcDir)
-    .filter((f) => f.endsWith(".ts"))
+    .filter((f) => f.endsWith('.ts'))
     .map((f) => f.slice(0, -3)),
   ...manualBases.keys(),
 ]);
@@ -214,7 +214,7 @@ for (const entry of INCLUDE) {
   if (entry instanceof RegExp) {
     for (const name of universe) if (entry.test(name)) roots.add(name);
   } else {
-    roots.add(entry.endsWith(".ts") ? entry.slice(0, -3) : entry);
+    roots.add(entry.endsWith('.ts') ? entry.slice(0, -3) : entry);
   }
 }
 // EXCLUDE wins over INCLUDE.
@@ -238,7 +238,7 @@ while (queue.length > 0) {
   const manualFile = manualBases.get(base);
   if (manualFile !== undefined) {
     // Provided locally — shim is already written; read the impl for its deps.
-    content = readFileSync(join(destDir, manualFile), "utf8");
+    content = readFileSync(join(destDir, manualFile), 'utf8');
     if (roots.has(base)) copiedNames.push(base);
   } else {
     const file = `${base}.ts`;
@@ -247,11 +247,11 @@ while (queue.length > 0) {
       missing.push(file);
       continue;
     }
-    content = readFileSync(from, "utf8");
+    content = readFileSync(from, 'utf8');
     // gen-poly emits `@/model/type.js`; the spec model now lives under
     // analyses/flow, so rewrite that import to the sibling type module
     // (spec/ sits one level below flow/).
-    content = content.replace(/@\/model\/type\.js/g, "../type.js");
+    content = content.replace(/@\/model\/type\.js/g, '../type.js');
     if (isNoCheck(base)) content = `// @ts-nocheck\n${content}`;
     writeFileSync(join(destDir, file), content);
     if (roots.has(base)) copiedNames.push(base);
@@ -265,24 +265,32 @@ while (queue.length > 0) {
 if (missing.length > 0) {
   console.error(
     chalk.red(`✗ ${missing.length} file(s) not found:`),
-    missing.join(", "),
+    missing.join(', '),
   );
 }
 
 // Generate a barrel that re-exports every emitted module
 const barrelBases = readdirSync(destDir)
-  .filter((f) => f.endsWith(".ts") && f !== "index.ts" && !f.endsWith(MANUAL_SUFFIX))
+  .filter(
+    (f) => f.endsWith('.ts') && f !== 'index.ts' && !f.endsWith(MANUAL_SUFFIX),
+  )
   .map((f) => f.slice(0, -3))
   .sort();
 const exportLines = barrelBases.map((base) => {
-  const symbol = base.replace(/[^A-Za-z0-9]/g, "_");
+  const symbol = base.replace(/[^A-Za-z0-9]/g, '_');
   return `export { ${symbol} } from "./${base}.js";`;
 });
-const barrel = `// THIS FILE IS AUTO-GENERATED, DO NOT EDIT\n${exportLines.join("\n")}\n`;
-writeFileSync(join(destDir, "index.ts"), barrel);
+const barrel = `// THIS FILE IS AUTO-GENERATED, DO NOT EDIT\n${exportLines.join('\n')}\n`;
+writeFileSync(join(destDir, 'index.ts'), barrel);
 
 console.log(
-  chalk.green(`✓ Copied ${copiedNames.length} polyfill file(s) → analyses/flow/spec/`),
+  chalk.green(
+    `✓ Copied ${copiedNames.length} polyfill file(s) → analyses/flow/spec/`,
+  ),
 );
-console.log(chalk.green(`✓ Wrote barrel (${barrelBases.length} exports) → analyses/flow/spec/index.ts`));
+console.log(
+  chalk.green(
+    `✓ Wrote barrel (${barrelBases.length} exports) → analyses/flow/spec/index.ts`,
+  ),
+);
 if (missing.length > 0) process.exit(1);

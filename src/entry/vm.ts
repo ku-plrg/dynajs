@@ -4,7 +4,14 @@ import path from 'node:path';
 import { full } from 'acorn-walk';
 import type { CallbackHint } from '../partial.js';
 import { instrument } from '../instrument/main.js';
-import { getInstrumentedName, getStatName, log, parse, warn, writeFile } from '../utils.js';
+import {
+  getInstrumentedName,
+  getStatName,
+  log,
+  parse,
+  warn,
+  writeFile,
+} from '../utils.js';
 import type { RuntimeOptions } from './options.js';
 
 // require is injected by esbuild
@@ -20,11 +27,17 @@ type VmScriptOptions = {
   filename?: string;
 };
 
-function writeGeneratedFile(filename: string, content: string, kind: string): void {
+function writeGeneratedFile(
+  filename: string,
+  content: string,
+  kind: string,
+): void {
   try {
     writeFile(filename, content);
   } catch (error) {
-    warn(`Failed to write generated ${kind} artifact \`${filename}\`: ${String(error)}`);
+    warn(
+      `Failed to write generated ${kind} artifact \`${filename}\`: ${String(error)}`,
+    );
   }
 }
 
@@ -40,7 +53,10 @@ function resolveVmFilename(kind: string, filename: unknown): string {
 }
 
 function injectRuntime(contextObject: any): any {
-  if (contextObject == null || (typeof contextObject !== 'object' && typeof contextObject !== 'function')) {
+  if (
+    contextObject == null ||
+    (typeof contextObject !== 'object' && typeof contextObject !== 'function')
+  ) {
     return contextObject;
   }
 
@@ -102,7 +118,13 @@ function instrumentCompileFunctionBody(
   options: RuntimeOptions,
 ): string {
   const wrapped = `(function(${params.join(', ')}) {\n${code}\n})`;
-  const instrumentedWrapped = instrumentVmScript(wrapped, 'compileFunction', filename, mode, options);
+  const instrumentedWrapped = instrumentVmScript(
+    wrapped,
+    'compileFunction',
+    filename,
+    mode,
+    options,
+  );
   const ast = parse(instrumentedWrapped, true);
   let bodyRange: { start: number; end: number } | undefined;
 
@@ -118,7 +140,10 @@ function instrumentCompileFunctionBody(
     return instrumentedWrapped.slice(bodyRange.start, bodyRange.end);
   }
 
-  const key = typeof filename === 'string' && filename.length > 0 ? filename : '<anonymous>';
+  const key =
+    typeof filename === 'string' && filename.length > 0
+      ? filename
+      : '<anonymous>';
   if (!compileWarnings.has(key)) {
     compileWarnings.add(key);
     warn(
@@ -132,7 +157,10 @@ export function isPatched(): boolean {
   return patched;
 }
 
-export function registerVmHook(mode: CallbackHint | undefined, options: RuntimeOptions): void {
+export function registerVmHook(
+  mode: CallbackHint | undefined,
+  options: RuntimeOptions,
+): void {
   if (patched) return;
   patched = true;
 
@@ -146,7 +174,13 @@ export function registerVmHook(mode: CallbackHint | undefined, options: RuntimeO
   class PatchedScript extends OriginalScript {
     constructor(code: string, scriptOptions?: VmScriptOptions) {
       super(
-        instrumentVmScript(code, 'Script', scriptOptions?.filename, mode, options),
+        instrumentVmScript(
+          code,
+          'Script',
+          scriptOptions?.filename,
+          mode,
+          options,
+        ),
         scriptOptions,
       );
     }
@@ -154,11 +188,21 @@ export function registerVmHook(mode: CallbackHint | undefined, options: RuntimeO
 
   mutableVm.Script = PatchedScript;
 
-  mutableVm.createContext = function createContext(contextObject?: any, contextOptions?: any) {
-    return originalCreateContext.call(this, injectRuntime(contextObject ?? {}), contextOptions);
+  mutableVm.createContext = function createContext(
+    contextObject?: any,
+    contextOptions?: any,
+  ) {
+    return originalCreateContext.call(
+      this,
+      injectRuntime(contextObject ?? {}),
+      contextOptions,
+    );
   };
 
-  mutableVm.createScript = function createScript(code: string, scriptOptions?: VmScriptOptions) {
+  mutableVm.createScript = function createScript(
+    code: string,
+    scriptOptions?: VmScriptOptions,
+  ) {
     return new vm.Script(code, scriptOptions);
   };
 
@@ -169,10 +213,26 @@ export function registerVmHook(mode: CallbackHint | undefined, options: RuntimeO
   ) {
     injectRuntime(contextifiedObject);
     if (typeof code !== 'string') {
-      return originalRunInContext.call(this, code, contextifiedObject, scriptOptions);
+      return originalRunInContext.call(
+        this,
+        code,
+        contextifiedObject,
+        scriptOptions,
+      );
     }
-    const nextCode = instrumentVmScript(code, 'runInContext', scriptOptions?.filename, mode, options);
-    return originalRunInContext.call(this, nextCode, contextifiedObject, scriptOptions);
+    const nextCode = instrumentVmScript(
+      code,
+      'runInContext',
+      scriptOptions?.filename,
+      mode,
+      options,
+    );
+    return originalRunInContext.call(
+      this,
+      nextCode,
+      contextifiedObject,
+      scriptOptions,
+    );
   };
 
   mutableVm.runInNewContext = function runInNewContext(
@@ -182,10 +242,26 @@ export function registerVmHook(mode: CallbackHint | undefined, options: RuntimeO
   ) {
     const nextContext = injectRuntime(contextObject ?? {});
     if (typeof code !== 'string') {
-      return originalRunInNewContext.call(this, code, nextContext, scriptOptions);
+      return originalRunInNewContext.call(
+        this,
+        code,
+        nextContext,
+        scriptOptions,
+      );
     }
-    const nextCode = instrumentVmScript(code, 'runInNewContext', scriptOptions?.filename, mode, options);
-    return originalRunInNewContext.call(this, nextCode, nextContext, scriptOptions);
+    const nextCode = instrumentVmScript(
+      code,
+      'runInNewContext',
+      scriptOptions?.filename,
+      mode,
+      options,
+    );
+    return originalRunInNewContext.call(
+      this,
+      nextCode,
+      nextContext,
+      scriptOptions,
+    );
   };
 
   mutableVm.runInThisContext = function runInThisContext(
@@ -195,7 +271,13 @@ export function registerVmHook(mode: CallbackHint | undefined, options: RuntimeO
     if (typeof code !== 'string') {
       return originalRunInThisContext.call(this, code, scriptOptions);
     }
-    const nextCode = instrumentVmScript(code, 'runInThisContext', scriptOptions?.filename, mode, options);
+    const nextCode = instrumentVmScript(
+      code,
+      'runInThisContext',
+      scriptOptions?.filename,
+      mode,
+      options,
+    );
     return originalRunInThisContext.call(this, nextCode, scriptOptions);
   };
 
@@ -204,7 +286,13 @@ export function registerVmHook(mode: CallbackHint | undefined, options: RuntimeO
     params: readonly string[],
     optionsArg?: VmScriptOptions,
   ) {
-    const nextCode = instrumentCompileFunctionBody(code, params ?? [], optionsArg?.filename, mode, options);
+    const nextCode = instrumentCompileFunctionBody(
+      code,
+      params ?? [],
+      optionsArg?.filename,
+      mode,
+      options,
+    );
     return originalCompileFunction.call(this, nextCode, params, optionsArg);
   };
 

@@ -9,12 +9,22 @@ function applyNamedEvaluation(
   name: string,
 ): void {
   if (func.id == null) {
-    (func as any).id = { type: 'Identifier', name, start: func.start, end: func.start } as acorn.Identifier;
+    (func as any).id = {
+      type: 'Identifier',
+      name,
+      start: func.start,
+      end: func.start,
+    } as acorn.Identifier;
   }
 }
 
-function isFuncExpr(node: acorn.AnyNode): node is acorn.FunctionExpression | acorn.ArrowFunctionExpression {
-  return node.type === 'FunctionExpression' || node.type === 'ArrowFunctionExpression';
+function isFuncExpr(
+  node: acorn.AnyNode,
+): node is acorn.FunctionExpression | acorn.ArrowFunctionExpression {
+  return (
+    node.type === 'FunctionExpression' ||
+    node.type === 'ArrowFunctionExpression'
+  );
 }
 
 // Named function expressions create an internal name binding (e.g. `function foo() {}`
@@ -22,7 +32,9 @@ function isFuncExpr(node: acorn.AnyNode): node is acorn.FunctionExpression | aco
 // the synthetic id can only be emitted safely when a same-named variable is in scope.
 // This predicate identifies the cases where we can safely reference the name inside
 // the function body regardless of outer scope.
-function hasSelfBinding(func: acorn.FunctionExpression | acorn.ArrowFunctionExpression): boolean {
+function hasSelfBinding(
+  func: acorn.FunctionExpression | acorn.ArrowFunctionExpression,
+): boolean {
   return func.type === 'FunctionExpression';
 }
 
@@ -39,9 +51,7 @@ function referencesName(node: acorn.Node, name: string): boolean {
 }
 
 // temporal fix
-const TOP_PRIORITY_TARGETS = new Set([
-  'toString', 'valueOf'
-]);
+const TOP_PRIORITY_TARGETS = new Set(['toString', 'valueOf']);
 
 // A simple ASCII identifier check.  Names from non-identifier string literals (e.g.
 // "foo bar") cannot be used as function names in generated source.
@@ -99,21 +109,36 @@ export function fixNamedEvaluations(ast: acorn.Node): void {
     VariableDeclarator(node) {
       const { id, init } = node as acorn.VariableDeclarator;
       if (init != null && id.type === 'Identifier' && isFuncExpr(init)) {
-        if (hasSelfBinding(init) && referencesName(init.body as acorn.Node, id.name)) return;
+        if (
+          hasSelfBinding(init) &&
+          referencesName(init.body as acorn.Node, id.name)
+        )
+          return;
         applyNamedEvaluation(init, id.name);
       }
     },
 
     Property(node) {
-      const { key, value, kind, method, computed, shorthand } = node as acorn.Property;
-      if (kind === 'init' && !method && !shorthand && !computed && isFuncExpr(value)) {
+      const { key, value, kind, method, computed, shorthand } =
+        node as acorn.Property;
+      if (
+        kind === 'init' &&
+        !method &&
+        !shorthand &&
+        !computed &&
+        isFuncExpr(value)
+      ) {
         // Arrow functions don't have an internal name binding, so the name would be
         // an unresolvable free variable inside the body.  Only apply for FunctionExpression.
         if (!hasSelfBinding(value)) return;
         if (key.type === 'Identifier') {
           if (!TOP_PRIORITY_TARGETS.has(key.name)) return;
           applyNamedEvaluation(value, key.name);
-        } else if (key.type === 'Literal' && typeof key.value === 'string' && isIdentifier(key.value)) {
+        } else if (
+          key.type === 'Literal' &&
+          typeof key.value === 'string' &&
+          isIdentifier(key.value)
+        ) {
           if (!TOP_PRIORITY_TARGETS.has(key.value)) return;
           applyNamedEvaluation(value, key.value);
         }
@@ -134,7 +159,9 @@ export function fixNamedEvaluations(ast: acorn.Node): void {
         ) {
           // The property name is NOT a variable binding, so only FunctionExpression is safe.
           if (!hasSelfBinding(func)) return;
-          const name = ((left as acorn.MemberExpression).property as acorn.Identifier).name;
+          const name = (
+            (left as acorn.MemberExpression).property as acorn.Identifier
+          ).name;
           if (!TOP_PRIORITY_TARGETS.has(name)) return;
           if (isIdentifier(name)) applyNamedEvaluation(func, name);
         }

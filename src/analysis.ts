@@ -1,9 +1,4 @@
-import {
-  VarKind,
-  err,
-  kindToStr,
-  locToStr,
-} from './utils.js';
+import { VarKind, err, kindToStr, locToStr } from './utils.js';
 import type { Analysis } from './types/analysis.js';
 import type { RuntimeOptions } from './entry/options.js';
 import * as utils from './utils.js';
@@ -13,7 +8,9 @@ import { StateOption } from './instrument/state.js';
 import { CAPTURED } from './captured.js';
 import { INSTRUMENTED_MARK } from './constant.js';
 
-declare global { var D$: DynaJSType; };
+declare global {
+  var D$: DynaJSType;
+}
 
 // sentinel symbol for optional chain short-circuit propagation
 const chainSkip = Symbol('D$.chainSkip');
@@ -29,8 +26,12 @@ let lastComputedValue: any = undefined;
 // store left side of a switch statement
 let switchLeft: any = undefined;
 let switchStack: any[] = [];
-function pushSwitchLeft() { switchStack.push(switchLeft); }
-function popSwitchLeft() { switchLeft = switchStack.pop(); }
+function pushSwitchLeft() {
+  switchStack.push(switchLeft);
+}
+function popSwitchLeft() {
+  switchLeft = switchStack.pop();
+}
 
 // -----------------------------------------------------------------------------
 // hooks for dynamic analysis
@@ -65,19 +66,32 @@ function Sx(id: number): void {
 }
 
 // hook for function calls
-function F(id: number, f: any, isConstructor: boolean, callOptional: boolean): any {
+function F(
+  id: number,
+  f: any,
+  isConstructor: boolean,
+  callOptional: boolean,
+): any {
   if (f === chainSkip) return () => chainSkip;
   if (callOptional) {
     f = C(id, '?.', f);
-    if (f === null || f === undefined || f === chainSkip) return () => chainSkip;
+    if (f === null || f === undefined || f === chainSkip)
+      return () => chainSkip;
   }
-  return function(this: any) {
+  return function (this: any) {
     return invokeFun(id, this, f, arguments, isConstructor, false);
-  }
+  };
 }
 
 // hook for method calls
-function M(id: number, base: any, prop: any, isConstructor: boolean, memberOptional: boolean, callOptional: boolean): any {
+function M(
+  id: number,
+  base: any,
+  prop: any,
+  isConstructor: boolean,
+  memberOptional: boolean,
+  callOptional: boolean,
+): any {
   if (base === chainSkip) return () => chainSkip;
   if (memberOptional) {
     base = C(id, '?.', base);
@@ -87,11 +101,12 @@ function M(id: number, base: any, prop: any, isConstructor: boolean, memberOptio
   if (f === chainSkip) return () => chainSkip;
   if (callOptional) {
     f = C(id, '?.', f);
-    if (f === null || f === undefined || f === chainSkip) return () => chainSkip;
+    if (f === null || f === undefined || f === chainSkip)
+      return () => chainSkip;
   }
-  return function() {
+  return function () {
     return invokeFun(id, base, f, arguments, isConstructor, true);
-  }
+  };
 }
 
 function Mp(
@@ -112,37 +127,50 @@ function Mp(
   if (f === chainSkip) return () => chainSkip;
   if (callOptional) {
     f = C(id, '?.', f);
-    if (f === null || f === undefined || f === chainSkip) return () => chainSkip;
+    if (f === null || f === undefined || f === chainSkip)
+      return () => chainSkip;
   }
-  return function() {
+  return function () {
     return invokeFun(id, base, f, arguments, isConstructor, true);
-  }
+  };
 }
 
 // hook for tagged template function calls
 function TF(id: number, f: any): any {
-  return function(this: any, strings: any, ...values: any[]) {
+  return function (this: any, strings: any, ...values: any[]) {
     return invokeTT(id, this, f, strings, values, false);
-  }
+  };
 }
 
 // hook for tagged template method calls
 function TM(id: number, base: any, prop: any): any {
   const f = G(id, base, prop);
-  return function(strings: any, ...values: any[]) {
+  return function (strings: any, ...values: any[]) {
     return invokeTT(id, base, f, strings, values, true);
-  }
+  };
 }
 
-function TMp(id: number, base: any, prop: any, getter: (base: any) => any): any {
+function TMp(
+  id: number,
+  base: any,
+  prop: any,
+  getter: (base: any) => any,
+): any {
   const f = Gp(id, base, prop, getter);
-  return function(strings: any, ...values: any[]) {
+  return function (strings: any, ...values: any[]) {
     return invokeTT(id, base, f, strings, values, true);
-  }
+  };
 }
 
 // helper to invoke a tagged template call with hierarchical hooks (general-first, specific wins)
-function invokeTT(id: number, base: any, f: any, strings: any, values: any[], isMethod: boolean): any {
+function invokeTT(
+  id: number,
+  base: any,
+  f: any,
+  strings: any,
+  values: any[],
+  isMethod: boolean,
+): any {
   let result: any;
   let skip = false;
   let args: any[] = [strings, ...values];
@@ -150,7 +178,14 @@ function invokeTT(id: number, base: any, f: any, strings: any, values: any[], is
   let specificFrame: unknown;
 
   // General hook fires first
-  const generalPre = D$.analysis.invokeFunPre?.(id, f, base, args, false, isMethod);
+  const generalPre = D$.analysis.invokeFunPre?.(
+    id,
+    f,
+    base,
+    args,
+    false,
+    isMethod,
+  );
   if (generalPre) {
     f = generalPre.f;
     base = generalPre.base;
@@ -162,7 +197,14 @@ function invokeTT(id: number, base: any, f: any, strings: any, values: any[], is
   }
 
   // Specific hook fires second and wins
-  const specificPre = D$.analysis.taggedTemplatePre?.(id, f, base, strings, values, isMethod);
+  const specificPre = D$.analysis.taggedTemplatePre?.(
+    id,
+    f,
+    base,
+    strings,
+    values,
+    isMethod,
+  );
   if (specificPre) {
     f = specificPre.f;
     base = specificPre.base;
@@ -179,11 +221,29 @@ function invokeTT(id: number, base: any, f: any, strings: any, values: any[], is
   args = [strings, ...values];
 
   // General post-hook fires first
-  const generalPost = D$.analysis.invokeFun?.(id, f, base, args, result, false, isMethod, generalFrame);
+  const generalPost = D$.analysis.invokeFun?.(
+    id,
+    f,
+    base,
+    args,
+    result,
+    false,
+    isMethod,
+    generalFrame,
+  );
   if (generalPost) result = generalPost.result;
 
   // Specific post-hook fires second and wins
-  const specificPost = D$.analysis.taggedTemplate?.(id, f, base, strings, values, result, isMethod, specificFrame);
+  const specificPost = D$.analysis.taggedTemplate?.(
+    id,
+    f,
+    base,
+    strings,
+    values,
+    result,
+    isMethod,
+    specificFrame,
+  );
   if (specificPost) result = specificPost.result;
 
   return result;
@@ -194,7 +254,9 @@ function invokeTT(id: number, base: any, f: any, strings: any, values: any[], is
 // body and the preceding ones as parameter lists, matching the Function
 // constructor semantics.
 function invokeFunctionConstructor(id: number, f: any, args: any): any {
-  const argArr: string[] = Array.prototype.slice.call(args).map((v: any) => spec.ToString(v));
+  const argArr: string[] = Array.prototype.slice
+    .call(args)
+    .map((v: any) => spec.ToString(v));
   // Invoke the original constructor first so that invalid params or body
   // throw exactly the error the user would normally see.
   f.apply(null, argArr);
@@ -218,7 +280,14 @@ function invokeFun(
   let result: any;
   let skip = false;
   let frame: unknown;
-  const pre = D$.analysis.invokeFunPre?.(id, f, base, args, isConstructor, isMethod);
+  const pre = D$.analysis.invokeFunPre?.(
+    id,
+    f,
+    base,
+    args,
+    isConstructor,
+    isMethod,
+  );
   if (pre) {
     f = pre.f;
     base = pre.base;
@@ -235,7 +304,16 @@ function invokeFun(
       result = CAPTURED.FunctionConstructor.prototype.apply.call(f, base, args);
     }
   }
-  const post = D$.analysis.invokeFun?.(id, f, base, args, result, isConstructor, isMethod, frame);
+  const post = D$.analysis.invokeFun?.(
+    id,
+    f,
+    base,
+    args,
+    result,
+    isConstructor,
+    isMethod,
+    frame,
+  );
   if (post) result = post.result;
   return result;
 }
@@ -247,24 +325,36 @@ function construct(f: any, args: any): any {
   } else {
     // for older environments without Reflect.construct
     switch (args.length) {
-      case 0: return new f();
-      case 1: return new f(args[0]);
-      case 2: return new f(args[0], args[1]);
-      case 3: return new f(args[0], args[1], args[2]);
-      case 4: return new f(args[0], args[1], args[2], args[3]);
+      case 0:
+        return new f();
+      case 1:
+        return new f(args[0]);
+      case 2:
+        return new f(args[0], args[1]);
+      case 3:
+        return new f(args[0], args[1], args[2]);
+      case 4:
+        return new f(args[0], args[1], args[2], args[3]);
     }
     // for more than 4 arguments
     const argArray = Array.prototype.slice.call(args);
-    const TempConstructor: any = function(this: any) {
+    const TempConstructor: any = function (this: any) {
       return f.apply(this, argArray);
-    }
+    };
     TempConstructor.prototype = f.prototype;
     return new TempConstructor();
   }
 }
 
 // hook for function enter
-function Fe(id: number, f: any, base: any, args: any, isAsync: boolean, isGenerator: boolean): void {
+function Fe(
+  id: number,
+  f: any,
+  base: any,
+  args: any,
+  isAsync: boolean,
+  isGenerator: boolean,
+): void {
   returnStack.push(undefined);
   pushSwitchLeft();
   D$.analysis.functionEnter?.(id, f, base, args, isAsync, isGenerator);
@@ -372,7 +462,13 @@ function Gp(
 }
 
 // hook for property writes (set-field)
-function P(id: number, base: any, prop: any, value: any, strict: boolean = false): any {
+function P(
+  id: number,
+  base: any,
+  prop: any,
+  value: any,
+  strict: boolean = false,
+): any {
   let skip = false;
   let frame: unknown;
   const pre = D$.analysis.putFieldPre?.(id, base, prop, value);
@@ -497,7 +593,7 @@ function U(id: number, op: string, operand: any): any {
     err(`unknown unary operator ${op}`);
   }
   if (!skip) {
-    value = f(operand)
+    value = f(operand);
   }
   // general post fires first
   const post = D$.analysis.unary?.(id, op, true, operand, value, frame);
@@ -505,23 +601,37 @@ function U(id: number, op: string, operand: any): any {
     value = post.result;
   }
   // specific post fires second and wins
-  const specificPost = fireSpecificUnary(id, op, true, operand, value, specificFrame);
+  const specificPost = fireSpecificUnary(
+    id,
+    op,
+    true,
+    operand,
+    value,
+    specificFrame,
+  );
   if (specificPost) {
     value = specificPost.result;
   }
   return value;
 }
 const UNARY_OPS: { [op: string]: (a: any) => any } = {
-  "-": (a: any) => -a,
-  "+": (a: any) => +a,
-  "!": (a: any) => !a,
-  "~": (a: any) => ~a,
-  "typeof": (a: any) => typeof a,
-  "void": (a: any) => void a,
-}
+  '-': (a: any) => -a,
+  '+': (a: any) => +a,
+  '!': (a: any) => !a,
+  '~': (a: any) => ~a,
+  typeof: (a: any) => typeof a,
+  void: (a: any) => void a,
+};
 
 // helpers to fire specific binary pre/post callbacks based on op
-function fireSpecificBinaryPre(id: number, op: string, left: any, right: any): { op: string, left: any, right: any, skip: boolean, frame?: unknown } | undefined {
+function fireSpecificBinaryPre(
+  id: number,
+  op: string,
+  left: any,
+  right: any,
+):
+  | { op: string; left: any; right: any; skip: boolean; frame?: unknown }
+  | undefined {
   let cb: keyof Analysis | undefined;
   if (ARITHMETIC_BINARY_OPS.has(op)) cb = 'arithmeticBinaryPre';
   else if (COMPARISON_BINARY_OPS.has(op)) cb = 'comparisonBinaryPre';
@@ -529,7 +639,14 @@ function fireSpecificBinaryPre(id: number, op: string, left: any, right: any): {
   if (!cb) return undefined;
   return (D$.analysis[cb] as any)?.(id, op, left, right);
 }
-function fireSpecificBinary(id: number, op: string, left: any, right: any, value: any, frame?: unknown): { result: any } | undefined {
+function fireSpecificBinary(
+  id: number,
+  op: string,
+  left: any,
+  right: any,
+  value: any,
+  frame?: unknown,
+): { result: any } | undefined {
   let cb: keyof Analysis | undefined;
   if (ARITHMETIC_BINARY_OPS.has(op)) cb = 'arithmeticBinary';
   else if (COMPARISON_BINARY_OPS.has(op)) cb = 'comparisonBinary';
@@ -538,7 +655,12 @@ function fireSpecificBinary(id: number, op: string, left: any, right: any, value
   return (D$.analysis[cb] as any)?.(id, op, left, right, value, frame);
 }
 // helpers to fire specific unary pre/post callbacks based on op
-function fireSpecificUnaryPre(id: number, op: string, prefix: boolean, operand: any): { op: string, operand: any, skip: boolean, frame?: unknown } | undefined {
+function fireSpecificUnaryPre(
+  id: number,
+  op: string,
+  prefix: boolean,
+  operand: any,
+): { op: string; operand: any; skip: boolean; frame?: unknown } | undefined {
   let cb: keyof Analysis | undefined;
   if (ARITHMETIC_UNARY_OPS.has(op)) cb = 'arithmeticUnaryPre';
   else if (op === '!') cb = 'logicalUnaryPre';
@@ -549,7 +671,14 @@ function fireSpecificUnaryPre(id: number, op: string, prefix: boolean, operand: 
   if (!cb) return undefined;
   return (D$.analysis[cb] as any)?.(id, op, prefix, operand);
 }
-function fireSpecificUnary(id: number, op: string, prefix: boolean, operand: any, value: any, frame?: unknown): { result: any } | undefined {
+function fireSpecificUnary(
+  id: number,
+  op: string,
+  prefix: boolean,
+  operand: any,
+  value: any,
+  frame?: unknown,
+): { result: any } | undefined {
   let cb: keyof Analysis | undefined;
   if (ARITHMETIC_UNARY_OPS.has(op)) cb = 'arithmeticUnary';
   else if (op === '!') cb = 'logicalUnary';
@@ -590,50 +719,74 @@ function B(id: number, op: string, left: any, right: any): any {
     err(`unknown binary operator ${op}`);
   }
   if (!skip) {
-    value = f(left, right)
+    value = f(left, right);
   }
   // general post fires first
   const post = D$.analysis.binary?.(id, op, left, right, value, frame);
   if (post) value = post.result;
   // specific post fires second and wins
-  const specificPost = fireSpecificBinary(id, op, left, right, value, specificFrame);
+  const specificPost = fireSpecificBinary(
+    id,
+    op,
+    left,
+    right,
+    value,
+    specificFrame,
+  );
   if (specificPost) value = specificPost.result;
   return value;
 }
 const BINARY_OPS: { [op: string]: (a: any, b: any) => any } = {
-  "==": (a: any, b: any) => a == b,
-  "!=": (a: any, b: any) => a != b,
-  "===": (a: any, b: any) => a === b,
-  "!==": (a: any, b: any) => a !== b,
-  "<": (a: any, b: any) => a < b,
-  "<=": (a: any, b: any) => a <= b,
-  ">": (a: any, b: any) => a > b,
-  ">=": (a: any, b: any) => a >= b,
-  "<<": (a: any, b: any) => a << b,
-  ">>": (a: any, b: any) => a >> b,
-  ">>>": (a: any, b: any) => a >>> b,
-  "+": (a: any, b: any) => a + b,
-  "-": (a: any, b: any) => a - b,
-  "*": (a: any, b: any) => a * b,
-  "/": (a: any, b: any) => a / b,
-  "%": (a: any, b: any) => a % b,
-  "|": (a: any, b: any) => a | b,
-  "^": (a: any, b: any) => a ^ b,
-  "&": (a: any, b: any) => a & b,
-  "in": (a: any, b: any) => a in b,
-  "instanceof": (a: any, b: any) => a instanceof b,
-  "**": (a: any, b: any) => a ** b,
-}
+  '==': (a: any, b: any) => a == b,
+  '!=': (a: any, b: any) => a != b,
+  '===': (a: any, b: any) => a === b,
+  '!==': (a: any, b: any) => a !== b,
+  '<': (a: any, b: any) => a < b,
+  '<=': (a: any, b: any) => a <= b,
+  '>': (a: any, b: any) => a > b,
+  '>=': (a: any, b: any) => a >= b,
+  '<<': (a: any, b: any) => a << b,
+  '>>': (a: any, b: any) => a >> b,
+  '>>>': (a: any, b: any) => a >>> b,
+  '+': (a: any, b: any) => a + b,
+  '-': (a: any, b: any) => a - b,
+  '*': (a: any, b: any) => a * b,
+  '/': (a: any, b: any) => a / b,
+  '%': (a: any, b: any) => a % b,
+  '|': (a: any, b: any) => a | b,
+  '^': (a: any, b: any) => a ^ b,
+  '&': (a: any, b: any) => a & b,
+  in: (a: any, b: any) => a in b,
+  instanceof: (a: any, b: any) => a instanceof b,
+  '**': (a: any, b: any) => a ** b,
+};
 const ARITHMETIC_BINARY_OPS = new Set(['+', '-', '*', '/', '%', '**']);
-const COMPARISON_BINARY_OPS = new Set(['==', '!=', '===', '!==', '<', '<=', '>', '>=', 'in', 'instanceof']);
-const BITWISE_BINARY_OPS    = new Set(['&', '|', '^', '<<', '>>', '>>>']);
-const ARITHMETIC_UNARY_OPS  = new Set(['+', '-']);
-const UPDATE_UNARY_OPS      = new Set(['++', '--']);
+const COMPARISON_BINARY_OPS = new Set([
+  '==',
+  '!=',
+  '===',
+  '!==',
+  '<',
+  '<=',
+  '>',
+  '>=',
+  'in',
+  'instanceof',
+]);
+const BITWISE_BINARY_OPS = new Set(['&', '|', '^', '<<', '>>', '>>>']);
+const ARITHMETIC_UNARY_OPS = new Set(['+', '-']);
+const UPDATE_UNARY_OPS = new Set(['++', '--']);
 const CONDITION_CB: Record<string, keyof Analysis> = {
-  'if': 'ifCondition', 'while': 'whileCondition', 'do-while': 'whileCondition',
-  'for': 'forCondition', '?': 'ternaryCondition',
-  '&&': 'logicalAnd', '||': 'logicalOr', '??': 'nullishCoalescing',
-  '?.': 'optionalChain', 'switch': 'switchCondition',
+  if: 'ifCondition',
+  while: 'whileCondition',
+  'do-while': 'whileCondition',
+  for: 'forCondition',
+  '?': 'ternaryCondition',
+  '&&': 'logicalAnd',
+  '||': 'logicalOr',
+  '??': 'nullishCoalescing',
+  '?.': 'optionalChain',
+  switch: 'switchCondition',
 };
 
 // hook for update operations. Threads pre/post results like B/U: the pre's
@@ -642,7 +795,14 @@ const CONDITION_CB: Record<string, keyof Analysis> = {
 // binary post's result (e.g. a wrapped value) is what gets written back. The
 // unary `skip` is ignored: ++/-- has no single native op to skip, only the
 // decomposed binary, whose own `skip` is respected below.
-function Up(id: number, binaryId: number, op: string, prefix: boolean, argument: any, write: (x: any) => any): any {
+function Up(
+  id: number,
+  binaryId: number,
+  op: string,
+  prefix: boolean,
+  argument: any,
+  write: (x: any) => any,
+): any {
   let operand = argument;
   let unaryFrame: unknown;
   let specificUnaryFrame: unknown;
@@ -672,7 +832,12 @@ function Up(id: number, binaryId: number, op: string, prefix: boolean, argument:
     skip = binaryPre.skip;
     binaryFrame = binaryPre.frame;
   }
-  const specificBinaryPre = fireSpecificBinaryPre(binaryId, binaryOp, left, right);
+  const specificBinaryPre = fireSpecificBinaryPre(
+    binaryId,
+    binaryOp,
+    left,
+    right,
+  );
   if (specificBinaryPre) {
     left = specificBinaryPre.left;
     right = specificBinaryPre.right;
@@ -684,15 +849,43 @@ function Up(id: number, binaryId: number, op: string, prefix: boolean, argument:
     // @ts-ignore
     newValue = op === '++' ? left + right : left - right;
   }
-  const binaryPost = D$.analysis.binary?.(binaryId, binaryOp, left, right, newValue, binaryFrame);
+  const binaryPost = D$.analysis.binary?.(
+    binaryId,
+    binaryOp,
+    left,
+    right,
+    newValue,
+    binaryFrame,
+  );
   if (binaryPost) newValue = binaryPost.result;
-  const specificBinaryPost = fireSpecificBinary(binaryId, binaryOp, left, right, newValue, specificBinaryFrame);
+  const specificBinaryPost = fireSpecificBinary(
+    binaryId,
+    binaryOp,
+    left,
+    right,
+    newValue,
+    specificBinaryFrame,
+  );
   if (specificBinaryPost) newValue = specificBinaryPost.result;
   write(newValue);
   let result = prefix ? newValue : oldValue;
-  const unaryPost = D$.analysis.unary?.(id, op, prefix, operand, result, unaryFrame);
+  const unaryPost = D$.analysis.unary?.(
+    id,
+    op,
+    prefix,
+    operand,
+    result,
+    unaryFrame,
+  );
   if (unaryPost) result = unaryPost.result;
-  const specificUnaryPost = fireSpecificUnary(id, op, prefix, operand, result, specificUnaryFrame);
+  const specificUnaryPost = fireSpecificUnary(
+    id,
+    op,
+    prefix,
+    operand,
+    result,
+    specificUnaryFrame,
+  );
   if (specificUnaryPost) result = specificUnaryPost.result;
   return result;
 }
@@ -726,7 +919,13 @@ function Swr(id: number, caseValue: any): any {
 }
 
 // hook for variable declarations
-function D(id: number, name: string, kind: VarKind, isSpread: boolean, value?: any): void {
+function D(
+  id: number,
+  name: string,
+  kind: VarKind,
+  isSpread: boolean,
+  value?: any,
+): void {
   const init = arguments.length >= 5;
   D$.analysis.declare?.(id, name, kindToStr[kind], init, value, isSpread);
 }
@@ -880,7 +1079,11 @@ function isInstrumented(f: unknown): boolean {
     let src = '';
     // pristine toString: user code may override Function.prototype.toString;
     // exotic callables (revoked proxies) may throw — treat as uncontrolled
-    try { src = CAPTURED.FunctionToString.call(f); } catch { /* uncontrolled */ }
+    try {
+      src = CAPTURED.FunctionToString.call(f);
+    } catch {
+      /* uncontrolled */
+    }
     cached = src.includes(INSTRUMENTED_MARK);
     instrumentedCache.set(f, cached);
   }
@@ -894,7 +1097,13 @@ function Ce(): void {
 }
 
 // hook for class field initialization
-function Fi(id: number, obj: any, key: any, isStatic: boolean, value: any): any {
+function Fi(
+  id: number,
+  obj: any,
+  key: any,
+  isStatic: boolean,
+  value: any,
+): any {
   const post = D$.analysis.fieldInit?.(id, obj, key, isStatic, value);
   if (post) value = post.result;
   return value;
@@ -903,7 +1112,7 @@ function Fi(id: number, obj: any, key: any, isStatic: boolean, value: any): any 
 // hook for super() constructor calls
 // caller is (...args) => super(...args); returns function so args flow normally
 function Su(id: number, caller: (...args: any[]) => any): any {
-  return function() {
+  return function () {
     let args: any[] = Array.from(arguments);
     const pre = D$.analysis.superCallPre?.(id, args);
     if (pre) args = pre.args;
@@ -915,7 +1124,13 @@ function Su(id: number, caller: (...args: any[]) => any): any {
 }
 
 // helper to dispatch super method call hooks around an already-resolved function
-function invokeSuperMethod(id: number, thisVal: any, prop: any, f: any, rawArgs: IArguments): any {
+function invokeSuperMethod(
+  id: number,
+  thisVal: any,
+  prop: any,
+  f: any,
+  rawArgs: IArguments,
+): any {
   let args: any[] = Array.from(rawArgs);
   const pre = D$.analysis.superMethodCallPre?.(id, thisVal, prop, args);
   if (pre) {
@@ -944,21 +1159,17 @@ function Sm(
   if (f === chainSkip) return () => chainSkip;
   if (callOptional) {
     f = C(id, '?.', f);
-    if (f === null || f === undefined || f === chainSkip) return () => chainSkip;
+    if (f === null || f === undefined || f === chainSkip)
+      return () => chainSkip;
   }
-  return function() {
+  return function () {
     return invokeSuperMethod(id, thisVal, prop, f, arguments);
   };
 }
 
 // hook for super.prop / super[k] reads
 // getter is () => super.prop (thunk, ignores thisVal since super is lexical)
-function Gs(
-  id: number,
-  thisVal: any,
-  prop: any,
-  getter: () => any,
-): any {
+function Gs(id: number, thisVal: any, prop: any, getter: () => any): any {
   let value: any;
   const pre = D$.analysis.superGetFieldPre?.(id, thisVal, prop);
   if (pre) prop = pre.prop;
@@ -990,7 +1201,7 @@ function Ps(
 // get the location string from an id
 function idToLoc(id: number): string {
   return locToStr(D$.ids[id]);
-};
+}
 
 // get the originating file for an id. `D$.files` holds one [lo, hi, file]
 // interval per instrumented file (ids are globally unique and contiguous per
@@ -1000,7 +1211,7 @@ function idToFile(id: number): string | undefined {
     if (id >= lo && id <= hi) return file;
   }
   return undefined;
-};
+}
 
 // hook for eval code instrumentation
 function Ev(id: number, code: any, isDirect: boolean): any {
@@ -1010,9 +1221,9 @@ function Ev(id: number, code: any, isDirect: boolean): any {
     if (pre.skip) return code;
   }
   const instCode =
-    typeof code === 'string' ? 
-      D$.instrument(code, isDirect ? 'eval' : 'evalIndirect')
-    : code;
+    typeof code === 'string'
+      ? D$.instrument(code, isDirect ? 'eval' : 'evalIndirect')
+      : code;
   const post = D$.analysis.instrumentCode?.(id, instCode, isDirect);
   return post ? post.result : instCode;
 }
@@ -1029,24 +1240,64 @@ const BASE = {
   utils,
   chainSkip,
   Ch,
-  Se, Sx, F, M, Mp, TF, TM, TMp, Fe, Fx, Re, O, E, G, Gp, P, Pp, De,
-  U, B, Up, C, Swl, Swr, D, R, W, L, TL, Th, X, Y, Yr, Aw, Awr,
-  Fi, Ce, Su, Sm, Gs, Ps, Ev, Lcs, Lcv, isInstrumented
+  Se,
+  Sx,
+  F,
+  M,
+  Mp,
+  TF,
+  TM,
+  TMp,
+  Fe,
+  Fx,
+  Re,
+  O,
+  E,
+  G,
+  Gp,
+  P,
+  Pp,
+  De,
+  U,
+  B,
+  Up,
+  C,
+  Swl,
+  Swr,
+  D,
+  R,
+  W,
+  L,
+  TL,
+  Th,
+  X,
+  Y,
+  Yr,
+  Aw,
+  Awr,
+  Fi,
+  Ce,
+  Su,
+  Sm,
+  Gs,
+  Ps,
+  Ev,
+  Lcs,
+  Lcv,
+  isInstrumented,
 };
 type GENERATED = {
   // on-the-fly instrumentation API
   instrument: (code: string, filename: string | undefined) => string;
-}
+};
 type DynaJSType = typeof BASE & GENERATED;
 
-export function setBaseObj(runtimeOpts : RuntimeOptions) {
+export function setBaseObj(runtimeOpts: RuntimeOptions) {
   let counter = 0;
 
   const generated = {
-
     instrument: (code: string, filename: string | undefined) => {
-
-      const instrumentOpt : StateOption = {
+      const instrumentOpt: StateOption = {
         ...runtimeOpts,
         isScript: false, // treat as module code for now - see issue #5
         callbackHint: undefined, // TODO mode,
@@ -1055,8 +1306,8 @@ export function setBaseObj(runtimeOpts : RuntimeOptions) {
       };
 
       return instrument(code, instrumentOpt);
-    }
-  }
+    },
+  };
   const dynaJSType = { ...BASE, ...generated } as DynaJSType;
-  globalThis.D$ =  dynaJSType;
+  globalThis.D$ = dynaJSType;
 }

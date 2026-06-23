@@ -1,10 +1,13 @@
-import type { InitializeHook, LoadHook, ResolveHook } from "node:module";
-import type { CallbackHint } from "../partial.js";
-import { instrument } from "../instrument/main.js";
-import { getInstrumentedName, getStatName, log, writeFile } from "../utils.js";
-import type { RuntimeOptions } from "./options.js";
-import { getFilePathFromUrl, isInstrumentTarget as isInstrumentTargetPath } from "./include.js";
-import { initializeIdGenerator } from "../instrument/write.js";
+import type { InitializeHook, LoadHook, ResolveHook } from 'node:module';
+import type { CallbackHint } from '../partial.js';
+import { instrument } from '../instrument/main.js';
+import { getInstrumentedName, getStatName, log, writeFile } from '../utils.js';
+import type { RuntimeOptions } from './options.js';
+import {
+  getFilePathFromUrl,
+  isInstrumentTarget as isInstrumentTargetPath,
+} from './include.js';
+import { initializeIdGenerator } from '../instrument/write.js';
 
 let mode: CallbackHint | undefined;
 let options: RuntimeOptions;
@@ -17,7 +20,10 @@ function isInstrumentTarget(url: string): boolean {
   return isInstrumentTargetPath(filename, options);
 }
 
-function writeInstrumentedFile(instrumentedPath: string, content: string): void {
+function writeInstrumentedFile(
+  instrumentedPath: string,
+  content: string,
+): void {
   writeFile(instrumentedPath, content);
 }
 

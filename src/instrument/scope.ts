@@ -58,8 +58,10 @@ export class Scope {
     if (func.id != null && func.body.type === 'BlockStatement') {
       const stmts = (func.body as any).body as any[];
       for (const stmt of stmts) {
-        if (stmt.type === 'VariableDeclaration' &&
-            (stmt.kind === 'let' || stmt.kind === 'const')) {
+        if (
+          stmt.type === 'VariableDeclaration' &&
+          (stmt.kind === 'let' || stmt.kind === 'const')
+        ) {
           for (const decl of stmt.declarations) {
             for (const x of collectIdentifiers(decl.id as acorn.Pattern)) {
               if (x === func.id.name) {
@@ -67,8 +69,11 @@ export class Scope {
               }
             }
           }
-        } else if (stmt.type === 'ClassDeclaration' && stmt.id != null &&
-                   stmt.id.name === func.id.name) {
+        } else if (
+          stmt.type === 'ClassDeclaration' &&
+          stmt.id != null &&
+          stmt.id.name === func.id.name
+        ) {
           this.tdzShadowedFuncNames.add(stmt.id.name);
         }
       }
@@ -146,7 +151,7 @@ export class Scope {
       }
     },
     ClassExpression: (node, scope, c) => {},
-  }
+  };
 
   static lexicalVisitors: RecursiveVisitors<Scope> = {
     ImportDeclaration: (node, scope, c) => {
@@ -184,5 +189,5 @@ export class Scope {
     ArrowFunctionExpression: (node, scope, c) => {},
     ClassDeclaration: (node, scope, c) => {},
     ClassExpression: (node, scope, c) => {},
-  }
+  };
 }

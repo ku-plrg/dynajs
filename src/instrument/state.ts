@@ -10,17 +10,16 @@ import type { PosMode } from '../constant.js';
 // -----------------------------------------------------------------------------
 
 export interface StateOption {
-  write?: (str: string) => void
-  indent?: string
-  lineEnd?: string
-  instrumentedPath?: string
-  originalPath?: string
-  verbose?: boolean
-  pos: PosMode
-  callbackHint: CallbackHint | undefined
-  isScript: boolean
+  write?: (str: string) => void;
+  indent?: string;
+  lineEnd?: string;
+  instrumentedPath?: string;
+  originalPath?: string;
+  verbose?: boolean;
+  pos: PosMode;
+  callbackHint: CallbackHint | undefined;
+  isScript: boolean;
 }
-
 
 export class State {
   output: string;
@@ -43,7 +42,9 @@ export class State {
     if (options.write != null) {
       this.write = options.write;
     } else {
-      this.write = (str: string) => { this.output += str };
+      this.write = (str: string) => {
+        this.output += str;
+      };
     }
     this.indent = options.indent ?? '  ';
     this.indentLevel = 0;
@@ -68,7 +69,10 @@ export class State {
     return result;
   }
 
-  createScope(body: (scope: Scope) => void, forLexical: boolean = false): Scope {
+  createScope(
+    body: (scope: Scope) => void,
+    forLexical: boolean = false,
+  ): Scope {
     const scope = new Scope(this.scope, forLexical);
     body(scope);
     this.scope = scope;
@@ -121,10 +125,7 @@ export class State {
     this.walk(node);
   }
 
-  walkArray(
-    nodes: acorn.Node[],
-    sep: string = ', ',
-  ): void {
+  walkArray(nodes: acorn.Node[], sep: string = ', '): void {
     const length = nodes.length;
     if (length === 0) return;
     this.walk(nodes[0]);

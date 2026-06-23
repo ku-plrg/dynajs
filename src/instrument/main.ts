@@ -21,7 +21,9 @@ import { State, type StateOption } from './state.js';
 import { beginLocCollection, getFileIdToLoc } from './write.js';
 import { fixNamedEvaluations } from './fix-named-eval.js';
 
-function mergeLocsToRuntime(fileLocs: { [id: number]: [number, number, number, number] }): void {
+function mergeLocsToRuntime(fileLocs: {
+  [id: number]: [number, number, number, number];
+}): void {
   const runtime = (globalThis as any).D$;
   if (!runtime || typeof runtime !== 'object') return;
   if (!runtime.ids || typeof runtime.ids !== 'object') return;
@@ -32,8 +34,11 @@ function mergeLocsToRuntime(fileLocs: { [id: number]: [number, number, number, n
 // down — see initializeIdGenerator), so one `instrument()` call yields one
 // closed id interval for `file`. Store it as a [lo, hi, file] interval rather
 // than a string per id, and let the runtime resolve `id -> file` by lookup.
-function idIntervalOf(fileLocs: { [id: number]: [number, number, number, number] }): [number, number] | undefined {
-  let lo = Infinity, hi = -Infinity;
+function idIntervalOf(fileLocs: {
+  [id: number]: [number, number, number, number];
+}): [number, number] | undefined {
+  let lo = Infinity,
+    hi = -Infinity;
   for (const key of Object.keys(fileLocs)) {
     const id = Number(key);
     if (id < lo) lo = id;
@@ -74,7 +79,7 @@ export function instrument(code: string, options: StateOption): string {
   const state = new State(options);
   if (options.verbose) log(stringify(ast));
 
-  let output = code
+  let output = code;
 
   if (code.indexOf(NO_INSTRUMENT) == -1) {
     fixNamedEvaluations(ast);
@@ -95,8 +100,13 @@ ${state.output}`;
 
   const prefixLines = [NO_INSTRUMENT];
   if (locMode === PosMode.PERSIST) {
-    prefixLines.push(`${DYNAJS_VAR}.ids = Object.assign(${DYNAJS_VAR}.ids, ${JSON.stringify(fileIdToLoc)});`);
-    if (interval) prefixLines.push(`${DYNAJS_VAR}.files.push([${interval[0]}, ${interval[1]}, ${JSON.stringify(file)}]);`);
+    prefixLines.push(
+      `${DYNAJS_VAR}.ids = Object.assign(${DYNAJS_VAR}.ids, ${JSON.stringify(fileIdToLoc)});`,
+    );
+    if (interval)
+      prefixLines.push(
+        `${DYNAJS_VAR}.files.push([${interval[0]}, ${interval[1]}, ${JSON.stringify(file)}]);`,
+      );
   }
   output = `${prefixLines.join('\n')}
 ${output}`;
@@ -104,4 +114,3 @@ ${output}`;
   if (options.verbose) log(output.trim());
   return output;
 }
-

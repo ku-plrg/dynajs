@@ -20,7 +20,8 @@ export function isInstrumentTarget(
     const relative = path.relative(root, filepath);
     if (relative.startsWith('..') || path.isAbsolute(relative)) continue;
     // is .includes good enough?
-    if (options.ignoreNodeModules && relative.includes('node_modules')) continue;
+    if (options.ignoreNodeModules && relative.includes('node_modules'))
+      continue;
     return true;
   }
   return false;

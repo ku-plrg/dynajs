@@ -1,19 +1,19 @@
-import { build } from "esbuild";
-import chalk from "chalk";
+import { build } from 'esbuild';
+import chalk from 'chalk';
 
 const requireBanner = [
   'import { createRequire } from "node:module";',
-  "const require = createRequire(import.meta.url);",
-].join("\n");
+  'const require = createRequire(import.meta.url);',
+].join('\n');
 
 const entryPoints = [
   {
-    entry: "analyses/taint/src/index.ts",
-    outfile: "analyses/dist/Taint.mjs",
+    entry: 'analyses/taint/src/index.ts',
+    outfile: 'analyses/dist/Taint.mjs',
   },
   {
-    entry: "analyses/concolic/src/index.ts",
-    outfile: "analyses/dist/Concolic.mjs",
+    entry: 'analyses/concolic/src/index.ts',
+    outfile: 'analyses/dist/Concolic.mjs',
   },
 ];
 
@@ -23,20 +23,20 @@ const results = await Promise.allSettled(
       entryPoints: [entry],
       outfile,
       bundle: true,
-      format: "esm",
-      platform: "node",
-      target: "node20",
-      packages: "bundle",
+      format: 'esm',
+      platform: 'node',
+      target: 'node20',
+      packages: 'bundle',
       banner: {
         js: requireBanner,
       },
-      tsconfig: "./analyses/tsconfig.json",
-      logLevel: "warning",
+      tsconfig: './analyses/tsconfig.json',
+      logLevel: 'warning',
     }),
   ),
 );
 
-const failed = results.filter((r) => r.status === "rejected");
+const failed = results.filter((r) => r.status === 'rejected');
 if (failed.length > 0) {
   console.error(
     chalk.red(

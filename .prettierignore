@@ -1,4 +1,5 @@
 bench/
 tests/
 samples/
+analyses/flow/spec/
 **/*.html

@@ -91,21 +91,9 @@ export function getRuntimeOptions(): RuntimeOptions {
       analysis: ['a'],
       pos: ['position'],
     },
-    boolean: [
-      'help',
-      'verbose',
-      'partial',
-      'full',
-      'ignore-node-modules',
-    ],
-    string: [
-      'analysis',
-      'home',
-      'pos',
-    ],
-    array: [
-      'include',
-    ],
+    boolean: ['help', 'verbose', 'partial', 'full', 'ignore-node-modules'],
+    string: ['analysis', 'home', 'pos'],
+    array: ['include'],
     configuration: {
       'short-option-groups': false,
     },
@@ -123,8 +111,11 @@ export function getRuntimeOptions(): RuntimeOptions {
     analysis: getStringValue(parsed.analysis),
     home: getStringValue(parsed.home) ?? process.env.DYNAJS_HOME,
     verbose: typeof parsed.verbose === 'boolean' ? parsed.verbose : false,
-    partialHook: full ? false : partial ?? false,
-    ignoreNodeModules: typeof parsed['ignore-node-modules'] === 'boolean' ? parsed['ignore-node-modules'] : false,
+    partialHook: full ? false : (partial ?? false),
+    ignoreNodeModules:
+      typeof parsed['ignore-node-modules'] === 'boolean'
+        ? parsed['ignore-node-modules']
+        : false,
     pos: parseLocMode(getStringValue(parsed.pos)),
     includeRoots: collectIncludeRoots(parsed),
   };

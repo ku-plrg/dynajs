@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 // dynajs concolic bridge for ExpoSE's `S$` module (its SDollar / AssertToolkit).
 //
@@ -27,7 +27,7 @@ globalThis.__NotAnError__ = NotAnErrorException;
 // A genuinely-absent second argument is the only `undefined` case here, so this
 // holds whether or not `typeof` sees through the wrapper.
 S$.symbol = function (name, concrete) {
-  if (typeof concrete !== "undefined") {
+  if (typeof concrete !== 'undefined') {
     return globalThis.__s_symbol__(name, concrete);
   }
   return S$.pureSymbol(name);

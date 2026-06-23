@@ -56,27 +56,66 @@ function Desugar(regex: string): string {
 // --- ReNode / Sym builders (the ctx.mk* surface RegexRecursive uses) --------
 
 const reLit = (value: string): ReNode => ({ kind: 'reLit', value });
-const reRange = (lo: string, hi: string): ReNode => ({ kind: 'reRange', lo, hi });
-const reUnion = (left: ReNode, right: ReNode): ReNode => ({ kind: 'reUnion', left, right });
-const reInter = (left: ReNode, right: ReNode): ReNode => ({ kind: 'reInter', left, right });
-const reConcat = (left: ReNode, right: ReNode): ReNode => ({ kind: 'reConcat', left, right });
+const reRange = (lo: string, hi: string): ReNode => ({
+  kind: 'reRange',
+  lo,
+  hi,
+});
+const reUnion = (left: ReNode, right: ReNode): ReNode => ({
+  kind: 'reUnion',
+  left,
+  right,
+});
+const reInter = (left: ReNode, right: ReNode): ReNode => ({
+  kind: 'reInter',
+  left,
+  right,
+});
+const reConcat = (left: ReNode, right: ReNode): ReNode => ({
+  kind: 'reConcat',
+  left,
+  right,
+});
 const reStar = (body: ReNode): ReNode => ({ kind: 'reStar', body });
 const rePlus = (body: ReNode): ReNode => ({ kind: 'rePlus', body });
 const reOpt = (body: ReNode): ReNode => ({ kind: 'reOpt', body });
 const reComp = (body: ReNode): ReNode => ({ kind: 'reComp', body });
-const reLoop = (body: ReNode, lo: number, hi: number): ReNode => ({ kind: 'reLoop', body, lo, hi });
+const reLoop = (body: ReNode, lo: number, hi: number): ReNode => ({
+  kind: 'reLoop',
+  body,
+  lo,
+  hi,
+});
 
 const sStr = (value: string): Sym => ({ kind: 'const', value });
 const sInt = (value: number): Sym => ({ kind: 'const', value });
 const sBool = (value: boolean): Sym => ({ kind: 'const', value });
-const seqConcat = (parts: Sym[]): Sym => parts.reduce((a, b) => ({ kind: 'concat', left: a, right: b }));
+const seqConcat = (parts: Sym[]): Sym =>
+  parts.reduce((a, b) => ({ kind: 'concat', left: a, right: b }));
 const seqLen = (src: Sym): Sym => ({ kind: 'strlen', src });
 const inRe = (str: Sym, re: ReNode): Sym => ({ kind: 'inRe', str, re });
-const eq = (a: Sym, b: Sym): Sym => ({ kind: 'binary', op: '===', left: a, right: b });
-const or = (a: Sym, b: Sym): Sym => ({ kind: 'binary', op: '||', left: a, right: b });
-const implies = (a: Sym, b: Sym): Sym => ({ kind: 'binary', op: '=>', left: a, right: b });
+const eq = (a: Sym, b: Sym): Sym => ({
+  kind: 'binary',
+  op: '===',
+  left: a,
+  right: b,
+});
+const or = (a: Sym, b: Sym): Sym => ({
+  kind: 'binary',
+  op: '||',
+  left: a,
+  right: b,
+});
+const implies = (a: Sym, b: Sym): Sym => ({
+  kind: 'binary',
+  op: '=>',
+  left: a,
+  right: b,
+});
 const andList = (xs: Sym[]): Sym =>
-  xs.length ? xs.reduce((a, b) => ({ kind: 'binary', op: '&&', left: a, right: b })) : sBool(true);
+  xs.length
+    ? xs.reduce((a, b) => ({ kind: 'binary', op: '&&', left: a, right: b }))
+    : sBool(true);
 
 // --- the parser ------------------------------------------------------------
 
@@ -85,7 +124,11 @@ type ParseError = { error: string; idx: number; remaining: string };
 // One recursive-descent pass over `regex` (the regexp *source*, already culled
 // of `/.../` and flags). `mint()` supplies fresh String vars; it is shared
 // across the nested calls below so every filler/capture name is unique.
-function RegexRecursive(regex: string, startIdx: number, mint: () => Sym): EncodedRegex {
+function RegexRecursive(
+  regex: string,
+  startIdx: number,
+  mint: () => Sym,
+): EncodedRegex {
   const pp_steps: { type: string; idx: number; re?: string }[] = [];
 
   let idx = startIdx;
@@ -204,7 +247,11 @@ function RegexRecursive(regex: string, startIdx: number, mint: () => Sym): Encod
     // Hack to greedly eat anything that is definately not a special character.
     // Makes SMT formulee look prettier. We look ahead and drop back to atom-by-
     // atom parsing if the lookahead is special.
-    while (current() && IS_JUST_TEXT.test(current()!) && !IS_SPECIAL.test(peek()!)) {
+    while (
+      current() &&
+      IS_JUST_TEXT.test(current()!) &&
+      !IS_SPECIAL.test(peek()!)
+    ) {
       parsed_str += next();
     }
     return mk(parsed_str);
@@ -235,7 +282,8 @@ function RegexRecursive(regex: string, startIdx: number, mint: () => Sym): Encod
       else if (c == 'x') {
         const c1 = next()!;
         const c2 = next()!;
-        if (!isHex(c1) || !isHex(c2)) throw BuildError('Expected hex character at ' + c1 + ' and ' + c2);
+        if (!isHex(c1) || !isHex(c2))
+          throw BuildError('Expected hex character at ' + c1 + ' and ' + c2);
         const hexToInt = parseInt(c1 + c2, 16);
         return mk(String.fromCharCode(hexToInt));
       } else if (c == 'u') {
@@ -245,8 +293,12 @@ function RegexRecursive(regex: string, startIdx: number, mint: () => Sym): Encod
           next();
         }
         const unicodeSequence = next()! + next()! + next()! + next()!;
-        if (expectingRBrace && next() != '}') throw BuildError('Expecting RBrace in unicode sequence');
-        if (!isHex(unicodeSequence)) throw BuildError('Expected digits in unicode sequence ' + unicodeSequence);
+        if (expectingRBrace && next() != '}')
+          throw BuildError('Expecting RBrace in unicode sequence');
+        if (!isHex(unicodeSequence))
+          throw BuildError(
+            'Expected digits in unicode sequence ' + unicodeSequence,
+          );
         return mk(String.fromCharCode(parseInt(unicodeSequence, 16)));
       } else if (c == 'r') return mk('\r');
       else if (c == 'v') return mk('\v');
@@ -340,7 +392,8 @@ function RegexRecursive(regex: string, startIdx: number, mint: () => Sym): Encod
             // If anything the capture is optional then anything inside it is also optional
             // TODO: Take a list of originals and rewrite an implication
             // iff Len(origin) > 0 then c[i] = o[i]
-            for (let i = newestCapture; i < captures.length; i++) rewriteCaptureOptional(i);
+            for (let i = newestCapture; i < captures.length; i++)
+              rewriteCaptureOptional(i);
             buildStarConstraints(atoms, newestCapture);
             break;
           }
@@ -363,7 +416,11 @@ function RegexRecursive(regex: string, startIdx: number, mint: () => Sym): Encod
   }
 
   function ParseMaybeAssertion(captureIndex: number): ReNode {
-    if (current() == '(' && peek() == '?' && (peek(2) == '!' || peek(2) == '=')) {
+    if (
+      current() == '(' &&
+      peek() == '?' &&
+      (peek(2) == '!' || peek(2) == '=')
+    ) {
       const end = FindClosingParen(regex, idx + 3);
       const re = regex.slice(idx + 3, end);
       pp_steps.push({ type: peek(2)!, re, idx: end + 1 });
@@ -483,10 +540,20 @@ function RegexRecursive(regex: string, startIdx: number, mint: () => Sym): Encod
 
     const cFinal = mint();
 
-    function buildSide(side: Sym, left: Sym[], original: Sym[], right: Sym[]): void {
+    function buildSide(
+      side: Sym,
+      left: Sym[],
+      original: Sym[],
+      right: Sym[],
+    ): void {
       const forceRightNothing = right.map((x) => eq(x, sStr('')));
       const forceLeftOriginal = left.map((x, i) => eq(left[i], original[i]));
-      assertions.push(implies(eq(cFinal, side), andList(forceRightNothing.concat(forceLeftOriginal))));
+      assertions.push(
+        implies(
+          eq(cFinal, side),
+          andList(forceRightNothing.concat(forceLeftOriginal)),
+        ),
+      );
     }
 
     buildSide(cLeft, leftCaptures, leftOriginals, rightCaptures);
@@ -639,7 +706,16 @@ function RegexRecursive(regex: string, startIdx: number, mint: () => Sym): Encod
     assertions.push(eq(captures[i], cur));
   }
 
-  return { ast, implier, assertions, captures, startIndex, anchoredStart, anchoredEnd, backreferences };
+  return {
+    ast,
+    implier,
+    assertions,
+    captures,
+    startIndex,
+    anchoredStart,
+    anchoredEnd,
+    backreferences,
+  };
 }
 
 function chr(code: number): string {

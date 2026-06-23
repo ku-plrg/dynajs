@@ -2,7 +2,6 @@ import type { SpecRuntime } from './type.js';
 import * as generated from './spec/index.js';
 
 export class Model {
-
   // --- static properties and methods ---
   static BUILTINS = new Map<Function, Function>([
     [String.fromCharCode, generated.INTRINSICS_String_fromCharCode],
@@ -10,33 +9,72 @@ export class Model {
     [String.raw, generated.INTRINSICS_String_raw],
     [String.prototype.at, generated.INTRINSICS_String_prototype_at],
     [String.prototype.charAt, generated.INTRINSICS_String_prototype_charAt],
-    [String.prototype.charCodeAt, generated.INTRINSICS_String_prototype_charCodeAt],
-    [String.prototype.codePointAt, generated.INTRINSICS_String_prototype_codePointAt],
+    [
+      String.prototype.charCodeAt,
+      generated.INTRINSICS_String_prototype_charCodeAt,
+    ],
+    [
+      String.prototype.codePointAt,
+      generated.INTRINSICS_String_prototype_codePointAt,
+    ],
     [String.prototype.concat, generated.INTRINSICS_String_prototype_concat],
     [String.prototype.endsWith, generated.INTRINSICS_String_prototype_endsWith],
     [String.prototype.includes, generated.INTRINSICS_String_prototype_includes],
     [String.prototype.indexOf, generated.INTRINSICS_String_prototype_indexOf],
-    [String.prototype.isWellFormed, generated.INTRINSICS_String_prototype_isWellFormed],
-    [String.prototype.lastIndexOf, generated.INTRINSICS_String_prototype_lastIndexOf],
-    [String.prototype.localeCompare, generated.INTRINSICS_String_prototype_localeCompare],
-    [String.prototype.normalize, generated.INTRINSICS_String_prototype_normalize],
+    [
+      String.prototype.isWellFormed,
+      generated.INTRINSICS_String_prototype_isWellFormed,
+    ],
+    [
+      String.prototype.lastIndexOf,
+      generated.INTRINSICS_String_prototype_lastIndexOf,
+    ],
+    [
+      String.prototype.localeCompare,
+      generated.INTRINSICS_String_prototype_localeCompare,
+    ],
+    [
+      String.prototype.normalize,
+      generated.INTRINSICS_String_prototype_normalize,
+    ],
     [String.prototype.padEnd, generated.INTRINSICS_String_prototype_padEnd],
     [String.prototype.padStart, generated.INTRINSICS_String_prototype_padStart],
     [String.prototype.repeat, generated.INTRINSICS_String_prototype_repeat],
     [String.prototype.replace, generated.INTRINSICS_String_prototype_replace],
-    [String.prototype.replaceAll, generated.INTRINSICS_String_prototype_replaceAll],
+    [
+      String.prototype.replaceAll,
+      generated.INTRINSICS_String_prototype_replaceAll,
+    ],
     [String.prototype.slice, generated.INTRINSICS_String_prototype_slice],
     [String.prototype.split, generated.INTRINSICS_String_prototype_split],
-    [String.prototype.startsWith, generated.INTRINSICS_String_prototype_startsWith],
+    [
+      String.prototype.startsWith,
+      generated.INTRINSICS_String_prototype_startsWith,
+    ],
     [String.prototype.substr, generated.INTRINSICS_String_prototype_substr],
-    [String.prototype.substring, generated.INTRINSICS_String_prototype_substring],
-    [String.prototype.toUpperCase, generated.INTRINSICS_String_prototype_toUpperCase],
-    [String.prototype.toLowerCase, generated.INTRINSICS_String_prototype_toLowerCase],
+    [
+      String.prototype.substring,
+      generated.INTRINSICS_String_prototype_substring,
+    ],
+    [
+      String.prototype.toUpperCase,
+      generated.INTRINSICS_String_prototype_toUpperCase,
+    ],
+    [
+      String.prototype.toLowerCase,
+      generated.INTRINSICS_String_prototype_toLowerCase,
+    ],
     [String.prototype.toString, generated.INTRINSICS_String_prototype_toString],
-    [String.prototype.toWellFormed, generated.INTRINSICS_String_prototype_toWellFormed],
+    [
+      String.prototype.toWellFormed,
+      generated.INTRINSICS_String_prototype_toWellFormed,
+    ],
     [String.prototype.trim, generated.INTRINSICS_String_prototype_trim],
     [String.prototype.trimEnd, generated.INTRINSICS_String_prototype_trimEnd],
-    [String.prototype.trimStart, generated.INTRINSICS_String_prototype_trimStart],
+    [
+      String.prototype.trimStart,
+      generated.INTRINSICS_String_prototype_trimStart,
+    ],
     [String.prototype.valueOf, generated.INTRINSICS_String_prototype_valueOf],
 
     // Annex B HTML wrapper methods.
@@ -45,7 +83,10 @@ export class Model {
     [String.prototype.blink, generated.INTRINSICS_String_prototype_blink],
     [String.prototype.bold, generated.INTRINSICS_String_prototype_bold],
     [String.prototype.fixed, generated.INTRINSICS_String_prototype_fixed],
-    [String.prototype.fontcolor, generated.INTRINSICS_String_prototype_fontcolor],
+    [
+      String.prototype.fontcolor,
+      generated.INTRINSICS_String_prototype_fontcolor,
+    ],
     [String.prototype.fontsize, generated.INTRINSICS_String_prototype_fontsize],
     [String.prototype.italics, generated.INTRINSICS_String_prototype_italics],
     [String.prototype.link, generated.INTRINSICS_String_prototype_link],
@@ -65,19 +106,28 @@ export class Model {
 
     [Array.prototype.at, generated.INTRINSICS_Array_prototype_at],
     [Array.prototype.concat, generated.INTRINSICS_Array_prototype_concat],
-    [Array.prototype.copyWithin, generated.INTRINSICS_Array_prototype_copyWithin],
+    [
+      Array.prototype.copyWithin,
+      generated.INTRINSICS_Array_prototype_copyWithin,
+    ],
     [Array.prototype.fill, generated.INTRINSICS_Array_prototype_fill],
     [Array.prototype.filter, generated.INTRINSICS_Array_prototype_filter],
     [Array.prototype.find, generated.INTRINSICS_Array_prototype_find],
     [Array.prototype.findIndex, generated.INTRINSICS_Array_prototype_findIndex],
     [Array.prototype.findLast, generated.INTRINSICS_Array_prototype_findLast],
-    [Array.prototype.findLastIndex, generated.INTRINSICS_Array_prototype_findLastIndex],
+    [
+      Array.prototype.findLastIndex,
+      generated.INTRINSICS_Array_prototype_findLastIndex,
+    ],
     [Array.prototype.join, generated.INTRINSICS_Array_prototype_join],
     [Array.prototype.map, generated.INTRINSICS_Array_prototype_map],
     [Array.prototype.pop, generated.INTRINSICS_Array_prototype_pop],
     [Array.prototype.push, generated.INTRINSICS_Array_prototype_push],
     [Array.prototype.reduce, generated.INTRINSICS_Array_prototype_reduce],
-    [Array.prototype.reduceRight, generated.INTRINSICS_Array_prototype_reduceRight],
+    [
+      Array.prototype.reduceRight,
+      generated.INTRINSICS_Array_prototype_reduceRight,
+    ],
     [Array.prototype.shift, generated.INTRINSICS_Array_prototype_shift],
     [Array.prototype.slice, generated.INTRINSICS_Array_prototype_slice],
 
@@ -88,9 +138,7 @@ export class Model {
     [JSON.stringify, generated.INTRINSICS_JSON_stringify],
   ]);
 
-  static SYNTAX = new Map<string, Function>([
-    ['+', generated.SYNTAX__add],
-  ]);
+  static SYNTAX = new Map<string, Function>([['+', generated.SYNTAX__add]]);
 
   static support(f: Function): boolean {
     return this.BUILTINS.has(f);
@@ -188,5 +236,4 @@ export class Model {
   //   // 8. Return operation(lNum, rNum).
   //   return $.binary(opText, left, right, result);
   // }
-
 }

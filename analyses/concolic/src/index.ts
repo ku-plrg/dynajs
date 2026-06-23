@@ -95,7 +95,10 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     return this.caseFoldIdentity(s, '^[^a-z]+$');
   }
 
-  private caseFoldIdentity(s: Valued<Sym>, singleCasePattern: string): Sym | undefined {
+  private caseFoldIdentity(
+    s: Valued<Sym>,
+    singleCasePattern: string,
+  ): Sym | undefined {
     const src = this.symOf(s);
     if (src.kind === 'const') return undefined;
     let enc: EncodedRegex;

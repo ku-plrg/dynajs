@@ -1,4 +1,4 @@
-import type { TaintAnalysis } from "./index.js";
+import type { TaintAnalysis } from './index.js';
 
 declare const D$: { analysis: TaintAnalysis } & Record<string, any>;
 
@@ -38,6 +38,10 @@ export function installPrelude(): ReadonlySet<unknown> {
   g.__assert__ = __assert__;
   g.__assert_taint__ = __assert_taint__;
   return new Set<unknown>([
-    __set_taint__, __is_tainted__, __is_tainted_at__, __assert__, __assert_taint__,
+    __set_taint__,
+    __is_tainted__,
+    __is_tainted_at__,
+    __assert__,
+    __assert_taint__,
   ]);
 }

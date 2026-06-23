@@ -5,8 +5,8 @@
 
 // A defined char at index 1 implies the string is longer than 1.
 {
-  const s = __symbolic__("at_len", "aaa");
-  if (s.at(1) === "a") {
+  const s = __symbolic__('at_len', 'aaa');
+  if (s.at(1) === 'a') {
     __symbolic_assert__(s.length > 1, true);
   }
 }
@@ -14,8 +14,8 @@
 // `at(1) !== 'z'` constrains the char but does NOT pin it to 'a', so
 // `at(1) === 'a'` stays falsifiable (clean) rather than provable.
 {
-  const s = __symbolic__("at_val", "bbb");
-  if (s.at(1) !== "z") {
-    __symbolic_assert__(s.at(1) === "a", false);
+  const s = __symbolic__('at_val', 'bbb');
+  if (s.at(1) !== 'z') {
+    __symbolic_assert__(s.at(1) === 'a', false);
   }
 }

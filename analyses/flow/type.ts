@@ -1,34 +1,65 @@
 declare const WrappedValueBrand: unique symbol;
 
-type WrapBrand<B extends boolean> = { readonly [WrappedValueBrand]: B; };
+type WrapBrand<B extends boolean> = { readonly [WrappedValueBrand]: B };
 
 export type Wrapped<T = unknown> = T & WrapBrand<true>;
 
 export type Unwrapped<T = unknown> = T & WrapBrand<false>;
 
 /** Primitives <: Unwrapped, but not vice versa (e.g. it can be an object that has been unwrapped) */
-export type Primitive = string | number | boolean | bigint | symbol | null | undefined;
+export type Primitive =
+  | string
+  | number
+  | boolean
+  | bigint
+  | symbol
+  | null
+  | undefined;
 
-interface SpecOps extends StringOps, ArithmeticOps, BitwiseOps, CompareOps, MathOps, ListOps, RangeOps, RegexOps {
+interface SpecOps
+  extends
+    StringOps,
+    ArithmeticOps,
+    BitwiseOps,
+    CompareOps,
+    MathOps,
+    ListOps,
+    RangeOps,
+    RegexOps {
   /** an injection (`unwrapped -> wrapped`). inverse of `$.peek`. default information transformation */
-  base: <T extends Unwrapped | Primitive>(v: T, parent: Wrapped[]) => Wrapped<T>;
+  base: <T extends Unwrapped | Primitive>(
+    v: T,
+    parent: Wrapped[],
+  ) => Wrapped<T>;
   /** a projection (`wrapped -> unwrapped`). inverse of `$.base`. lost of information happens due to concretization */
   peek: <T>(wrapped: Wrapped<T>) => Unwrapped<T>;
   /** Invoke `f` (a callable) with receiver `thisArg` and `args`, routing to `f`'s */
-  apply: (f: Wrapped<unknown>, thisArg: Wrapped<unknown>, args: Wrapped<unknown>[]) => Wrapped<unknown>;
+  apply: (
+    f: Wrapped<unknown>,
+    thisArg: Wrapped<unknown>,
+    args: Wrapped<unknown>[],
+  ) => Wrapped<unknown>;
   /** a projection to use Wrapped value as a condition */
   condition: (bid: number, cond: Wrapped<boolean>) => boolean;
 }
 
 interface StringOps {
-  substring: (s: Wrapped<string>, start: Wrapped<number>, end: Wrapped<number>) => Wrapped<string>;
+  substring: (
+    s: Wrapped<string>,
+    start: Wrapped<number>,
+    end: Wrapped<number>,
+  ) => Wrapped<string>;
   concatenate: (s1: Wrapped<string>, s2: Wrapped<string>) => Wrapped<string>;
   length: (s: Wrapped<string>) => Wrapped<number>;
   codeUnitAt: (s: Wrapped<string>, i: Wrapped<number>) => Wrapped<string>;
-  trim: (s: Wrapped<string>, leading: boolean, trailing: boolean) => Wrapped<string>;
+  trim: (
+    s: Wrapped<string>,
+    leading: boolean,
+    trailing: boolean,
+  ) => Wrapped<string>;
   toLower: (s: Wrapped<string>) => Wrapped<string>;
   toUpper: (s: Wrapped<string>) => Wrapped<string>;
-};
+}
 
 export interface RegexMatch {
   matched: Wrapped<boolean>; // did the subject match (str.in_re)
@@ -62,13 +93,33 @@ interface CompareOps {
   lessThan: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<boolean>;
   lessThanEqual: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<boolean>;
   greaterThan: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<boolean>;
-  greaterThanEqual: (l: Wrapped<number>, r: Wrapped<number>) => Wrapped<boolean>;
-  is: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(l: L, r: R) => Wrapped<boolean /* l is Extract<L, R> */>;
-  isNot: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(l: L, r: R) => Wrapped<boolean /* l is Exclude<L, R> */>;
+  greaterThanEqual: (
+    l: Wrapped<number>,
+    r: Wrapped<number>,
+  ) => Wrapped<boolean>;
+  is: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(
+    l: L,
+    r: R,
+  ) => Wrapped<boolean /* l is Extract<L, R> */>;
+  isNot: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(
+    l: L,
+    r: R,
+  ) => Wrapped<boolean /* l is Exclude<L, R> */>;
   isNaN: (x: Wrapped<number>) => boolean;
   isFinite: (x: Wrapped<number>) => boolean;
   isInteger: (x: Wrapped<number>) => Wrapped<boolean>;
-  isType: (x: Wrapped<unknown>, ty: 'object' | 'null' | 'undefined' | 'string' | 'number' | 'boolean' | 'symbol' | 'bigint') => boolean;
+  isType: (
+    x: Wrapped<unknown>,
+    ty:
+      | 'object'
+      | 'null'
+      | 'undefined'
+      | 'string'
+      | 'number'
+      | 'boolean'
+      | 'symbol'
+      | 'bigint',
+  ) => boolean;
 }
 
 interface MathOps {
@@ -79,7 +130,11 @@ interface MathOps {
   ceil: (x: Wrapped<number>) => Wrapped<number>;
   round: (x: Wrapped<number>) => Wrapped<number>;
   truncate: (x: Wrapped<number>) => Wrapped<number>;
-  clamp: (x: Wrapped<number>, lower: Wrapped<number>, upper: Wrapped<number>) => Wrapped<number>;
+  clamp: (
+    x: Wrapped<number>,
+    lower: Wrapped<number>,
+    upper: Wrapped<number>,
+  ) => Wrapped<number>;
 }
 
 interface ListOps {
@@ -89,7 +144,14 @@ interface ListOps {
 }
 
 interface RangeOps {
-  range: (lo: Wrapped<number>, loInclusive: boolean, hi: Wrapped<number>, hiInclusive: boolean, ascending: boolean, bid: number) => Wrapped<number>[];
+  range: (
+    lo: Wrapped<number>,
+    loInclusive: boolean,
+    hi: Wrapped<number>,
+    hiInclusive: boolean,
+    ascending: boolean,
+    bid: number,
+  ) => Wrapped<number>[];
 }
 
 export interface SpecRuntime extends SpecOps {

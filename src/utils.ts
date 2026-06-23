@@ -6,7 +6,6 @@ import * as acorn from 'acorn';
 import { ECMA_VERSION, EXIT_CODE_TODO, SCRIPT_NAME } from './constant.js';
 import type { Program, Node } from 'acorn';
 
-
 enum LogLevel {
   LOG,
   WARN,
@@ -18,8 +17,11 @@ export function readFile(filename: string): string {
   return fs.readFileSync(filename, 'utf-8').toString();
 }
 
-export function walkDir(dir: string, callback: (filename: string) => void): void {
-  fs.readdirSync(dir, { withFileTypes: true }).forEach(entry => {
+export function walkDir(
+  dir: string,
+  callback: (filename: string) => void,
+): void {
+  fs.readdirSync(dir, { withFileTypes: true }).forEach((entry) => {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       walkDir(fullPath, callback);
@@ -82,12 +84,16 @@ export function getString(value: any): string {
 }
 
 export function stringify(value: any): string {
-  return JSON.stringify(value, (key, value) => {
-    if (typeof value === 'bigint') {
-      return value.toString() + 'n'; // 구분을 위해 'n'을 붙여주는 것이 관례
-    }
-    return value;
-  }, 2)
+  return JSON.stringify(
+    value,
+    (key, value) => {
+      if (typeof value === 'bigint') {
+        return value.toString() + 'n'; // 구분을 위해 'n'을 붙여주는 것이 관례
+      }
+      return value;
+    },
+    2,
+  );
 }
 
 export const BAR = '-'.repeat(80);
@@ -111,7 +117,9 @@ export function log(
       print = console.warn;
       break;
     case LogLevel.ERROR:
-      print = (msg: string) => { throw msg; };
+      print = (msg: string) => {
+        throw msg;
+      };
       break;
   }
   const msg = color(`[${header.padEnd(5, ' ')}] ${getString(value)}`);
@@ -144,14 +152,18 @@ export function todo(msg: string = '') {
 
 export function parse(code: string, isScript: boolean): Program {
   const sourceType = isScript ? 'script' : 'module';
-  return acorn.parse(code, {locations: true, ecmaVersion: ECMA_VERSION, sourceType });
+  return acorn.parse(code, {
+    locations: true,
+    ecmaVersion: ECMA_VERSION,
+    sourceType,
+  });
 }
 
 export function inputValidCheck(inputs: any): void {
   if (!Array.isArray(inputs)) {
     err('Input set must be an array.');
   } else {
-    inputs.forEach(input => {
+    inputs.forEach((input) => {
       if (!Array.isArray(input)) {
         err(`Input must be an array -- ${getString(input)}`);
       }
@@ -194,24 +206,26 @@ export class StringBuilder {
   result: string;
   useResult: boolean;
   depth: number;
-  constructor(useResult: boolean = true, indent: string = "  ") {
+  constructor(useResult: boolean = true, indent: string = '  ') {
     this.indent = indent;
-    this.result = "";
+    this.result = '';
     this.useResult = useResult;
     this.depth = 0;
   }
   put = (str: string): string => {
-    const line = this.indent.repeat(this.depth) + str
+    const line = this.indent.repeat(this.depth) + str;
     // NOTE this might cause error if string is too long (analyzing large code)
-    if (this.useResult) { this.result += line + '\n'; }
+    if (this.useResult) {
+      this.result += line + '\n';
+    }
     return line;
-  }
+  };
   indentIn = (): void => {
     this.depth += 1;
-  }
+  };
   indentOut = (): void => {
     if (this.depth > 0) this.depth -= 1;
-  }
+  };
 }
 
 export enum VarKind {
@@ -226,15 +240,15 @@ export enum VarKind {
 }
 
 export const strToKind: { [key: string]: VarKind } = {
-  'var': VarKind.Var,
-  'let': VarKind.Let,
-  'const': VarKind.Const,
-  'function': VarKind.Func,
-  'param': VarKind.Param,
-  'arguments': VarKind.Arguments,
-  'catch': VarKind.CatchParam,
-  'class': VarKind.Class,
-}
+  var: VarKind.Var,
+  let: VarKind.Let,
+  const: VarKind.Const,
+  function: VarKind.Func,
+  param: VarKind.Param,
+  arguments: VarKind.Arguments,
+  catch: VarKind.CatchParam,
+  class: VarKind.Class,
+};
 
 export const kindToStr: { [key in VarKind]: string } = {
   [VarKind.Var]: 'var',
@@ -245,20 +259,21 @@ export const kindToStr: { [key in VarKind]: string } = {
   [VarKind.Arguments]: 'arguments',
   [VarKind.CatchParam]: 'catch',
   [VarKind.Class]: 'class',
-}
+};
 
 export const locToStr = (loc: [number, number, number, number]): string => {
   if (Array.isArray(loc)) {
-
     const [startRow, startCol, endRow, endCol] = loc;
     return startRow == endRow
-    ? `${startRow}:${startCol}-${endCol}`
-    : `${startRow}:${startCol}-${endRow}:${endCol}`;
+      ? `${startRow}:${startCol}-${endCol}`
+      : `${startRow}:${startCol}-${endRow}:${endCol}`;
   }
   return 'unknown location';
-}
+};
 
-export const getLocFromNode = (node: Node): [number, number, number, number] => {
+export const getLocFromNode = (
+  node: Node,
+): [number, number, number, number] => {
   if (!node.loc) return [-1, -1, -1, -1];
   return [
     node.loc.start.line,
@@ -266,4 +281,4 @@ export const getLocFromNode = (node: Node): [number, number, number, number] => 
     node.loc.end.line,
     node.loc.end.column + 1,
   ];
-}
+};

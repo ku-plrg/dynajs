@@ -8,8 +8,8 @@ that implements any subset of these callbacks and is loaded at startup via the
 ```js
 (function (D$) {
   D$.analysis = {
-    invokeFunPre(id, f, base, args, isConstructor, isMethod) { },
-    invokeFun(id, f, base, args, result, isConstructor, isMethod) { },
+    invokeFunPre(id, f, base, args, isConstructor, isMethod) {},
+    invokeFun(id, f, base, args, result, isConstructor, isMethod) {},
   };
 })(D$);
 ```
@@ -30,23 +30,23 @@ site. You can use `D$.idToLoc(id)` to retrieve the original source information.
 
 ### Pre / Post Pairs
 
-Operations that can be intercepted both *before* and *after* execution come in
+Operations that can be intercepted both _before_ and _after_ execution come in
 paired callbacks:
 
-| Pre (intercept inputs) | Post (observe / replace output) |
-|---|---|
-| `invokeFunPre` | `invokeFun` |
-| `taggedTemplatePre` | `taggedTemplate` |
-| `getFieldPre` | `getField` |
-| `putFieldPre` | `putField` |
-| `_deletePre` | `_delete` |
-| `unaryPre` | `unary` |
-| `binaryPre` | `binary` |
-| `superCallPre` | `superCall` |
-| `superMethodCallPre` | `superMethodCall` |
-| `superGetFieldPre` | `superGetField` |
-| `superPutFieldPre` | `superPutField` |
-| *(operator-specific)Pre* | *(operator-specific)* |
+| Pre (intercept inputs)   | Post (observe / replace output) |
+| ------------------------ | ------------------------------- |
+| `invokeFunPre`           | `invokeFun`                     |
+| `taggedTemplatePre`      | `taggedTemplate`                |
+| `getFieldPre`            | `getField`                      |
+| `putFieldPre`            | `putField`                      |
+| `_deletePre`             | `_delete`                       |
+| `unaryPre`               | `unary`                         |
+| `binaryPre`              | `binary`                        |
+| `superCallPre`           | `superCall`                     |
+| `superMethodCallPre`     | `superMethodCall`               |
+| `superGetFieldPre`       | `superGetField`                 |
+| `superPutFieldPre`       | `superPutField`                 |
+| _(operator-specific)Pre_ | _(operator-specific)_           |
 
 Returning `{ skip: true }` from a `*Pre` callback suppresses the actual
 operation; the runtime passes a `skip` result directly to the corresponding
@@ -54,8 +54,8 @@ post callback.
 
 ### General / Specific Hierarchy
 
-Several callback families follow a **general → specific** pattern. The *general*
-callback fires for every member of a family; the *specific* callback fires only
+Several callback families follow a **general → specific** pattern. The _general_
+callback fires for every member of a family; the _specific_ callback fires only
 for the matching subset of operators or value types. When both are implemented:
 
 1. The **general** callback fires first.
@@ -90,7 +90,7 @@ flowchart TD
     style UU fill:#eefaee,stroke:#339933
 ```
 
-*Arrows indicate dispatch order: general fires first, specific fires second.*
+_Arrows indicate dispatch order: general fires first, specific fires second._
 
 ---
 
@@ -297,18 +297,18 @@ sequenceDiagram
 
 ### Script Lifecycle
 
-| Callback | When it fires |
-|---|---|
-| `scriptEnter(id, instrumentedPath, originalPath)` | A script begins executing |
-| `scriptExit(id, exc?)` | A script finishes (normally or via exception) |
-| `endExecution()` | The process is about to exit after all scripts complete |
+| Callback                                          | When it fires                                           |
+| ------------------------------------------------- | ------------------------------------------------------- |
+| `scriptEnter(id, instrumentedPath, originalPath)` | A script begins executing                               |
+| `scriptExit(id, exc?)`                            | A script finishes (normally or via exception)           |
+| `endExecution()`                                  | The process is about to exit after all scripts complete |
 
 ```js
 (function (D$) {
   D$.analysis = {
-    scriptEnter(id, instrumentedPath, originalPath) { },
-    scriptExit(id, exc) { },
-    endExecution() { },
+    scriptEnter(id, instrumentedPath, originalPath) {},
+    scriptExit(id, exc) {},
+    endExecution() {},
   };
 })(D$);
 ```
@@ -317,17 +317,17 @@ sequenceDiagram
 
 ### Function Body
 
-| Callback | When it fires |
-|---|---|
-| `functionEnter(id, f, base, args, isAsync, isGenerator)` | Start of a function body |
-| `functionExit(id, returnValue, exception, isAsync, isGenerator)` | End of a function body |
-| `_return(id, value)` | A `return` statement |
+| Callback                                                         | When it fires            |
+| ---------------------------------------------------------------- | ------------------------ |
+| `functionEnter(id, f, base, args, isAsync, isGenerator)`         | Start of a function body |
+| `functionExit(id, returnValue, exception, isAsync, isGenerator)` | End of a function body   |
+| `_return(id, value)`                                             | A `return` statement     |
 
 ```js
 (function (D$) {
   D$.analysis = {
-    functionEnter(id, f, base, args, isAsync, isGenerator) { },
-    functionExit(id, returnValue, exception, isAsync, isGenerator) { },
+    functionEnter(id, f, base, args, isAsync, isGenerator) {},
+    functionExit(id, returnValue, exception, isAsync, isGenerator) {},
     _return(id, value) {
       // return { result: value } to replace the returned value
     },
@@ -339,12 +339,12 @@ sequenceDiagram
 
 ### Function Calls
 
-| Callback | When it fires | Returns |
-|---|---|---|
-| `invokeFunPre(id, f, base, args, isConstructor, isMethod)` | Before any call | `{ f, base, args, skip }` \| `void` |
-| `invokeFun(id, f, base, args, result, isConstructor, isMethod)` | After any call | `{ result }` \| `void` |
-| `taggedTemplatePre(id, f, base, strings, values, isMethod)` | Before a tagged template (after `invokeFunPre`) | `{ f, base, strings, values, skip }` \| `void` |
-| `taggedTemplate(id, f, base, strings, values, result, isMethod)` | After a tagged template (after `invokeFun`) | `{ result }` \| `void` |
+| Callback                                                         | When it fires                                   | Returns                                        |
+| ---------------------------------------------------------------- | ----------------------------------------------- | ---------------------------------------------- |
+| `invokeFunPre(id, f, base, args, isConstructor, isMethod)`       | Before any call                                 | `{ f, base, args, skip }` \| `void`            |
+| `invokeFun(id, f, base, args, result, isConstructor, isMethod)`  | After any call                                  | `{ result }` \| `void`                         |
+| `taggedTemplatePre(id, f, base, strings, values, isMethod)`      | Before a tagged template (after `invokeFunPre`) | `{ f, base, strings, values, skip }` \| `void` |
+| `taggedTemplate(id, f, base, strings, values, result, isMethod)` | After a tagged template (after `invokeFun`)     | `{ result }` \| `void`                         |
 
 ```js
 (function (D$) {
@@ -370,14 +370,14 @@ sequenceDiagram
 
 ### Property Access
 
-| Callback | When it fires | Returns |
-|---|---|---|
-| `getFieldPre(id, base, prop)` | Before `obj.prop` / `obj[key]` | `{ base, prop, skip }` \| `void` |
-| `getField(id, base, prop, result)` | After property read (specific; fires after `memoryAccess`) | `{ result }` \| `void` |
-| `putFieldPre(id, base, prop, value)` | Before `obj.prop = v` | `{ base, prop, value, skip }` \| `void` |
-| `putField(id, base, prop, value)` | After property write (specific; fires after `memoryWrite`) | `{ result }` \| `void` |
-| `_deletePre(id, base, prop)` | Before `delete obj.prop` | `{ base, prop, skip }` \| `void` |
-| `_delete(id, base, prop, value)` | After `delete obj.prop` | `{ result: boolean }` \| `void` |
+| Callback                             | When it fires                                              | Returns                                 |
+| ------------------------------------ | ---------------------------------------------------------- | --------------------------------------- |
+| `getFieldPre(id, base, prop)`        | Before `obj.prop` / `obj[key]`                             | `{ base, prop, skip }` \| `void`        |
+| `getField(id, base, prop, result)`   | After property read (specific; fires after `memoryAccess`) | `{ result }` \| `void`                  |
+| `putFieldPre(id, base, prop, value)` | Before `obj.prop = v`                                      | `{ base, prop, value, skip }` \| `void` |
+| `putField(id, base, prop, value)`    | After property write (specific; fires after `memoryWrite`) | `{ result }` \| `void`                  |
+| `_deletePre(id, base, prop)`         | Before `delete obj.prop`                                   | `{ base, prop, skip }` \| `void`        |
+| `_delete(id, base, prop, value)`     | After `delete obj.prop`                                    | `{ result: boolean }` \| `void`         |
 
 ```js
 (function (D$) {
@@ -410,11 +410,11 @@ sequenceDiagram
 
 ### Variable Access
 
-| Callback | When it fires | Returns |
-|---|---|---|
-| `read(id, name, value)` | Variable identifier read (specific; fires after `memoryAccess`) | `{ result }` \| `void` |
-| `write(id, names, value)` | Variable assignment (specific; fires after `memoryWrite`) | `{ result }` \| `void` |
-| `declare(id, name, kind, init, value, isSpread)` | Variable declaration | `void` |
+| Callback                                         | When it fires                                                   | Returns                |
+| ------------------------------------------------ | --------------------------------------------------------------- | ---------------------- |
+| `read(id, name, value)`                          | Variable identifier read (specific; fires after `memoryAccess`) | `{ result }` \| `void` |
+| `write(id, names, value)`                        | Variable assignment (specific; fires after `memoryWrite`)       | `{ result }` \| `void` |
+| `declare(id, name, kind, init, value, isSpread)` | Variable declaration                                            | `void`                 |
 
 ```js
 (function (D$) {
@@ -438,12 +438,12 @@ sequenceDiagram
 
 ### General Memory Callbacks
 
-| Callback | Covers | Returns |
-|---|---|---|
-| `memoryAccess(id, value)` | All reads (`getField` + `read`) | `{ result }` \| `void` |
-| `memoryWrite(id, value)` | All writes (`putField` + `write`) | `{ result }` \| `void` |
+| Callback                  | Covers                            | Returns                |
+| ------------------------- | --------------------------------- | ---------------------- |
+| `memoryAccess(id, value)` | All reads (`getField` + `read`)   | `{ result }` \| `void` |
+| `memoryWrite(id, value)`  | All writes (`putField` + `write`) | `{ result }` \| `void` |
 
-These are the *general* callbacks in the memory hierarchy. They fire before the
+These are the _general_ callbacks in the memory hierarchy. They fire before the
 more specific `getField`/`read` and `putField`/`write` callbacks respectively.
 
 ```js
@@ -463,16 +463,16 @@ more specific `getField`/`read` and `putField`/`write` callbacks respectively.
 
 ### Unary Operations
 
-| Callback | Operators | Returns |
-|---|---|---|
-| `unaryPre(id, op, prefix, operand)` | All unary | `{ op, operand, skip }` \| `void` |
-| `unary(id, op, prefix, operand, result)` | All unary | `{ result }` \| `void` |
-| `arithmeticUnaryPre` / `arithmeticUnary` | `+` `-` | same shapes |
-| `logicalUnaryPre` / `logicalUnary` | `!` | same shapes |
-| `bitwiseUnaryPre` / `bitwiseUnary` | `~` | same shapes |
-| `typeofUnaryPre` / `typeofUnary` | `typeof` | same shapes |
-| `voidUnaryPre` / `voidUnary` | `void` | same shapes |
-| `updateUnaryPre` / `updateUnary` | `++` `--` | same shapes |
+| Callback                                 | Operators | Returns                           |
+| ---------------------------------------- | --------- | --------------------------------- |
+| `unaryPre(id, op, prefix, operand)`      | All unary | `{ op, operand, skip }` \| `void` |
+| `unary(id, op, prefix, operand, result)` | All unary | `{ result }` \| `void`            |
+| `arithmeticUnaryPre` / `arithmeticUnary` | `+` `-`   | same shapes                       |
+| `logicalUnaryPre` / `logicalUnary`       | `!`       | same shapes                       |
+| `bitwiseUnaryPre` / `bitwiseUnary`       | `~`       | same shapes                       |
+| `typeofUnaryPre` / `typeofUnary`         | `typeof`  | same shapes                       |
+| `voidUnaryPre` / `voidUnary`             | `void`    | same shapes                       |
+| `updateUnaryPre` / `updateUnary`         | `++` `--` | same shapes                       |
 
 ```js
 (function (D$) {
@@ -486,14 +486,14 @@ more specific `getField`/`read` and `putField`/`write` callbacks respectively.
     },
 
     // Operator-specific variants (fire after the general callbacks above)
-    arithmeticUnaryPre(id, op, prefix, operand) { },
-    arithmeticUnary(id, op, prefix, operand, result) { },
-    logicalUnaryPre(id, op, prefix, operand) { },
-    logicalUnary(id, op, prefix, operand, result) { },
-    typeofUnaryPre(id, op, prefix, operand) { },
-    typeofUnary(id, op, prefix, operand, result) { },
-    updateUnaryPre(id, op, prefix, operand) { },
-    updateUnary(id, op, prefix, operand, result) { },
+    arithmeticUnaryPre(id, op, prefix, operand) {},
+    arithmeticUnary(id, op, prefix, operand, result) {},
+    logicalUnaryPre(id, op, prefix, operand) {},
+    logicalUnary(id, op, prefix, operand, result) {},
+    typeofUnaryPre(id, op, prefix, operand) {},
+    typeofUnary(id, op, prefix, operand, result) {},
+    updateUnaryPre(id, op, prefix, operand) {},
+    updateUnary(id, op, prefix, operand, result) {},
   };
 })(D$);
 ```
@@ -502,13 +502,13 @@ more specific `getField`/`read` and `putField`/`write` callbacks respectively.
 
 ### Binary Operations
 
-| Callback | Operators | Returns |
-|---|---|---|
-| `binaryPre(id, op, left, right)` | All binary | `{ op, left, right, skip }` \| `void` |
-| `binary(id, op, left, right, result)` | All binary | `{ result }` \| `void` |
-| `arithmeticBinaryPre` / `arithmeticBinary` | `+` `-` `*` `/` `%` `**` | same shapes |
-| `comparisonBinaryPre` / `comparisonBinary` | `==` `!=` `===` `!==` `<` `<=` `>` `>=` `in` `instanceof` | same shapes |
-| `bitwiseBinaryPre` / `bitwiseBinary` | `&` `\|` `^` `<<` `>>` `>>>` | same shapes |
+| Callback                                   | Operators                                                 | Returns                               |
+| ------------------------------------------ | --------------------------------------------------------- | ------------------------------------- |
+| `binaryPre(id, op, left, right)`           | All binary                                                | `{ op, left, right, skip }` \| `void` |
+| `binary(id, op, left, right, result)`      | All binary                                                | `{ result }` \| `void`                |
+| `arithmeticBinaryPre` / `arithmeticBinary` | `+` `-` `*` `/` `%` `**`                                  | same shapes                           |
+| `comparisonBinaryPre` / `comparisonBinary` | `==` `!=` `===` `!==` `<` `<=` `>` `>=` `in` `instanceof` | same shapes                           |
+| `bitwiseBinaryPre` / `bitwiseBinary`       | `&` `\|` `^` `<<` `>>` `>>>`                              | same shapes                           |
 
 ```js
 (function (D$) {
@@ -522,12 +522,12 @@ more specific `getField`/`read` and `putField`/`write` callbacks respectively.
     },
 
     // Operator-specific variants (fire after the general callbacks above)
-    arithmeticBinaryPre(id, op, left, right) { },
-    arithmeticBinary(id, op, left, right, result) { },
-    comparisonBinaryPre(id, op, left, right) { },
-    comparisonBinary(id, op, left, right, result) { },
-    bitwiseBinaryPre(id, op, left, right) { },
-    bitwiseBinary(id, op, left, right, result) { },
+    arithmeticBinaryPre(id, op, left, right) {},
+    arithmeticBinary(id, op, left, right, result) {},
+    comparisonBinaryPre(id, op, left, right) {},
+    comparisonBinary(id, op, left, right, result) {},
+    bitwiseBinaryPre(id, op, left, right) {},
+    bitwiseBinary(id, op, left, right, result) {},
   };
 })(D$);
 ```
@@ -538,18 +538,18 @@ more specific `getField`/`read` and `putField`/`write` callbacks respectively.
 
 All condition callbacks share the signature `(id, value) => { result } | void`.
 
-| Callback | Condition site |
-|---|---|
+| Callback                   | Condition site                             |
+| -------------------------- | ------------------------------------------ |
 | `condition(id, op, value)` | All conditions (also receives `op` string) |
-| `ifCondition` | `if` / `else if` |
-| `whileCondition` | `while` / `do-while` |
-| `forCondition` | `for` loop test |
-| `ternaryCondition` | `? :` |
-| `logicalAnd` | `&&` (left-hand side) |
-| `logicalOr` | `\|\|` (left-hand side) |
-| `nullishCoalescing` | `??` (left-hand side) |
-| `optionalChain` | `?.` (guard) |
-| `switchCondition` | `switch` discriminant |
+| `ifCondition`              | `if` / `else if`                           |
+| `whileCondition`           | `while` / `do-while`                       |
+| `forCondition`             | `for` loop test                            |
+| `ternaryCondition`         | `? :`                                      |
+| `logicalAnd`               | `&&` (left-hand side)                      |
+| `logicalOr`                | `\|\|` (left-hand side)                    |
+| `nullishCoalescing`        | `??` (left-hand side)                      |
+| `optionalChain`            | `?.` (guard)                               |
+| `switchCondition`          | `switch` discriminant                      |
 
 ```js
 (function (D$) {
@@ -561,15 +561,15 @@ All condition callbacks share the signature `(id, value) => { result } | void`.
     },
 
     // Condition-specific variants (fire after the general callback above)
-    ifCondition(id, value) { },
-    whileCondition(id, value) { },
-    forCondition(id, value) { },
-    ternaryCondition(id, value) { },
-    logicalAnd(id, value) { },
-    logicalOr(id, value) { },
-    nullishCoalescing(id, value) { },
-    optionalChain(id, value) { },
-    switchCondition(id, value) { },
+    ifCondition(id, value) {},
+    whileCondition(id, value) {},
+    forCondition(id, value) {},
+    ternaryCondition(id, value) {},
+    logicalAnd(id, value) {},
+    logicalOr(id, value) {},
+    nullishCoalescing(id, value) {},
+    optionalChain(id, value) {},
+    switchCondition(id, value) {},
   };
 })(D$);
 ```
@@ -580,17 +580,17 @@ All condition callbacks share the signature `(id, value) => { result } | void`.
 
 All literal callbacks share the signature `(id, value) => { result } | void`.
 
-| Callback | Value type |
-|---|---|
-| `literal` | All literals |
-| `numberLiteral` | `number` |
-| `bigintLiteral` | `bigint` |
-| `stringLiteral` | `string` |
-| `booleanLiteral` | `boolean` |
-| `nullLiteral` | `null` |
-| `regexpLiteral` | `RegExp` |
-| `arrayLiteral` | `Array` |
-| `objectLiteral` | plain `object` |
+| Callback          | Value type                            |
+| ----------------- | ------------------------------------- |
+| `literal`         | All literals                          |
+| `numberLiteral`   | `number`                              |
+| `bigintLiteral`   | `bigint`                              |
+| `stringLiteral`   | `string`                              |
+| `booleanLiteral`  | `boolean`                             |
+| `nullLiteral`     | `null`                                |
+| `regexpLiteral`   | `RegExp`                              |
+| `arrayLiteral`    | `Array`                               |
+| `objectLiteral`   | plain `object`                        |
 | `functionLiteral` | `function` / arrow / class expression |
 
 ```js
@@ -601,15 +601,15 @@ All literal callbacks share the signature `(id, value) => { result } | void`.
     },
 
     // Type-specific variants (fire after the general callback above)
-    numberLiteral(id, value) { },
-    bigintLiteral(id, value) { },
-    stringLiteral(id, value) { },
-    booleanLiteral(id, value) { },
-    nullLiteral(id, value) { },
-    regexpLiteral(id, value) { },
-    arrayLiteral(id, value) { },
-    objectLiteral(id, value) { },
-    functionLiteral(id, value) { },
+    numberLiteral(id, value) {},
+    bigintLiteral(id, value) {},
+    stringLiteral(id, value) {},
+    booleanLiteral(id, value) {},
+    nullLiteral(id, value) {},
+    regexpLiteral(id, value) {},
+    arrayLiteral(id, value) {},
+    objectLiteral(id, value) {},
+    functionLiteral(id, value) {},
   };
 })(D$);
 ```
@@ -618,16 +618,16 @@ All literal callbacks share the signature `(id, value) => { result } | void`.
 
 ### Super Operations
 
-| Callback | Operation | Returns |
-|---|---|---|
-| `superCallPre(id, args)` | Before `super(...)` | `{ args }` \| `void` |
-| `superCall(id, args, thisVal)` | After `super(...)` | `{ result }` \| `void` |
-| `superMethodCallPre(id, thisVal, prop, args)` | Before `super.method(...)` | `{ prop, args }` \| `void` |
-| `superMethodCall(id, thisVal, prop, args, result)` | After `super.method(...)` | `{ result }` \| `void` |
-| `superGetFieldPre(id, thisVal, prop)` | Before `super.prop` read | `{ prop }` \| `void` |
-| `superGetField(id, thisVal, prop, value)` | After `super.prop` read | `{ result }` \| `void` |
-| `superPutFieldPre(id, thisVal, prop, value)` | Before `super.prop = v` | `{ prop, value }` \| `void` |
-| `superPutField(id, thisVal, prop, value)` | After `super.prop = v` | `void` |
+| Callback                                           | Operation                  | Returns                     |
+| -------------------------------------------------- | -------------------------- | --------------------------- |
+| `superCallPre(id, args)`                           | Before `super(...)`        | `{ args }` \| `void`        |
+| `superCall(id, args, thisVal)`                     | After `super(...)`         | `{ result }` \| `void`      |
+| `superMethodCallPre(id, thisVal, prop, args)`      | Before `super.method(...)` | `{ prop, args }` \| `void`  |
+| `superMethodCall(id, thisVal, prop, args, result)` | After `super.method(...)`  | `{ result }` \| `void`      |
+| `superGetFieldPre(id, thisVal, prop)`              | Before `super.prop` read   | `{ prop }` \| `void`        |
+| `superGetField(id, thisVal, prop, value)`          | After `super.prop` read    | `{ result }` \| `void`      |
+| `superPutFieldPre(id, thisVal, prop, value)`       | Before `super.prop = v`    | `{ prop, value }` \| `void` |
+| `superPutField(id, thisVal, prop, value)`          | After `super.prop = v`     | `void`                      |
 
 ```js
 (function (D$) {
@@ -653,7 +653,7 @@ All literal callbacks share the signature `(id, value) => { result } | void`.
     superPutFieldPre(id, thisVal, prop, value) {
       // return { prop, value } to replace property name or value
     },
-    superPutField(id, thisVal, prop, value) { },
+    superPutField(id, thisVal, prop, value) {},
   };
 })(D$);
 ```
@@ -662,21 +662,21 @@ All literal callbacks share the signature `(id, value) => { result } | void`.
 
 ### Other Callbacks
 
-| Callback | When it fires | Returns |
-|---|---|---|
-| `endExpression(id, value)` | End of an expression statement | `void` |
-| `forInOfObject(id, value, isForIn)` | Before a `for-in` / `for-of` loop | `{ result }` \| `void` |
-| `fieldInit(id, obj, key, isStatic, value)` | Class field initializer evaluation | `{ result }` \| `void` |
-| `_throw(id, val)` | `throw` statement | `{ result }` \| `void` |
-| `_yield(id, value, isDelegate)` | `yield` / `yield*` expression | `{ result }` \| `void` |
-| `_resume(id, value)` | Generator `.next(val)` resume | `{ result }` \| `void` |
-| `_await(id, value)` | `await` expression (before suspension) | `{ result }` \| `void` |
-| `_awaitResult(id, value)` | `await` resumes with resolved value | `{ result }` \| `void` |
+| Callback                                   | When it fires                          | Returns                |
+| ------------------------------------------ | -------------------------------------- | ---------------------- |
+| `endExpression(id, value)`                 | End of an expression statement         | `void`                 |
+| `forInOfObject(id, value, isForIn)`        | Before a `for-in` / `for-of` loop      | `{ result }` \| `void` |
+| `fieldInit(id, obj, key, isStatic, value)` | Class field initializer evaluation     | `{ result }` \| `void` |
+| `_throw(id, val)`                          | `throw` statement                      | `{ result }` \| `void` |
+| `_yield(id, value, isDelegate)`            | `yield` / `yield*` expression          | `{ result }` \| `void` |
+| `_resume(id, value)`                       | Generator `.next(val)` resume          | `{ result }` \| `void` |
+| `_await(id, value)`                        | `await` expression (before suspension) | `{ result }` \| `void` |
+| `_awaitResult(id, value)`                  | `await` resumes with resolved value    | `{ result }` \| `void` |
 
 ```js
 (function (D$) {
   D$.analysis = {
-    endExpression(id, value) { },
+    endExpression(id, value) {},
     forInOfObject(id, value, isForIn) {
       // isForIn: true for for-in, false for for-of
       // return { result } to replace the iterable

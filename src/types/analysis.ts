@@ -16,7 +16,7 @@ interface FullAnalysis {
   scriptEnter: (
     id: number,
     instrumentedPath: string,
-    originalPath: string
+    originalPath: string,
   ) => void;
 
   /**
@@ -24,10 +24,7 @@ interface FullAnalysis {
    * @param id - Unique source location identifier.
    * @param exc - Present and set to `{ exception }` if the script threw.
    */
-  scriptExit: (
-    id: number,
-    exc?: { exception: any }
-  ) => void;
+  scriptExit: (id: number, exc?: { exception: any }) => void;
 
   // ---------------------------------------------------------------------------
   // Function calls — Pre/Post pair
@@ -54,8 +51,8 @@ interface FullAnalysis {
     base: any,
     args: any,
     isConstructor: boolean,
-    isMethod: boolean
-  ) => { f: any, base: any, args: any, skip: boolean, frame?: unknown } | void;
+    isMethod: boolean,
+  ) => { f: any; base: any; args: any; skip: boolean; frame?: unknown } | void;
 
   /**
    * Called after a function returns (or is skipped via `invokeFunPre`).
@@ -80,7 +77,7 @@ interface FullAnalysis {
     result: any,
     isConstructor: boolean,
     isMethod: boolean,
-    frame: unknown
+    frame: unknown,
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
@@ -105,8 +102,15 @@ interface FullAnalysis {
     base: any,
     strings: any,
     values: any[],
-    isMethod: boolean
-  ) => { f: any, base: any, strings: any, values: any[], skip: boolean, frame?: unknown } | void;
+    isMethod: boolean,
+  ) => {
+    f: any;
+    base: any;
+    strings: any;
+    values: any[];
+    skip: boolean;
+    frame?: unknown;
+  } | void;
 
   /**
    * Called after a tagged template literal returns.
@@ -129,7 +133,7 @@ interface FullAnalysis {
     values: any[],
     result: any,
     isMethod: boolean,
-    frame: unknown
+    frame: unknown,
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
@@ -152,8 +156,8 @@ interface FullAnalysis {
   templateConcatPre: (
     id: number,
     left: any,
-    right: any
-  ) => { left: any, right: any, skip: boolean, frame?: unknown } | void;
+    right: any,
+  ) => { left: any; right: any; skip: boolean; frame?: unknown } | void;
 
   /**
    * Called after each binary concatenation step inside a template literal
@@ -170,7 +174,7 @@ interface FullAnalysis {
     left: any,
     right: any,
     result: any,
-    frame: unknown
+    frame: unknown,
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
@@ -193,7 +197,7 @@ interface FullAnalysis {
     base: any,
     args: any,
     isAsync: boolean,
-    isGenerator: boolean
+    isGenerator: boolean,
   ) => void;
 
   /**
@@ -211,7 +215,7 @@ interface FullAnalysis {
     returnValue: any,
     exception: { exception: any } | undefined,
     isAsync: boolean,
-    isGenerator: boolean
+    isGenerator: boolean,
   ) => void;
 
   // ---------------------------------------------------------------------------
@@ -225,10 +229,7 @@ interface FullAnalysis {
    * @param value - The value being returned.
    * @returns `{ result }` to replace the returned value, or `void`.
    */
-  _return: (
-    id: number,
-    value: any
-  ) => { result: any } | void;
+  _return: (id: number, value: any) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
   // For-in / for-of
@@ -245,7 +246,7 @@ interface FullAnalysis {
   forInOfObject: (
     id: number,
     value: any,
-    isForIn: boolean
+    isForIn: boolean,
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
@@ -259,10 +260,7 @@ interface FullAnalysis {
    * @param id - Source location identifier.
    * @param value - The expression's final value.
    */
-  endExpression: (
-    id: number,
-    value: any
-  ) => void;
+  endExpression: (id: number, value: any) => void;
 
   // ---------------------------------------------------------------------------
   // Property access — Pre/Post pairs
@@ -280,8 +278,8 @@ interface FullAnalysis {
   getFieldPre: (
     id: number,
     base: any,
-    prop: any
-  ) => { base: any, prop: any, skip: boolean, frame?: unknown } | void;
+    prop: any,
+  ) => { base: any; prop: any; skip: boolean; frame?: unknown } | void;
 
   /**
    * Called after a property read completes (or is skipped).
@@ -299,7 +297,7 @@ interface FullAnalysis {
     base: any,
     prop: any,
     result: any,
-    frame: unknown
+    frame: unknown,
   ) => { result: any } | void;
 
   /**
@@ -316,8 +314,14 @@ interface FullAnalysis {
     id: number,
     base: any,
     prop: any,
-    value: any
-  ) => { base: any, prop: any, value: any, skip: boolean, frame?: unknown } | void;
+    value: any,
+  ) => {
+    base: any;
+    prop: any;
+    value: any;
+    skip: boolean;
+    frame?: unknown;
+  } | void;
 
   /**
    * Called after a property write completes.
@@ -335,7 +339,7 @@ interface FullAnalysis {
     base: any,
     prop: any,
     value: any,
-    frame: unknown
+    frame: unknown,
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
@@ -354,8 +358,8 @@ interface FullAnalysis {
   _deletePre: (
     id: number,
     base: any,
-    prop: any
-  ) => { base: any, prop: any, skip: boolean } | void;
+    prop: any,
+  ) => { base: any; prop: any; skip: boolean } | void;
 
   /**
    * Called after a `delete` expression completes.
@@ -370,7 +374,7 @@ interface FullAnalysis {
     id: number,
     base: any,
     prop: any,
-    value: boolean
+    value: boolean,
   ) => { result: boolean } | void;
 
   // ---------------------------------------------------------------------------
@@ -396,8 +400,8 @@ interface FullAnalysis {
     id: number,
     op: string,
     prefix: boolean,
-    operand: any
-  ) => { op: string, operand: any, skip: boolean, frame?: unknown } | void;
+    operand: any,
+  ) => { op: string; operand: any; skip: boolean; frame?: unknown } | void;
 
   /**
    * Called **after** any unary operation. Fires for every unary operator.
@@ -419,7 +423,7 @@ interface FullAnalysis {
     prefix: boolean,
     operand: any,
     result: any,
-    frame: unknown
+    frame: unknown,
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
@@ -427,34 +431,106 @@ interface FullAnalysis {
   // ---------------------------------------------------------------------------
 
   /** Pre-callback for arithmetic unary operators (`+`, `-`). Fires after {@link unaryPre}; result takes precedence. */
-  arithmeticUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean, frame?: unknown } | void;
+  arithmeticUnaryPre: (
+    id: number,
+    op: string,
+    prefix: boolean,
+    operand: any,
+  ) => { op: string; operand: any; skip: boolean; frame?: unknown } | void;
   /** Post-callback for arithmetic unary operators (`+`, `-`). Fires after {@link unary}; result takes precedence. */
-  arithmeticUnary: (id: number, op: string, prefix: boolean, operand: any, result: any, frame: unknown) => { result: any } | void;
+  arithmeticUnary: (
+    id: number,
+    op: string,
+    prefix: boolean,
+    operand: any,
+    result: any,
+    frame: unknown,
+  ) => { result: any } | void;
 
   /** Pre-callback for logical unary operator (`!`). Fires after {@link unaryPre}; result takes precedence. */
-  logicalUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean, frame?: unknown } | void;
+  logicalUnaryPre: (
+    id: number,
+    op: string,
+    prefix: boolean,
+    operand: any,
+  ) => { op: string; operand: any; skip: boolean; frame?: unknown } | void;
   /** Post-callback for logical unary operator (`!`). Fires after {@link unary}; result takes precedence. */
-  logicalUnary: (id: number, op: string, prefix: boolean, operand: any, result: any, frame: unknown) => { result: any } | void;
+  logicalUnary: (
+    id: number,
+    op: string,
+    prefix: boolean,
+    operand: any,
+    result: any,
+    frame: unknown,
+  ) => { result: any } | void;
 
   /** Pre-callback for bitwise unary operator (`~`). Fires after {@link unaryPre}; result takes precedence. */
-  bitwiseUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean, frame?: unknown } | void;
+  bitwiseUnaryPre: (
+    id: number,
+    op: string,
+    prefix: boolean,
+    operand: any,
+  ) => { op: string; operand: any; skip: boolean; frame?: unknown } | void;
   /** Post-callback for bitwise unary operator (`~`). Fires after {@link unary}; result takes precedence. */
-  bitwiseUnary: (id: number, op: string, prefix: boolean, operand: any, result: any, frame: unknown) => { result: any } | void;
+  bitwiseUnary: (
+    id: number,
+    op: string,
+    prefix: boolean,
+    operand: any,
+    result: any,
+    frame: unknown,
+  ) => { result: any } | void;
 
   /** Pre-callback for `typeof` operator. Fires after {@link unaryPre}; result takes precedence. */
-  typeofUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean, frame?: unknown } | void;
+  typeofUnaryPre: (
+    id: number,
+    op: string,
+    prefix: boolean,
+    operand: any,
+  ) => { op: string; operand: any; skip: boolean; frame?: unknown } | void;
   /** Post-callback for `typeof` operator. Fires after {@link unary}; result takes precedence. */
-  typeofUnary: (id: number, op: string, prefix: boolean, operand: any, result: any, frame: unknown) => { result: any } | void;
+  typeofUnary: (
+    id: number,
+    op: string,
+    prefix: boolean,
+    operand: any,
+    result: any,
+    frame: unknown,
+  ) => { result: any } | void;
 
   /** Pre-callback for `void` operator. Fires after {@link unaryPre}; result takes precedence. */
-  voidUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean, frame?: unknown } | void;
+  voidUnaryPre: (
+    id: number,
+    op: string,
+    prefix: boolean,
+    operand: any,
+  ) => { op: string; operand: any; skip: boolean; frame?: unknown } | void;
   /** Post-callback for `void` operator. Fires after {@link unary}; result takes precedence. */
-  voidUnary: (id: number, op: string, prefix: boolean, operand: any, result: any, frame: unknown) => { result: any } | void;
+  voidUnary: (
+    id: number,
+    op: string,
+    prefix: boolean,
+    operand: any,
+    result: any,
+    frame: unknown,
+  ) => { result: any } | void;
 
   /** Pre-callback for update operators (`++`, `--`). Fires after {@link unaryPre}; result takes precedence. */
-  updateUnaryPre: (id: number, op: string, prefix: boolean, operand: any) => { op: string, operand: any, skip: boolean, frame?: unknown } | void;
+  updateUnaryPre: (
+    id: number,
+    op: string,
+    prefix: boolean,
+    operand: any,
+  ) => { op: string; operand: any; skip: boolean; frame?: unknown } | void;
   /** Post-callback for update operators (`++`, `--`). Fires after {@link unary}; result takes precedence. */
-  updateUnary: (id: number, op: string, prefix: boolean, operand: any, result: any, frame: unknown) => { result: any } | void;
+  updateUnary: (
+    id: number,
+    op: string,
+    prefix: boolean,
+    operand: any,
+    result: any,
+    frame: unknown,
+  ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
   // Binary operations — general callback
@@ -482,8 +558,14 @@ interface FullAnalysis {
     id: number,
     op: string,
     left: any,
-    right: any
-  ) => { op: string, left: any, right: any, skip: boolean, frame?: unknown } | void;
+    right: any,
+  ) => {
+    op: string;
+    left: any;
+    right: any;
+    skip: boolean;
+    frame?: unknown;
+  } | void;
 
   /**
    * Called **after** any binary operation. Fires for every binary operator.
@@ -505,7 +587,7 @@ interface FullAnalysis {
     left: any,
     right: any,
     result: any,
-    frame: unknown
+    frame: unknown,
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
@@ -520,8 +602,14 @@ interface FullAnalysis {
     id: number,
     op: string,
     left: any,
-    right: any
-  ) => { op: string, left: any, right: any, skip: boolean, frame?: unknown } | void;
+    right: any,
+  ) => {
+    op: string;
+    left: any;
+    right: any;
+    skip: boolean;
+    frame?: unknown;
+  } | void;
 
   /**
    * Post-callback for arithmetic binary operators (`+`, `-`, `*`, `/`, `%`, `**`).
@@ -533,7 +621,7 @@ interface FullAnalysis {
     left: any,
     right: any,
     result: any,
-    frame: unknown
+    frame: unknown,
   ) => { result: any } | void;
 
   /**
@@ -544,8 +632,14 @@ interface FullAnalysis {
     id: number,
     op: string,
     left: any,
-    right: any
-  ) => { op: string, left: any, right: any, skip: boolean, frame?: unknown } | void;
+    right: any,
+  ) => {
+    op: string;
+    left: any;
+    right: any;
+    skip: boolean;
+    frame?: unknown;
+  } | void;
 
   /**
    * Post-callback for comparison operators (`==`, `!=`, `===`, `!==`, `<`, `<=`, `>`, `>=`, `in`, `instanceof`).
@@ -557,7 +651,7 @@ interface FullAnalysis {
     left: any,
     right: any,
     result: any,
-    frame: unknown
+    frame: unknown,
   ) => { result: any } | void;
 
   /**
@@ -568,8 +662,14 @@ interface FullAnalysis {
     id: number,
     op: string,
     left: any,
-    right: any
-  ) => { op: string, left: any, right: any, skip: boolean, frame?: unknown } | void;
+    right: any,
+  ) => {
+    op: string;
+    left: any;
+    right: any;
+    skip: boolean;
+    frame?: unknown;
+  } | void;
 
   /**
    * Post-callback for bitwise binary operators (`&`, `|`, `^`, `<<`, `>>`, `>>>`).
@@ -581,7 +681,7 @@ interface FullAnalysis {
     left: any,
     right: any,
     result: any,
-    frame: unknown
+    frame: unknown,
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
@@ -600,11 +700,7 @@ interface FullAnalysis {
    * @param value - The condition value (before truthiness coercion).
    * @returns `{ result }` to replace the condition value, or `void`.
    */
-  condition: (
-    id: number,
-    op: string,
-    value: any
-  ) => { result: any } | void;
+  condition: (id: number, op: string, value: any) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
   // Conditions — specific sub-callbacks
@@ -649,7 +745,7 @@ interface FullAnalysis {
     kind: string,
     init: boolean,
     value: any,
-    isSpread: boolean
+    isSpread: boolean,
   ) => void;
 
   // ---------------------------------------------------------------------------
@@ -678,11 +774,7 @@ interface FullAnalysis {
    * @param value - The current value.
    * @returns `{ result }` to replace the read value, or `void`.
    */
-  read: (
-    id: number,
-    name: string,
-    value: any
-  ) => { result: any } | void;
+  read: (id: number, name: string, value: any) => { result: any } | void;
 
   /**
    * Called for any memory write (property or variable). Acts as the general callback
@@ -706,11 +798,7 @@ interface FullAnalysis {
    * @param value - The value being assigned.
    * @returns `{ result }` to replace the assigned value, or `void`.
    */
-  write: (
-    id: number,
-    names: string[],
-    value: any
-  ) => { result: any } | void;
+  write: (id: number, names: string[], value: any) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
   // Literals — general callback
@@ -727,10 +815,7 @@ interface FullAnalysis {
    * @param value - The literal value.
    * @returns `{ result }` to replace the literal, or `void`.
    */
-  literal: (
-    id: number,
-    value: any
-  ) => { result: any } | void;
+  literal: (id: number, value: any) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
   // Literals — specific sub-callbacks
@@ -766,10 +851,7 @@ interface FullAnalysis {
    * @param val - The value being thrown.
    * @returns `{ result }` to replace the thrown value, or `void`.
    */
-  _throw: (
-    id: number,
-    val: any
-  ) => { result: any } | void;
+  _throw: (id: number, val: any) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
   // Generators
@@ -786,7 +868,7 @@ interface FullAnalysis {
   _yield: (
     id: number,
     value: any,
-    isDelegate: boolean
+    isDelegate: boolean,
   ) => { result: any } | void;
 
   /**
@@ -796,10 +878,7 @@ interface FullAnalysis {
    * @param value - The resume value.
    * @returns `{ result }` to replace the resume value, or `void`.
    */
-  _resume: (
-    id: number,
-    value: any
-  ) => { result: any } | void;
+  _resume: (id: number, value: any) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
   // Async / Await
@@ -812,10 +891,7 @@ interface FullAnalysis {
    * @param value - The value/promise being awaited.
    * @returns `{ result }` to replace the awaited value, or `void`.
    */
-  _await: (
-    id: number,
-    value: any
-  ) => { result: any } | void;
+  _await: (id: number, value: any) => { result: any } | void;
 
   /**
    * Called when an `await` resumes with its resolved value.
@@ -824,10 +900,7 @@ interface FullAnalysis {
    * @param value - The resolved value.
    * @returns `{ result }` to replace the resolved value, or `void`.
    */
-  _awaitResult: (
-    id: number,
-    value: any
-  ) => { result: any } | void;
+  _awaitResult: (id: number, value: any) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
   // Class field initialization
@@ -848,7 +921,7 @@ interface FullAnalysis {
     obj: any,
     key: any,
     isStatic: boolean,
-    value: any
+    value: any,
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
@@ -862,10 +935,7 @@ interface FullAnalysis {
    * @param args - The argument list.
    * @returns `{ args }` to replace the arguments, or `void`.
    */
-  superCallPre: (
-    id: number,
-    args: any[]
-  ) => { args: any[] } | void;
+  superCallPre: (id: number, args: any[]) => { args: any[] } | void;
 
   /**
    * Called after `super(...)` returns (i.e. the base constructor finishes).
@@ -875,11 +945,7 @@ interface FullAnalysis {
    * @param thisVal - The newly constructed `this` value.
    * @returns `{ result }` to replace `this`, or `void`.
    */
-  superCall: (
-    id: number,
-    args: any[],
-    thisVal: any
-  ) => { result: any } | void;
+  superCall: (id: number, args: any[], thisVal: any) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
   // Super — method call
@@ -898,8 +964,8 @@ interface FullAnalysis {
     id: number,
     thisVal: any,
     prop: any,
-    args: any[]
-  ) => { prop: any, args: any[] } | void;
+    args: any[],
+  ) => { prop: any; args: any[] } | void;
 
   /**
    * Called after `super.method(...)` returns.
@@ -916,7 +982,7 @@ interface FullAnalysis {
     thisVal: any,
     prop: any,
     args: any[],
-    result: any
+    result: any,
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
@@ -934,7 +1000,7 @@ interface FullAnalysis {
   superGetFieldPre: (
     id: number,
     thisVal: any,
-    prop: any
+    prop: any,
   ) => { prop: any } | void;
 
   /**
@@ -950,7 +1016,7 @@ interface FullAnalysis {
     id: number,
     thisVal: any,
     prop: any,
-    value: any
+    value: any,
   ) => { result: any } | void;
 
   // ---------------------------------------------------------------------------
@@ -970,8 +1036,8 @@ interface FullAnalysis {
     id: number,
     thisVal: any,
     prop: any,
-    value: any
-  ) => { prop: any, value: any } | void;
+    value: any,
+  ) => { prop: any; value: any } | void;
 
   /**
    * Called after `super.prop = value` completes.
@@ -981,12 +1047,7 @@ interface FullAnalysis {
    * @param prop - The property key.
    * @param value - The value that was assigned.
    */
-  superPutField: (
-    id: number,
-    thisVal: any,
-    prop: any,
-    value: any
-  ) => void;
+  superPutField: (id: number, thisVal: any, prop: any, value: any) => void;
 
   // ---------------------------------------------------------------------------
   // Eval hooking
@@ -1005,8 +1066,8 @@ interface FullAnalysis {
   instrumentCodePre: (
     id: number,
     code: string | any,
-    isDirect: boolean
-  ) => { code: string | any, skip?: boolean } | void;
+    isDirect: boolean,
+  ) => { code: string | any; skip?: boolean } | void;
 
   /**
    * Called after eval'd code has been instrumented. Return value can replace
@@ -1020,7 +1081,7 @@ interface FullAnalysis {
   instrumentCode: (
     id: number,
     code: string | any,
-    isDirect: boolean
+    isDirect: boolean,
   ) => { result: string | any } | void;
 
   result: any;
