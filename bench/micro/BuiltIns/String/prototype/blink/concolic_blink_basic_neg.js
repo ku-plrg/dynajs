@@ -1,6 +1,7 @@
 // @type concolic
 // @target es5 String.prototype.blink
 // @feature builtin blink
+// @done
 
 
 function __test_symbolic__(symbolic) {

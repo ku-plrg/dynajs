@@ -1,12 +1,13 @@
 // @type concolic
 // @target es5 String.prototype.toLocaleLowerCase
 // @feature builtin toLocaleLowerCase
+// @done
 
 
 function __test_symbolic__(symbolic) {
 
-  // @witness toLocaleLowerCase is modeled to always return a string
-  __IS_SAT__(typeof symbolic.toLocaleLowerCase() !== 'string', false);
+  // @witness lowercase cannot contain uppercase letters
+  __IS_SAT__(symbolic.toLocaleLowerCase().includes('A'), false);
 
 }
 

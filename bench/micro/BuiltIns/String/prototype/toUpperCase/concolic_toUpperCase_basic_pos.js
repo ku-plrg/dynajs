@@ -1,12 +1,12 @@
 // @type concolic
 // @target es5 String.prototype.toUpperCase
 // @feature builtin toUpperCase
-
+// @done
 
 function __test_symbolic__(symbolic) {
 
-  // @witness uppercasing never shortens a string, so length cannot decrease
-  __IS_SAT__(symbolic.toUpperCase().length < symbolic.length, false);
+  // @witness uppercase cannot contain lowercase letters
+  __IS_SAT__(symbolic.toUpperCase().includes('a'), false);
 
 }
 

@@ -1,6 +1,7 @@
 // @type concolic
 // @target es6+ String.prototype.symbol_iterator
 // @feature builtin symbol_iterator
+// @done
 
 
 function __test_symbolic__(symbolic) {

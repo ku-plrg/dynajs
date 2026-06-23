@@ -1,6 +1,7 @@
 // @type concolic
 // @target es5 String.prototype.substring
 // @feature builtin substring
+// @done
 
 
 function __test_symbolic__(symbolic) {

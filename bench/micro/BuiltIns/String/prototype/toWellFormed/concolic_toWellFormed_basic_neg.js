@@ -1,12 +1,13 @@
 // @type concolic
 // @target es6+ String.prototype.toWellFormed
 // @feature builtin toWellFormed
+// @done
 
 
 function __test_symbolic__(symbolic) {
 
-    // @witness __test_symbolic__("xyz")
-    __IS_SAT__(symbolic.toWellFormed() !== 'abc', true);
+    // @witness __test_symbolic__("\ud800")
+    __IS_SAT__(symbolic.toWellFormed() !== '�', true);
 
 }
 

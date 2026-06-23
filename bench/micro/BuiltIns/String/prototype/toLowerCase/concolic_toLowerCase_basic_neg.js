@@ -1,7 +1,7 @@
 // @type concolic
 // @target es5 String.prototype.toLowerCase
 // @feature builtin toLowerCase
-//@done
+// @done
 
 
 function __test_symbolic__(symbolic) {

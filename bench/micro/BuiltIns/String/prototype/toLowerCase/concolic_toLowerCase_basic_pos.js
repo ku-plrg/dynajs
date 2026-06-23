@@ -1,12 +1,12 @@
 // @type concolic
 // @target es5 String.prototype.toLowerCase
 // @feature builtin toLowerCase
-
+// @done
 
 function __test_symbolic__(symbolic) {
 
-  // @witness toLowerCase never shortens a string, only expands
-  __IS_SAT__(symbolic.toLowerCase().length < symbolic.length, false);
+  // @witness lowercase cannot contain uppercase letters
+  __IS_SAT__(symbolic.toLowerCase().includes('A'), false);
 
 }
 

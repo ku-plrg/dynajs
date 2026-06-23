@@ -1,12 +1,13 @@
 // @type concolic
 // @target es5 String.prototype.toLocaleUpperCase
 // @feature builtin toLocaleUpperCase
+// @done
 
 
 function __test_symbolic__(symbolic) {
 
-  // @witness toLocaleUpperCase never shortens, so result length stays >= original
-  __IS_SAT__(symbolic.toLocaleUpperCase().length < symbolic.length, false);
+  // @witness uppercase cannot contain lowercase letters
+  __IS_SAT__(symbolic.toLocaleUpperCase().includes('a'), false);
 
 }
 

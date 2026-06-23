@@ -1,6 +1,7 @@
 // @type concolic
 // @target es5 String.prototype.toLocaleUpperCase
 // @feature builtin toLocaleUpperCase
+// @done
 
 
 function __test_symbolic__(symbolic) {

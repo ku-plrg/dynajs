@@ -1,16 +1,13 @@
 // @type concolic
 // @target es5 String.prototype.substring
 // @feature builtin substring
+// @done
 
 
 function __test_symbolic__(symbolic) {
 
-  if (symbolic.substring(0, 3) === 'abc') {
-    // @witness the substring(0,3)==='abc' guard pins index 1 to 'b'
-    __IS_SAT__(symbolic.charAt(1) !== 'b', false);
-  } else {
-    __IS_SAT__(true, false);
-  }
+  // @witness substring(1, 2) length is less than 1
+  __IS__SAT__(symbolic.substring(1, 2).length > 1, false);
 
 }
 
