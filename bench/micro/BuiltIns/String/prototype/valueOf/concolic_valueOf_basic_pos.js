@@ -6,10 +6,10 @@
 function __test_symbolic__(symbolic) {
 
   if (symbolic.valueOf() === 'ab') {
-    // @witness valueOf returns the string itself, so it equals the source
-    __symbolic_assert__(symbolic === 'ab', true);
+    // @witness valueOf()==='ab' guard pins symbolic to 'ab'
+    __IS_SAT__(symbolic !== 'ab', false);
   } else {
-    __symbolic_assert__(false, true);
+    __IS_SAT__(true, false);
   }
 
 }

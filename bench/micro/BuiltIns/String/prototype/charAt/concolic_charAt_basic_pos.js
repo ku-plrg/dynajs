@@ -7,10 +7,10 @@
 function __test_symbolic__(symbolic) {
 
   if (symbolic.charAt(0) === 'a' && symbolic.charAt(1) === 'b') {
-    //@witness index 2 to exist, so length>=2
-    __symbolic_assert__(symbolic.length >= 2, true);
+    //@witness the charAt(0)/charAt(1) guards pin indices 0 and 1, forcing length>=2
+    __IS_SAT__(symbolic.length < 2, false);
   } else {
-    __symbolic_assert__(false, true);
+    __IS_SAT__(true, false);
   }
 
 }

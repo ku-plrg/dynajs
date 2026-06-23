@@ -7,7 +7,7 @@
 function __test_symbolic__(symbolic) {
 
   // @witness __test_symbolic__("abcde")
-  __symbolic_assert__(symbolic.padStart(5, '.')[0] === '.', false)
+  __IS_SAT__(symbolic.padStart(5, '.')[0] !== '.', true)
 
 }
 

@@ -2,14 +2,17 @@
 // @target es6+ Array.prototype.unshift
 // @feature builtin array-unshift
 
-var e0 = "a";
-var e1 = "b";
-var a = [e0, e1];
-var item = "c";
-__set_taint__(item);
-var len = a.unshift(item);
+function __test_taint__(tainted) {
+    var a = ["a", "b"];
+    var len = a.unshift(tainted);
+    // @witness unshift returns a length (number), clean
+    __assert_taint__(len, false);
+    // @witness __test_taint__('hello') => a[0] = 'hello' tainted
+    __assert_taint__(a[0], true);
+    // @witness always a[1] = "a", clean
+    __assert_taint__(a[1], false);
+    // @witness always a[2] = "b", clean
+    __assert_taint__(a[2], false);
+}
 
-__assert_taint__(len, false);
-__assert_taint__(a[0], true);
-__assert_taint__(a[1], false);
-__assert_taint__(a[2], false);
+__test_taint__(__set_taint__("hello"));

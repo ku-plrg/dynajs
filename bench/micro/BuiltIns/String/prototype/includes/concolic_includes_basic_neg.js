@@ -8,7 +8,7 @@ function __test_symbolic__(symbolic) {
 
   if (symbolic.includes('b')) {
     // @witness __test_symbolic__("bbb")
-    __symbolic_assert__(symbolic.includes('ab'), false)
+    __IS_SAT__(!(symbolic.includes('ab')), true)
   }
 
 }

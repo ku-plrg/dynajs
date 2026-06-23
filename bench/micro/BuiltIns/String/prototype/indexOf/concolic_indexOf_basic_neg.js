@@ -5,8 +5,8 @@
 
 function __test_symbolic__(symbolic) {
 
-  // @winess __test_symbolic__('aabb')
-  __symbolic_assert__(symbolic.indexOf('b') === 1, false);
+  // @witness __test_symbolic__("bbb")
+  __IS_SAT__(symbolic.indexOf('b') !== 1, true);
 
 
 }

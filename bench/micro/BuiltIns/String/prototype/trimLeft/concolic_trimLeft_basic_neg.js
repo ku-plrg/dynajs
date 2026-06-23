@@ -5,8 +5,8 @@
 
 function __test_symbolic__(symbolic) {
 
-  // @witness __test_symbolic__("xyz")
-  __symbolic_assert__(symbolic.trimLeft() === 'abc', false);
+  // @witness __test_symbolic__("x")
+  __IS_SAT__(symbolic.trimLeft() !== 'abc', true);
 
 }
 

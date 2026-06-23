@@ -7,10 +7,10 @@
 function __test_symbolic__(symbolic) {
 
   if (symbolic.endsWith('abc')) {
-    // @witness ending with 'abc' (3 chars) forces length >= 3
-    __symbolic_assert__(symbolic.length >= 3, true);
+    // @witness endsWith('abc') guard forces length >= 3
+    __IS_SAT__(symbolic.length < 3, false);
   } else {
-    __symbolic_assert__(false, true);
+    __IS_SAT__(true, false);
   }
 
 }

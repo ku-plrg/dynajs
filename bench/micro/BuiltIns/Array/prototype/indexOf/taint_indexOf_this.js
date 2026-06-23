@@ -2,21 +2,16 @@
 // @target es5 Array.prototype.indexOf
 // @feature builtin array-indexOf
 
-var e0 = "a";
-var e1 = "b";
-var e2 = "c";
-__set_taint__(e0);
-__set_taint__(e2);
-var a = [e0, e1, e2];
+function __test_taint__(tainted) {
+    var a = [tainted, "b", "c"];
+    // @witness __test_taint__('hello') => a.indexOf('hello') = 0 tainted
+    __assert_taint__(a.indexOf("hello"), true);
+    // @witness index/position, not content => clean
+    __assert_taint__(a.indexOf("b"), false);
+    // @witness index/position, not content => clean
+    __assert_taint__(a.indexOf("c"), false);
+    // @witness indexOf returns -1 (not found), clean
+    __assert_taint__(a.indexOf("z"), false);
+}
 
-var r0 = a.indexOf("a");
-__assert_taint__(r0, true);
-
-var r1 = a.indexOf("b");
-__assert_taint__(r1, false);
-
-var r2 = a.indexOf("c");
-__assert_taint__(r2, true);
-
-var r3 = a.indexOf("z");
-__assert_taint__(r3, false);
+__test_taint__(__set_taint__("hello"));

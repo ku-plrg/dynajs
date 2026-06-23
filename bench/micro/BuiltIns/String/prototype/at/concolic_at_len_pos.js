@@ -7,10 +7,10 @@
 function __test_symbolic__(symbolic) {
 
   if (symbolic.at(1) === 'a') {
-    // @witness at(1)==='a' requires index 1 to exist, so length>1
-    __symbolic_assert__(symbolic.length > 1, true);
+    // @witness the at(1)==='a' guard requires index 1, forcing length>=2
+    __IS_SAT__(symbolic.length <= 1, false);
   } else {
-    __symbolic_assert__(false, true);
+    __IS_SAT__(true, false);
   }
 
 

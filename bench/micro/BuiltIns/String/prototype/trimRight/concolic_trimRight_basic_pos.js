@@ -7,10 +7,10 @@
 function __test_symbolic__(symbolic) {
 
   if (symbolic.trimRight().length === symbolic.length) {
-  // @witness trimRight never lengthens the string
-    __symbolic_assert__(symbolic[symbolic.length - 1] !== ' ' , true);
+  // @witness no-shorten guard means no trailing space, so last char isn't ' '
+    __IS_SAT__(symbolic[symbolic.length - 1] === ' ' , false);
   } else {
-    __symbolic_assert__(false, true);
+    __IS_SAT__(true, false);
   }
 
 }

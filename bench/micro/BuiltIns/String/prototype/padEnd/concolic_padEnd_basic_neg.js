@@ -8,7 +8,7 @@ function __test_symbolic__(symbolic) {
 
   var r = symbolic.padEnd(5, '.');
   // @witness __test_symbolic__("abcde")
-  __symbolic_assert__(r[r.length-1] === '.', false)
+  __IS_SAT__(r[r.length-1] !== '.', true)
 
 }
 

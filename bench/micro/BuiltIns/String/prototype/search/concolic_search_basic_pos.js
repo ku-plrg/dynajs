@@ -7,10 +7,10 @@
 function __test_symbolic__(symbolic) {
 
   if (symbolic.search(/b/) === 1) {
-    // @witness /b/ first matches at index 1, so char 1 is 'b'
-    __symbolic_assert__(symbolic[1] === 'b', true);
+    // @witness the search(/b/)===1 guard pins index 1 to 'b'
+    __IS_SAT__(symbolic[1] !== 'b', false);
   } else {
-    __symbolic_assert__(false, true);
+    __IS_SAT__(true, false);
   }
 
 }

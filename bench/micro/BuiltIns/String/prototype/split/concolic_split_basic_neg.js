@@ -8,7 +8,7 @@ function __test_symbolic__(symbolic) {
 
   var p = symbolic.split('-');
     // @witness __test_symbolic__("ab-x")
-  __symbolic_assert__(symbolic.split('-')[1] === 'c', false);
+  __IS_SAT__(symbolic.split('-')[1] !== 'c', true);
 
 
 }

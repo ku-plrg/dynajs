@@ -2,18 +2,14 @@
 // @target es6+ Array.prototype.find
 // @feature builtin array-find
 
-var e0 = "a";
-var e1 = "b";
-var e2 = "c";
-__set_taint__(e0);
-__set_taint__(e2);
-var a = [e0, e1, e2];
+function __test_taint__(tainted) {
+    var a = [tainted, "b", "c"];
+    // @witness __test_taint__('hello') => a.find(v==='hello') = 'hello' tainted
+    __assert_taint__(a.find(function (v) { return v === "hello"; }), true);
+    // @witness always 'b' clean element returned
+    __assert_taint__(a.find(function (v) { return v === "b"; }), false);
+    // @witness find returns undefined (not found), clean
+    __assert_taint__(a.find(function (v) { return v === "z"; }), false);
+}
 
-var r0 = a.find(function (v) { return v === "a"; });
-__assert_taint__(r0, true);
-
-var r1 = a.find(function (v) { return v === "b"; });
-__assert_taint__(r1, false);
-
-var r2 = a.find(function (v) { return v === "z"; });
-__assert_taint__(r2, false);
+__test_taint__(__set_taint__("hello"));

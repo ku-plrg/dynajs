@@ -2,22 +2,17 @@
 // @target es5 Array.prototype.shift
 // @feature builtin array-shift
 
-var e0 = "a";
-var e1 = "b";
-var e2 = "c";
-__set_taint__(e0);
-__set_taint__(e2);
-var a = [e0, e1, e2];
+function __test_taint__(tainted) {
+    var a = [tainted, "b", "c"];
+    // @witness __test_taint__('hello') => a.shift() = 'hello' tainted
+    __assert_taint__(a.shift(), true);
+    // @witness always a.shift() = "b", clean
+    __assert_taint__(a.shift(), false);
+    // @witness always a.shift() = "c", clean
+    __assert_taint__(a.shift(), false);
+    var empty = [];
+    // @witness a.shift() on empty array = undefined (OOB), clean
+    __assert_taint__(empty.shift(), false);
+}
 
-var r0 = a.shift();
-__assert_taint__(r0, true);
-
-var r1 = a.shift();
-__assert_taint__(r1, false);
-
-var r2 = a.shift();
-__assert_taint__(r2, true);
-
-var empty = [];
-var r3 = empty.shift();
-__assert_taint__(r3, false);
+__test_taint__(__set_taint__("hello"));

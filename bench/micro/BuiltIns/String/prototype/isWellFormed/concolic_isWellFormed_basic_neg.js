@@ -7,7 +7,7 @@
 function __test_symbolic__(symbolic) {
 
   // @witness __test_symbolic__("\ud800")
-  __symbolic_assert__(symbolic.isWellFormed() === true, false);
+  __IS_SAT__(symbolic.isWellFormed() !== true, true);
 
 }
 

@@ -2,21 +2,16 @@
 // @target es6+ Array.prototype.findIndex
 // @feature builtin array-findIndex
 
-var e0 = "a";
-var e1 = "b";
-var e2 = "c";
-__set_taint__(e0);
-__set_taint__(e2);
-var a = [e0, e1, e2];
+function __test_taint__(tainted) {
+    var a = [tainted, "b", "c"];
+    // @witness __test_taint__('hello') => a.findIndex(v==='hello') = 0 tainted
+    __assert_taint__(a.findIndex(function (v) { return v === "hello"; }), true);
+    // @witness index/position, not content => clean
+    __assert_taint__(a.findIndex(function (v) { return v === "b"; }), false);
+    // @witness index/position, not content => clean
+    __assert_taint__(a.findIndex(function (v) { return v === "c"; }), false);
+    // @witness findIndex returns -1 (not found), clean
+    __assert_taint__(a.findIndex(function (v) { return v === "z"; }), false);
+}
 
-var r0 = a.findIndex(function (v) { return v === "a"; });
-__assert_taint__(r0, true);
-
-var r1 = a.findIndex(function (v) { return v === "b"; });
-__assert_taint__(r1, false);
-
-var r2 = a.findIndex(function (v) { return v === "c"; });
-__assert_taint__(r2, true);
-
-var r3 = a.findIndex(function (v) { return v === "z"; });
-__assert_taint__(r3, false);
+__test_taint__(__set_taint__("hello"));

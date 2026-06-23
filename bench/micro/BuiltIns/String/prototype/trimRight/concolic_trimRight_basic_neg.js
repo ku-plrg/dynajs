@@ -7,7 +7,7 @@
 function __test_symbolic__(symbolic) {
 
   // @witness __test_symbolic__("xyz")
-  __symbolic_assert__(symbolic.trimRight() === 'abc', false);
+  __IS_SAT__(symbolic.trimRight() !== 'abc', true);
 
 }
 

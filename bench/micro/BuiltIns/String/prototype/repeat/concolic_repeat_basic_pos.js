@@ -9,10 +9,10 @@ function __test_symbolic__(symbolic) {
 
   if (symbolic.repeat(5) == "HHHHH") {
 
-    // @witness symbolic must be "H"
-    __symbolic_assert__(symbolic === "H", true);
+    // @witness the repeat(5)=="HHHHH" guard pins symbolic to "H"
+    __IS_SAT__(symbolic !== "H", false);
   } else {
-    __symbolic_assert__(false, true);
+    __IS_SAT__(true, false);
   }
 
 }

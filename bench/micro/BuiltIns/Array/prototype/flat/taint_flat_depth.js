@@ -2,15 +2,15 @@
 // @target es6+ Array.prototype.flat
 // @feature builtin array-flat
 
-var e0 = "a";
-var e1 = "b";
-var e2 = "c";
-var a = [e0, [e1, [e2]]];
-var d = 2;
-__set_taint__(d);
-var r = a.flat(d);
+function __test_taint__(tainted) {
+    var a = ["a", ["b", ["c"]]];
+    var r = a.flat(tainted);
+    // @witness depth is index/position, not content => clean
+    __assert_taint__(r[0], false);
+    // @witness depth is index/position, not content => clean
+    __assert_taint__(r[1], false);
+    // @witness depth is index/position, not content => clean
+    __assert_taint__(r[2], false);
+}
 
-// implicit branch: false
-__assert_taint__(r[0], false);
-__assert_taint__(r[1], false);
-__assert_taint__(r[2], false);
+__test_taint__(__set_taint__(2));

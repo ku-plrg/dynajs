@@ -2,14 +2,14 @@
 // @target es6+ Array.prototype.includes
 // @feature builtin array-includes
 
-var e0 = "a";
-var e1 = "b";
-var e2 = "c";
-__set_taint__(e0);
-__set_taint__(e2);
-var a = [e0, e1, e2];
+function __test_taint__(tainted) {
+    var a = [tainted, "b", "c"];
+    // @witness boolean result, clean
+    __assert_taint__(a.includes("hello"), false);
+    // @witness boolean result, clean
+    __assert_taint__(a.includes("b"), false);
+    // @witness boolean result, clean
+    __assert_taint__(a.includes("z"), false);
+}
 
-__assert_taint__(a.includes(e0), false);
-__assert_taint__(a.includes(e1), false);
-__assert_taint__(a.includes(e2), false);
-__assert_taint__(a.includes("z"), false);
+__test_taint__(__set_taint__("hello"));

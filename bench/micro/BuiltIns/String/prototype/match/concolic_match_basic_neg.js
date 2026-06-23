@@ -8,7 +8,7 @@ function __test_symbolic__(symbolic) {
 
   if (symbolic.match(/^a.c$/)) {
     // @witness __test_symbolic__("axc")
-    __symbolic_assert__(symbolic[1] === 'b', false);
+    __IS_SAT__(symbolic[1] !== 'b', true);
   }
 
 }

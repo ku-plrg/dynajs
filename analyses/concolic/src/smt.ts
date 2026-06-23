@@ -336,6 +336,27 @@ export function solveValidity(
   return 'unknown';
 }
 
+// Ask z3 whether `assertSym` is *satisfiable* under the path condition `pc`, by
+// checking `pc ∧ assert` for satisfiability — the dual of solveValidity:
+//   sat   -> a witness exists (an input on this path makes `assert` hold)
+//   unsat -> infeasible (no such input)
+//   else  -> "unknown"
+export function solveSat(
+  pc: readonly Polarized[],
+  assertSym: Sym,
+): 'sat' | 'unsat' | 'unknown' {
+  const vars = new Map<string, Sort>();
+  const assertions = assertPath(pc, vars);
+  assertions.push(`(assert ${symToSmt(assertSym, vars)})`);
+  const smt = buildSmt(vars, assertions, '(check-sat)');
+  // DEBUG=1: show the SMT-LIB problem we hand to z3 for this query before solving.
+  if (process.env.DEBUG) console.error(`[concolic] SMT for IS_SAT:\n${smt}`);
+  const out = runZ3(smt);
+  if (out.startsWith('sat')) return 'sat';
+  if (out.startsWith('unsat')) return 'unsat';
+  return 'unknown';
+}
+
 // Is the path condition satisfiable, and if so, what concrete inputs realise it?
 // Returns the satisfying assignment for every variable that appears, or null
 // when unsat / unknown / variable-free. The model-extraction counterpart to

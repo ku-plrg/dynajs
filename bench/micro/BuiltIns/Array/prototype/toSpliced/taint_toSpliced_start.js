@@ -2,14 +2,13 @@
 // @target es6+ Array.prototype.toSpliced
 // @feature builtin array-toSpliced
 
-var e0 = "a";
-var e1 = "b";
-var e2 = "c";
-var a = [e0, e1, e2];
-var s = 1;
-__set_taint__(s);
-var r = a.toSpliced(s, 1);
+function __test_taint__(tainted) {
+    var a = ["a", "b", "c"];
+    var r = a.toSpliced(tainted, 1);
+    // @witness index/position, not content => clean
+    __assert_taint__(r[0], false);
+    // @witness index/position, not content => clean
+    __assert_taint__(r[1], false);
+}
 
-// implicit branch: false
-__assert_taint__(r[0], false);
-__assert_taint__(r[1], false);
+__test_taint__(__set_taint__(1));

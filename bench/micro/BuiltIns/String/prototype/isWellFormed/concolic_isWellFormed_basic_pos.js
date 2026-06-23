@@ -6,8 +6,8 @@
 
 function __test_symbolic__(symbolic) {
 
-  // @witness isWellFormed returns a boolean
-  __symbolic_assert__(typeof symbolic.isWellFormed() === 'boolean', true);
+  // @witness isWellFormed() always returns a boolean
+  __IS_SAT__(typeof symbolic.isWellFormed() !== 'boolean', false);
 
 }
 

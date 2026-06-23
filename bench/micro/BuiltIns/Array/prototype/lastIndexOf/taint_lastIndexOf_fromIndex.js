@@ -2,14 +2,12 @@
 // @target es5 Array.prototype.lastIndexOf
 // @feature builtin array-lastIndexOf
 
-var a = ["b", "a", "b", "c"];
+function __test_taint__(tainted) {
+    var a = ["b", "a", "b", "c"];
+    // @witness __test_taint__(2) => a.lastIndexOf("b", tainted) = 2 tainted
+    __assert_taint__(a.lastIndexOf("b", tainted), true);
+    // @witness lastIndexOf returns -1 (not found), clean
+    __assert_taint__(a.lastIndexOf("b", tainted - 12), false);
+}
 
-var f0 = 2;
-__set_taint__(f0);
-var r0 = a.lastIndexOf("b", f0);
-__assert_taint__(r0, true);
-
-var f1 = -10;
-__set_taint__(f1);
-var r1 = a.lastIndexOf("b", f1);
-__assert_taint__(r1, false);
+__test_taint__(__set_taint__(2));

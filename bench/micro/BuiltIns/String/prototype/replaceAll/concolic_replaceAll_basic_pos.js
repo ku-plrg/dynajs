@@ -8,10 +8,10 @@ function __test_symbolic__(symbolic) {
 
   var r = symbolic.replaceAll('z', 'Y');
   if (r === symbolic) {
-    // @witness 'z' is absent since replaceAll is identity
-    __symbolic_assert__(symbolic[0] !== 'z', true);
+    // @witness replaceAll('z','Y') identity means no 'z' present anywhere
+    __IS_SAT__(symbolic[0] === 'z', false);
   } else {
-    __symbolic_assert__(false, true);
+    __IS_SAT__(true, false);
   }
 
 }

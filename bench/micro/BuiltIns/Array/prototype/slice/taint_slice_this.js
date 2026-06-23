@@ -2,14 +2,13 @@
 // @target es6+ Array.prototype.slice
 // @feature builtin array-slice
 
-var e0 = "a";
-var e1 = "b";
-var e2 = "c";
-var e3 = "d";
-__set_taint__(e0);
-__set_taint__(e2);
-var a = [e0, e1, e2, e3];
-var r = a.slice(1, 3);
+function __test_taint__(tainted) {
+    var a = ["a", "b", tainted, "d"];
+    var r = a.slice(1, 3);
+    // @witness always r[0] = "b", clean
+    __assert_taint__(r[0], false);
+    // @witness __test_taint__('hello') => r[1] = 'hello' tainted
+    __assert_taint__(r[1], true);
+}
 
-__assert_taint__(r[0], false);
-__assert_taint__(r[1], true);
+__test_taint__(__set_taint__("hello"));

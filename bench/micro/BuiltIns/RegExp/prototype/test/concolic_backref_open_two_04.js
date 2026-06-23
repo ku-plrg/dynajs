@@ -1,0 +1,12 @@
+// @type concolic
+// @target es5 RegExp.prototype.test
+// @feature builtin regexp-backreference
+
+function __test_symbolic__(symbolic) {
+  if (/^(([a-z])\2)+$/.test(symbolic)) {
+    // @witness __test_symbolic__("zz")
+    __IS_SAT__(symbolic === "zz", true);
+  }
+}
+
+__test_symbolic__(__symbolic__('s', "zz"));

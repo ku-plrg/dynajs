@@ -7,8 +7,8 @@
 function __test_symbolic__(symbolic) {
 
   if (symbolic.indexOf('z') === -1) {
-    // @witness __test_symbolic__("xbc")
-    __symbolic_assert__(symbolic.indexOf(0) === 'a', false);
+    // @witness __test_symbolic__("abc")
+    __IS_SAT__(symbolic.indexOf(0) !== 'a', true);
   }
 
 }
