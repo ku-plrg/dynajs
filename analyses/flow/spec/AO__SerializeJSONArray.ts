@@ -18,10 +18,10 @@ export function AO__SerializeJSONArray ($ : SpecRuntime, state : Wrapped<unknown
   var partial = [] as Wrapped<never>[];
   var len = AO__LengthOfArrayLike($, (value as Wrapped<unknown>));
   var index = $.base<number>(0, []);
-  while ($.condition(Number.MAX_SAFE_INTEGER - 589, $.lessThan(index, len)))
+  while ($.condition(Number.MAX_SAFE_INTEGER - 653, $.lessThan(index, len)))
   {
     var strP = AO__SerializeJSONProperty($, (state as Wrapped<unknown>), (AO__ToString($, (index as Wrapped<unknown>)) as Wrapped<string>), (value as Wrapped<unknown>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 590, $.is(strP, $.base<undefined>(undefined, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 654, $.is(strP, $.base<undefined>(undefined, []))))
     {
       $.append(partial, $.base<string>("null", []))
     }
@@ -39,7 +39,7 @@ export function AO__SerializeJSONArray ($ : SpecRuntime, state : Wrapped<unknown
   }
   else
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 591, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.base<string>("", []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 655, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.base<string>("", []))))
     {
       var properties = (partial as Wrapped<string>[]).reduce((a, b) => $.concatenate(a, $.concatenate($.base<string>(",", []), b)));
       var final = $.concatenate($.concatenate($.base<string>("[", []), properties), $.base<string>("]", []));

@@ -305,7 +305,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     // StringOps
     length: (s) => {
       const v = (this.unwrap(s) as string).length;
-      if (this.$.isType(s, 'string')) {
+      if (this.$.peek(this.$.isType(s, 'string'))) {
         return this.lift(
           v,
           this.lengthOfStringInfo?.(this.valued(s)) ??
@@ -546,8 +546,19 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       r: R,
     ): Wrapped<boolean> =>
       this.cmpOp('!==', l, r, this.unwrap(l) !== this.unwrap(r)),
-    isNaN: (x) => Number.isNaN(this.unwrap(x) as number),
-    isFinite: (x) => Number.isFinite(this.unwrap(x) as number),
+    // isNaN/isFinite/isType go through baseInfo, not unaryInfo: unlike isInteger
+    // (a genuine symbolic predicate over the SMT Real), these aren't modelable —
+    // NaN/∞ aren't in the Real theory and a value's type is concrete. baseInfo
+    // yields `lost` for a symbolic operand, which conditionInfo drops (the branch
+    // concretizes, ExpoSE-faithful), while taint still flows operand→result.
+    isNaN: (x) => {
+      const v = Number.isNaN(this.unwrap(x) as number);
+      return this.lift(v, this.baseInfo(v, [this.valued(x)]));
+    },
+    isFinite: (x) => {
+      const v = Number.isFinite(this.unwrap(x) as number);
+      return this.lift(v, this.baseInfo(v, [this.valued(x)]));
+    },
     isInteger: (x) => {
       const v = Number.isInteger(this.unwrap(x) as number);
       return this.lift(
@@ -557,21 +568,24 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       );
     },
     isType: (x, ty) => {
-      const v = this.unwrap(x);
+      const raw = this.unwrap(x);
+      let v: boolean;
       switch (ty) {
         // "Type(x) is Object": objects and callables, but not null.
         case 'object':
-          return (
-            (typeof v === 'object' && v !== null) || typeof v === 'function'
-          );
+          v = (typeof raw === 'object' && raw !== null) || typeof raw === 'function';
+          break;
         case 'null':
-          return v === null;
+          v = raw === null;
+          break;
         case 'undefined':
-          return v === undefined;
+          v = raw === undefined;
+          break;
         // string / number / boolean / symbol / bigint / function
         default:
-          return typeof v === ty;
+          v = typeof raw === ty;
       }
+      return this.lift(v, this.baseInfo(v, [this.valued(x)]));
     },
 
     // MathOps
@@ -837,7 +851,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
         // `s.length` is the one field read with op-aware meaning (strlen);
         // route it through lengthInfo, else baseInfo flow-through.
         if (p === 'length') {
-          if (this.$.isType(f.base, 'string')) {
+          if (this.$.peek(this.$.isType(f.base, 'string'))) {
             return this.lift(
               result,
               this.lengthOfStringInfo?.(

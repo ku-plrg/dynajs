@@ -20,14 +20,14 @@ export function AO__ArraySpeciesCreate ($ : SpecRuntime, originalArray : Wrapped
   //    c. If thisRealm and realmC are not the same Realm Record, then
   //       i. If SameValue(C, realmC.[[Intrinsics]].[[%Array%]]) is true, set C to undefined.
   }
-  if ($.isType(C, "object")) {
+  if ($.peek($.isType(C, "object"))) {
   // 5. If C is an Object, then
   //    a. Set C to ? Get(C, %Symbol.species%).
     C = AO__Get($, C, $.base(Symbol.species, []));
   //    b. If C is null, set C to undefined.
     if ($.peek(C) === null) C = $.undef;
   }
-  if ($.isType(C, "undefined")) {
+  if ($.peek($.isType(C, "undefined"))) {
   // 6. If C is undefined, return ? ArrayCreate(length).
     return AO__ArrayCreate($, length);
   }

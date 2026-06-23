@@ -8,7 +8,7 @@ export function AO__CreateHTML ($ : SpecRuntime, string : Wrapped<unknown>, tag 
   var str = AO__RequireObjectCoercible($, string);
   var S = AO__ToString($, (str as Wrapped<unknown>));
   var p1 = $.concatenate($.base<string>("<", []), tag);
-  if (!$.condition(Number.MAX_SAFE_INTEGER - 22, $.is(attribute, $.base<string>("", []))))
+  if (!$.condition(Number.MAX_SAFE_INTEGER - 26, $.is(attribute, $.base<string>("", []))))
   {
     var V = AO__ToString($, (value as Wrapped<unknown>));
     var escapedV = $.base($.peek(V).replaceAll(String.fromCharCode(0x22), "&quot;"), [V]);

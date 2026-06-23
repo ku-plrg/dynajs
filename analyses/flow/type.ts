@@ -105,8 +105,8 @@ interface CompareOps {
     l: L,
     r: R,
   ) => Wrapped<boolean /* l is Exclude<L, R> */>;
-  isNaN: (x: Wrapped<number>) => boolean;
-  isFinite: (x: Wrapped<number>) => boolean;
+  isNaN: (x: Wrapped<number>) => Wrapped<boolean>;
+  isFinite: (x: Wrapped<number>) => Wrapped<boolean>;
   isInteger: (x: Wrapped<number>) => Wrapped<boolean>;
   isType: (
     x: Wrapped<unknown>,
@@ -119,7 +119,7 @@ interface CompareOps {
       | 'boolean'
       | 'symbol'
       | 'bigint',
-  ) => boolean;
+  ) => Wrapped<boolean>;
 }
 
 interface MathOps {

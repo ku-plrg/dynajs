@@ -15,7 +15,7 @@ import { AO__ToString } from "./AO__ToString.js";
 export function INTRINSICS_Array_prototype_filter ($ : SpecRuntime, $this : Wrapped<unknown>, callback : Wrapped<unknown>, thisArg : Wrapped<unknown> = $.undef) {
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 127, $.is(AO__IsCallable($, (callback as Wrapped<unknown>)), $.base<boolean>(false, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 136, $.is(AO__IsCallable($, (callback as Wrapped<unknown>)), $.base<boolean>(false, []))))
   {
     throw new TypeError;
   }
@@ -23,15 +23,15 @@ export function INTRINSICS_Array_prototype_filter ($ : SpecRuntime, $this : Wrap
   var A = AO__ArraySpeciesCreate($, (O as Wrapped<unknown>), ($.base<number>(0, []) as Wrapped<number>));
   var k = $.base<number>(0, []);
   var to = $.base<number>(0, []);
-  while ($.condition(Number.MAX_SAFE_INTEGER - 128, $.lessThan(k, len)))
+  while ($.condition(Number.MAX_SAFE_INTEGER - 137, $.lessThan(k, len)))
   {
     var Pk = AO__ToString($, (k as Wrapped<unknown>));
     var kPresent = AO__HasProperty($, (O as Wrapped<unknown>), (Pk as Wrapped<unknown>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 129, $.is(kPresent, $.base<boolean>(true, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 138, $.is(kPresent, $.base<boolean>(true, []))))
     {
       var kValue = AO__Get($, (O as Wrapped<unknown>), (Pk as Wrapped<unknown>));
       var selected = AO__ToBoolean($, (AO__Call($, (callback as Wrapped<unknown>), (thisArg as Wrapped<unknown>), ([kValue, k, O] as Wrapped<unknown>[])) as Wrapped<unknown>));
-      if ($.condition(Number.MAX_SAFE_INTEGER - 130, $.is(selected, $.base<boolean>(true, []))))
+      if ($.condition(Number.MAX_SAFE_INTEGER - 139, $.is(selected, $.base<boolean>(true, []))))
       {
         AO__CreateDataPropertyOrThrow($, (A as Wrapped<unknown>), (AO__ToString($, (to as Wrapped<unknown>)) as Wrapped<unknown>), (kValue as Wrapped<unknown>));
         to = $.add((to as Wrapped<number>), ($.base<number>(1, []) as Wrapped<number>));

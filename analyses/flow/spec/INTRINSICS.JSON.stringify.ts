@@ -18,38 +18,38 @@ export function INTRINSICS_JSON_stringify ($ : SpecRuntime, $this : Wrapped<unkn
   var indent = $.base<string>("", []);
   var PropertyList = $.base<undefined>(undefined, []);
   var ReplacerFunction = $.base<undefined>(undefined, []);
-  if (($.isType(replacer, "object")))
+  if (($.condition(Number.MAX_SAFE_INTEGER - 255, $.isType(replacer, "object"))))
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 246, $.is(AO__IsCallable($, (replacer as Wrapped<unknown>)), $.base<boolean>(true, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 256, $.is(AO__IsCallable($, (replacer as Wrapped<unknown>)), $.base<boolean>(true, []))))
     {
       ReplacerFunction = replacer;
     }
     else
     {
       var isArray = AO__IsArray($, (replacer as Wrapped<unknown>));
-      if ($.condition(Number.MAX_SAFE_INTEGER - 247, $.is(isArray, $.base<boolean>(true, []))))
+      if ($.condition(Number.MAX_SAFE_INTEGER - 257, $.is(isArray, $.base<boolean>(true, []))))
       {
         PropertyList = [] as Wrapped<never>[];
         var len = AO__LengthOfArrayLike($, (replacer as Wrapped<unknown>));
         var k = $.base<number>(0, []);
-        while ($.condition(Number.MAX_SAFE_INTEGER - 248, $.lessThan(k, len)))
+        while ($.condition(Number.MAX_SAFE_INTEGER - 258, $.lessThan(k, len)))
         {
           var prop = AO__ToString($, (k as Wrapped<unknown>));
           var v = AO__Get($, (replacer as Wrapped<unknown>), (prop as Wrapped<unknown>));
           var item = $.base<undefined>(undefined, []);
-          if (($.isType(v, "string")))
+          if (($.condition(Number.MAX_SAFE_INTEGER - 259, $.isType(v, "string"))))
           {
             item = v;
           }
           else
           {
-            if (($.isType(v, "number")))
+            if (($.condition(Number.MAX_SAFE_INTEGER - 260, $.isType(v, "number"))))
             {
               item = AO__ToString($, (v as Wrapped<unknown>));
             }
             else
             {
-              if (($.isType(v, "object")))
+              if (($.condition(Number.MAX_SAFE_INTEGER - 261, $.isType(v, "object"))))
               {
                 if ($.peek(v) instanceof String || $.peek(v) instanceof Number) { item = AO__ToString($, (v as Wrapped<unknown>)); }
               }
@@ -58,7 +58,7 @@ export function INTRINSICS_JSON_stringify ($ : SpecRuntime, $this : Wrapped<unkn
 
           }
 
-          if (!$.condition(Number.MAX_SAFE_INTEGER - 249, $.is(item, $.base<undefined>(undefined, []))) && !$.contains(PropertyList, item))
+          if (!$.condition(Number.MAX_SAFE_INTEGER - 262, $.is(item, $.base<undefined>(undefined, []))) && !$.contains(PropertyList, item))
           {
             $.append(PropertyList, item)
           }
@@ -72,7 +72,7 @@ export function INTRINSICS_JSON_stringify ($ : SpecRuntime, $this : Wrapped<unkn
 
   }
 
-  if (($.isType(space, "object")))
+  if (($.condition(Number.MAX_SAFE_INTEGER - 263, $.isType(space, "object"))))
   {
     if (($.peek(space) instanceof Number))
     {
@@ -89,11 +89,11 @@ export function INTRINSICS_JSON_stringify ($ : SpecRuntime, $this : Wrapped<unkn
 
   }
 
-  if (($.isType(space, "number")))
+  if (($.condition(Number.MAX_SAFE_INTEGER - 264, $.isType(space, "number"))))
   {
     var spaceMV = AO__ToIntegerOrInfinity($, (space as Wrapped<unknown>));
     spaceMV = $.min($.base<number>(10, []), spaceMV);
-    if ($.condition(Number.MAX_SAFE_INTEGER - 250, $.lessThan(spaceMV, $.base<number>(1, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 265, $.lessThan(spaceMV, $.base<number>(1, []))))
     {
       var gap = $.base<string>("", []);
     }
@@ -105,9 +105,9 @@ export function INTRINSICS_JSON_stringify ($ : SpecRuntime, $this : Wrapped<unkn
   }
   else
   {
-    if (($.isType(space, "string")))
+    if (($.condition(Number.MAX_SAFE_INTEGER - 266, $.isType(space, "string"))))
     {
-      if ($.condition(Number.MAX_SAFE_INTEGER - 251, $.lessThanEqual($.length(space), $.base<number>(10, []))))
+      if ($.condition(Number.MAX_SAFE_INTEGER - 267, $.lessThanEqual($.length(space), $.base<number>(10, []))))
       {
         var gap = space;
       }

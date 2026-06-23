@@ -2,7 +2,7 @@ import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
 
 export function AO__ToPrimitive($: SpecRuntime, arg: Wrapped<unknown>, preferredType: Wrapped<'string' | 'number'> | undefined = undefined): Wrapped<Primitive> {
   // 1. If input is an Object, then
-  if ($.isType(arg, 'object')) {
+  if ($.peek($.isType(arg, 'object'))) {
     throw new Error('TODO: AO__ToPrimitive for objects');
     //    a. Let exoticToPrim be ? GetMethod(input, %Symbol.toPrimitive%).
     //    b. If exoticToPrim is not undefined, then

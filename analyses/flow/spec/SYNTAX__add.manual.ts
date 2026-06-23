@@ -5,7 +5,7 @@ import { AO__ToNumber } from "./AO__ToNumber.js";
 
 function SYNTAX__add_primitive($: SpecRuntime, lPrim: Wrapped<Primitive>, rPrim: Wrapped<Primitive>): Wrapped<string> | Wrapped<number> {
   //   c. If lPrim is a String or rPrim is a String, then
-  if ($.isType(lPrim, 'string') || $.isType(rPrim, 'string')) {
+  if ($.peek($.isType(lPrim, 'string')) || $.peek($.isType(rPrim, 'string'))) {
     //     i. Let lStr be ? ToString(lPrim).
     const lStr = AO__ToString($, lPrim);
     //     ii. Let rStr be ? ToString(rPrim).
@@ -37,7 +37,7 @@ function SYNTAX__add_primitive($: SpecRuntime, lPrim: Wrapped<Primitive>, rPrim:
 // ApplyStringOrNumericBinaryOperator (13.15.3), specialized to opText = `+`
 // (split out of the former Model.applyBinary, one file per operator).
 export function SYNTAX__add($: SpecRuntime, lVal: Wrapped<unknown>, rVal: Wrapped<unknown>): Wrapped<string> | Wrapped<number> {
-  if ($.isType(lVal, 'object') || $.isType(rVal, 'object')) {
+  if ($.peek($.isType(lVal, 'object')) || $.peek($.isType(rVal, 'object'))) {
     const l: Unwrapped<unknown> = $.peek(lVal);
     const r: Unwrapped<unknown> = $.peek(rVal);
     // @ts-expect-error - it calls the plus

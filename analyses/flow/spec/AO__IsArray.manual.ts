@@ -2,7 +2,7 @@
 import type { Wrapped, SpecRuntime } from "../type.js";
 
 export function AO__IsArray ($ : SpecRuntime, argument : Wrapped<unknown>) {
-  if (!($.isType(argument, "object")))
+  if (!($.peek($.isType(argument, "object"))))
   {
     return $.base<boolean>(false, []);
   }

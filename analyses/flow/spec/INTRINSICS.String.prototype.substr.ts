@@ -10,13 +10,13 @@ export function INTRINSICS_String_prototype_substr ($ : SpecRuntime, $this : Wra
   var S = AO__ToString($, (O as Wrapped<unknown>));
   var size = $.length(S);
   var intStart = AO__ToIntegerOrInfinity($, (start as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 442, $.is(intStart, $.base<number>(-Infinity, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 465, $.is(intStart, $.base<number>(-Infinity, []))))
   {
     intStart = $.base<number>(0, []);
   }
   else
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 443, $.lessThan(intStart, $.base<number>(0, []))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 466, $.lessThan(intStart, $.base<number>(0, []))))
     {
       intStart = $.max($.add((size as Wrapped<number>), (intStart as Wrapped<number>)), $.base<number>(0, []));
     }
@@ -27,7 +27,7 @@ export function INTRINSICS_String_prototype_substr ($ : SpecRuntime, $this : Wra
 
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 444, $.is(length, $.base<undefined>(undefined, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 467, $.is(length, $.base<undefined>(undefined, []))))
   {
     var intLength = size;
   }

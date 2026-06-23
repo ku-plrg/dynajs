@@ -11,7 +11,7 @@ export function AO__SameValueZero ($ : SpecRuntime, x : Wrapped<unknown>, y : Wr
     return $.base<boolean>(false, []);
   }
 
-  if (($.isType(x, "number")))
+  if (($.peek($.isType(x, "number"))))
   {
     // return Number__sameValueZero(x, y);
     return $.base<boolean>(x === y, []);

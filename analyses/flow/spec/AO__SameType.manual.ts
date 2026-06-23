@@ -13,32 +13,32 @@ export function AO__SameType ($ : SpecRuntime, x : Wrapped<unknown>, y : Wrapped
     return $.base<boolean>(true, []);
   }
 
-  if (($.isType(x, "boolean")) && ($.isType(y, "boolean")))
+  if (($.peek($.isType(x, "boolean"))) && ($.peek($.isType(y, "boolean"))))
   {
     return $.base<boolean>(true, []);
   }
 
-  if (($.isType(x, "number")) && ($.isType(y, "number")))
+  if (($.peek($.isType(x, "number"))) && ($.peek($.isType(y, "number"))))
   {
     return $.base<boolean>(true, []);
   }
 
-  if (($.isType(x, "bigint")) && ($.isType(y, "bigint")))
+  if (($.peek($.isType(x, "bigint"))) && ($.peek($.isType(y, "bigint"))))
   {
     return $.base<boolean>(true, []);
   }
 
-  if (($.isType(x, "symbol")) && ($.isType(y, "symbol")))
+  if (($.peek($.isType(x, "symbol"))) && ($.peek($.isType(y, "symbol"))))
   {
     return $.base<boolean>(true, []);
   }
 
-  if (($.isType(x, "string")) && ($.isType(y, "string")))
+  if (($.peek($.isType(x, "string"))) && ($.peek($.isType(y, "string"))))
   {
     return $.base<boolean>(true, []);
   }
 
-  if (($.isType(x, "object")) && ($.isType(y, "object")))
+  if (($.peek($.isType(x, "object"))) && ($.peek($.isType(y, "object"))))
   {
     return $.base<boolean>(true, []);
   }

@@ -7,7 +7,7 @@ export function AO__ToNumeric($: SpecRuntime, arg: Wrapped<unknown>): Wrapped<nu
   // 1. Let primValue be ? ToPrimitive(value, number).
   const primValue = AO__ToPrimitive($, arg, $.base('number', []));
   // 2. If primValue is a BigInt, return primValue.
-  if ($.isType(primValue, 'bigint')) {
+  if ($.peek($.isType(primValue, 'bigint'))) {
     return primValue as Wrapped<bigint>;
   }
   // 3. Return ? ToNumber(primValue).
