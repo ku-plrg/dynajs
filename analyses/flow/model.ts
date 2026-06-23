@@ -81,6 +81,10 @@ export class Model {
     [Array.prototype.shift, generated.INTRINSICS_Array_prototype_shift],
     [Array.prototype.slice, generated.INTRINSICS_Array_prototype_slice],
 
+    [Math.floor, generated.INTRINSICS_Math_floor],
+    [Math.ceil, generated.INTRINSICS_Math_ceil],
+    [Math.round, generated.INTRINSICS_Math_round],
+
     [JSON.stringify, generated.INTRINSICS_JSON_stringify],
   ]);
 
