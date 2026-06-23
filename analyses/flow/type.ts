@@ -97,6 +97,8 @@ interface MathOps {
   max: (...xs: Wrapped<number>[]) => Wrapped<number>;
   abs: (x: Wrapped<number>) => Wrapped<number>;
   floor: (x: Wrapped<number>) => Wrapped<number>;
+  ceil: (x: Wrapped<number>) => Wrapped<number>;
+  round: (x: Wrapped<number>) => Wrapped<number>;
   truncate: (x: Wrapped<number>) => Wrapped<number>;
   clamp: (x: Wrapped<number>, lower: Wrapped<number>, upper: Wrapped<number>) => Wrapped<number>;
 }

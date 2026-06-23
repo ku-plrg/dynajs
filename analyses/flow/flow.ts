@@ -296,6 +296,8 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     max: (...xs) => this.numOp(Math.max(...xs.map((x) => this.unwrap(x) as number)), xs),
     abs: (x) => this.numOp(Math.abs(this.unwrap(x) as number), [x]),
     floor: (x) => this.numOp(Math.floor(this.unwrap(x) as number), [x]),
+    ceil: (x) => this.numOp(Math.ceil(this.unwrap(x) as number), [x]),
+    round: (x) => this.numOp(Math.round(this.unwrap(x) as number), [x]),
     truncate: (x) => {
       const v = Math.trunc(this.unwrap(x) as number);
       return this.lift(v, this.truncateInfo?.(this.valued(x)) ?? this.baseInfo(v, [this.valued(x)]));
