@@ -1,5 +1,5 @@
 // @type taint
-// @target es6 Set.prototype.clear
+// @target es6+ Set.prototype.clear
 // @feature builtin clear
 
 function __test_taint__(tainted) {

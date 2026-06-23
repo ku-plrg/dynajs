@@ -7,10 +7,10 @@
 function __test_symbolic__(symbolic) {
 
   if (symbolic.lastIndexOf('b') === 2) {
-    // @witness 'b' last occurs at index 2, so char 2 is 'b'
-    __symbolic_assert__(symbolic[2] === 'b', true);
+    // @witness lastIndexOf('b')===2 guard forces char at index 2 to be 'b'
+    __IS_SAT__(symbolic[2] !== 'b', false);
   } else {
-    __symbolic_assert__(false, true);
+    __IS_SAT__(true, false);
   }
 
 }

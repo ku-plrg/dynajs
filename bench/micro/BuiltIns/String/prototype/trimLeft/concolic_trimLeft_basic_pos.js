@@ -8,10 +8,10 @@ function __test_symbolic__(symbolic) {
 
   // @witness trimLeft never lengthens the string
     if (symbolic.trimLeft().length === symbolic.length) {
-  // @witness trimLeft never lengthens the string
-    __symbolic_assert__(symbolic[0] !== ' ' , true);
+  // @witness preserved-length guard means no leading space was trimmed
+    __IS_SAT__(symbolic[0] === ' ' , false);
   } else {
-    __symbolic_assert__(false, true);
+    __IS_SAT__(true, false);
   }
 
 }

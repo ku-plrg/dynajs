@@ -1,5 +1,5 @@
 // @type taint
-// @target es6 RegExp.prototype[Symbol.replace]
+// @target es6+ RegExp.prototype[Symbol.replace]
 // @feature builtin symbol_replace
 
 function __test_taint__(tainted) {

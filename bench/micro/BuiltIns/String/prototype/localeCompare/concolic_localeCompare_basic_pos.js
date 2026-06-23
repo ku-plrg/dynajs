@@ -6,8 +6,8 @@
 
 function __test_symbolic__(symbolic) {
 
-  // @witness a string compares equal (0) to itself
-  __symbolic_assert__(symbolic.localeCompare(symbolic) === 0, true);
+  // @witness any string compares equal (0) to itself
+  __IS_SAT__(symbolic.localeCompare(symbolic) !== 0, false);
 
 }
 

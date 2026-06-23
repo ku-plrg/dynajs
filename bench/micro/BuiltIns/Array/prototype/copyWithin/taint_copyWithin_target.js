@@ -1,16 +1,13 @@
 // @type taint
 // @target es6+ Array.prototype.copyWithin
 // @feature builtin array-copyWithin
+// @done
 
-var e0 = "a";
-var e1 = "b";
-var e2 = "c";
-var e3 = "d";
-var a = [e0, e1, e2, e3];
-var t = 0;
-__set_taint__(t);
-var r = a.copyWithin(t, 2);
+function __test_taint__(tainted) {
+    
+    var r = ["a", "b", "c", "d"].copyWithin(tainted, 2);
+    // @witness tainted target index does not taint copied elements
+    __assert_taint__(r[0], false);
+}
 
-// implicit branch: false
-__assert_taint__(r[0], false);
-__assert_taint__(r[1], false);
+__test_taint__(__set_taint__(0));

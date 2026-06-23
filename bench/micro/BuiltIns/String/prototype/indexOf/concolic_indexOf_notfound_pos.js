@@ -7,10 +7,10 @@
 function __test_symbolic__(symbolic) {
 
   if (symbolic.indexOf('z') === -1) {
-    // @witness indexOf returns -1 only when 'z' is absent, so char 0 is not 'z'
-    __symbolic_assert__(symbolic[0] !== 'z', true);
+    // @witness the indexOf('z')===-1 guard means 'z' is absent everywhere
+    __IS_SAT__(symbolic[0] === 'z', false);
   } else {
-    __symbolic_assert__(false, true);
+    __IS_SAT__(true, false);
   }
 
 }

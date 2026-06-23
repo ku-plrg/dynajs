@@ -1,5 +1,5 @@
 // @type taint
-// @target es6 Set.prototype[Symbol.iterator]
+// @target es6+ Set.prototype[Symbol.iterator]
 // @feature builtin symbol_iterator
 
 function __test_taint__(tainted) {

@@ -1,5 +1,5 @@
 // @type taint
-// @target es6 Set.prototype.delete
+// @target es6+ Set.prototype.delete
 // @feature builtin delete
 
 function __test_taint__(tainted) {

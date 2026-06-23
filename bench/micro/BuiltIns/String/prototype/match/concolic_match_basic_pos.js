@@ -7,10 +7,10 @@
 function __test_symbolic__(symbolic) {
 
   if (symbolic.match(/^a.c$/)) {
-    // @witness anchored /^a.c$/ pins char 0 to 'a'
-    __symbolic_assert__(symbolic[0] === 'a', true);
+    // @witness anchored /^a.c$/ match pins index 0 to 'a'
+    __IS_SAT__(symbolic[0] !== 'a', false);
   } else {
-    __symbolic_assert__(false, true);
+    __IS_SAT__(true, false);
   }
 
 }

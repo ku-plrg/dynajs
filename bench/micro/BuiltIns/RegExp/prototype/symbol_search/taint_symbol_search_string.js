@@ -1,5 +1,5 @@
 // @type taint
-// @target es6 RegExp.prototype[Symbol.search]
+// @target es6+ RegExp.prototype[Symbol.search]
 // @feature builtin symbol_search
 
 function __test_taint__(tainted) {

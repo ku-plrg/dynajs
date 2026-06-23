@@ -1,5 +1,5 @@
 // @type taint
-// @target es6 Number.isNaN
+// @target es6+ Number.isNaN
 // @feature builtin isNaN
 
 function __test_taint__(tainted) {

@@ -8,7 +8,7 @@ function __test_symbolic__(symbolic) {
 
   if (symbolic.slice(0, 2) === 'ab') {
     // @witness __test_symbolic__("abz")
-    __symbolic_assert__(symbolic.slice(0, 3) === 'abc', false);
+    __IS_SAT__(symbolic.slice(0, 3) !== 'abc', true);
   }
 
 }

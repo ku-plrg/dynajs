@@ -2,15 +2,12 @@
 // @target es6+ Array.prototype.splice
 // @feature builtin array-splice
 
-var e0 = "a";
-var e1 = "b";
-var e2 = "c";
-var e3 = "d";
-var a = [e0, e1, e2, e3];
-var s = 1;
-__set_taint__(s);
-var r = a.splice(s, 2);
+function __test_taint__(tainted) {
+    var a = ["a", "b", "c", "d"];
+    var r = a.splice(tainted, 2);
+    // @witness tainted start index does not taint removed elements
+    __assert_taint__(r[0], false);
+    __assert_taint__(r[1], false);
+}
 
-// implicit branch: false
-__assert_taint__(r[0], false);
-__assert_taint__(r[1], false);
+__test_taint__(__set_taint__(1));

@@ -7,10 +7,10 @@
 function __test_symbolic__(symbolic) {
 
   if (symbolic.startsWith('abc')) {
-    // @witness starting with 'abc' (3 chars) forces length >= 3
-    __symbolic_assert__(symbolic.length >= 3, true);  
+    // @witness startsWith('abc') forces a 3-char prefix, so length>=3
+    __IS_SAT__(symbolic.length < 3, false);
   } else {
-    __symbolic_assert__(false, true);
+    __IS_SAT__(true, false);
   }
 
 }

@@ -8,8 +8,8 @@ function __test_symbolic__(symbolic) {
 
   if (symbolic.startsWith('a')) {
 
-    // @witness __test_symbolic__('aaa')
-    __symbolic_assert__(symbolic.startsWith('ab'),false)
+    // @witness __test_symbolic__("aaa")
+    __IS_SAT__(!(symbolic.startsWith('ab')),true)
 
   }
 

@@ -2,12 +2,11 @@
 // @target es6+ Array.prototype.includes
 // @feature builtin array-includes
 
-var e0 = "a";
-var e1 = "b";
-var e2 = "c";
-var a = [e0, e1, e2];
-var fromIndex = 0;
-__set_taint__(fromIndex);
+function __test_taint__(tainted) {
+    var a = ["a", "b", "c"];
+    // @witness includes() with a tainted fromIndex returns a boolean => clean
+    __assert_taint__(a.includes("a", tainted), false);
+    __assert_taint__(a.includes("c", tainted), false);
+}
 
-__assert_taint__(a.includes("a", fromIndex), false);
-__assert_taint__(a.includes("c", fromIndex), false);
+__test_taint__(__set_taint__(0));

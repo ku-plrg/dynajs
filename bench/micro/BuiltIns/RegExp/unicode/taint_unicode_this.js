@@ -1,5 +1,5 @@
 // @type taint
-// @target es6 RegExp.unicode
+// @target es6+ RegExp.unicode
 // @feature builtin unicode
 
 function __test_taint__(tainted) {

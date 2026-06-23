@@ -6,8 +6,8 @@
 
 function __test_symbolic__(symbolic) {
 
-  // @witness codePointAt returns a numeric code point
-  __symbolic_assert__(typeof symbolic.codePointAt(0) === 'number', true);
+  // @witness codePointAt(0) is modeled to always return a number
+  __IS_SAT__(typeof symbolic.codePointAt(0) !== 'number', false);
 
 }
 

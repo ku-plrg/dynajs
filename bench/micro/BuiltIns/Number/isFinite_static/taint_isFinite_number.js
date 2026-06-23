@@ -1,5 +1,5 @@
 // @type taint
-// @target es6 Number.isFinite
+// @target es6+ Number.isFinite
 // @feature builtin isFinite
 
 function __test_taint__(tainted) {

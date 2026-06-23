@@ -8,10 +8,10 @@ function __test_symbolic__(symbolic) {
 
   var p = symbolic.split('-');
   if (p[0] === 'ab') {
-    // @witness the first segment 'ab' is the source prefix, so char 0 is 'a'
-    __symbolic_assert__(symbolic[0] === 'a', true);
+    // @witness the p[0]==='ab' guard pins the first char to 'a'
+    __IS_SAT__(symbolic[0] !== 'a', false);
   } else {
-    __symbolic_assert__(false, true);
+    __IS_SAT__(true, false);
   }
 
 }

@@ -6,8 +6,8 @@
 
 function __test_symbolic__(symbolic) {
 
-  // @witness normalize returns a string
-  __symbolic_assert__(typeof symbolic.normalize() === 'string', true);
+  // @witness normalize() always returns a string
+  __IS_SAT__(typeof symbolic.normalize() !== 'string', false);
 
 }
 

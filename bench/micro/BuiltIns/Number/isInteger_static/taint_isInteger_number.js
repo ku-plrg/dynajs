@@ -1,5 +1,5 @@
 // @type taint
-// @target es6 Number.isInteger
+// @target es6+ Number.isInteger
 // @feature builtin isInteger
 
 function __test_taint__(tainted) {

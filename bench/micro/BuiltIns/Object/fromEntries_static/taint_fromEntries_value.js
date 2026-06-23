@@ -1,5 +1,5 @@
 // @type taint
-// @target es2019 Object.fromEntries
+// @target es6+ Object.fromEntries
 // @feature builtin fromEntries
 
 function __test_taint__(tainted) {

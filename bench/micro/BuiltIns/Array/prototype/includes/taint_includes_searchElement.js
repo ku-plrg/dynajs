@@ -2,11 +2,10 @@
 // @target es6+ Array.prototype.includes
 // @feature builtin array-includes
 
-var e0 = "a";
-var e1 = "b";
-var e2 = "c";
-var a = [e0, e1, e2];
-var s = "a";
-__set_taint__(s);
+function __test_taint__(tainted) {
+    var a = ["a", "hello", "c"];
+    // @witness includes() with a tainted search element returns a boolean => clean
+    __assert_taint__(a.includes(tainted), false);
+}
 
-__assert_taint__(a.includes(s), false);
+__test_taint__(__set_taint__("hello"));

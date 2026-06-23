@@ -1,5 +1,5 @@
 // @type taint
-// @target es6 RegExp.prototype[Symbol.split]
+// @target es6+ RegExp.prototype[Symbol.split]
 // @feature builtin symbol_split
 
 function __test_taint__(tainted) {

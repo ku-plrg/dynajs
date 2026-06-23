@@ -1,5 +1,5 @@
 // @type taint
-// @target es6 Map.prototype.keys
+// @target es6+ Map.prototype.keys
 // @feature builtin keys
 
 function __test_taint__(tainted) {

@@ -1,5 +1,5 @@
 // @type taint
-// @target es6 Number.parseInt
+// @target es6+ Number.parseInt
 // @feature builtin parseInt
 
 function __test_taint__(tainted) {

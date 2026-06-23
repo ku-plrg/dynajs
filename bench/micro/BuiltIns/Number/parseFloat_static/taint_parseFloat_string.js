@@ -1,5 +1,5 @@
 // @type taint
-// @target es6 Number.parseFloat
+// @target es6+ Number.parseFloat
 // @feature builtin parseFloat
 
 function __test_taint__(tainted) {

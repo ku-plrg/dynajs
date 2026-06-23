@@ -1,5 +1,5 @@
 // @type taint
-// @target es6 RegExp.flags
+// @target es6+ RegExp.flags
 // @feature builtin flags
 
 function __test_taint__(tainted) {

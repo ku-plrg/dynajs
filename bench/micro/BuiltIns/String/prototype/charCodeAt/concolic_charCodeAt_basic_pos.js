@@ -7,10 +7,10 @@
 function __test_symbolic__(symbolic) {
 
   if (symbolic.charCodeAt(0) === 97) {
-    //@witness index 1 to exist, so length>=1
-    __symbolic_assert__(symbolic.length >= 1, true);
+    //@witness charCodeAt(0)===97 guard requires index 0, so length>=1
+    __IS_SAT__(symbolic.length < 1, false);
   } else {
-    __symbolic_assert__(false, true);
+    __IS_SAT__(true, false);
   }
 
 }

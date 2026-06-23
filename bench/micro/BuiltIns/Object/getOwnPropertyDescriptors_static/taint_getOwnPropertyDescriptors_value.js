@@ -1,5 +1,5 @@
 // @type taint
-// @target es2017 Object.getOwnPropertyDescriptors
+// @target es6+ Object.getOwnPropertyDescriptors
 // @feature builtin getOwnPropertyDescriptors
 
 function __test_taint__(tainted) {

@@ -1,13 +1,13 @@
 // @type taint
 // @target es6+ Array.prototype.every
 // @feature builtin array-every
+// @done
 
-var e0 = "a";
-var e1 = "b";
-var e2 = "c";
-__set_taint__(e0);
-__set_taint__(e2);
-var a = [e0, e1, e2];
+function __test_taint__(tainted) {
+    var a = [tainted, "b", "c"];
+    // @witness every() returns a boolean => clean even with tainted "x"
+    __assert_taint__(a.every(function (v) { return typeof v === "string"; }), false);
+    __assert_taint__(a.every(function (v) { return v === "hello"; }), false);
+}
 
-__assert_taint__(a.every(function (v) { return typeof v === "string"; }), false);
-__assert_taint__(a.every(function (v) { return v === "a"; }), false);
+__test_taint__(__set_taint__("hello"));

@@ -8,7 +8,7 @@ function __test_symbolic__(symbolic) {
 
 
   // @witness __test_symbolic__("aa")
-  __symbolic_assert__([...symbolic.matchAll(/a/g)].length === 1, false);
+  __IS_SAT__([...symbolic.matchAll(/a/g)].length !== 1, true);
 
 }
 

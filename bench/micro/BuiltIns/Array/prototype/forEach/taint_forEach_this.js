@@ -2,12 +2,11 @@
 // @target es6+ Array.prototype.forEach
 // @feature builtin array-forEach
 
-var e0 = "a";
-var e1 = "b";
-var e2 = "c";
-__set_taint__(e0);
-__set_taint__(e2);
-var a = [e0, e1, e2];
-var r = a.forEach(function (v) { return v; });
+function __test_taint__(tainted) {
+    var a = [tainted, "b", "c"];
+    var r = a.forEach(function (v) { return v; });
+    // @witness forEach returns undefined => clean
+    __assert_taint__(r, false);
+}
 
-__assert_taint__(r, false);
+__test_taint__(__set_taint__("hello"));

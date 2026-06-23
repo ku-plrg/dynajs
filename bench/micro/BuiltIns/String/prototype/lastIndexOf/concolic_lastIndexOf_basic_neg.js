@@ -6,8 +6,8 @@
 
 function __test_symbolic__(symbolic) {
 
-    // @winess __test_symbolic__('baa')
-  __symbolic_assert__(symbolic.lastIndexOf('b') === 2, false);
+    // @witness __test_symbolic__("baa")
+  __IS_SAT__(symbolic.lastIndexOf('b') !== 2, true);
 
 }
 

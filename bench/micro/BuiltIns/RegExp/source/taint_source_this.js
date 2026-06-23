@@ -1,5 +1,5 @@
 // @type taint
-// @target es6 RegExp.source
+// @target es6+ RegExp.source
 // @feature builtin source
 
 function __test_taint__(tainted) {

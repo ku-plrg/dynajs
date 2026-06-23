@@ -1,5 +1,5 @@
 // @type taint
-// @target es6 Set.prototype.values
+// @target es6+ Set.prototype.values
 // @feature builtin values
 
 function __test_taint__(tainted) {

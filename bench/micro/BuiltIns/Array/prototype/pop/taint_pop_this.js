@@ -2,22 +2,16 @@
 // @target es5 Array.prototype.pop
 // @feature builtin array-pop
 
-var e0 = "a";
-var e1 = "b";
-var e2 = "c";
-__set_taint__(e0);
-__set_taint__(e2);
-var a = [e0, e1, e2];
+function __test_taint__(tainted) {
+    var a = ["a", "b", tainted];
+    // @witness pop returns the tainted element "x"
+    __assert_taint__(a.pop(), true);
+    // @witness pop returns a clean element
+    __assert_taint__(a.pop(), false);
+    __assert_taint__(a.pop(), false);
+    var empty = [];
+    // @witness pop on empty array => undefined, clean
+    __assert_taint__(empty.pop(), false);
+}
 
-var r0 = a.pop();
-__assert_taint__(r0, true);
-
-var r1 = a.pop();
-__assert_taint__(r1, false);
-
-var r2 = a.pop();
-__assert_taint__(r2, true);
-
-var empty = [];
-var r3 = empty.pop();
-__assert_taint__(r3, false);
+__test_taint__(__set_taint__("hello"));

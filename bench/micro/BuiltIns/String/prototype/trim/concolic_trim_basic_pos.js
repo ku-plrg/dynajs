@@ -7,10 +7,10 @@
 function __test_symbolic__(symbolic) {
 
   if (symbolic.trim().length === symbolic.length) {
-  // @witness trim never lengthens the string
-    __symbolic_assert__(symbolic[0] !== ' '&& symbolic[symbolic.length - 1] !== ' ' , true);
+  // @witness equal-length guard means no edge spaces, so the negation is impossible
+    __IS_SAT__(!(symbolic[0] !== ' '&& symbolic[symbolic.length - 1] !== ' ') , false);
   } else {
-    __symbolic_assert__(false, true);
+    __IS_SAT__(true, false);
   }
 
 }

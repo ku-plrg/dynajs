@@ -7,7 +7,7 @@
 function __test_symbolic__(symbolic) {
 
   // @witness __test_symbolic__("xyz")
-  __symbolic_assert__(symbolic.localeCompare('abc') === 0, false);
+  __IS_SAT__(symbolic.localeCompare('abc') !== 0, true);
 
 }
 

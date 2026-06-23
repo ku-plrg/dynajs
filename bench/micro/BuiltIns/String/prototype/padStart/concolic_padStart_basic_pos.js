@@ -8,10 +8,10 @@ function __test_symbolic__(symbolic) {
 
   var r = symbolic.padStart(4, '.');
   if (symbolic.length === 4) {
-    // @witness when length already equals the target, padStart returns the source unchanged
-    __symbolic_assert__(r === symbolic, true);
+    // @witness length===4 meets target, so padStart returns source unchanged
+    __IS_SAT__(r !== symbolic, false);
   } else {
-    __symbolic_assert__(false, true);
+    __IS_SAT__(true, false);
   }
 
 }

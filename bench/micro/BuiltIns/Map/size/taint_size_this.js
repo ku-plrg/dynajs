@@ -1,5 +1,5 @@
 // @type taint
-// @target es6 Map.size
+// @target es6+ Map.size
 // @feature builtin size
 
 function __test_taint__(tainted) {

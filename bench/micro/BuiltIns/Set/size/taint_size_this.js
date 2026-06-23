@@ -1,5 +1,5 @@
 // @type taint
-// @target es6 Set.size
+// @target es6+ Set.size
 // @feature builtin size
 
 function __test_taint__(tainted) {

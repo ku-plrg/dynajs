@@ -1,5 +1,5 @@
 // @type taint
-// @target es6 Number.isSafeInteger
+// @target es6+ Number.isSafeInteger
 // @feature builtin isSafeInteger
 
 function __test_taint__(tainted) {

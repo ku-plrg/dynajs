@@ -1,5 +1,5 @@
 // @type taint
-// @target es6 Map.prototype.forEach
+// @target es6+ Map.prototype.forEach
 // @feature builtin forEach
 
 function __test_taint__(tainted) {

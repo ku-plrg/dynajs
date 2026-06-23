@@ -1,5 +1,5 @@
 // @type taint
-// @target es2017 Object.values
+// @target es6+ Object.values
 // @feature builtin values
 
 function __test_taint__(tainted) {

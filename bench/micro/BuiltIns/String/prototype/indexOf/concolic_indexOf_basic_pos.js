@@ -6,10 +6,10 @@
 function __test_symbolic__(symbolic) {
 
   if (symbolic.indexOf('b') === 0) {
-    // @witness 'b' first occurs at index 0, so char 0 is 'b'
-    __symbolic_assert__(symbolic[0] === 'b', true);
+    // @witness the indexOf('b')===0 guard pins index 0 to 'b'
+    __IS_SAT__(symbolic[0] !== 'b', false);
   } else {
-    __symbolic_assert__(false, true);
+    __IS_SAT__(true, false);
   }
 
 }

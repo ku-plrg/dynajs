@@ -1,5 +1,5 @@
 // @type taint
-// @target es6 Object.assign
+// @target es6+ Object.assign
 // @feature builtin assign
 
 function __test_taint__(tainted) {

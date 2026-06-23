@@ -8,7 +8,7 @@ function __test_symbolic__(symbolic) {
 
   if (symbolic.search(/b/) >= 0) {
     // @witness __test_symbolic__("bbb")
-    __symbolic_assert__(symbolic.search(/b/) === 1, false);
+    __IS_SAT__(symbolic.search(/b/) !== 1, true);
   }
 
 }

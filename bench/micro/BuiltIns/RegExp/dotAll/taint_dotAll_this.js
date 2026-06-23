@@ -1,5 +1,5 @@
 // @type taint
-// @target es2018 RegExp.dotAll
+// @target es6+ RegExp.dotAll
 // @feature builtin dotAll
 
 function __test_taint__(tainted) {

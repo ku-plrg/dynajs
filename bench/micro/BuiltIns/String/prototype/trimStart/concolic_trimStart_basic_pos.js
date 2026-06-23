@@ -8,10 +8,10 @@ function __test_symbolic__(symbolic) {
 
 
   if (symbolic.trimStart().length === symbolic.length) {
-  // @witness trimStart never lengthens the string
-    __symbolic_assert__(symbolic[0] !== ' ' , true);
+  // @witness trimStart not shortening means no leading space at index 0
+    __IS_SAT__(symbolic[0] === ' ' , false);
   } else {
-    __symbolic_assert__(false, true);
+    __IS_SAT__(true, false);
   }
 
 

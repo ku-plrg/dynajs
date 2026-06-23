@@ -8,8 +8,8 @@ function __test_symbolic__(symbolic) {
 
   if([...symbolic.matchAll(/a/g)].length == 0){
 
-    // @witness symbolic does not include a
-    __symbolic_assert__(symbolic[0] !== 'a', true);
+    // @witness empty matchAll(/a/g) guard means no 'a' anywhere, so index 0 can't be 'a'
+    __IS_SAT__(symbolic[0] === 'a', false);
   }
 
 }

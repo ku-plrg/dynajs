@@ -8,8 +8,8 @@ function __test_symbolic__(symbolic) {
 
   if (symbolic.endsWith('c')) {
 
-    // @witness __test_symbolic__('ccc')
-    __symbolic_assert__(symbolic.endsWith('bc'),false)
+    // @witness __test_symbolic__("ac")
+    __IS_SAT__(!(symbolic.endsWith('bc')),true)
   }
 
 }

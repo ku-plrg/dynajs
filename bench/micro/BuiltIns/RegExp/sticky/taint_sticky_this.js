@@ -1,5 +1,5 @@
 // @type taint
-// @target es6 RegExp.sticky
+// @target es6+ RegExp.sticky
 // @feature builtin sticky
 
 function __test_taint__(tainted) {
