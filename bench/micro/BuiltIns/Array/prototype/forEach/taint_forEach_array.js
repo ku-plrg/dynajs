@@ -1,0 +1,13 @@
+// @type taint
+// @target es6+ Array.prototype.forEach
+// @feature builtin array-forEach
+
+function __test_taint__(tainted) {
+    // tainted = whole-tainted array WITH elements (["x","y","z"])
+    var g;
+    tainted.forEach(function(v) { g = v; });
+    // @witness __test_taint__(["x","y","z"]) => g = "z" tainted (last element assigned)
+    __assert_taint__(g, true);
+}
+
+__test_taint__(__set_taint__(["x", "y", "z"]));
