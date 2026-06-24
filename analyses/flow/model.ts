@@ -3,7 +3,7 @@ import * as generated from './spec/index.js';
 
 export class Model {
   // --- static properties and methods ---
-  static BUILTINS = new Map<Function, Function>([
+  static BUILTINS = new Map<Function, Function>(([
     [String.fromCharCode, generated.INTRINSICS_String_fromCharCode],
     [String.fromCodePoint, generated.INTRINSICS_String_fromCodePoint],
     [String.raw, generated.INTRINSICS_String_raw],
@@ -137,7 +137,9 @@ export class Model {
     [Math.abs, generated.INTRINSICS_Math_abs],
 
     [JSON.stringify, generated.INTRINSICS_JSON_stringify],
-  ]);
+  ] as [Function | undefined, Function][]).filter(
+    (entry): entry is [Function, Function] => entry[0] !== undefined,
+  ));
 
   static SYNTAX = new Map<string, Function>([['+', generated.SYNTAX__add]]);
 
