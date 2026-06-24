@@ -1,6 +1,7 @@
 // @type taint
 // @target es5 break-continue
 // @feature syntax break-continue
+// @done
 
 function __test_taint__(tainted) {
     var tb_arr = ["a", tainted, "c"];
@@ -11,6 +12,7 @@ function __test_taint__(tainted) {
         break;
       }
     }
+    // @witness __test_taint__("x")
     __assert_taint__(tb_picked, true);
 }
 

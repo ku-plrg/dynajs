@@ -1,15 +1,15 @@
 // @type taint
 // @target es6+ for-of
 // @feature syntax for-of
-// Iterating a tainted string with `for...of` yields its characters; each
-// char carries the string's taint, so the bound loop value is tainted.
+// @done
 
 function __test_taint__(tainted) {
-    var tos_first;
+    var tos_first = "";
     for (var tos_c of tainted) {
-      tos_first = tos_c;
+      tos_first = tos_first + tos_c;
       break;
     }
+    // @witness __test_taint__("xxx") => tos_first = "xxx"
     __assert_taint__(tos_first, true);
 }
 

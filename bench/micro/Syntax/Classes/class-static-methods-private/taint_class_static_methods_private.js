@@ -1,9 +1,7 @@
 // @type taint
 // @target es6+ class-static-methods-private
 // @feature syntax class-static-methods-private
-// Private static methods (`static #m(){}`, ES2022) are callable only from within
-// the class. A parser without private-method support reports `error` here;
-// ground truth is the true semantics.
+// @done
 
 class TSM {
   static #passthru(v) {
@@ -24,7 +22,9 @@ class TSM2 {
 }
 
 function __test_taint__(tainted) {
+    // @witness __test_taint__("x")
     __assert_taint__(TSM.run(tainted), true);
+    // @witness always "clean"
     __assert_taint__(TSM2.run(tainted), false);
 }
 

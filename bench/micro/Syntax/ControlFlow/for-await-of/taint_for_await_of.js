@@ -1,6 +1,7 @@
 // @type taint
 // @target es6+ for-await-of
 // @feature syntax for-await-of
+// @done
 
 function __test_taint__(tainted) {
     (async function () {
@@ -10,6 +11,7 @@ function __test_taint__(tainted) {
         first = v;
         break;
       }
+      // @witness __test_taint__("x")
       __assert_taint__(first, true);
     })();
 }

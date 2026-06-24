@@ -1,10 +1,7 @@
 // @type taint
 // @target es6+ class-methods-private
 // @feature syntax class-methods-private
-// Private instance methods (`#m(){}`, ES2022) are callable only from inside the
-// class; a private method returning a tainted field yields tainted data. A
-// parser without private-method support reports `error` here; ground truth is
-// the true semantics.
+// @done
 
 function __test_taint__(tainted) {
     class TPM {
@@ -12,11 +9,20 @@ function __test_taint__(tainted) {
       #get() {
         return this.#v;
       }
+      #label() {
+        return "clean";
+      }
       reveal() {
         return this.#get();
       }
+      getLabel() {
+        return this.#label();
+      }
     }
+    // @witness __test_taint__("x")
     __assert_taint__(new TPM().reveal(), true);
+    // @witness always "clean"
+    __assert_taint__(new TPM().getLabel(), false);
 }
 
 __test_taint__(__set_taint__("tv"));
