@@ -934,6 +934,13 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     }
     // fall through: A modeled builtin with all-bottom-primitive inputs
 
+    // The callee reaches the engine's Function.prototype.apply site; a wrapped
+    // primitive (a symbolic value used as a function) would leak its proxy there
+    // ("called on #<Object>") instead of raising an ordinary "not a function"
+    // TypeError. Peek it: a raw non-callable produces the natural error, while
+    // instrumented/native function callees peek to themselves (no-op).
+    const callee = this.$.peek(_f as Wrapped);
+
     if (this.policy.isOpaque(_f)) {
       const esc = this.escaper.escape(_base, argArr, entries);
       if (esc.crossed.length > 0)
@@ -943,7 +950,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
         );
       return {
         skip: false,
-        f: _f,
+        f: callee,
         base: esc.base,
         args: esc.args,
         frame: {
@@ -957,7 +964,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     }
     return {
       skip: false,
-      f: _f,
+      f: callee,
       base: _base,
       args,
       frame: { ty: 'transparent', entries },
