@@ -9297,6 +9297,13 @@
         "result": "TN"
       }
     ],
+    "BuiltIns__String__prototype__slice__concolic_slice_zero_end_pos": [
+      {
+        "expected": "unsat",
+        "actual": "unsat",
+        "result": "TN"
+      }
+    ],
     "BuiltIns__String__prototype__split__concolic_split_basic_neg": [
       {
         "expected": "sat",
@@ -9362,9 +9369,9 @@
     ],
     "BuiltIns__String__prototype__substring__concolic_substring_basic_pos": [
       {
-        "expected": "unsat",
-        "actual": "unsat",
-        "result": "TN"
+        "expected": "detected",
+        "actual": "error",
+        "result": "FN"
       }
     ],
     "BuiltIns__String__prototype__symbol_iterator__concolic_symbol_iterator_basic_neg": [
@@ -9376,9 +9383,9 @@
     ],
     "BuiltIns__String__prototype__symbol_iterator__concolic_symbol_iterator_basic_pos": [
       {
-        "expected": "unsat",
+        "expected": "sat",
         "actual": "error",
-        "result": "FP"
+        "result": "FN"
       }
     ],
     "BuiltIns__String__prototype__toLocaleLowerCase__concolic_toLocaleLowerCase_basic_neg": [
@@ -9454,8 +9461,8 @@
     "BuiltIns__String__prototype__toWellFormed__concolic_toWellFormed_basic_neg": [
       {
         "expected": "sat",
-        "actual": "unsat",
-        "result": "FN"
+        "actual": "sat",
+        "result": "TP"
       }
     ],
     "BuiltIns__String__prototype__toWellFormed__concolic_toWellFormed_basic_pos": [
