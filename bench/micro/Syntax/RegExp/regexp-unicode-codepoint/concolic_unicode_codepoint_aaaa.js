@@ -1,6 +1,7 @@
 // @type concolic
 // @target es6+ RegExp
 // @feature syntax regexp-unicode-codepoint
+// @done
 
 function __test_symbolic__(symbolic) {
     if (/^\u{AAAA}$/u.test(symbolic)) {

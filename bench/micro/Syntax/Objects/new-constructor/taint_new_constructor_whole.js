@@ -1,6 +1,7 @@
 // @type taint
 // @target es5 Object
 // @feature syntax object-taint
+// @done
 
 function __test_taint__(tainted) {
     // tainted = {a:1}; the whole object is the taint source (prop 'a' present at taint time)

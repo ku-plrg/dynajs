@@ -1,6 +1,7 @@
 // @type taint
 // @target es5 member-access
 // @feature syntax member-access
+// @done
 
 function __test_taint__(tainted) {
     var tnc_z = tainted;
