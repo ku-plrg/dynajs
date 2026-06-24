@@ -1,5 +1,5 @@
 // @type concolic
-// @target es2023 Array.prototype.findLast
+// @target es6+ Array.prototype.findLast
 // @feature builtin findLast
 
 function __test_symbolic__(symbolic) {

@@ -1,5 +1,5 @@
 // @type concolic
-// @target es2023 Array.prototype.toSpliced
+// @target es6+ Array.prototype.toSpliced
 // @feature builtin toSpliced
 
 function __test_symbolic__(symbolic) {

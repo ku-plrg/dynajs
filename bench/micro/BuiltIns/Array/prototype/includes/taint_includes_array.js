@@ -1,5 +1,5 @@
 // @type taint
-// @target es7 Array.prototype.includes
+// @target es6+ Array.prototype.includes
 // @feature builtin array-includes
 
 function __test_taint__(tainted) {

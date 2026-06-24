@@ -1,5 +1,5 @@
 // @type concolic
-// @target es2019 Array.prototype.flat
+// @target es6+ Array.prototype.flat
 // @feature builtin flat
 
 function __test_symbolic__(symbolic) {

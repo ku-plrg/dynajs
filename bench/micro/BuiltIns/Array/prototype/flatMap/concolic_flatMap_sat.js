@@ -1,14 +1,12 @@
 // @type concolic
-// @target es2019 Array.prototype.flatMap
+// @target es6+ Array.prototype.flatMap
 // @feature builtin flatMap
 
 function __test_symbolic__(symbolic) {
   if (symbolic.length === 2) {
     var r = symbolic.flatMap(function (v) { return [v]; });
-    // @witness each element maps to a single-element array, so flattening preserves length 2
-    __IS_SAT__(r.length !== 2, false);
-  } else {
-    __IS_SAT__(true, false);
+    // @witness __test_symbolic__([9, 0])
+    __IS_SAT__(r[0] === 9, true);
   }
 }
 

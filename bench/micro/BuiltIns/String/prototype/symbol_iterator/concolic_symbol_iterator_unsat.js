@@ -9,8 +9,8 @@ function __test_symbolic__(symbolic) {
 
   if([...symbolic][0] === 'a' && typeof symbolic === 'string') {
 
-    // @witness first char is 'a'
-    __IS_SAT__(symbolic[0] !== 'a', true);
+    // @witness under the guard the first char is 'a', so symbolic[0] !== 'a' can never hold
+    __IS_SAT__(symbolic[0] !== 'a', false);
   }
 
 

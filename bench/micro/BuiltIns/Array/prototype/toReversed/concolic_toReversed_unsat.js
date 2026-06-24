@@ -1,5 +1,5 @@
 // @type concolic
-// @target es2023 Array.prototype.toReversed
+// @target es6+ Array.prototype.toReversed
 // @feature builtin toReversed
 
 function __test_symbolic__(symbolic) {

@@ -1,5 +1,5 @@
 // @type concolic
-// @target es2023 Array.prototype.toSorted
+// @target es6+ Array.prototype.toSorted
 // @feature builtin toSorted
 
 function __test_symbolic__(symbolic) {

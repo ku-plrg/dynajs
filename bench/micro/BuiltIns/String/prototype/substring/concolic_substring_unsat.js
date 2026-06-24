@@ -7,7 +7,7 @@
 function __test_symbolic__(symbolic) {
 
   // @witness substring(1, 2) length is less than 1
-  __IS__SAT__(symbolic.substring(1, 2).length > 1, false);
+  __IS_SAT__(symbolic.substring(1, 2).length > 1, false);
 
 }
 
