@@ -841,16 +841,12 @@ export abstract class FlowAnalysis<Info> implements Analysis {
           ),
         );
         if (i !== undefined) {
-          // Carry the prop's info into the offsets so an index-flow (s[taintedIndex])
-          // reaches substringInfo; a plain literal index propagates nothing.
           return this.$.substring(
             f.base as Wrapped<string>,
             this.$.base(i, [f.prop]),
             this.$.base(i + 1, [f.prop]),
           );
         }
-        // `s.length` is the one field read with op-aware meaning (strlen);
-        // route it through lengthInfo, else baseInfo flow-through.
         if (p === 'length') {
           if (this.$.peek(this.$.isType(f.base, 'string'))) {
             return this.lift(
