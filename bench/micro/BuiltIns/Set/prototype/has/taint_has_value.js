@@ -1,6 +1,7 @@
 // @type taint
 // @target es6+ Set.prototype.has
 // @feature builtin has
+// @done
 
 function __test_taint__(tainted) {
     var s = new Set();

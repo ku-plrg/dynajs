@@ -1,6 +1,7 @@
 // @type taint
 // @target es6+ Set.prototype.entries
 // @feature builtin entries
+// @done
 
 function __test_taint__(tainted) {
     var s = new Set();
@@ -8,10 +9,10 @@ function __test_taint__(tainted) {
 
     var e = Array.from(s.entries())[0];
 
-    // @witness __test_taint__('hello') => e[0] = 'hello' tainted
+    // @witness __test_taint__('x') => e[0] = 'x' tainted
     __assert_taint__(e[0], true);
 
-    // @witness __test_taint__('hello') => e[1] = 'hello' tainted
+    // @witness __test_taint__('x') => e[1] = 'x' tainted
     __assert_taint__(e[1], true);
 
     var s2 = new Set();

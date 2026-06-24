@@ -1,6 +1,7 @@
 // @type taint
 // @target es6+ Set.prototype.delete
 // @feature builtin delete
+// @done
 
 function __test_taint__(tainted) {
     var s = new Set();

@@ -1,13 +1,14 @@
 // @type taint
 // @target es6+ Set.size
 // @feature builtin size
+// @done
 
 function __test_taint__(tainted) {
     var s = new Set();
     s.add(tainted);
 
-    // @witness __test_taint__('hello') => s.size = 1 tainted
-    __assert_taint__(s.size, true);
+    // @witness size of s is always 1
+    __assert_taint__(s.size, false);
 
     var s2 = new Set();
     s2.add('a');
