@@ -11,6 +11,7 @@ import {
   containsLost,
   sortOf,
   sortsComparable,
+  isNumericSort,
   symToString,
 } from '@shared/sym.js';
 import { encodeRegex, type EncodedRegex } from '@shared/regex.js';
@@ -379,9 +380,25 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     // we drop it (the branch already ran concretely) — the path condition is then
     // weaker, never wrong. Matches ExpoSE, which concretizes such a branch to a
     // vacuous `true`.
-    if (sym.kind !== 'const' && !containsLost(sym)) {
-      this.pathConstraints.push({ id, constraint: sym, taken });
-    }
+    if (sym.kind === 'const' || containsLost(sym)) return;
+    const bool = this.toBool(sym);
+    if (bool !== undefined) this.pathConstraints.push({ id, constraint: bool, taken });
+  }
+
+  // ToBoolean at a branch site (ExpoSE SymbolicState.toBool): a branch condition
+  // must be a Bool, but `if (x)` hands us `x` itself before coercion (the core
+  // passes the raw value to `condition`, no ToBoolean wrap). A comparison/logical
+  // sym is already Bool and passes through; a String coerces to `x !== ""`, a
+  // number to `x !== 0`. Anything else (object/array/seq) has no z3 truthiness
+  // image — ExpoSE concretizes it, so we drop the branch (undefined).
+  private toBool(sym: Sym): Sym | undefined {
+    const sort = sortOf(sym);
+    if (sort === 'Bool') return sym;
+    if (sort === 'String')
+      return { kind: 'binary', op: '!==', left: sym, right: { kind: 'const', value: '' } };
+    if (isNumericSort(sort))
+      return { kind: 'binary', op: '!==', left: sym, right: { kind: 'const', value: 0 } };
+    return undefined;
   }
 
   // The symbolic expression for an operand: its attached Info, else a constant of
