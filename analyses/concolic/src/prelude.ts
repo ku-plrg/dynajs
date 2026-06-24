@@ -40,7 +40,7 @@ function __s_symbol__(name: unknown, seed: unknown): unknown {
   return D$.analysis.symbolNamed(name, seed);
 }
 
-// Typeless symbol (no seed). Full type-forking is M8; for now a named scalar.
+// Typeless symbol (no seed); forks across types via pureSymbolNamed (M8).
 function __s_pure__(name: unknown): unknown {
   return D$.analysis.pureSymbolNamed(name);
 }

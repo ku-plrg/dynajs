@@ -397,6 +397,17 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     this.pathConstraints.push({ id: -1, constraint, taken: true, binder });
   }
 
+  // Record a real (flippable) branch the engine raises itself rather than
+  // observes at a `$.condition` site — currently only the pureSymbol type
+  // cascade. Each gets a distinct synthetic id so alternatives() exposes it as
+  // its own fork point (the Distributor buckets by forkIid). The ids count down
+  // from -1000 to avoid the binder sentinel (-1) and user/spec branch ids; they
+  // affect only search-order bucketing, never replay (which keys off `_bound`).
+  private syntheticBranchId = -1000;
+  private pushBranch(constraint: Sym, taken: boolean): void {
+    this.pathConstraints.push({ id: this.syntheticBranchId--, constraint, taken });
+  }
+
   // The scalar SMT sort concolic models a concrete value with (its two scalar
   // sorts, plus Bool); the seq sort whose elements are that scalar; and the JS
   // `typeof` those elements have (for the push type-match check).
@@ -506,11 +517,73 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     );
   }
 
-  // `S$.pureSymbol(name)`: a typeless symbol with no seed. Real type-forking
-  // (the value is reused as string/number/bool across branches) is M8; for now
-  // we stand it up as a named Int seeded 0 so corpus files at least run.
+  // The candidate types a pureSymbol forks across, in ExpoSE's createPureSymbol
+  // order. `pureSeed` mints a FRESH concrete seed per arm (a shared object/array
+  // literal would alias across two pureSymbols via arrayMeta/objectMeta).
+  private static readonly PURE_TYPES = [
+    'string',
+    'number',
+    'boolean',
+    'object',
+    'array_number',
+    'array_string',
+    'array_bool',
+    'null',
+  ] as const;
+  private pureSeed(type: string): unknown {
+    switch (type) {
+      case 'string':
+        return 'seed_string';
+      case 'number':
+        return 0;
+      case 'boolean':
+        return false;
+      case 'object':
+        return {};
+      case 'array_number':
+        return [0];
+      case 'array_string':
+        return [''];
+      case 'array_bool':
+        return [false];
+      default:
+        return null; // 'null'
+    }
+  }
+
+  // `S$.pureSymbol(name)`: a typeless symbol with no seed, realized by type
+  // forking exactly as ExpoSE's SymbolicState.createPureSymbol. A fresh String
+  // *type* variable `name_t` (seeded "undefined") drives a cascade of symbolic
+  // equality branches against the type-name strings. On the seed run every arm is
+  // false, so the symbol is `undefined`; the recorded branches become
+  // alternatives the Distributor re-queues with `name_t` pinned to one type, on
+  // which the matching arm mints a typed symbol via makeSymbolic — no engine
+  // machinery beyond the existing alternatives()/replay loop. The per-type seeds
+  // match createSymbolicValue ("seed_string"/0/false/{}/[0]/[""]/[false]/null).
   pureSymbolNamed(name: unknown): unknown /* Wrapped */ {
-    return this.makeSymbolic(this.rename(String(this.valued(name).value)), 0);
+    const varName = this.rename(String(this.valued(name).value));
+    const typeVar: Sym = { kind: 'var', name: `${varName}_t`, sort: 'String' };
+    const input = this.seedInput();
+    const typeKey = `${varName}_t`;
+    const typeConcrete =
+      typeKey in input ? String(input[typeKey]) : 'undefined';
+    for (const type of ConcolicAnalysis.PURE_TYPES) {
+      const taken = typeConcrete === type;
+      this.pushBranch(
+        {
+          kind: 'binary',
+          op: '==',
+          left: typeVar,
+          right: { kind: 'const', value: type },
+        },
+        taken,
+      );
+      if (taken) {
+        const seed = this.pureSeed(type);
+        return seed === null ? null : this.makeSymbolic(varName, seed);
+      }
+    }
+    return undefined; // ExpoSE's `else`: an unconstrained type yields undefined
   }
 
   // Introduce symbolic variable `name`, returning a wrapped value the program
