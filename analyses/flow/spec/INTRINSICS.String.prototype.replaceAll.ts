@@ -14,10 +14,10 @@ import { AO__ToString } from "./AO__ToString.js";
 
 export function INTRINSICS_String_prototype_replaceAll ($ : SpecRuntime, $this : Wrapped<unknown>, searchValue : Wrapped<unknown>, replaceValue : Wrapped<unknown>) {
   var O = AO__RequireObjectCoercible($, $this);
-  if (!($.condition(Number.MAX_SAFE_INTEGER - 433, $.is(searchValue, $.lit<undefined>(undefined))) || $.condition(Number.MAX_SAFE_INTEGER - 434, $.is(searchValue, $.lit<null>(null)))))
+  if (!($.condition(Number.MAX_SAFE_INTEGER - 437, $.is(searchValue, $.lit<undefined>(undefined))) || $.condition(Number.MAX_SAFE_INTEGER - 438, $.is(searchValue, $.lit<null>(null)))))
   {
     var isRegExp = AO__IsRegExp($, (searchValue as Wrapped<unknown>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 435, $.is(isRegExp, $.lit<boolean>(true))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 439, $.is(isRegExp, $.lit<boolean>(true))))
     {
       var flags = AO__Get($, (searchValue as Wrapped<unknown>), ($.lit<string>("flags") as Wrapped<unknown>));
       AO__RequireObjectCoercible($, flags);
@@ -29,7 +29,7 @@ export function INTRINSICS_String_prototype_replaceAll ($ : SpecRuntime, $this :
     }
 
     var replacer = AO__GetMethod($, (searchValue as Wrapped<unknown>), ($.lit<symbol>(Symbol.replace) as Wrapped<unknown>));
-    if (!$.condition(Number.MAX_SAFE_INTEGER - 436, $.is(replacer, $.lit<undefined>(undefined))))
+    if (!$.condition(Number.MAX_SAFE_INTEGER - 440, $.is(replacer, $.lit<undefined>(undefined))))
     {
       return AO__Call($, (replacer as Wrapped<unknown>), (searchValue as Wrapped<unknown>), ([O, replaceValue] as Wrapped<unknown>[]));
     }
@@ -39,7 +39,7 @@ export function INTRINSICS_String_prototype_replaceAll ($ : SpecRuntime, $this :
   var string = AO__ToString($, (O as Wrapped<unknown>));
   var searchString = AO__ToString($, (searchValue as Wrapped<unknown>));
   var functionalReplace = AO__IsCallable($, (replaceValue as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 437, $.is(functionalReplace, $.lit<boolean>(false))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 441, $.is(functionalReplace, $.lit<boolean>(false))))
   {
     replaceValue = AO__ToString($, (replaceValue as Wrapped<unknown>));
   }
@@ -48,7 +48,7 @@ export function INTRINSICS_String_prototype_replaceAll ($ : SpecRuntime, $this :
   var advanceBy = $.max($.lit<number>(1), searchLength);
   var matchPositions = [] as Wrapped<never>[];
   var position = AO__StringIndexOf($, (string as Wrapped<string>), (searchString as Wrapped<string>), ($.lit<number>(0) as Wrapped<number>));
-  while (!$.condition(Number.MAX_SAFE_INTEGER - 438, $.is(position, $.lit<string>("not-found"))))
+  while (!$.condition(Number.MAX_SAFE_INTEGER - 442, $.is(position, $.lit<string>("not-found"))))
   {
     $.append(matchPositions, position)
     position = AO__StringIndexOf($, (string as Wrapped<string>), (searchString as Wrapped<string>), ($.add((position as Wrapped<number>), (advanceBy as Wrapped<number>)) as Wrapped<number>));
@@ -59,7 +59,7 @@ export function INTRINSICS_String_prototype_replaceAll ($ : SpecRuntime, $this :
   for (var p of matchPositions)
   {
     var preserved = $.substring(string, (endOfLastMatch as Wrapped<number>), (p as Wrapped<number>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 439, $.is(functionalReplace, $.lit<boolean>(true))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 443, $.is(functionalReplace, $.lit<boolean>(true))))
     {
       var replacement = AO__ToString($, (AO__Call($, (replaceValue as Wrapped<unknown>), ($.lit<undefined>(undefined) as Wrapped<unknown>), ([searchString, p, string] as Wrapped<unknown>[])) as Wrapped<unknown>));
     }
@@ -73,7 +73,7 @@ export function INTRINSICS_String_prototype_replaceAll ($ : SpecRuntime, $this :
     endOfLastMatch = $.add((p as Wrapped<number>), (searchLength as Wrapped<number>));
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 440, $.lessThan(endOfLastMatch, $.length(string))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 444, $.lessThan(endOfLastMatch, $.length(string))))
   {
     result = $.concatenate(result, $.substring(string, (endOfLastMatch as Wrapped<number>), $.length(string)));
   }

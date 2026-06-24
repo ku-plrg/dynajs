@@ -12,10 +12,10 @@ export function INTRINSICS_String_prototype_toWellFormed ($ : SpecRuntime, $this
   var strLen = $.length(S);
   var k = $.lit<number>(0);
   var result = $.lit<string>("");
-  while ($.condition(Number.MAX_SAFE_INTEGER - 469, $.lessThan(k, strLen)))
+  while ($.condition(Number.MAX_SAFE_INTEGER - 473, $.lessThan(k, strLen)))
   {
     var cp = AO__CodePointAt($, (S as Wrapped<string>), (k as Wrapped<number>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 470, $.is(cp["IsUnpairedSurrogate" /* TODO INTERNAL : internal access */], $.lit<boolean>(true))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 474, $.is(cp["IsUnpairedSurrogate" /* TODO INTERNAL : internal access */], $.lit<boolean>(true))))
     {
       result = $.concatenate(result, $.lit<string>("�"));
     }

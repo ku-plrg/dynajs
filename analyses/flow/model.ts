@@ -134,6 +134,7 @@ export class Model {
     [Math.floor, generated.INTRINSICS_Math_floor],
     [Math.ceil, generated.INTRINSICS_Math_ceil],
     [Math.round, generated.INTRINSICS_Math_round],
+    [Math.abs, generated.INTRINSICS_Math_abs],
 
     [JSON.stringify, generated.INTRINSICS_JSON_stringify],
   ]);

@@ -59,7 +59,7 @@ const INCLUDE = [
   // /^INTRINSICS\.Function\./,
   // "INTRINSICS.JSON.stringify",
   // /^INTRINSICS\.Map\./,
-  /^INTRINSICS\.Math\.(floor|ceil|round)/,
+  /^INTRINSICS\.Math\.(floor|ceil|round|abs)/,
   // /^INTRINSICS\.Number\./,
   // /^INTRINSICS\.Object\./,
   // /^INTRINSICS\.RegExp\./,

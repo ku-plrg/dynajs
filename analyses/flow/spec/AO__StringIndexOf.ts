@@ -3,16 +3,16 @@ import type { Wrapped, SpecRuntime } from "../type.js";
 
 export function AO__StringIndexOf ($ : SpecRuntime, string : Wrapped<string>, searchValue : Wrapped<string>, fromIndex : Wrapped<number>) {
   var len = $.length(string);
-  if ($.condition(Number.MAX_SAFE_INTEGER - 693, $.is(searchValue, $.lit<string>(""))) && $.condition(Number.MAX_SAFE_INTEGER - 694, $.lessThanEqual(fromIndex, len)))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 697, $.is(searchValue, $.lit<string>(""))) && $.condition(Number.MAX_SAFE_INTEGER - 698, $.lessThanEqual(fromIndex, len)))
   {
     return fromIndex;
   }
 
   var searchLen = $.length(searchValue);
-  for (var i of $.range((fromIndex as Wrapped<number>), true, ($.subtract((len as Wrapped<number>), (searchLen as Wrapped<number>)) as Wrapped<number>), true, true, Number.MAX_SAFE_INTEGER - 696))
+  for (var i of $.range((fromIndex as Wrapped<number>), true, ($.subtract((len as Wrapped<number>), (searchLen as Wrapped<number>)) as Wrapped<number>), true, true, Number.MAX_SAFE_INTEGER - 700))
   {
     var candidate = $.substring(string, (i as Wrapped<number>), ($.add((i as Wrapped<number>), (searchLen as Wrapped<number>)) as Wrapped<number>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 695, $.is(candidate, searchValue)))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 699, $.is(candidate, searchValue)))
     {
       return i;
     }

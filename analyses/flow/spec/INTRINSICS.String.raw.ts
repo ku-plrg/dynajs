@@ -11,7 +11,7 @@ export function INTRINSICS_String_raw ($ : SpecRuntime, $this : Wrapped<unknown>
   var cooked = AO__ToObject($, template);
   var literals = AO__ToObject($, AO__Get($, (cooked as Wrapped<unknown>), ($.lit<string>("raw") as Wrapped<unknown>)));
   var literalCount = AO__LengthOfArrayLike($, (literals as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 472, $.lessThanEqual(literalCount, $.lit<number>(0))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 476, $.lessThanEqual(literalCount, $.lit<number>(0))))
   {
     return $.lit<string>("");
   }
@@ -23,12 +23,12 @@ export function INTRINSICS_String_raw ($ : SpecRuntime, $this : Wrapped<unknown>
     var nextLiteralVal = AO__Get($, (literals as Wrapped<unknown>), (AO__ToString($, (nextIndex as Wrapped<unknown>)) as Wrapped<unknown>));
     var nextLiteral = AO__ToString($, (nextLiteralVal as Wrapped<unknown>));
     R = $.concatenate(R, nextLiteral);
-    if ($.condition(Number.MAX_SAFE_INTEGER - 473, $.is($.add((nextIndex as Wrapped<number>), ($.lit<number>(1) as Wrapped<number>)), literalCount)))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 477, $.is($.add((nextIndex as Wrapped<number>), ($.lit<number>(1) as Wrapped<number>)), literalCount)))
     {
       return R;
     }
 
-    if ($.condition(Number.MAX_SAFE_INTEGER - 474, $.lessThan(nextIndex, substitutionCount)))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 478, $.lessThan(nextIndex, substitutionCount)))
     {
       var nextSubVal = substitutions[nextIndex];
       var nextSub = AO__ToString($, (nextSubVal as Wrapped<unknown>));

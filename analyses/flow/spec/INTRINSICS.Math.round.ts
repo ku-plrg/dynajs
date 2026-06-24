@@ -5,17 +5,17 @@ import { AO__ToNumber } from "./AO__ToNumber.js";
 
 export function INTRINSICS_Math_round ($ : SpecRuntime, $this : Wrapped<unknown>, x : Wrapped<unknown>) {
   var n = AO__ToNumber($, (x as Wrapped<unknown>));
-  if (!$.condition(Number.MAX_SAFE_INTEGER - 295, $.isFinite(n)) || ($.condition(Number.MAX_SAFE_INTEGER - 296, $.isInteger(n))))
+  if (!$.condition(Number.MAX_SAFE_INTEGER - 299, $.isFinite(n)) || ($.condition(Number.MAX_SAFE_INTEGER - 300, $.isInteger(n))))
   {
     return n;
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 297, $.lessThan(n, $.lit<number>(0.5))) && $.condition(Number.MAX_SAFE_INTEGER - 298, $.greaterThan(n, $.lit<number>(0))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 301, $.lessThan(n, $.lit<number>(0.5))) && $.condition(Number.MAX_SAFE_INTEGER - 302, $.greaterThan(n, $.lit<number>(0))))
   {
     return $.lit<number>(0);
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 299, $.lessThan(n, $.lit<number>(0))) && $.condition(Number.MAX_SAFE_INTEGER - 300, $.greaterThanEqual(n, $.lit<number>(-0.5))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 303, $.lessThan(n, $.lit<number>(0))) && $.condition(Number.MAX_SAFE_INTEGER - 304, $.greaterThanEqual(n, $.lit<number>(-0.5))))
   {
     return $.lit<number>(0);
   }

@@ -77,6 +77,7 @@ export { INTRINSICS_Array_prototype_reduceRight } from "./INTRINSICS.Array.proto
 export { INTRINSICS_Array_prototype_shift } from "./INTRINSICS.Array.prototype.shift.js";
 export { INTRINSICS_Array_prototype_slice } from "./INTRINSICS.Array.prototype.slice.js";
 export { INTRINSICS_JSON_stringify } from "./INTRINSICS.JSON.stringify.js";
+export { INTRINSICS_Math_abs } from "./INTRINSICS.Math.abs.js";
 export { INTRINSICS_Math_ceil } from "./INTRINSICS.Math.ceil.js";
 export { INTRINSICS_Math_floor } from "./INTRINSICS.Math.floor.js";
 export { INTRINSICS_Math_round } from "./INTRINSICS.Math.round.js";
