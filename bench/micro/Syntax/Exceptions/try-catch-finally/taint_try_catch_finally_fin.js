@@ -1,6 +1,7 @@
 // @type taint
 // @target es6+ try-catch-finally
 // @feature syntax try-catch-finally
+// @done
 
 function __test_taint__(tainted) {
     var te_out;
@@ -11,6 +12,7 @@ function __test_taint__(tainted) {
     } finally {
       te_out = te_out + "";
     }
+    // @witness __test_taint__("x") => te_out = "x"
     __assert_taint__(te_out, true);
 }
 

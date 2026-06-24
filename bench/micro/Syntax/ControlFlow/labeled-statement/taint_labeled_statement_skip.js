@@ -1,6 +1,7 @@
 // @type taint
 // @target es5 labeled-statement
 // @feature syntax labeled-statement
+// @done
 
 function __test_taint__(tainted) {
     var tlb_kept = "clean";
@@ -8,6 +9,7 @@ function __test_taint__(tainted) {
       continue loop;
       tlb_kept = tainted;
     }
+    // @witness always "clean"
     __assert_taint__(tlb_kept, false);
 }
 

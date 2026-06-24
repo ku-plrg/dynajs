@@ -1,6 +1,7 @@
 // @type taint
 // @target es6+ optional-catch-binding
 // @feature syntax optional-catch-binding
+// @done
 
 function __test_taint__(tainted) {
     var toc_r;

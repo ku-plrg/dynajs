@@ -1,6 +1,7 @@
 // @type taint
 // @target es5 labeled-statement
 // @feature syntax labeled-statement
+// @done
 
 function __test_taint__(tainted) {
     var tlb_picked;
@@ -10,6 +11,7 @@ function __test_taint__(tainted) {
         break outer;
       }
     }
+    // @witness __test_taint__("x") => tlb_picked = "x"
     __assert_taint__(tlb_picked, true);
 }
 

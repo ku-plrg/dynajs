@@ -1,13 +1,15 @@
 // @type taint
 // @target es6+ object-rest
 // @feature syntax object-rest
-// An object rest pattern (`{a, ...rest}`, ES2018) collects the remaining
-// own-enumerable properties into a new object, preserving each value's taint.
+// @done
 
 function __test_taint__(tainted) {
-    var { a: tor_a, ...tor_rest } = { a: "clean", b: tainted, c: "x" };
+    var { a: tor_a, ...tor_rest } = { a: "a", b: tainted, c: "c" };
+    // @witness tor_a is always "a"
     __assert_taint__(tor_a, false);
+    // @witness __test_taint__('x') -> tor_rest.b = 'x'
     __assert_taint__(tor_rest.b, true);
+    // @witness tor_rest.c is always "c"
     __assert_taint__(tor_rest.c, false);
 }
 
