@@ -662,7 +662,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
         },
         true,
       );
-      return this.make(concrete, arrSym);
+      return this.lift(concrete, arrSym);
     }
     if (concrete !== null && typeof concrete === 'object') {
       this.objectMeta.set(concrete, {
@@ -670,9 +670,9 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
         counter: 0,
         fields: new Map(),
       });
-      return this.make(concrete);
+      return this.lift(concrete);
     }
-    return this.make(concrete, {
+    return this.lift(concrete, {
       kind: 'var',
       name: varName,
       sort: this.scalarSort(concrete),
