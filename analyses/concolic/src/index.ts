@@ -40,12 +40,6 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   private objectMeta = new WeakMap<object, ObjectMeta>();
   private regexVarCounter = 0;
 
-  // Running as the ExpoSE drop-in (under the Distributor: EXPOSE_OUT_PATH is set
-  // per worker) ⇒ multi-path with concrete RE-EXECUTION + the divergence guard.
-  // That re-execution is what lets `lost` be replaced by concretization safely
-  // (baseInfo below) — the single-path microbench has no such gate.
-  private readonly reexecuting = !!process.env.EXPOSE_OUT_PATH;
-
   protected transparentCalls = GHOSTS;
 
   domain: InfoDomain<Sym | undefined> = {
@@ -53,23 +47,18 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     isBottom: (info): info is undefined => info === undefined,
   };
 
-  // An unmodeled op (no specific Info hook) over a symbolic operand. Two regimes:
-  //   - drop-in / Distributor (`reexecuting`): CONCRETIZE — return bottom so the
-  //     result becomes a const of its concrete value, exactly as ExpoSE's
-  //     `_symbolicBinary` default. This keeps a real symbolic sibling live in
-  //     `unmodeled OP realSym` (vs `lost` poisoning the whole expr), so we explore
-  //     the same branches ExpoSE does. A stale-concretized constraint can mislead a
-  //     branch, but the Distributor's concrete re-execution + divergence guard
-  //     self-correct it — findings are decided by the real re-run, never the bake.
-  //   - single-path microbench: mark `lost`. There is no re-execution to catch a
-  //     stale bake, so a `lost`-bearing branch/assert is dropped/concretized rather
-  //     than solved (see the lost-vs-concretize analysis: concretizing there turns
-  //     `_unsat` queries into false `sat`).
-  protected baseInfo(_value: unknown, parents: Valued<Sym>[]): Sym | undefined {
-    if (this.reexecuting) return undefined;
-    return parents.some((p) => p.info !== undefined)
-      ? { kind: 'lost' }
-      : undefined;
+  // An unmodeled op (no specific Info hook, or one whose core operation has no z3
+  // image — e.g. $.floor/$.round bottom out here): CONCRETIZE. Return bottom so
+  // the result becomes a const of its concrete value, exactly as ExpoSE's
+  // `_symbolicBinary` default. ONE behavior across every harness — the single-path
+  // microbench and the multi-path Distributor drop-in alike — so the microbench
+  // measures the SAME concolic we deploy as ExpoSE's Analyser (a fair, like-for-like
+  // comparison; the framework's novelty must show through the MODELED ops, not a
+  // mode-specific trick). A stale concretization can mislead a branch, but in the
+  // Distributor concrete re-execution + the divergence guard self-correct it, and
+  // in the single-path microbench it is the same imprecision ExpoSE itself has.
+  protected baseInfo(_value: unknown, _parents: Valued<Sym>[]): Sym | undefined {
+    return undefined;
   }
 
   protected substringInfo(
