@@ -10,7 +10,7 @@ import {
   builtinName,
 } from './site.js';
 import { BoundaryEscape, type EscapeRecord } from './escape.js';
-import { AO__CanonicalNumericIndexString } from './spec/index.js';
+import { AO__CanonicalNumericIndexString, AO__ToString, AO__ToNumber } from './spec/index.js';
 
 type ValuedGeneral<Shape extends {}, Value = unknown> = Shape & {
   value: Value;
@@ -767,7 +767,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     const l = this.$.peek(left);
     const r = this.$.peek(right);
     const frame: BinFrame = { ty: 'bin', op, left, right };
-    return { op, left: l, right: r, skip: Model.supportSyntax(op), frame };
+    return { op, left: l, right: r, skip: op === '+', frame };
   }
 
   binary(
@@ -783,9 +783,9 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     // user-code site, like NodeMedic stamps the source location on `binary`.
     this.currentId = _id;
     const f = frame as BinFrame;
-    if (Model.supportSyntax(f.op)) {
+    if (f.op === '+') {
       return {
-        result: Model.ofSyntax(f.op)(
+        result: this.SYNTAX__add(
           this.$,
           f.left,
           f.right,
@@ -1068,7 +1068,50 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     return { result: transformed };
   }
 
-  // wrappers
+  ////////// syntax model ////////////
+  private SYNTAX__add($: SpecRuntime, lVal: Lifted<unknown>, rVal: Lifted<unknown>): Lifted<string> | Lifted<number> {
+    if ($.peek($.isType(lVal, 'object')) || $.peek($.isType(rVal, 'object'))) {
+      const l: Unlifted<unknown> = $.peek(lVal);
+      const r: Unlifted<unknown> = $.peek(rVal);
+      // @ts-expect-error - it calls the plus
+      const v = l + r;
+      // over-approximate the result type as unknown, since it could be either string or number
+      return $.base(v, [lVal, rVal]);
+    } else {
+      const lPrim = lVal as Lifted<Primitive>;
+      const rPrim = rVal as Lifted<Primitive>;
+      //   c. If lPrim is a String or rPrim is a String, then
+      if ($.peek($.isType(lPrim, 'string')) || $.peek($.isType(rPrim, 'string'))) {
+        //     i. Let lStr be ? ToString(lPrim).
+        const lStr = AO__ToString($, lPrim);
+        //     ii. Let rStr be ? ToString(rPrim).
+        const rStr = AO__ToString($, rPrim);
+        //     iii. Return the string-concatenation of lStr and rStr.
+        return $.concatenate(lStr, rStr);
+      }
+      //   d. Set lVal to lPrim.
+      //   e. Set rVal to rPrim.
+      // 2. NOTE: At this point, it must be a numeric operation.
+      // 3. Let lNum be ? ToNumeric(lVal).
+      const lNum = AO__ToNumber($, lPrim);
+      // 4. Let rNum be ? ToNumeric(rVal).
+      const rNum = AO__ToNumber($, rPrim);
+      // 5. If SameType(lNum, rNum) is false, throw a TypeError exception.
+      if (!(typeof $.peek(lNum) === typeof $.peek(rNum))) {
+        throw new TypeError('TypeError: Cannot mix BigInt and other types');
+      }
+      // 6. If lNum is a BigInt, then
+      //   a. Return ? BigInt::add(lNum, rNum). // ???
+      // 7. Else,
+      //   a. Assert: lNum is a Number.
+      //   b. Let operation be Number::add.
+      // 8. Return operation(lNum, rNum).
+      return $.add(lNum, rNum);
+    }
+  }
+
+
+  ////////// lift-hanlders //////////
   private id = 0;
   private freshId() {
     return Symbol(this.id++);
