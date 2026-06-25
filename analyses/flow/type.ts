@@ -33,6 +33,11 @@ interface SpecOps
   ) => Wrapped<T>;
   /** a projection (`wrapped -> unwrapped`). inverse of `$.base`. lost of information happens due to concretization */
   peek: <T>(wrapped: Wrapped<T>) => Unwrapped<T>;
+  /** a field read (`base[prop]`) routed through the analysis's `getFieldInfo`, so a
+   *  spec model observes element/property reads exactly as user code `o[p]` does
+   *  (e.g. concolic's symbolic-array `select`). Without it a model read concretizes
+   *  via `base`. Falls back to `baseInfo` when no `getFieldInfo` applies. */
+  get: (base: Wrapped<unknown>, prop: Wrapped<unknown>) => Wrapped<unknown>;
   /** Invoke `f` (a callable) with receiver `thisArg` and `args`, routing to `f`'s */
   apply: (
     f: Wrapped<unknown>,

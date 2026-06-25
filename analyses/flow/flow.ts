@@ -699,6 +699,23 @@ export abstract class FlowAnalysis<Info> implements Analysis {
         ),
       ),
     peek: <T>(wrapped: Wrapped<T>) => this.unwrap(wrapped),
+    // A field read (`base[prop]`) from within a spec model, routed through the
+    // same getFieldInfo the core `getField` hook uses for user-code `o[p]` — so a
+    // model (e.g. AO__Get) observes a symbolic-array element / symbolic-object
+    // field as a real Sym instead of a concretized `base`. The raw read mirrors
+    // AO__Get's own (`peek(base)[peek(prop)]`).
+    get: (base, prop) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result: unknown = (this.$.peek(base) as any)[this.$.peek(prop) as any];
+      return this.lift(
+        result,
+        this.getFieldInfo?.(
+          this.valued(base),
+          this.valued(prop),
+          this.valued(result),
+        ) ?? this.baseInfo(result, [this.valued(base), this.valued(prop)]),
+      );
+    },
     apply: (f, thisArg, args) => {
       const fn = this.unwrap(f as Wrapped<Function>); // caller (AO__Call) ensured IsCallable
       // Route to the model when the callee is a known builtin — so a builtin
