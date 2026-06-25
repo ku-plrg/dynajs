@@ -99,7 +99,8 @@ export function sortOf(s: Sym): Sort | undefined {
       // floor/ceil/round yield a Real (their z3 encoding uses to_int/to_real);
       // arithmetic unaries (`-`/`+`) keep the operand's sort.
       if (s.op === '!' || s.op === 'isInteger') return 'Bool';
-      if (s.op === 'floor' || s.op === 'ceil' || s.op === 'round') return 'Real';
+      if (s.op === 'floor' || s.op === 'ceil' || s.op === 'round')
+        return 'Real';
       return sortOf(s.operand);
     case 'binary':
       if (BOOL_BINARY_OPS.has(s.op)) return 'Bool';

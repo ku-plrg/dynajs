@@ -56,7 +56,10 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   // mode-specific trick). A stale concretization can mislead a branch, but in the
   // Distributor concrete re-execution + the divergence guard self-correct it, and
   // in the single-path microbench it is the same imprecision ExpoSE itself has.
-  protected baseInfo(_value: unknown, _parents: Valued<Sym>[]): Sym | undefined {
+  protected baseInfo(
+    _value: unknown,
+    _parents: Valued<Sym>[],
+  ): Sym | undefined {
     return undefined;
   }
 
@@ -405,7 +408,8 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     // it already ran concretely. Matches ExpoSE.
     if (sym.kind === 'const') return;
     const bool = this.toBool(sym);
-    if (bool !== undefined) this.pathConstraints.push({ id, constraint: bool, taken });
+    if (bool !== undefined)
+      this.pathConstraints.push({ id, constraint: bool, taken });
   }
 
   // ToBoolean at a branch site (ExpoSE SymbolicState.toBool): a branch condition
@@ -418,9 +422,19 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     const sort = sortOf(sym);
     if (sort === 'Bool') return sym;
     if (sort === 'String')
-      return { kind: 'binary', op: '!==', left: sym, right: { kind: 'const', value: '' } };
+      return {
+        kind: 'binary',
+        op: '!==',
+        left: sym,
+        right: { kind: 'const', value: '' },
+      };
     if (isNumericSort(sort))
-      return { kind: 'binary', op: '!==', left: sym, right: { kind: 'const', value: 0 } };
+      return {
+        kind: 'binary',
+        op: '!==',
+        left: sym,
+        right: { kind: 'const', value: 0 },
+      };
     return undefined;
   }
 
@@ -445,7 +459,11 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   // affect only search-order bucketing, never replay (which keys off `_bound`).
   private syntheticBranchId = -1000;
   private pushBranch(constraint: Sym, taken: boolean): void {
-    this.pathConstraints.push({ id: this.syntheticBranchId--, constraint, taken });
+    this.pathConstraints.push({
+      id: this.syntheticBranchId--,
+      constraint,
+      taken,
+    });
   }
 
   // The scalar SMT sort concolic models a concrete value with (its two scalar

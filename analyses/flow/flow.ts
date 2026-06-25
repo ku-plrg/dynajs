@@ -10,7 +10,11 @@ import {
   builtinName,
 } from './site.js';
 import { BoundaryEscape, type EscapeRecord } from './escape.js';
-import { AO__CanonicalNumericIndexString, AO__ToString, AO__ToNumber } from './spec/index.js';
+import {
+  AO__CanonicalNumericIndexString,
+  AO__ToString,
+  AO__ToNumber,
+} from './spec/index.js';
 
 type ValuedGeneral<Shape extends {}, Value = unknown> = Shape & {
   value: Value;
@@ -240,8 +244,11 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   }
 
   /** NOTE never override this method */
-  protected /* final */ lift<T>(value: T, info: Info = this.domain.getBottom()): Lifted<T> {
-    let w : Lifted<T>;
+  protected /* final */ lift<T>(
+    value: T,
+    info: Info = this.domain.getBottom(),
+  ): Lifted<T> {
+    let w: Lifted<T>;
     if (this.isObjectish(value)) {
       if (!this.valueMap.has(value as object)) {
         this.valueMap.set(value as object, { id: this.freshId(), value });
@@ -592,7 +599,9 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       switch (ty) {
         // "Type(x) is Object": objects and callables, but not null.
         case 'object':
-          v = (typeof raw === 'object' && raw !== null) || typeof raw === 'function';
+          v =
+            (typeof raw === 'object' && raw !== null) ||
+            typeof raw === 'function';
           break;
         case 'null':
           v = raw === null;
@@ -715,7 +724,9 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     // AO__Get's own (`peek(base)[peek(prop)]`).
     get: (base, prop) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result: unknown = (this.$.peek(base) as any)[this.$.peek(prop) as any];
+      const result: unknown = (this.$.peek(base) as any)[
+        this.$.peek(prop) as any
+      ];
       return this.lift(
         result,
         this.getFieldInfo?.(
@@ -785,11 +796,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     const f = frame as BinFrame;
     if (f.op === '+') {
       return {
-        result: this.SYNTAX__add(
-          this.$,
-          f.left,
-          f.right,
-        ) as Lifted<unknown>,
+        result: this.SYNTAX__add(this.$, f.left, f.right) as Lifted<unknown>,
       };
     } else {
       // assert : result is given
@@ -823,7 +830,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     this.currentId = _id;
     const f = frame as BinFrame;
     return {
-      result: Model.ofSyntax('+')(this.$, f.left, f.right) as Lifted<string>,
+      result: this.SYNTAX__add(this.$, f.left, f.right) as Lifted<string>,
     };
   }
 
@@ -952,9 +959,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   ) {
     this.currentId = _id;
     const argArr = Array.from(args) as Lifted[]; // can we do this without `as`?
-    const entries: Lifted[] = _isMethod
-      ? [_base as Lifted, ...argArr]
-      : argArr;
+    const entries: Lifted[] = _isMethod ? [_base as Lifted, ...argArr] : argArr;
     if (
       Model.support(_f) &&
       !entries.every(
@@ -1069,7 +1074,11 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   }
 
   ////////// syntax model ////////////
-  private SYNTAX__add($: SpecRuntime, lVal: Lifted<unknown>, rVal: Lifted<unknown>): Lifted<string> | Lifted<number> {
+  private SYNTAX__add(
+    $: SpecRuntime,
+    lVal: Lifted<unknown>,
+    rVal: Lifted<unknown>,
+  ): Lifted<string> | Lifted<number> {
     if ($.peek($.isType(lVal, 'object')) || $.peek($.isType(rVal, 'object'))) {
       const l: Unlifted<unknown> = $.peek(lVal);
       const r: Unlifted<unknown> = $.peek(rVal);
@@ -1081,7 +1090,10 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       const lPrim = lVal as Lifted<Primitive>;
       const rPrim = rVal as Lifted<Primitive>;
       //   c. If lPrim is a String or rPrim is a String, then
-      if ($.peek($.isType(lPrim, 'string')) || $.peek($.isType(rPrim, 'string'))) {
+      if (
+        $.peek($.isType(lPrim, 'string')) ||
+        $.peek($.isType(rPrim, 'string'))
+      ) {
         //     i. Let lStr be ? ToString(lPrim).
         const lStr = AO__ToString($, lPrim);
         //     ii. Let rStr be ? ToString(rPrim).
@@ -1109,7 +1121,6 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       return $.add(lNum, rNum);
     }
   }
-
 
   ////////// lift-hanlders //////////
   private id = 0;

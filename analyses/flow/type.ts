@@ -27,10 +27,7 @@ interface SpecOps
     RangeOps,
     RegexOps {
   /** an injection (`unwrapped -> wrapped`). inverse of `$.peek`. default information transformation */
-  base: <T extends Unlifted | Primitive>(
-    v: T,
-    parent: Lifted[],
-  ) => Lifted<T>;
+  base: <T extends Unlifted | Primitive>(v: T, parent: Lifted[]) => Lifted<T>;
   /** a projection (`wrapped -> unwrapped`). inverse of `$.base`. lost of information happens due to concretization */
   peek: <T>(wrapped: Lifted<T>) => Unlifted<T>;
   /** a field read (`base[prop]`) routed through the analysis's `getFieldInfo`, so a
@@ -98,10 +95,7 @@ interface CompareOps {
   lessThan: (l: Lifted<number>, r: Lifted<number>) => Lifted<boolean>;
   lessThanEqual: (l: Lifted<number>, r: Lifted<number>) => Lifted<boolean>;
   greaterThan: (l: Lifted<number>, r: Lifted<number>) => Lifted<boolean>;
-  greaterThanEqual: (
-    l: Lifted<number>,
-    r: Lifted<number>,
-  ) => Lifted<boolean>;
+  greaterThanEqual: (l: Lifted<number>, r: Lifted<number>) => Lifted<boolean>;
   is: <L extends Lifted<unknown>, R extends Lifted<unknown>>(
     l: L,
     r: R,
