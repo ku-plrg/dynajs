@@ -171,6 +171,16 @@ export class Model {
         ],
         [Array.prototype.shift, generated.INTRINSICS_Array_prototype_shift],
         [Array.prototype.slice, generated.INTRINSICS_Array_prototype_slice],
+        [Array.prototype.some, generated.INTRINSICS_Array_prototype_some],
+        [
+          Array.prototype.toReversed,
+          generated.INTRINSICS_Array_prototype_toReversed,
+        ],
+        [
+          Array.prototype.toSpliced,
+          generated.INTRINSICS_Array_prototype_toSpliced,
+        ],
+        [Array.prototype.unshift, generated.INTRINSICS_Array_prototype_unshift],
 
         [Math.floor, generated.INTRINSICS_Math_floor],
         [Math.ceil, generated.INTRINSICS_Math_ceil],
