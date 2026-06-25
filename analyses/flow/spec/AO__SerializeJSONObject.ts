@@ -15,7 +15,7 @@ export function AO__SerializeJSONObject ($ : SpecRuntime, state : Wrapped<unknow
   $.append(state["Stack" /* TODO INTERNAL : internal access */], value)
   var stepBack = state["Indent" /* TODO INTERNAL : internal access */];
   state["Indent" /* TODO INTERNAL : internal access */] = $.concatenate(state["Indent" /* TODO INTERNAL : internal access */], state["Gap" /* TODO INTERNAL : internal access */]);
-  if (!$.condition(Number.MAX_SAFE_INTEGER - 660, $.is(state["PropertyList" /* TODO INTERNAL : internal access */], $.lit<undefined>(undefined))))
+  if (!$.condition(Number.MAX_SAFE_INTEGER - 679, $.is(state["PropertyList" /* TODO INTERNAL : internal access */], $.lit<undefined>(undefined))))
   {
     var K = state["PropertyList" /* TODO INTERNAL : internal access */];
   }
@@ -28,11 +28,11 @@ export function AO__SerializeJSONObject ($ : SpecRuntime, state : Wrapped<unknow
   for (var P of K)
   {
     var strP = AO__SerializeJSONProperty($, (state as Wrapped<unknown>), (P as Wrapped<string>), (value as Wrapped<unknown>));
-    if (!$.condition(Number.MAX_SAFE_INTEGER - 661, $.is(strP, $.lit<undefined>(undefined))))
+    if (!$.condition(Number.MAX_SAFE_INTEGER - 680, $.is(strP, $.lit<undefined>(undefined))))
     {
       var member = AO__QuoteJSONString($, (P as Wrapped<string>));
       member = $.concatenate(member, $.lit<string>(":"));
-      if (!$.condition(Number.MAX_SAFE_INTEGER - 662, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.lit<string>(""))))
+      if (!$.condition(Number.MAX_SAFE_INTEGER - 681, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.lit<string>(""))))
       {
         member = $.concatenate(member, $.lit<string>(" "));
       }
@@ -49,7 +49,7 @@ export function AO__SerializeJSONObject ($ : SpecRuntime, state : Wrapped<unknow
   }
   else
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 663, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.lit<string>(""))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 682, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.lit<string>(""))))
     {
       var properties = (partial as Wrapped<string>[]).reduce((a, b) => $.concatenate(a, $.concatenate($.base<string>(",", []), b)));
       var final = $.concatenate($.concatenate($.lit<string>("{"), properties), $.lit<string>("}"));

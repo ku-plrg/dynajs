@@ -15,22 +15,22 @@ import { AO__ToString } from "./AO__ToString.js";
 
 export function AO__SerializeJSONProperty ($ : SpecRuntime, state : Wrapped<unknown>, key : Wrapped<string>, holder : Wrapped<unknown>) {
   var value = AO__Get($, (holder as Wrapped<unknown>), (key as Wrapped<unknown>));
-  if (($.condition(Number.MAX_SAFE_INTEGER - 664, $.isType(value, "object"))) || ($.condition(Number.MAX_SAFE_INTEGER - 665, $.isType(value, "bigint"))))
+  if (($.condition(Number.MAX_SAFE_INTEGER - 683, $.isType(value, "object"))) || ($.condition(Number.MAX_SAFE_INTEGER - 684, $.isType(value, "bigint"))))
   {
     var toJSON = AO__GetV($, (value as Wrapped<unknown>), ($.lit<string>("toJSON") as Wrapped<unknown>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 666, $.is(AO__IsCallable($, (toJSON as Wrapped<unknown>)), $.lit<boolean>(true))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 685, $.is(AO__IsCallable($, (toJSON as Wrapped<unknown>)), $.lit<boolean>(true))))
     {
       value = AO__Call($, (toJSON as Wrapped<unknown>), (value as Wrapped<unknown>), ([key] as Wrapped<unknown>[]));
     }
 
   }
 
-  if (!$.condition(Number.MAX_SAFE_INTEGER - 667, $.is(state["ReplacerFunction" /* TODO INTERNAL : internal access */], $.lit<undefined>(undefined))))
+  if (!$.condition(Number.MAX_SAFE_INTEGER - 686, $.is(state["ReplacerFunction" /* TODO INTERNAL : internal access */], $.lit<undefined>(undefined))))
   {
     value = AO__Call($, (state["ReplacerFunction" /* TODO INTERNAL : internal access */] as Wrapped<unknown>), (holder as Wrapped<unknown>), ([key, value] as Wrapped<unknown>[]));
   }
 
-  if (($.condition(Number.MAX_SAFE_INTEGER - 668, $.isType(value, "object"))))
+  if (($.condition(Number.MAX_SAFE_INTEGER - 687, $.isType(value, "object"))))
   {
     if (($.peek(value) instanceof Number))
     {
@@ -63,29 +63,29 @@ export function AO__SerializeJSONProperty ($ : SpecRuntime, state : Wrapped<unkn
 
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 669, $.is(value, $.lit<null>(null))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 688, $.is(value, $.lit<null>(null))))
   {
     return $.lit<string>("null");
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 670, $.is(value, $.lit<boolean>(true))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 689, $.is(value, $.lit<boolean>(true))))
   {
     return $.lit<string>("true");
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 671, $.is(value, $.lit<boolean>(false))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 690, $.is(value, $.lit<boolean>(false))))
   {
     return $.lit<string>("false");
   }
 
-  if (($.condition(Number.MAX_SAFE_INTEGER - 672, $.isType(value, "string"))))
+  if (($.condition(Number.MAX_SAFE_INTEGER - 691, $.isType(value, "string"))))
   {
     return AO__QuoteJSONString($, (value as Wrapped<string>));
   }
 
-  if (($.condition(Number.MAX_SAFE_INTEGER - 673, $.isType(value, "number"))))
+  if (($.condition(Number.MAX_SAFE_INTEGER - 692, $.isType(value, "number"))))
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 674, $.isFinite(value)))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 693, $.isFinite(value)))
     {
       return AO__ToString($, (value as Wrapped<unknown>));
     }
@@ -93,15 +93,15 @@ export function AO__SerializeJSONProperty ($ : SpecRuntime, state : Wrapped<unkn
     return $.lit<string>("null");
   }
 
-  if (($.condition(Number.MAX_SAFE_INTEGER - 675, $.isType(value, "bigint"))))
+  if (($.condition(Number.MAX_SAFE_INTEGER - 694, $.isType(value, "bigint"))))
   {
     throw new TypeError;
   }
 
-  if (($.condition(Number.MAX_SAFE_INTEGER - 676, $.isType(value, "object"))) && $.condition(Number.MAX_SAFE_INTEGER - 677, $.is(AO__IsCallable($, (value as Wrapped<unknown>)), $.lit<boolean>(false))))
+  if (($.condition(Number.MAX_SAFE_INTEGER - 695, $.isType(value, "object"))) && $.condition(Number.MAX_SAFE_INTEGER - 696, $.is(AO__IsCallable($, (value as Wrapped<unknown>)), $.lit<boolean>(false))))
   {
     var isArray = AO__IsArray($, (value as Wrapped<unknown>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 678, $.is(isArray, $.lit<boolean>(true))))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 697, $.is(isArray, $.lit<boolean>(true))))
     {
       return AO__SerializeJSONArray($, (state as Wrapped<unknown>), (value as Wrapped<unknown>));
     }

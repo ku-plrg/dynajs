@@ -12,7 +12,7 @@ export function INTRINSICS_String_prototype_lastIndexOf ($ : SpecRuntime, $this 
   var S = AO__ToString($, (O as Wrapped<unknown>));
   var searchStr = AO__ToString($, (searchString as Wrapped<unknown>));
   var numPos = AO__ToNumber($, (position as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 413, $.isNaN(numPos as Wrapped<number>)))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 432, $.isNaN(numPos as Wrapped<number>)))
   {
     var pos = $.lit<number>(Infinity);
   }
@@ -23,14 +23,14 @@ export function INTRINSICS_String_prototype_lastIndexOf ($ : SpecRuntime, $this 
 
   var len = $.length(S);
   var searchLen = $.length(searchStr);
-  if ($.condition(Number.MAX_SAFE_INTEGER - 414, $.lessThan(len, searchLen)))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 433, $.lessThan(len, searchLen)))
   {
     return $.lit<number>(-1);
   }
 
   var start = $.clamp(pos, $.lit<number>(0), $.subtract((len as Wrapped<number>), (searchLen as Wrapped<number>)));
   var result = AO__StringLastIndexOf($, (S as Wrapped<string>), (searchStr as Wrapped<string>), (start as Wrapped<number>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 415, $.is(result, $.lit<string>("not-found"))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 434, $.is(result, $.lit<string>("not-found"))))
   {
     return $.lit<number>(-1);
   }

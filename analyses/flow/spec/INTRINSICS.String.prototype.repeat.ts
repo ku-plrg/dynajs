@@ -9,12 +9,12 @@ export function INTRINSICS_String_prototype_repeat ($ : SpecRuntime, $this : Wra
   var O = AO__RequireObjectCoercible($, $this);
   var S = AO__ToString($, (O as Wrapped<unknown>));
   var n = AO__ToIntegerOrInfinity($, (count as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 428, $.lessThan(n, $.lit<number>(0))) || $.condition(Number.MAX_SAFE_INTEGER - 429, $.is(n, $.lit<number>(Infinity))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 447, $.lessThan(n, $.lit<number>(0))) || $.condition(Number.MAX_SAFE_INTEGER - 448, $.is(n, $.lit<number>(Infinity))))
   {
     throw new RangeError;
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 430, $.is(n, $.lit<number>(0))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 449, $.is(n, $.lit<number>(0))))
   {
     return $.lit<string>("");
   }
