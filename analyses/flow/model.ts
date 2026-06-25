@@ -135,6 +135,15 @@ export class Model {
     [Math.ceil, generated.INTRINSICS_Math_ceil],
     [Math.round, generated.INTRINSICS_Math_round],
     [Math.abs, generated.INTRINSICS_Math_abs],
+    [Math.trunc, generated.INTRINSICS_Math_trunc],
+    [Math.sign, generated.INTRINSICS_Math_sign],
+    // Math.max/min polyfills are generated but left unregistered (concretized, as
+    // ExpoSE does — it has no max/min model either). Their spec fold seeds with
+    // ±Infinity ($.lit), which the concolic Real-SMT backend can't encode
+    // (`non-finite number: Infinity`, smt.ts) → registering errors on any
+    // symbolically-compared operand. Re-enable once smt.ts folds ±∞ comparisons.
+    // [Math.max, generated.INTRINSICS_Math_max],
+    // [Math.min, generated.INTRINSICS_Math_min],
 
     [JSON.stringify, generated.INTRINSICS_JSON_stringify],
   ] as [Function | undefined, Function][]).filter(

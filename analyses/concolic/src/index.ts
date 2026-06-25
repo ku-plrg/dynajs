@@ -233,14 +233,6 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     entries: unknown[],
     _result: unknown,
   ): Sym | undefined {
-    // Math.trunc has no generated spec polyfill (unregistered → reaches here as an
-    // opaque call); model it as the existing toward-zero `truncate` Sym (realTrunc
-    // in smt.ts). It is a method call, so entries = [Math, x].
-    if (f === Math.trunc) {
-      const src = this.symOf(this.valued(entries[1]));
-      return src.kind === 'const' ? undefined : { kind: 'truncate', src };
-    }
-
     const base = entries[0];
     if (base === null || typeof base !== 'object') return undefined;
     const meta = this.arrayMeta.get(base);
