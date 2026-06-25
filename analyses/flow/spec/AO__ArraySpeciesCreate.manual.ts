@@ -1,4 +1,4 @@
-import type { SpecRuntime, Lifted, Unwrapped, Primitive } from "../type.js";
+import type { SpecRuntime, Lifted, Unlifted, Primitive } from "../type.js";
 
 import { AO__Get } from "./AO__Get.js";
 import { AO__IsConstructor } from "./AO__IsConstructor.js";
@@ -9,7 +9,7 @@ export function AO__ArraySpeciesCreate ($ : SpecRuntime, originalArray : Lifted<
   const isArray = Array.isArray($.peek(originalArray));
   // 2. If isArray is false, return ? ArrayCreate(length).
   if (!isArray) {
-    return $.base(new Array($.peek(length)) as Unwrapped<unknown[]>, [length]);
+    return $.base(new Array($.peek(length)) as Unlifted<unknown[]>, [length]);
   }
   // 3. Let C be ? Get(originalArray, "constructor").
   let C = AO__Get($, originalArray, $.base("constructor", []));

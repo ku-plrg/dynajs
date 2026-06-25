@@ -1,4 +1,4 @@
-import type { SpecRuntime, Lifted, Unwrapped, Primitive } from "../type.js";
+import type { SpecRuntime, Lifted, Unlifted, Primitive } from "../type.js";
 
 export function AO__ToObject($: SpecRuntime, argument: Lifted<unknown>): Lifted<object> {
   "use strict";

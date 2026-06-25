@@ -3,7 +3,7 @@
 // through the object-model. Only reached via OrdinaryCreateFromConstructor (RegExp
 // allocation in the String RegExp methods). Exists so the import resolves at
 // build time.
-import type { SpecRuntime, Lifted, Unwrapped, Primitive } from "../type.js";
+import type { SpecRuntime, Lifted, Unlifted, Primitive } from "../type.js";
 
 export function AO__GetPrototypeFromConstructor(
   $: SpecRuntime,

@@ -4,7 +4,7 @@ type WrapBrand<B extends boolean> = { readonly [WrappedValueBrand]: B };
 
 export type Lifted<T = unknown> = T & WrapBrand<true>;
 
-export type Unwrapped<T = unknown> = T & WrapBrand<false>;
+export type Unlifted<T = unknown> = T & WrapBrand<false>;
 
 /** Primitives <: Unwrapped, but not vice versa (e.g. it can be an object that has been unwrapped) */
 export type Primitive =
@@ -27,12 +27,12 @@ interface SpecOps
     RangeOps,
     RegexOps {
   /** an injection (`unwrapped -> wrapped`). inverse of `$.peek`. default information transformation */
-  base: <T extends Unwrapped | Primitive>(
+  base: <T extends Unlifted | Primitive>(
     v: T,
     parent: Lifted[],
   ) => Lifted<T>;
   /** a projection (`wrapped -> unwrapped`). inverse of `$.base`. lost of information happens due to concretization */
-  peek: <T>(wrapped: Lifted<T>) => Unwrapped<T>;
+  peek: <T>(wrapped: Lifted<T>) => Unlifted<T>;
   /** a field read (`base[prop]`) routed through the analysis's `getFieldInfo`, so a
    *  spec model observes element/property reads exactly as user code `o[p]` does
    *  (e.g. concolic's symbolic-array `select`). Without it a model read concretizes
@@ -162,5 +162,5 @@ interface RangeOps {
 export interface SpecRuntime extends SpecOps {
   // constant
   undef: Lifted<undefined>;
-  lit: <T extends Unwrapped | Primitive>(v: T) => Lifted<T>;
+  lit: <T extends Unlifted | Primitive>(v: T) => Lifted<T>;
 }

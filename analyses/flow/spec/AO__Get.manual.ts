@@ -1,4 +1,4 @@
-import type { SpecRuntime, Lifted, Unwrapped, Primitive } from "../type.js";
+import type { SpecRuntime, Lifted, Unlifted, Primitive } from "../type.js";
 
 export function AO__Get ($ : SpecRuntime, O : Lifted<unknown>, P : Lifted<unknown>): Lifted<unknown> {
   // 1. Return ? O.[[Get]](P, O).

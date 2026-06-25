@@ -1,4 +1,4 @@
-import type { SpecRuntime, Lifted, Unwrapped, Primitive } from "../type.js";
+import type { SpecRuntime, Lifted, Unlifted, Primitive } from "../type.js";
 
 export function AO__ThisStringValue ($ : SpecRuntime, value : Lifted<unknown>) {
   if (($.peek($.isType(value, "string"))))

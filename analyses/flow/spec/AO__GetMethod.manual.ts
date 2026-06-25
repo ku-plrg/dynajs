@@ -1,4 +1,4 @@
-import type { SpecRuntime, Lifted, Unwrapped, Primitive } from "../type.js";
+import type { SpecRuntime, Lifted, Unlifted, Primitive } from "../type.js";
 
 import { AO__GetV } from "./AO__GetV.js";
 import { AO__IsCallable } from "./AO__IsCallable.js";

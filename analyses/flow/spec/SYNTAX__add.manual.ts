@@ -1,4 +1,4 @@
-import type { SpecRuntime, Lifted, Unwrapped, Primitive } from "../type.js";
+import type { SpecRuntime, Lifted, Unlifted, Primitive } from "../type.js";
 
 import { AO__ToString } from "./AO__ToString.js";
 import { AO__ToNumber } from "./AO__ToNumber.js";
@@ -38,8 +38,8 @@ function SYNTAX__add_primitive($: SpecRuntime, lPrim: Lifted<Primitive>, rPrim: 
 // (split out of the former Model.applyBinary, one file per operator).
 export function SYNTAX__add($: SpecRuntime, lVal: Lifted<unknown>, rVal: Lifted<unknown>): Lifted<string> | Lifted<number> {
   if ($.peek($.isType(lVal, 'object')) || $.peek($.isType(rVal, 'object'))) {
-    const l: Unwrapped<unknown> = $.peek(lVal);
-    const r: Unwrapped<unknown> = $.peek(rVal);
+    const l: Unlifted<unknown> = $.peek(lVal);
+    const r: Unlifted<unknown> = $.peek(rVal);
     // @ts-expect-error - it calls the plus
     const v = l + r;
     // over-approximate the result type as unknown, since it could be either string or number

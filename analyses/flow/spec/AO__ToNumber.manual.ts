@@ -1,4 +1,4 @@
-import type { SpecRuntime, Lifted, Unwrapped, Primitive } from "../type.js";
+import type { SpecRuntime, Lifted, Unlifted, Primitive } from "../type.js";
 
 export function AO__ToNumber($: SpecRuntime, arg: Lifted<unknown>): Lifted<number> {
   const argument = $.peek(arg);

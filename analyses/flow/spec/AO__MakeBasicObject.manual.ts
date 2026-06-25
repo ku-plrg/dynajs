@@ -5,7 +5,7 @@
 // directly: a plain JS object whose internal slots are own properties and whose
 // essential internal methods are the host object's own. Callers (e.g.
 // OrdinaryObjectCreate) then assign slots like O["Prototype"] = proto.
-import type { SpecRuntime, Lifted, Unwrapped, Primitive } from "../type.js";
+import type { SpecRuntime, Lifted, Unlifted, Primitive } from "../type.js";
 
 export function AO__MakeBasicObject(
   $: SpecRuntime,

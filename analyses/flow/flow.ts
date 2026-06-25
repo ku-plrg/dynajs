@@ -1,7 +1,7 @@
 import util from 'node:util';
 import { required } from './utils.js';
 import type { Analysis } from '@/types/analysis.js';
-import type { SpecRuntime, Lifted, Unwrapped, Primitive } from './type.js';
+import type { SpecRuntime, Lifted, Unlifted, Primitive } from './type.js';
 import { Model } from './model.js';
 import {
   type Site,
@@ -687,7 +687,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     },
 
     // SpecOps
-    base: <T extends Unwrapped<unknown> | Primitive>(
+    base: <T extends Unlifted<unknown> | Primitive>(
       v: T,
       parents: Lifted<unknown>[],
     ): Lifted<T> =>
@@ -738,13 +738,13 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     get undef(): Lifted<undefined> {
       return this.base(undefined, []);
     },
-    lit: <T extends Unwrapped | Primitive>(v: T) => this.$.base(v, []),
+    lit: <T extends Unlifted | Primitive>(v: T) => this.$.base(v, []),
   } satisfies SpecRuntime;
 
   literal(_id: number, value: unknown) {
     this.currentId = _id;
     this.escaper.markEscapableLiteral(value);
-    const w = this.$.base(value as Unwrapped<unknown>, []);
+    const w = this.$.base(value as Unlifted<unknown>, []);
     return w === value ? undefined : { result: w };
   }
 
@@ -766,7 +766,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     _op: string,
     _l: Lifted,
     _r: Lifted,
-    result: Unwrapped<unknown>,
+    result: Unlifted<unknown>,
     frame: unknown,
   ) {
     required(frame !== undefined, 'binary hook missing frame');
@@ -807,7 +807,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     _id: number,
     _left: Lifted,
     _right: Lifted,
-    result: Unwrapped<unknown>,
+    result: Unlifted<unknown>,
     frame: unknown,
   ) {
     required(frame !== undefined, 'templateConcat hook missing frame');
@@ -829,7 +829,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     _op: string,
     _prefix: boolean,
     _operand: unknown,
-    result: Unwrapped<unknown>,
+    result: Unlifted<unknown>,
     frame: unknown,
   ) {
     required(frame !== undefined, 'unary hook missing frame');
@@ -1100,12 +1100,12 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     return proxy as T as Lifted<T>;
   }
 
-  private unwrap<T = unknown>(value: Lifted<T>): Unwrapped<T> {
-    if (!this.isObjectish(value)) return value as T as Unwrapped<T>; // should not happen;
+  private unwrap<T = unknown>(value: Lifted<T>): Unlifted<T> {
+    if (!this.isObjectish(value)) return value as T as Unlifted<T>; // should not happen;
     const entry = this.valueMap.get(value);
     return entry === undefined
-      ? (value as T as Unwrapped<T>)
-      : (entry.value as T as Unwrapped<T>);
+      ? (value as T as Unlifted<T>)
+      : (entry.value as T as Unlifted<T>);
   }
 
   private forcedUnwrap(value: unknown): IdValuePair {
