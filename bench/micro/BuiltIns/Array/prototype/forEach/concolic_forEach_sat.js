@@ -1,6 +1,7 @@
 // @type concolic
 // @target es5 Array.prototype.forEach
 // @feature builtin forEach
+// @done
 
 function __test_symbolic__(symbolic) {
     var sum = 0;

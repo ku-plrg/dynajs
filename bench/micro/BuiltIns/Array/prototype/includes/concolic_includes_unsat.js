@@ -1,6 +1,7 @@
 // @type concolic
 // @target es6+ Array.prototype.includes
 // @feature builtin includes
+// @done
 
 function __test_symbolic__(symbolic) {
 

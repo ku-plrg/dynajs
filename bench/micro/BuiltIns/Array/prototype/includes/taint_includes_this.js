@@ -1,6 +1,7 @@
 // @type taint
 // @target es6+ Array.prototype.includes
 // @feature builtin array-includes
+// @done
 
 function __test_taint__(tainted) {
     var a = [tainted, "b", "c"];

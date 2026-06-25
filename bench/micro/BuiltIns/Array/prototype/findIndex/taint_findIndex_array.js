@@ -1,6 +1,7 @@
 // @type taint
 // @target es6+ Array.prototype.findIndex
 // @feature builtin array-findIndex
+// @done
 
 function __test_taint__(tainted) {
     // @witness always tainted.findIndex(v => v === "x") = 0, position (always clean)

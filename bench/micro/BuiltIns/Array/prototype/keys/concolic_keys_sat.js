@@ -1,6 +1,7 @@
 // @type concolic
 // @target es6+ Array.prototype.keys
 // @feature builtin keys
+// @done
 
 function __test_symbolic__(symbolic) {
 

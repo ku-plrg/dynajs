@@ -1,6 +1,7 @@
 // @type taint
 // @target es6+ Array.prototype.forEach
 // @feature builtin array-forEach
+// @done
 
 function __test_taint__(tainted) {
     var g;

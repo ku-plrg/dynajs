@@ -1,6 +1,7 @@
 // @type taint
 // @target es5 Array.prototype.indexOf
 // @feature builtin array-indexOf
+// @done
 
 function __test_taint__(tainted) {
     var r1 = tainted.indexOf("a");

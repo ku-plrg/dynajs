@@ -1,6 +1,7 @@
 // @type concolic
 // @target es6+ Array.prototype.findLastIndex
 // @feature builtin findLastIndex
+// @done
 
 function __test_symbolic__(symbolic) {
 

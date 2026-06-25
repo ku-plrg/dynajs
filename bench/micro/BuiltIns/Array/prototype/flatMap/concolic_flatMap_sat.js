@@ -1,6 +1,7 @@
 // @type concolic
 // @target es6+ Array.prototype.flatMap
 // @feature builtin flatMap
+// @done
 
 function __test_symbolic__(symbolic) {
 

@@ -1,6 +1,7 @@
 // @type taint
 // @target es6+ Array.prototype.flatMap
 // @feature builtin array-flatMap
+// @done
 
 function __test_taint__(tainted) {
     var r = tainted.flatMap(function(v) { return [v]; });

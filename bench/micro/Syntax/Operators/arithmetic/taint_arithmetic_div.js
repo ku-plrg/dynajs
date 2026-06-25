@@ -1,8 +1,10 @@
 // @type taint
 // @target es5 arithmetic
 // @feature syntax arithmetic
+// @done
 
 function __test_taint__(tainted) {
+    // @witness __test_taint__(84) => tainted / 2 = 42 tainted
     __assert_taint__(tainted / 2, true);
 }
 

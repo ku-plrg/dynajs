@@ -4,6 +4,8 @@
 // @done
 
 function __test_taint__(tainted) {
+    // @witness __test_taint__(["x","x","x"]) => tainted.find(() => true) = "x" tainted
+    __assert_taint__(tainted.find(function() { return true; }), true);
     // @witness always clean values 
     __assert_taint__(tainted.find(function(v) { return v === "clean"; }), false);
     // @witness always tainted.find(() => false) = undefined (not-found), clean

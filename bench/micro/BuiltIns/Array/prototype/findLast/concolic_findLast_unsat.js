@@ -1,6 +1,7 @@
 // @type concolic
 // @target es6+ Array.prototype.findLast
 // @feature builtin findLast
+// @done
 
 function __test_symbolic__(symbolic) {
   if (symbolic.length === 2 && symbolic[1] > 10) {

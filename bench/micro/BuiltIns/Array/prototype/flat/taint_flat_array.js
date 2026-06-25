@@ -1,6 +1,7 @@
 // @type taint
 // @target es6+ Array.prototype.flat
 // @feature builtin array-flat
+// @done
 
 function __test_taint__(tainted) {
     var r = tainted.flat();

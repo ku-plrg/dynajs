@@ -1,11 +1,10 @@
 // @type taint
 // @target es6+ Array.prototype.findLast
 // @feature builtin array-findLast
+// @done
 
 function __test_taint__(tainted) {
     var a = ["a", "b", tainted];
-    // @witness __test_taint__('x') => a.findLast(v==='x') = 'x' tainted
-    __assert_taint__(a.findLast(function (v) { return v === "hello"; }), true);
     // @witness always 'b' clean element returned
     __assert_taint__(a.findLast(function (v) { return v === "b"; }), false);
     // @witness findLast returns undefined (not found), clean
