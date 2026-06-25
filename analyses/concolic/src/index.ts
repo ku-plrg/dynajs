@@ -121,7 +121,16 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     r: Valued<Sym>,
   ): Sym | undefined {
     const left = this.symOf(l);
-    const right = this.symOf(r);
+    let right = this.symOf(r);
+    // ExpoSE SymbolicState.binary: a string LEFT operand coerces the right via
+    // ToString before the (bare) equality. A string right keeps its symbolic
+    // form; a non-string right is concretized to its `String(value)` image — what
+    // a JS `string == other` comparison coerces through. This turns the otherwise
+    // ill-typed cross-sort `"x" == 5` into the solvable string eq `x == "5"`. We
+    // apply it only at equality ops: the relational/arith string-left cases ExpoSE
+    // also coerces would need string ordering, outside our z3 string theory.
+    if (ConcolicAnalysis.EQUALITY_OPS.has(op) && typeof l.value === 'string')
+      right = this.toStringSym(r);
     if (left.kind === 'const' && right.kind === 'const') return undefined;
     // Cross-sort equality is concretely decided (a value is one definite sort per
     // path): e.g. a numeric StringIndexOf result vs the "not-found" string sentinel
@@ -135,6 +144,14 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
         return undefined;
     }
     return { kind: 'binary', op, left, right };
+  }
+
+  // ExpoSE SymbolicState.ToString: a string operand keeps its symbolic form; any
+  // other value concretizes to `String(value)` (its `"" + value` image, the
+  // coercion JS `==` applies to the non-string side of a string comparison).
+  private toStringSym(v: Valued<Sym>): Sym {
+    if (typeof v.value === 'string') return this.symOf(v);
+    return { kind: 'const', value: String(v.value) };
   }
 
   protected unaryInfo(op: string, x: Valued<Sym>): Sym | undefined {
