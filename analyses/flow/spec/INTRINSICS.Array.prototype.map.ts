@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "../type.js";
+import type { Lifted, SpecRuntime } from "../type.js";
 
 import { AO__ArraySpeciesCreate } from "./AO__ArraySpeciesCreate.js";
 import { AO__Call } from "./AO__Call.js";
@@ -11,28 +11,28 @@ import { AO__LengthOfArrayLike } from "./AO__LengthOfArrayLike.js";
 import { AO__ToObject } from "./AO__ToObject.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_Array_prototype_map ($ : SpecRuntime, $this : Wrapped<unknown>, callback : Wrapped<unknown>, thisArg : Wrapped<unknown> = $.undef) {
+export function INTRINSICS_Array_prototype_map ($ : SpecRuntime, $this : Lifted<unknown>, callback : Lifted<unknown>, thisArg : Lifted<unknown> = $.undef) {
   var O = AO__ToObject($, $this);
-  var len = AO__LengthOfArrayLike($, (O as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 172, $.is(AO__IsCallable($, (callback as Wrapped<unknown>)), $.lit<boolean>(false))))
+  var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
+  if ($.condition(Number.MAX_SAFE_INTEGER - 172, $.is(AO__IsCallable($, (callback as Lifted<unknown>)), $.lit<boolean>(false))))
   {
     throw new TypeError;
   }
 
-  var A = AO__ArraySpeciesCreate($, (O as Wrapped<unknown>), (len as Wrapped<number>));
+  var A = AO__ArraySpeciesCreate($, (O as Lifted<unknown>), (len as Lifted<number>));
   var k = $.lit<number>(0);
   while ($.condition(Number.MAX_SAFE_INTEGER - 173, $.lessThan(k, len)))
   {
-    var Pk = AO__ToString($, (k as Wrapped<unknown>));
-    var kPresent = AO__HasProperty($, (O as Wrapped<unknown>), (Pk as Wrapped<unknown>));
+    var Pk = AO__ToString($, (k as Lifted<unknown>));
+    var kPresent = AO__HasProperty($, (O as Lifted<unknown>), (Pk as Lifted<unknown>));
     if ($.condition(Number.MAX_SAFE_INTEGER - 174, $.is(kPresent, $.lit<boolean>(true))))
     {
-      var kValue = AO__Get($, (O as Wrapped<unknown>), (Pk as Wrapped<unknown>));
-      var mappedValue = AO__Call($, (callback as Wrapped<unknown>), (thisArg as Wrapped<unknown>), ([kValue, k, O] as Wrapped<unknown>[]));
-      AO__CreateDataPropertyOrThrow($, (A as Wrapped<unknown>), (Pk as Wrapped<unknown>), (mappedValue as Wrapped<unknown>));
+      var kValue = AO__Get($, (O as Lifted<unknown>), (Pk as Lifted<unknown>));
+      var mappedValue = AO__Call($, (callback as Lifted<unknown>), (thisArg as Lifted<unknown>), ([kValue, k, O] as Lifted<unknown>[]));
+      AO__CreateDataPropertyOrThrow($, (A as Lifted<unknown>), (Pk as Lifted<unknown>), (mappedValue as Lifted<unknown>));
     }
 
-    k = $.add((k as Wrapped<number>), ($.lit<number>(1) as Wrapped<number>));
+    k = $.add((k as Lifted<number>), ($.lit<number>(1) as Lifted<number>));
   }
 
   return A;

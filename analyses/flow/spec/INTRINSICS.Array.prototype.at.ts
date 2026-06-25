@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "../type.js";
+import type { Lifted, SpecRuntime } from "../type.js";
 
 import { AO__Get } from "./AO__Get.js";
 import { AO__LengthOfArrayLike } from "./AO__LengthOfArrayLike.js";
@@ -7,17 +7,17 @@ import { AO__ToIntegerOrInfinity } from "./AO__ToIntegerOrInfinity.js";
 import { AO__ToObject } from "./AO__ToObject.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_Array_prototype_at ($ : SpecRuntime, $this : Wrapped<unknown>, index : Wrapped<unknown>) {
+export function INTRINSICS_Array_prototype_at ($ : SpecRuntime, $this : Lifted<unknown>, index : Lifted<unknown>) {
   var O = AO__ToObject($, $this);
-  var len = AO__LengthOfArrayLike($, (O as Wrapped<unknown>));
-  var relativeIndex = AO__ToIntegerOrInfinity($, (index as Wrapped<unknown>));
+  var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
+  var relativeIndex = AO__ToIntegerOrInfinity($, (index as Lifted<unknown>));
   if ($.condition(Number.MAX_SAFE_INTEGER - 107, $.greaterThanEqual(relativeIndex, $.lit<number>(0))))
   {
     var k = relativeIndex;
   }
   else
   {
-    var k = $.add((len as Wrapped<number>), (relativeIndex as Wrapped<number>));
+    var k = $.add((len as Lifted<number>), (relativeIndex as Lifted<number>));
   }
 
   if ($.condition(Number.MAX_SAFE_INTEGER - 108, $.lessThan(k, $.lit<number>(0))) || $.condition(Number.MAX_SAFE_INTEGER - 109, $.greaterThanEqual(k, len)))
@@ -25,5 +25,5 @@ export function INTRINSICS_Array_prototype_at ($ : SpecRuntime, $this : Wrapped<
     return $.lit<undefined>(undefined);
   }
 
-  return AO__Get($, (O as Wrapped<unknown>), (AO__ToString($, (k as Wrapped<unknown>)) as Wrapped<unknown>));
+  return AO__Get($, (O as Lifted<unknown>), (AO__ToString($, (k as Lifted<unknown>)) as Lifted<unknown>));
 }

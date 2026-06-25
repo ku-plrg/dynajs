@@ -1,21 +1,21 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "../type.js";
+import type { Lifted, SpecRuntime } from "../type.js";
 
 import { AO__Get } from "./AO__Get.js";
 import { AO__LengthOfArrayLike } from "./AO__LengthOfArrayLike.js";
 import { AO__ToObject } from "./AO__ToObject.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_Array_prototype_join ($ : SpecRuntime, $this : Wrapped<unknown>, separator : Wrapped<unknown>) {
+export function INTRINSICS_Array_prototype_join ($ : SpecRuntime, $this : Lifted<unknown>, separator : Lifted<unknown>) {
   var O = AO__ToObject($, $this);
-  var len = AO__LengthOfArrayLike($, (O as Wrapped<unknown>));
+  var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
   if ($.condition(Number.MAX_SAFE_INTEGER - 161, $.is(separator, $.lit<undefined>(undefined))))
   {
     var sep = $.lit<string>(",");
   }
   else
   {
-    var sep = AO__ToString($, (separator as Wrapped<unknown>));
+    var sep = AO__ToString($, (separator as Lifted<unknown>));
   }
 
   var R = $.lit<string>("");
@@ -27,14 +27,14 @@ export function INTRINSICS_Array_prototype_join ($ : SpecRuntime, $this : Wrappe
       R = $.concatenate(R, sep);
     }
 
-    var element = AO__Get($, (O as Wrapped<unknown>), (AO__ToString($, (k as Wrapped<unknown>)) as Wrapped<unknown>));
+    var element = AO__Get($, (O as Lifted<unknown>), (AO__ToString($, (k as Lifted<unknown>)) as Lifted<unknown>));
     if (!($.condition(Number.MAX_SAFE_INTEGER - 164, $.is(element, $.lit<undefined>(undefined))) || $.condition(Number.MAX_SAFE_INTEGER - 165, $.is(element, $.lit<null>(null)))))
     {
-      var S = AO__ToString($, (element as Wrapped<unknown>));
+      var S = AO__ToString($, (element as Lifted<unknown>));
       R = $.concatenate(R, S);
     }
 
-    k = $.add((k as Wrapped<number>), ($.lit<number>(1) as Wrapped<number>));
+    k = $.add((k as Lifted<number>), ($.lit<number>(1) as Lifted<number>));
   }
 
   return R;

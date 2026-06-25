@@ -1,5 +1,5 @@
-import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+import type { SpecRuntime, Lifted, Unwrapped, Primitive } from "../type.js";
 
-export function AO__StringToBigInt ($ : SpecRuntime, string : Wrapped<string>): Wrapped<bigint> {
+export function AO__StringToBigInt ($ : SpecRuntime, string : Lifted<string>): Lifted<bigint> {
   return $.base(BigInt($.peek(string)), [string]);
 }

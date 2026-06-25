@@ -1,10 +1,10 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "../type.js";
+import type { Lifted, SpecRuntime } from "../type.js";
 
 import { AO__ToNumber } from "./AO__ToNumber.js";
 
-export function INTRINSICS_Math_round ($ : SpecRuntime, $this : Wrapped<unknown>, x : Wrapped<unknown>) {
-  var n = AO__ToNumber($, (x as Wrapped<unknown>));
+export function INTRINSICS_Math_round ($ : SpecRuntime, $this : Lifted<unknown>, x : Lifted<unknown>) {
+  var n = AO__ToNumber($, (x as Lifted<unknown>));
   if (!$.condition(Number.MAX_SAFE_INTEGER - 307, $.isFinite(n)) || ($.condition(Number.MAX_SAFE_INTEGER - 308, $.isInteger(n))))
   {
     return n;

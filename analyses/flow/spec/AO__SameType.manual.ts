@@ -1,8 +1,8 @@
 
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "../type.js";
+import type { Lifted, SpecRuntime } from "../type.js";
 
-export function AO__SameType ($ : SpecRuntime, x : Wrapped<unknown>, y : Wrapped<unknown>) {
+export function AO__SameType ($ : SpecRuntime, x : Lifted<unknown>, y : Lifted<unknown>) {
   if ($.condition(Number.MAX_SAFE_INTEGER - 537, $.is(x, $.base<undefined>(undefined, []))) && $.condition(Number.MAX_SAFE_INTEGER - 538, $.is(y, $.base<undefined>(undefined, []))))
   {
     return $.base<boolean>(true, []);

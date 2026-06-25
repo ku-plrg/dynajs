@@ -1,7 +1,7 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "../type.js";
+import type { Lifted, SpecRuntime } from "../type.js";
 
-export function AO__StringPad ($ : SpecRuntime, S : Wrapped<string>, maxLength : Wrapped<number>, fillString : Wrapped<string>, placement : Wrapped<unknown>) {
+export function AO__StringPad ($ : SpecRuntime, S : Lifted<string>, maxLength : Lifted<number>, fillString : Lifted<string>, placement : Lifted<unknown>) {
   var stringLength = $.length(S);
   if ($.condition(Number.MAX_SAFE_INTEGER - 722, $.lessThanEqual(maxLength, stringLength)))
   {
@@ -13,7 +13,7 @@ export function AO__StringPad ($ : SpecRuntime, S : Wrapped<string>, maxLength :
     return S;
   }
 
-  var fillLen = $.subtract((maxLength as Wrapped<number>), (stringLength as Wrapped<number>));
+  var fillLen = $.subtract((maxLength as Lifted<number>), (stringLength as Lifted<number>));
   var truncatedStringFiller = $.base(String($.peek(fillString)).repeat(Math.ceil($.peek(fillLen) / String($.peek(fillString)).length)).slice(0, $.peek(fillLen)), [fillString, fillLen]);
   if ($.condition(Number.MAX_SAFE_INTEGER - 724, $.is(placement, $.lit<string>("start"))))
   {

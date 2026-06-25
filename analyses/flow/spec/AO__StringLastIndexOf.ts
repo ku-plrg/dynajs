@@ -1,12 +1,12 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "../type.js";
+import type { Lifted, SpecRuntime } from "../type.js";
 
-export function AO__StringLastIndexOf ($ : SpecRuntime, string : Wrapped<string>, searchValue : Wrapped<string>, fromIndex : Wrapped<number>) {
+export function AO__StringLastIndexOf ($ : SpecRuntime, string : Lifted<string>, searchValue : Lifted<string>, fromIndex : Lifted<number>) {
   var len = $.length(string);
   var searchLen = $.length(searchValue);
-  for (var i of $.range(($.lit<number>(0) as Wrapped<number>), true, (fromIndex as Wrapped<number>), true, false, Number.MAX_SAFE_INTEGER - 721))
+  for (var i of $.range(($.lit<number>(0) as Lifted<number>), true, (fromIndex as Lifted<number>), true, false, Number.MAX_SAFE_INTEGER - 721))
   {
-    var candidate = $.substring(string, (i as Wrapped<number>), ($.add((i as Wrapped<number>), (searchLen as Wrapped<number>)) as Wrapped<number>));
+    var candidate = $.substring(string, (i as Lifted<number>), ($.add((i as Lifted<number>), (searchLen as Lifted<number>)) as Lifted<number>));
     if ($.condition(Number.MAX_SAFE_INTEGER - 720, $.is(candidate, searchValue)))
     {
       return i;

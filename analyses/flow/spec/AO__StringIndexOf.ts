@@ -1,7 +1,7 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "../type.js";
+import type { Lifted, SpecRuntime } from "../type.js";
 
-export function AO__StringIndexOf ($ : SpecRuntime, string : Wrapped<string>, searchValue : Wrapped<string>, fromIndex : Wrapped<number>) {
+export function AO__StringIndexOf ($ : SpecRuntime, string : Lifted<string>, searchValue : Lifted<string>, fromIndex : Lifted<number>) {
   var len = $.length(string);
   if ($.condition(Number.MAX_SAFE_INTEGER - 716, $.is(searchValue, $.lit<string>(""))) && $.condition(Number.MAX_SAFE_INTEGER - 717, $.lessThanEqual(fromIndex, len)))
   {
@@ -9,9 +9,9 @@ export function AO__StringIndexOf ($ : SpecRuntime, string : Wrapped<string>, se
   }
 
   var searchLen = $.length(searchValue);
-  for (var i of $.range((fromIndex as Wrapped<number>), true, ($.subtract((len as Wrapped<number>), (searchLen as Wrapped<number>)) as Wrapped<number>), true, true, Number.MAX_SAFE_INTEGER - 719))
+  for (var i of $.range((fromIndex as Lifted<number>), true, ($.subtract((len as Lifted<number>), (searchLen as Lifted<number>)) as Lifted<number>), true, true, Number.MAX_SAFE_INTEGER - 719))
   {
-    var candidate = $.substring(string, (i as Wrapped<number>), ($.add((i as Wrapped<number>), (searchLen as Wrapped<number>)) as Wrapped<number>));
+    var candidate = $.substring(string, (i as Lifted<number>), ($.add((i as Lifted<number>), (searchLen as Lifted<number>)) as Lifted<number>));
     if ($.condition(Number.MAX_SAFE_INTEGER - 718, $.is(candidate, searchValue)))
     {
       return i;

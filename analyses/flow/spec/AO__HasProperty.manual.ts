@@ -1,8 +1,8 @@
 
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "../type.js";
+import type { Lifted, SpecRuntime } from "../type.js";
 
-export function AO__HasProperty ($ : SpecRuntime, O : Wrapped<unknown>, P : Wrapped<unknown>): Wrapped<boolean> {
+export function AO__HasProperty ($ : SpecRuntime, O : Lifted<unknown>, P : Lifted<unknown>): Lifted<boolean> {
   "use strict";
 
   const o = $.peek(O);

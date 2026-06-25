@@ -1,7 +1,7 @@
 
-import type { Wrapped, SpecRuntime } from "../type.js";
+import type { Lifted, SpecRuntime } from "../type.js";
 
-export function AO__IsRegExp ($ : SpecRuntime, argument : Wrapped<unknown>) {
+export function AO__IsRegExp ($ : SpecRuntime, argument : Lifted<unknown>) {
   if (!($.peek($.isType(argument, "object"))))
   {
     return $.base<boolean>(false, []);

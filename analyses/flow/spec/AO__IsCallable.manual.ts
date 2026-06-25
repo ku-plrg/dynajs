@@ -1,6 +1,6 @@
-import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+import type { SpecRuntime, Lifted, Unwrapped, Primitive } from "../type.js";
 
-export function AO__IsCallable($: SpecRuntime, argument : Wrapped<unknown>) : Wrapped<boolean> {
+export function AO__IsCallable($: SpecRuntime, argument : Lifted<unknown>) : Lifted<boolean> {
   "use strict";
 
   const arg = $.peek(argument);

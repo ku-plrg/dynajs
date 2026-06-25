@@ -1,10 +1,10 @@
-import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+import type { SpecRuntime, Lifted, Unwrapped, Primitive } from "../type.js";
 
 export function AO__UTF16SurrogatePairToCodePoint(
   $: SpecRuntime,
-  lead: Wrapped<string>,
-  trail: Wrapped<string>,
-): Wrapped<number> {
+  lead: Lifted<string>,
+  trail: Lifted<string>,
+): Lifted<number> {
   // 1. Assert: lead is a leading surrogate and trail is a trailing surrogate.
   var leadCU = $.peek(lead).charCodeAt(0);
   var trailCU = $.peek(trail).charCodeAt(0);

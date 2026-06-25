@@ -1,6 +1,6 @@
-import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+import type { SpecRuntime, Lifted, Unwrapped, Primitive } from "../type.js";
 
-export function AO__CreateArrayIterator ($ : SpecRuntime, array : Wrapped<unknown>, kind : Wrapped<string>) {
+export function AO__CreateArrayIterator ($ : SpecRuntime, array : Lifted<unknown>, kind : Lifted<string>) {
   // error: typed array not supported
   // TODO array only...
   const unwrappedArray = $.peek(array);

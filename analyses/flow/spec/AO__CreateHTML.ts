@@ -1,16 +1,16 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "../type.js";
+import type { Lifted, SpecRuntime } from "../type.js";
 
 import { AO__RequireObjectCoercible } from "./AO__RequireObjectCoercible.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function AO__CreateHTML ($ : SpecRuntime, string : Wrapped<unknown>, tag : Wrapped<string>, attribute : Wrapped<string>, value : Wrapped<unknown>) {
+export function AO__CreateHTML ($ : SpecRuntime, string : Lifted<unknown>, tag : Lifted<string>, attribute : Lifted<string>, value : Lifted<unknown>) {
   var str = AO__RequireObjectCoercible($, string);
-  var S = AO__ToString($, (str as Wrapped<unknown>));
+  var S = AO__ToString($, (str as Lifted<unknown>));
   var p1 = $.concatenate($.lit<string>("<"), tag);
   if (!$.condition(Number.MAX_SAFE_INTEGER - 26, $.is(attribute, $.lit<string>(""))))
   {
-    var V = AO__ToString($, (value as Wrapped<unknown>));
+    var V = AO__ToString($, (value as Lifted<unknown>));
     var escapedV = $.base($.peek(V).replaceAll(String.fromCharCode(0x22), "&quot;"), [V]);
     p1 = $.concatenate($.concatenate($.concatenate($.concatenate($.concatenate($.concatenate(p1, $.base<string>(" ", [])), attribute), $.base<string>("=", [])), $.base<string>(String.fromCharCode(0x22), [])), escapedV), $.base<string>(String.fromCharCode(0x22), []));
   }

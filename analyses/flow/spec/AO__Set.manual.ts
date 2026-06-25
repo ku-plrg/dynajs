@@ -1,6 +1,6 @@
-import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+import type { SpecRuntime, Lifted, Unwrapped, Primitive } from "../type.js";
 
-export function AO__Set ($ : SpecRuntime, O : Wrapped<unknown>, P : Wrapped<unknown>, V : Wrapped<unknown>, Throw : Wrapped<boolean>) {
+export function AO__Set ($ : SpecRuntime, O : Lifted<unknown>, P : Lifted<unknown>, V : Lifted<unknown>, Throw : Lifted<boolean>) {
   "use strict";
 
   const Ou = $.peek(O);

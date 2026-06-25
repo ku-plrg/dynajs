@@ -1,12 +1,12 @@
 // @ts-nocheck
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "../type.js";
+import type { Lifted, SpecRuntime } from "../type.js";
 
 import { AO__EnumerableOwnProperties } from "./AO__EnumerableOwnProperties.js";
 import { AO__QuoteJSONString } from "./AO__QuoteJSONString.js";
 import { AO__SerializeJSONProperty } from "./AO__SerializeJSONProperty.js";
 
-export function AO__SerializeJSONObject ($ : SpecRuntime, state : Wrapped<unknown>, value : Wrapped<unknown>) {
+export function AO__SerializeJSONObject ($ : SpecRuntime, state : Lifted<unknown>, value : Lifted<unknown>) {
   if ($.contains(state["Stack" /* TODO INTERNAL : internal access */], value))
   {
     throw new TypeError("JSON.stringify: cannot serialize cyclic structure");
@@ -21,16 +21,16 @@ export function AO__SerializeJSONObject ($ : SpecRuntime, state : Wrapped<unknow
   }
   else
   {
-    var K = AO__EnumerableOwnProperties($, (value as Wrapped<unknown>), ($.lit<string>("key") as Wrapped<unknown>));
+    var K = AO__EnumerableOwnProperties($, (value as Lifted<unknown>), ($.lit<string>("key") as Lifted<unknown>));
   }
 
-  var partial = [] as Wrapped<never>[];
+  var partial = [] as Lifted<never>[];
   for (var P of K)
   {
-    var strP = AO__SerializeJSONProperty($, (state as Wrapped<unknown>), (P as Wrapped<string>), (value as Wrapped<unknown>));
+    var strP = AO__SerializeJSONProperty($, (state as Lifted<unknown>), (P as Lifted<string>), (value as Lifted<unknown>));
     if (!$.condition(Number.MAX_SAFE_INTEGER - 680, $.is(strP, $.lit<undefined>(undefined))))
     {
-      var member = AO__QuoteJSONString($, (P as Wrapped<string>));
+      var member = AO__QuoteJSONString($, (P as Lifted<string>));
       member = $.concatenate(member, $.lit<string>(":"));
       if (!$.condition(Number.MAX_SAFE_INTEGER - 681, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.lit<string>(""))))
       {
@@ -51,13 +51,13 @@ export function AO__SerializeJSONObject ($ : SpecRuntime, state : Wrapped<unknow
   {
     if ($.condition(Number.MAX_SAFE_INTEGER - 682, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.lit<string>(""))))
     {
-      var properties = (partial as Wrapped<string>[]).reduce((a, b) => $.concatenate(a, $.concatenate($.base<string>(",", []), b)));
+      var properties = (partial as Lifted<string>[]).reduce((a, b) => $.concatenate(a, $.concatenate($.base<string>(",", []), b)));
       var final = $.concatenate($.concatenate($.lit<string>("{"), properties), $.lit<string>("}"));
     }
     else
     {
       var separator = $.concatenate($.concatenate($.lit<string>(","), $.lit<string>("\n")), state["Indent" /* TODO INTERNAL : internal access */]);
-      var properties = (partial as Wrapped<string>[]).reduce((a, b) => $.concatenate(a, $.concatenate(separator, b)));
+      var properties = (partial as Lifted<string>[]).reduce((a, b) => $.concatenate(a, $.concatenate(separator, b)));
       var final = $.concatenate($.concatenate($.concatenate($.concatenate($.concatenate($.concatenate($.lit<string>("{"), $.lit<string>("\n")), state["Indent" /* TODO INTERNAL : internal access */]), properties), $.lit<string>("\n")), stepBack), $.lit<string>("}"));
     }
 

@@ -5,14 +5,14 @@
 // directly: a plain JS object whose internal slots are own properties and whose
 // essential internal methods are the host object's own. Callers (e.g.
 // OrdinaryObjectCreate) then assign slots like O["Prototype"] = proto.
-import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+import type { SpecRuntime, Lifted, Unwrapped, Primitive } from "../type.js";
 
 export function AO__MakeBasicObject(
   $: SpecRuntime,
-  internalSlotsList: Wrapped<string>[],
+  internalSlotsList: Lifted<string>[],
 ): Record<string, unknown> {
   // 1. Set internalSlotsList to the list-concatenation of internalSlotsList and « [[PrivateElements]] ».
-  internalSlotsList = internalSlotsList.concat(["PrivateElements"] as Wrapped<string>[]);
+  internalSlotsList = internalSlotsList.concat(["PrivateElements"] as Lifted<string>[]);
   // 2. Let obj be a newly created object with an internal slot for each name in internalSlotsList.
   // 3. NOTE: the initial value of each such internal slot is undefined unless specified otherwise.
   const obj: Record<string, unknown> = {};
@@ -26,7 +26,7 @@ export function AO__MakeBasicObject(
   // 6-7. Asserts about [[Prototype]] / [[Extensible]] presence are the caller's
   //      responsibility — no-ops here.
   // 8. If internalSlotsList contains [[Extensible]], set obj.[[Extensible]] to true.
-  if ($.contains(internalSlotsList, "Extensible" as Wrapped<string>)) {
+  if ($.contains(internalSlotsList, "Extensible" as Lifted<string>)) {
     obj["Extensible"] = $.base<boolean>(true, []);
   }
   // 9. Return obj.

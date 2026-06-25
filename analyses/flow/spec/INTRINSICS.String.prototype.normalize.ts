@@ -1,19 +1,19 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "../type.js";
+import type { Lifted, SpecRuntime } from "../type.js";
 
 import { AO__RequireObjectCoercible } from "./AO__RequireObjectCoercible.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_String_prototype_normalize ($ : SpecRuntime, $this : Wrapped<unknown>, form : Wrapped<unknown> = $.undef) {
+export function INTRINSICS_String_prototype_normalize ($ : SpecRuntime, $this : Lifted<unknown>, form : Lifted<unknown> = $.undef) {
   var O = AO__RequireObjectCoercible($, $this);
-  var S = AO__ToString($, (O as Wrapped<unknown>));
+  var S = AO__ToString($, (O as Lifted<unknown>));
   if ($.condition(Number.MAX_SAFE_INTEGER - 442, $.is(form, $.lit<undefined>(undefined))))
   {
     var f = $.lit<string>("NFC");
   }
   else
   {
-    var f = AO__ToString($, (form as Wrapped<unknown>));
+    var f = AO__ToString($, (form as Lifted<unknown>));
   }
 
   if (!((($.condition(Number.MAX_SAFE_INTEGER - 443, $.is(f, $.lit<string>("NFC"))) || $.condition(Number.MAX_SAFE_INTEGER - 444, $.is(f, $.lit<string>("NFD")))) || $.condition(Number.MAX_SAFE_INTEGER - 445, $.is(f, $.lit<string>("NFKC")))) || $.condition(Number.MAX_SAFE_INTEGER - 446, $.is(f, $.lit<string>("NFKD")))))

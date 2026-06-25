@@ -1,27 +1,27 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "../type.js";
+import type { Lifted, SpecRuntime } from "../type.js";
 
 import { AO__RequireObjectCoercible } from "./AO__RequireObjectCoercible.js";
 import { AO__ToIntegerOrInfinity } from "./AO__ToIntegerOrInfinity.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_String_prototype_substring ($ : SpecRuntime, $this : Wrapped<unknown>, start : Wrapped<unknown>, end : Wrapped<unknown>) {
+export function INTRINSICS_String_prototype_substring ($ : SpecRuntime, $this : Lifted<unknown>, start : Lifted<unknown>, end : Lifted<unknown>) {
   var O = AO__RequireObjectCoercible($, $this);
-  var S = AO__ToString($, (O as Wrapped<unknown>));
+  var S = AO__ToString($, (O as Lifted<unknown>));
   var len = $.length(S);
-  var intStart = AO__ToIntegerOrInfinity($, (start as Wrapped<unknown>));
+  var intStart = AO__ToIntegerOrInfinity($, (start as Lifted<unknown>));
   if ($.condition(Number.MAX_SAFE_INTEGER - 491, $.is(end, $.lit<undefined>(undefined))))
   {
     var intEnd = len;
   }
   else
   {
-    var intEnd = AO__ToIntegerOrInfinity($, (end as Wrapped<unknown>));
+    var intEnd = AO__ToIntegerOrInfinity($, (end as Lifted<unknown>));
   }
 
   var finalStart = $.clamp(intStart, $.lit<number>(0), len);
   var finalEnd = $.clamp(intEnd, $.lit<number>(0), len);
   var from = $.min(finalStart, finalEnd);
   var to = $.max(finalStart, finalEnd);
-  return $.substring(S, (from as Wrapped<number>), (to as Wrapped<number>));
+  return $.substring(S, (from as Lifted<number>), (to as Lifted<number>));
 }

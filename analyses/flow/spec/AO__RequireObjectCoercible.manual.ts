@@ -1,6 +1,6 @@
-import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+import type { SpecRuntime, Lifted, Unwrapped, Primitive } from "../type.js";
 
-export function AO__RequireObjectCoercible(__runtime__: SpecRuntime, argument: Wrapped<unknown>): Wrapped<unknown> {
+export function AO__RequireObjectCoercible(__runtime__: SpecRuntime, argument: Lifted<unknown>): Lifted<unknown> {
   "use strict";
 
   const v = __runtime__.peek(argument);

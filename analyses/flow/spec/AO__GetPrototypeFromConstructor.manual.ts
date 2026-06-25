@@ -3,12 +3,12 @@
 // through the object-model. Only reached via OrdinaryCreateFromConstructor (RegExp
 // allocation in the String RegExp methods). Exists so the import resolves at
 // build time.
-import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+import type { SpecRuntime, Lifted, Unwrapped, Primitive } from "../type.js";
 
 export function AO__GetPrototypeFromConstructor(
   $: SpecRuntime,
-  constructor: Wrapped<unknown>,
-  intrinsicDefaultProto: Wrapped<string>,
-): Wrapped<unknown> {
+  constructor: Lifted<unknown>,
+  intrinsicDefaultProto: Lifted<string>,
+): Lifted<unknown> {
   throw new Error("AO__GetPrototypeFromConstructor: object-model is not implemented yet");
 }

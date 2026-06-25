@@ -1,6 +1,6 @@
-import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+import type { SpecRuntime, Lifted, Unwrapped, Primitive } from "../type.js";
 
-export function AO__ArrayCreate($ : SpecRuntime, length : Wrapped<number>, proto?: Wrapped<unknown>): Wrapped<unknown> {
+export function AO__ArrayCreate($ : SpecRuntime, length : Lifted<number>, proto?: Lifted<unknown>): Lifted<unknown> {
   const len = $.peek(length);
   // 1. If length > 2**32 - 1, throw a RangeError exception.
   if (len > 2 ** 32 - 1) {

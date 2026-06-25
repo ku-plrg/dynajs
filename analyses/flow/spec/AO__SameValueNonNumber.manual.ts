@@ -1,8 +1,8 @@
 
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "../type.js";
+import type { Lifted, SpecRuntime } from "../type.js";
 
-export function AO__SameValueNonNumber ($ : SpecRuntime, xW : Wrapped<unknown>, yW : Wrapped<unknown>): Wrapped<boolean> {
+export function AO__SameValueNonNumber ($ : SpecRuntime, xW : Lifted<unknown>, yW : Lifted<unknown>): Lifted<boolean> {
   const x = $.peek(xW);
   const y = $.peek(yW);
 

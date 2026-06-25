@@ -1,12 +1,12 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "../type.js";
+import type { Lifted, SpecRuntime } from "../type.js";
 
 import { AO__RequireObjectCoercible } from "./AO__RequireObjectCoercible.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function AO__TrimString ($ : SpecRuntime, string : Wrapped<unknown>, where : Wrapped<unknown>) {
+export function AO__TrimString ($ : SpecRuntime, string : Lifted<unknown>, where : Lifted<unknown>) {
   var str = AO__RequireObjectCoercible($, string);
-  var S = AO__ToString($, (str as Wrapped<unknown>));
+  var S = AO__ToString($, (str as Lifted<unknown>));
   if ($.condition(Number.MAX_SAFE_INTEGER - 772, $.is(where, $.lit<string>("start"))))
   {
     var T = $.trim(S, true, false);

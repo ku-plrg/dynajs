@@ -1,8 +1,8 @@
 
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "../type.js";
+import type { Lifted, SpecRuntime } from "../type.js";
 
-export function AO__DeletePropertyOrThrow ($ : SpecRuntime, O : Wrapped<unknown>, P : Wrapped<unknown>) {
+export function AO__DeletePropertyOrThrow ($ : SpecRuntime, O : Lifted<unknown>, P : Lifted<unknown>) {
   "use strict";
 
   const Ou = $.peek(O);

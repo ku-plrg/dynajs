@@ -1,7 +1,7 @@
 import util from 'node:util';
 import { required } from './utils.js';
 import type { Analysis } from '@/types/analysis.js';
-import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from './type.js';
+import type { SpecRuntime, Lifted, Unwrapped, Primitive } from './type.js';
 import { Model } from './model.js';
 import {
   type Site,
@@ -27,9 +27,9 @@ type IdValuePair = ValuedGeneral<{ id: symbol }, unknown>;
 // translate, which (for concolic) poisons the path condition.
 const NON_VALUE_BINARY_OPS = new Set(['instanceof', 'in']);
 
-type BinFrame = { ty: 'bin'; op: string; left: Wrapped; right: Wrapped };
-type UnFrame = { ty: 'un'; op: string; operand: Wrapped };
-type GetFieldFrame = { ty: 'getField'; base: Wrapped; prop: Wrapped };
+type BinFrame = { ty: 'bin'; op: string; left: Lifted; right: Lifted };
+type UnFrame = { ty: 'un'; op: string; operand: Lifted };
+type GetFieldFrame = { ty: 'getField'; base: Lifted; prop: Lifted };
 
 type CallFrame = OpaqueCall | TransparentCall;
 type OpaqueCall = {
@@ -235,7 +235,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   protected valued<V>(v: V): Valued<Info, V> {
     return {
       info: this.getInfo(v) satisfies Info,
-      value: this.unwrap(v as Wrapped<V>),
+      value: this.unwrap(v as Lifted<V>),
     } satisfies Valued<Info, V>;
   }
 
@@ -243,11 +243,11 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   protected make<V>(
     value: V,
     info: Info = this.domain.getBottom(),
-  ): Wrapped<V> {
+  ): Lifted<V> {
     return this.lift(value, info);
   }
 
-  private lift<T>(value: T, info: Info): Wrapped<T> {
+  private lift<T>(value: T, info: Info): Lifted<T> {
     const w = this.wrap(value);
     /* Bottom carries no information, so skip */
     if (!this.domain.isBottom(info)) this.setInfo(w, info);
@@ -255,7 +255,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   }
 
   /** internal(flow.ts) */
-  private numOp(v: number, parents: Wrapped<unknown>[]): Wrapped<number> {
+  private numOp(v: number, parents: Lifted<unknown>[]): Lifted<number> {
     return this.lift(
       v,
       this.baseInfo(
@@ -268,10 +268,10 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   /** internal(flow.ts) */
   private binOp(
     op: string,
-    l: Wrapped<number>,
-    r: Wrapped<number>,
+    l: Lifted<number>,
+    r: Lifted<number>,
     v: number,
-  ): Wrapped<number> {
+  ): Lifted<number> {
     return this.lift(
       v,
       this.binaryInfo?.(op, this.valued(l), this.valued(r)) ??
@@ -280,7 +280,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   }
 
   /** internal(flow.ts) */
-  private unOp(op: string, x: Wrapped<number>, v: number): Wrapped<number> {
+  private unOp(op: string, x: Lifted<number>, v: number): Lifted<number> {
     return this.lift(
       v,
       this.unaryInfo?.(op, this.valued(x)) ??
@@ -292,10 +292,10 @@ export abstract class FlowAnalysis<Info> implements Analysis {
    * numbers, but `is`/`isNot` compare strings, sentinels, etc. */
   private cmpOp(
     op: string,
-    l: Wrapped<unknown>,
-    r: Wrapped<unknown>,
+    l: Lifted<unknown>,
+    r: Lifted<unknown>,
     v: boolean,
-  ): Wrapped<boolean> {
+  ): Lifted<boolean> {
     return this.lift(
       v,
       this.binaryInfo?.(op, this.valued(l), this.valued(r)) ??
@@ -305,7 +305,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
   condition(id: number, _op: string, value: unknown): { result: unknown } {
     if (_op !== 'model') this.currentId = id;
-    const raw = this.unwrap(value as Wrapped<unknown>);
+    const raw = this.unwrap(value as Lifted<unknown>);
     this.conditionInfo?.(id, this.valued(value), Boolean(raw));
     return { result: raw };
   }
@@ -402,14 +402,14 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       // Run `regex.exec(string)` concretely on the raw values (no wrapped
       // primitive leaks into the engine), then let the analysis supply the
       // symbolic match facts. The spec models assemble the observable result.
-      const rawRegex = this.unwrap(regex as Wrapped<RegExp>);
+      const rawRegex = this.unwrap(regex as Lifted<RegExp>);
       const rawString = this.unwrap(string);
       // exec carrying capture spans, so the fallback can recover each capture as
       // a substring of the subject (see execWithIndices).
       const concrete = execWithIndices(rawRegex, rawString);
       const matched = concrete !== null;
       const info = this.regexExecInfo?.(
-        this.valued(regex as Wrapped<RegExp>) as Valued<Info, RegExp>,
+        this.valued(regex as Lifted<RegExp>) as Valued<Info, RegExp>,
         this.valued(string),
         concrete,
       );
@@ -545,15 +545,15 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       ),
     condition: (bid, cond) =>
       this.condition(bid, 'model', cond).result as boolean,
-    is: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(
+    is: <L extends Lifted<unknown>, R extends Lifted<unknown>>(
       l: L,
       r: R,
-    ): Wrapped<boolean> =>
+    ): Lifted<boolean> =>
       this.cmpOp('===', l, r, this.unwrap(l) === this.unwrap(r)),
-    isNot: <L extends Wrapped<unknown>, R extends Wrapped<unknown>>(
+    isNot: <L extends Lifted<unknown>, R extends Lifted<unknown>>(
       l: L,
       r: R,
-    ): Wrapped<boolean> =>
+    ): Lifted<boolean> =>
       this.cmpOp('!==', l, r, this.unwrap(l) !== this.unwrap(r)),
     // isNaN/isFinite/isType go through baseInfo, not unaryInfo: unlike isInteger
     // (a genuine symbolic predicate over the SMT Real), these aren't modelable —
@@ -657,7 +657,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       hiInclusive,
       ascending,
       bid,
-    ): Wrapped<number>[] => {
+    ): Lifted<number>[] => {
       // The interval is the SET {x : lo ≤/< x ≤/< hi}; `ascending` only picks the
       // order. Materialized eagerly as an array (driven by a native `for...of` in
       // generated code), so each index is a `lift`ed value: a user analysis observes
@@ -665,7 +665,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       // and without that hook each index falls back to deriving from the bounds.
       const start = (this.unwrap(lo) as number) + (loInclusive ? 0 : 1);
       const end = (this.unwrap(hi) as number) - (hiInclusive ? 0 : 1);
-      const out: Wrapped<number>[] = [];
+      const out: Lifted<number>[] = [];
       for (let i = start; i <= end; i++) {
         out.push(
           this.lift(
@@ -689,8 +689,8 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     // SpecOps
     base: <T extends Unwrapped<unknown> | Primitive>(
       v: T,
-      parents: Wrapped<unknown>[],
-    ): Wrapped<T> =>
+      parents: Lifted<unknown>[],
+    ): Lifted<T> =>
       this.lift(
         v,
         this.baseInfo(
@@ -698,7 +698,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
           parents.map((p) => this.valued(p)),
         ),
       ),
-    peek: <T>(wrapped: Wrapped<T>) => this.unwrap(wrapped),
+    peek: <T>(wrapped: Lifted<T>) => this.unwrap(wrapped),
     // A field read (`base[prop]`) from within a spec model, routed through the
     // same getFieldInfo the core `getField` hook uses for user-code `o[p]` — so a
     // model (e.g. AO__Get) observes a symbolic-array element / symbolic-object
@@ -717,7 +717,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       );
     },
     apply: (f, thisArg, args) => {
-      const fn = this.unwrap(f as Wrapped<Function>); // caller (AO__Call) ensured IsCallable
+      const fn = this.unwrap(f as Lifted<Function>); // caller (AO__Call) ensured IsCallable
       // Route to the model when the callee is a known builtin — so a builtin
       // reached through a spec AO (a regex's @@match, an iterator protocol, …)
       // is modeled like a direct call, not run opaquely on wrapped args. Mirrors
@@ -726,7 +726,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
         const modelFn = Model.ofBuiltin(fn);
         return this.withBuiltinSite(builtinName(fn), () =>
           modelFn(this.$, thisArg, ...args),
-        ) as Wrapped<unknown>;
+        ) as Lifted<unknown>;
       }
       // Non-modeled (e.g. an instrumented user callback): plain call, provenance
       // from callee/receiver/args — what AO__Call did before delegating here.
@@ -735,7 +735,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     // Default for absent optional params (see SpecRuntime.undef / type.ts). `this`
     // here is the runtime object, so `this.base` is the op above. An absent arg
     // has no source, hence empty parents.
-    get undef(): Wrapped<undefined> {
+    get undef(): Lifted<undefined> {
       return this.base(undefined, []);
     },
     lit: <T extends Unwrapped | Primitive>(v: T) => this.$.base(v, []),
@@ -750,11 +750,11 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
   /* for-in/of iterates natively, currently string iteration losts info */
   forInOfObject(_id: number, value: unknown, _isForIn: boolean) {
-    const raw = this.$.peek(value as Wrapped<unknown>);
+    const raw = this.$.peek(value as Lifted<unknown>);
     return raw === value ? undefined : { result: raw };
   }
 
-  binaryPre(_id: number, op: string, left: Wrapped, right: Wrapped) {
+  binaryPre(_id: number, op: string, left: Lifted, right: Lifted) {
     const l = this.$.peek(left);
     const r = this.$.peek(right);
     const frame: BinFrame = { ty: 'bin', op, left, right };
@@ -764,8 +764,8 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   binary(
     _id: number,
     _op: string,
-    _l: Wrapped,
-    _r: Wrapped,
+    _l: Lifted,
+    _r: Lifted,
     result: Unwrapped<unknown>,
     frame: unknown,
   ) {
@@ -780,7 +780,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
           this.$,
           f.left,
           f.right,
-        ) as Wrapped<unknown>,
+        ) as Lifted<unknown>,
       };
     } else {
       // assert : result is given
@@ -796,7 +796,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     }
   }
 
-  templateConcatPre(_id: number, left: Wrapped, right: Wrapped) {
+  templateConcatPre(_id: number, left: Lifted, right: Lifted) {
     const l = this.$.peek(left);
     const r = this.$.peek(right);
     const frame: BinFrame = { ty: 'bin', op: '+', left, right };
@@ -805,8 +805,8 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
   templateConcat(
     _id: number,
-    _left: Wrapped,
-    _right: Wrapped,
+    _left: Lifted,
+    _right: Lifted,
     result: Unwrapped<unknown>,
     frame: unknown,
   ) {
@@ -814,11 +814,11 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     this.currentId = _id;
     const f = frame as BinFrame;
     return {
-      result: Model.ofSyntax('+')(this.$, f.left, f.right) as Wrapped<string>,
+      result: Model.ofSyntax('+')(this.$, f.left, f.right) as Lifted<string>,
     };
   }
 
-  unaryPre(_id: number, op: string, _prefix: boolean, operand: Wrapped) {
+  unaryPre(_id: number, op: string, _prefix: boolean, operand: Lifted) {
     const e = this.$.peek(operand);
     const frame: UnFrame = { ty: 'un', op, operand: operand };
     return { op, operand: e, skip: false, frame };
@@ -835,7 +835,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     required(frame !== undefined, 'unary hook missing frame');
     this.currentId = _id;
     const f = frame as UnFrame;
-    const transformed: Wrapped<unknown> = this.lift(
+    const transformed: Lifted<unknown> = this.lift(
       result,
       this.unaryInfo?.(f.op, this.valued(f.operand)) ??
         this.baseInfo(result, [this.valued(f.operand)]),
@@ -846,12 +846,12 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   getFieldPre(_id: number, base: any, prop: any) {
     const frame: GetFieldFrame = {
       ty: 'getField',
-      base: base as Wrapped,
-      prop: prop as Wrapped,
+      base: base as Lifted,
+      prop: prop as Lifted,
     };
     return {
-      base: this.$.peek(base as Wrapped),
-      prop: this.$.peek(prop as Wrapped),
+      base: this.$.peek(base as Lifted),
+      prop: this.$.peek(prop as Lifted),
       skip: false,
       frame,
     };
@@ -873,7 +873,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
         );
         if (i !== undefined) {
           return this.$.substring(
-            f.base as Wrapped<string>,
+            f.base as Lifted<string>,
             this.$.base(i, [f.prop]),
             this.$.base(i + 1, [f.prop]),
           );
@@ -883,7 +883,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
             return this.lift(
               result,
               this.lengthOfStringInfo?.(
-                this.valued(f.base as Wrapped<string>),
+                this.valued(f.base as Lifted<string>),
               ) ?? this.baseInfo(result, [this.valued(f.base)]),
             );
           } else {
@@ -898,7 +898,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
         this.isWrapped(result) &&
         !this.domain.isBottom(this.getInfo(result))
       ) {
-        return result as Wrapped<unknown>;
+        return result as Lifted<unknown>;
       }
       return this.lift(
         result,
@@ -913,16 +913,16 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   }
 
   putFieldPre(_id: number, base: any, prop: any, value: any) {
-    const rawBase: unknown = this.$.peek(base as Wrapped);
+    const rawBase: unknown = this.$.peek(base as Lifted);
     let v: unknown = value;
     if (ArrayBuffer.isView(rawBase)) {
-      v = this.$.peek(value as Wrapped);
+      v = this.$.peek(value as Lifted);
     } else {
       this.escaper.markEscapable(value);
     }
     return {
       base: rawBase,
-      prop: this.$.peek(prop as Wrapped),
+      prop: this.$.peek(prop as Lifted),
       value: v,
       skip: false,
     };
@@ -942,9 +942,9 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     _isMethod: boolean,
   ) {
     this.currentId = _id;
-    const argArr = Array.from(args) as Wrapped[]; // can we do this without `as`?
-    const entries: Wrapped[] = _isMethod
-      ? [_base as Wrapped, ...argArr]
+    const argArr = Array.from(args) as Lifted[]; // can we do this without `as`?
+    const entries: Lifted[] = _isMethod
+      ? [_base as Lifted, ...argArr]
       : argArr;
     if (
       Model.support(_f) &&
@@ -970,7 +970,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     // ("called on #<Object>") instead of raising an ordinary "not a function"
     // TypeError. Peek it: a raw non-callable produces the natural error, while
     // instrumented/native function callees peek to themselves (no-op).
-    const callee = this.$.peek(_f as Wrapped);
+    const callee = this.$.peek(_f as Lifted);
 
     if (this.policy.isOpaque(_f)) {
       const esc = this.escaper.escape(_base, argArr, entries);
@@ -1018,7 +1018,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     if (f.ty === 'opaque' && f.modeled) {
       const modelFn = Model.ofBuiltin(_f);
       result = this.withBuiltinSite(builtinName(_f), () =>
-        modelFn(this.$, _base as Wrapped, ...(_args as Wrapped[])),
+        modelFn(this.$, _base as Lifted, ...(_args as Lifted[])),
       );
     }
 
@@ -1026,7 +1026,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       switch (f.ty) {
         case 'opaque': {
           // when modeled, the model dispatched above already returned a Wrapped value
-          if (f.modeled) return result as unknown as Wrapped<unknown>;
+          if (f.modeled) return result as unknown as Lifted<unknown>;
           if (f.escaped.length > 0) this.escaper.restore(f.escaped);
           const opaqueInfo = this.opaqueCallInfo?.(
             _f,
@@ -1038,9 +1038,9 @@ export abstract class FlowAnalysis<Info> implements Analysis {
             this.isWrapped(result) &&
             !this.domain.isBottom(this.getInfo(result))
           ) {
-            return result as Wrapped<unknown>;
+            return result as Lifted<unknown>;
           }
-          const parents = Array.from(f.entries) as Wrapped[]; // can we do this without `as`?
+          const parents = Array.from(f.entries) as Lifted[]; // can we do this without `as`?
           return this.$.base(result, parents);
         }
         case 'transparent': {
@@ -1048,9 +1048,9 @@ export abstract class FlowAnalysis<Info> implements Analysis {
             this.isWrapped(result) &&
             !this.domain.isBottom(this.getInfo(result))
           ) {
-            return result as Wrapped<unknown>;
+            return result as Lifted<unknown>;
           }
-          const parents = Array.from(f.entries) as Wrapped[];
+          const parents = Array.from(f.entries) as Lifted[];
           return this.$.base(result, parents);
         }
       }
@@ -1075,20 +1075,20 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     return !this.isObjectish(v);
   }
 
-  private isWrapped(v: unknown): v is Wrapped<unknown> {
+  private isWrapped(v: unknown): v is Lifted<unknown> {
     return this.isObjectish(v) && this.valueMap.has(v);
   }
 
-  private isPrimitiveProxy(v: unknown): v is Wrapped<unknown> {
+  private isPrimitiveProxy(v: unknown): v is Lifted<unknown> {
     return this.isObjectish(v) && this.primitiveWrapper.has(v);
   }
 
-  private wrap<T>(value: T): Wrapped<T> {
+  private wrap<T>(value: T): Lifted<T> {
     if (this.isObjectish(value)) {
       if (!this.valueMap.has(value as object)) {
         this.valueMap.set(value as object, { id: this.freshId(), value });
       }
-      return value as Wrapped<T>;
+      return value as Lifted<T>;
     }
     const proxy = {
       [util.inspect.custom]() {
@@ -1097,10 +1097,10 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     };
     this.primitiveWrapper.add(proxy);
     this.valueMap.set(proxy, { id: this.freshId(), value });
-    return proxy as T as Wrapped<T>;
+    return proxy as T as Lifted<T>;
   }
 
-  private unwrap<T = unknown>(value: Wrapped<T>): Unwrapped<T> {
+  private unwrap<T = unknown>(value: Lifted<T>): Unwrapped<T> {
     if (!this.isObjectish(value)) return value as T as Unwrapped<T>; // should not happen;
     const entry = this.valueMap.get(value);
     return entry === undefined

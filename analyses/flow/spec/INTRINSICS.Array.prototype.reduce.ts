@@ -1,6 +1,6 @@
 // @ts-nocheck
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "../type.js";
+import type { Lifted, SpecRuntime } from "../type.js";
 
 import { AO__Call } from "./AO__Call.js";
 import { AO__Get } from "./AO__Get.js";
@@ -10,11 +10,11 @@ import { AO__LengthOfArrayLike } from "./AO__LengthOfArrayLike.js";
 import { AO__ToObject } from "./AO__ToObject.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_Array_prototype_reduce ($ : SpecRuntime, $this : Wrapped<unknown>, callback : Wrapped<unknown>, initialValue : Wrapped<unknown> = $.undef) {
+export function INTRINSICS_Array_prototype_reduce ($ : SpecRuntime, $this : Lifted<unknown>, callback : Lifted<unknown>, initialValue : Lifted<unknown> = $.undef) {
   var initialValueIsPresent = arguments.length > 3;
   var O = AO__ToObject($, $this);
-  var len = AO__LengthOfArrayLike($, (O as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 177, $.is(AO__IsCallable($, (callback as Wrapped<unknown>)), $.lit<boolean>(false))))
+  var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
+  if ($.condition(Number.MAX_SAFE_INTEGER - 177, $.is(AO__IsCallable($, (callback as Lifted<unknown>)), $.lit<boolean>(false))))
   {
     throw new TypeError;
   }
@@ -35,14 +35,14 @@ export function INTRINSICS_Array_prototype_reduce ($ : SpecRuntime, $this : Wrap
     var kPresent = $.lit<boolean>(false);
     while ($.condition(Number.MAX_SAFE_INTEGER - 179, $.is(kPresent, $.lit<boolean>(false))) && $.condition(Number.MAX_SAFE_INTEGER - 180, $.lessThan(k, len)))
     {
-      var Pk = AO__ToString($, (k as Wrapped<unknown>));
-      kPresent = AO__HasProperty($, (O as Wrapped<unknown>), (Pk as Wrapped<unknown>));
+      var Pk = AO__ToString($, (k as Lifted<unknown>));
+      kPresent = AO__HasProperty($, (O as Lifted<unknown>), (Pk as Lifted<unknown>));
       if ($.condition(Number.MAX_SAFE_INTEGER - 181, $.is(kPresent, $.lit<boolean>(true))))
       {
-        accumulator = AO__Get($, (O as Wrapped<unknown>), (Pk as Wrapped<unknown>));
+        accumulator = AO__Get($, (O as Lifted<unknown>), (Pk as Lifted<unknown>));
       }
 
-      k = $.add((k as Wrapped<number>), ($.lit<number>(1) as Wrapped<number>));
+      k = $.add((k as Lifted<number>), ($.lit<number>(1) as Lifted<number>));
     }
 
     if ($.condition(Number.MAX_SAFE_INTEGER - 182, $.is(kPresent, $.lit<boolean>(false))))
@@ -54,15 +54,15 @@ export function INTRINSICS_Array_prototype_reduce ($ : SpecRuntime, $this : Wrap
 
   while ($.condition(Number.MAX_SAFE_INTEGER - 183, $.lessThan(k, len)))
   {
-    var Pk = AO__ToString($, (k as Wrapped<unknown>));
-    var kPresent = AO__HasProperty($, (O as Wrapped<unknown>), (Pk as Wrapped<unknown>));
+    var Pk = AO__ToString($, (k as Lifted<unknown>));
+    var kPresent = AO__HasProperty($, (O as Lifted<unknown>), (Pk as Lifted<unknown>));
     if ($.condition(Number.MAX_SAFE_INTEGER - 184, $.is(kPresent, $.lit<boolean>(true))))
     {
-      var kValue = AO__Get($, (O as Wrapped<unknown>), (Pk as Wrapped<unknown>));
-      accumulator = AO__Call($, (callback as Wrapped<unknown>), ($.lit<undefined>(undefined) as Wrapped<unknown>), ([accumulator, kValue, k, O] as Wrapped<unknown>[]));
+      var kValue = AO__Get($, (O as Lifted<unknown>), (Pk as Lifted<unknown>));
+      accumulator = AO__Call($, (callback as Lifted<unknown>), ($.lit<undefined>(undefined) as Lifted<unknown>), ([accumulator, kValue, k, O] as Lifted<unknown>[]));
     }
 
-    k = $.add((k as Wrapped<number>), ($.lit<number>(1) as Wrapped<number>));
+    k = $.add((k as Lifted<number>), ($.lit<number>(1) as Lifted<number>));
   }
 
   return accumulator;

@@ -1,6 +1,6 @@
-import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+import type { SpecRuntime, Lifted, Unwrapped, Primitive } from "../type.js";
 
-export function AO__ToPrimitive($: SpecRuntime, arg: Wrapped<unknown>, preferredType: Wrapped<'string' | 'number'> | undefined = undefined): Wrapped<Primitive> {
+export function AO__ToPrimitive($: SpecRuntime, arg: Lifted<unknown>, preferredType: Lifted<'string' | 'number'> | undefined = undefined): Lifted<Primitive> {
   // 1. If input is an Object, then
   if ($.peek($.isType(arg, 'object'))) {
     throw new Error('TODO: AO__ToPrimitive for objects');
@@ -20,5 +20,5 @@ export function AO__ToPrimitive($: SpecRuntime, arg: Wrapped<unknown>, preferred
     //    d. Return ? OrdinaryToPrimitive(input, preferredType).
   }
   // 2. Return input.
-  return arg as Wrapped<Primitive>;
+  return arg as Lifted<Primitive>;
 }

@@ -1,8 +1,8 @@
-import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+import type { SpecRuntime, Lifted, Unwrapped, Primitive } from "../type.js";
 
 import { AO__ToNumber } from './AO__ToNumber.js'
 
-export function AO__ToIntegerOrInfinity($: SpecRuntime, argument: Wrapped<unknown>): Wrapped<number> {
+export function AO__ToIntegerOrInfinity($: SpecRuntime, argument: Lifted<unknown>): Lifted<number> {
   "use strict";
 
   // 1. Let number be ? ToNumber(argument).
@@ -26,6 +26,6 @@ export function AO__ToIntegerOrInfinity($: SpecRuntime, argument: Wrapped<unknow
   }
 
   // 5. Return truncate(ℝ(number)).
-  return $.truncate(argument as Wrapped<number>);
+  return $.truncate(argument as Lifted<number>);
 }
 

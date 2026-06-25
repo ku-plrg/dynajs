@@ -1,9 +1,9 @@
-import type { Wrapped } from './type.js';
+import type { Lifted } from './type.js';
 
 export type EscapeRecord = {
   container: object;
   prop: string | symbol;
-  wrapped: Wrapped<unknown>;
+  wrapped: Lifted<unknown>;
 };
 
 // Result of escaping one opaque call's receiver + args across the boundary.
@@ -11,7 +11,7 @@ export type Escaped = {
   base: unknown;
   args: unknown[];
   log: EscapeRecord[]; // in-place container mutations, replayed by restore()
-  crossed: Wrapped<unknown>[]; // wrapped primitives that left controlled code (for escapedInfo)
+  crossed: Lifted<unknown>[]; // wrapped primitives that left controlled code (for escapedInfo)
 };
 
 /** Strips wrapped primitives out of values flowing into an uninstrumented
@@ -22,8 +22,8 @@ export class BoundaryEscape {
   private containersMayHoldWrapped = false;
 
   constructor(
-    private readonly isPrimitiveProxy: (v: unknown) => v is Wrapped<unknown>,
-    private readonly unwrap: (w: Wrapped<unknown>) => unknown,
+    private readonly isPrimitiveProxy: (v: unknown) => v is Lifted<unknown>,
+    private readonly unwrap: (w: Lifted<unknown>) => unknown,
   ) {}
 
   markEscapable(value: unknown): void {
@@ -54,7 +54,7 @@ export class BoundaryEscape {
     }
   }
 
-  escape(base: unknown, args: Wrapped[], entries: Wrapped[]): Escaped {
+  escape(base: unknown, args: Lifted[], entries: Lifted[]): Escaped {
     const log: EscapeRecord[] = [];
     const visited = new Set<object>();
     const escapedArgs = args.map((a) => this.escapeValue(a, log, visited));

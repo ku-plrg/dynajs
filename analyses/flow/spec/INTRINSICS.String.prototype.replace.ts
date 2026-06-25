@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "../type.js";
+import type { Lifted, SpecRuntime } from "../type.js";
 
 import { AO__Call } from "./AO__Call.js";
 import { AO__GetMethod } from "./AO__GetMethod.js";
@@ -9,43 +9,43 @@ import { AO__RequireObjectCoercible } from "./AO__RequireObjectCoercible.js";
 import { AO__StringIndexOf } from "./AO__StringIndexOf.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_String_prototype_replace ($ : SpecRuntime, $this : Wrapped<unknown>, searchValue : Wrapped<unknown>, replaceValue : Wrapped<unknown>) {
+export function INTRINSICS_String_prototype_replace ($ : SpecRuntime, $this : Lifted<unknown>, searchValue : Lifted<unknown>, replaceValue : Lifted<unknown>) {
   var O = AO__RequireObjectCoercible($, $this);
   if (!($.condition(Number.MAX_SAFE_INTEGER - 450, $.is(searchValue, $.lit<undefined>(undefined))) || $.condition(Number.MAX_SAFE_INTEGER - 451, $.is(searchValue, $.lit<null>(null)))))
   {
-    var replacer = AO__GetMethod($, (searchValue as Wrapped<unknown>), ($.lit<symbol>(Symbol.replace) as Wrapped<unknown>));
+    var replacer = AO__GetMethod($, (searchValue as Lifted<unknown>), ($.lit<symbol>(Symbol.replace) as Lifted<unknown>));
     if (!$.condition(Number.MAX_SAFE_INTEGER - 452, $.is(replacer, $.lit<undefined>(undefined))))
     {
-      return AO__Call($, (replacer as Wrapped<unknown>), (searchValue as Wrapped<unknown>), ([O, replaceValue] as Wrapped<unknown>[]));
+      return AO__Call($, (replacer as Lifted<unknown>), (searchValue as Lifted<unknown>), ([O, replaceValue] as Lifted<unknown>[]));
     }
 
   }
 
-  var string = AO__ToString($, (O as Wrapped<unknown>));
-  var searchString = AO__ToString($, (searchValue as Wrapped<unknown>));
-  var functionalReplace = AO__IsCallable($, (replaceValue as Wrapped<unknown>));
+  var string = AO__ToString($, (O as Lifted<unknown>));
+  var searchString = AO__ToString($, (searchValue as Lifted<unknown>));
+  var functionalReplace = AO__IsCallable($, (replaceValue as Lifted<unknown>));
   if ($.condition(Number.MAX_SAFE_INTEGER - 453, $.is(functionalReplace, $.lit<boolean>(false))))
   {
-    replaceValue = AO__ToString($, (replaceValue as Wrapped<unknown>));
+    replaceValue = AO__ToString($, (replaceValue as Lifted<unknown>));
   }
 
   var searchLength = $.length(searchString);
-  var position = AO__StringIndexOf($, (string as Wrapped<string>), (searchString as Wrapped<string>), ($.lit<number>(0) as Wrapped<number>));
+  var position = AO__StringIndexOf($, (string as Lifted<string>), (searchString as Lifted<string>), ($.lit<number>(0) as Lifted<number>));
   if ($.condition(Number.MAX_SAFE_INTEGER - 454, $.is(position, $.lit<string>("not-found"))))
   {
     return string;
   }
 
-  var preceding = $.substring(string, ($.lit<number>(0) as Wrapped<number>), (position as Wrapped<number>));
-  var following = $.substring(string, ($.add((position as Wrapped<number>), (searchLength as Wrapped<number>)) as Wrapped<number>), $.length(string));
+  var preceding = $.substring(string, ($.lit<number>(0) as Lifted<number>), (position as Lifted<number>));
+  var following = $.substring(string, ($.add((position as Lifted<number>), (searchLength as Lifted<number>)) as Lifted<number>), $.length(string));
   if ($.condition(Number.MAX_SAFE_INTEGER - 455, $.is(functionalReplace, $.lit<boolean>(true))))
   {
-    var replacement = AO__ToString($, (AO__Call($, (replaceValue as Wrapped<unknown>), ($.lit<undefined>(undefined) as Wrapped<unknown>), ([searchString, position, string] as Wrapped<unknown>[])) as Wrapped<unknown>));
+    var replacement = AO__ToString($, (AO__Call($, (replaceValue as Lifted<unknown>), ($.lit<undefined>(undefined) as Lifted<unknown>), ([searchString, position, string] as Lifted<unknown>[])) as Lifted<unknown>));
   }
   else
   {
-    var captures = [] as Wrapped<never>[];
-    var replacement = AO__GetSubstitution($, (searchString as Wrapped<string>), (string as Wrapped<string>), (position as Wrapped<number>), (captures as Wrapped<string | undefined>[]), ($.lit<undefined>(undefined) as Wrapped<unknown>), (replaceValue as Wrapped<string>));
+    var captures = [] as Lifted<never>[];
+    var replacement = AO__GetSubstitution($, (searchString as Lifted<string>), (string as Lifted<string>), (position as Lifted<number>), (captures as Lifted<string | undefined>[]), ($.lit<undefined>(undefined) as Lifted<unknown>), (replaceValue as Lifted<string>));
   }
 
   return $.concatenate($.concatenate(preceding, replacement), following);

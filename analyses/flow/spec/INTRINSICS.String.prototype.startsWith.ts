@@ -1,21 +1,21 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "../type.js";
+import type { Lifted, SpecRuntime } from "../type.js";
 
 import { AO__IsRegExp } from "./AO__IsRegExp.js";
 import { AO__RequireObjectCoercible } from "./AO__RequireObjectCoercible.js";
 import { AO__ToIntegerOrInfinity } from "./AO__ToIntegerOrInfinity.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_String_prototype_startsWith ($ : SpecRuntime, $this : Wrapped<unknown>, searchString : Wrapped<unknown>, position : Wrapped<unknown> = $.undef) {
+export function INTRINSICS_String_prototype_startsWith ($ : SpecRuntime, $this : Lifted<unknown>, searchString : Lifted<unknown>, position : Lifted<unknown> = $.undef) {
   var O = AO__RequireObjectCoercible($, $this);
-  var S = AO__ToString($, (O as Wrapped<unknown>));
-  var isRegExp = AO__IsRegExp($, (searchString as Wrapped<unknown>));
+  var S = AO__ToString($, (O as Lifted<unknown>));
+  var isRegExp = AO__IsRegExp($, (searchString as Lifted<unknown>));
   if ($.condition(Number.MAX_SAFE_INTEGER - 483, $.is(isRegExp, $.lit<boolean>(true))))
   {
     throw new TypeError;
   }
 
-  var searchStr = AO__ToString($, (searchString as Wrapped<unknown>));
+  var searchStr = AO__ToString($, (searchString as Lifted<unknown>));
   var len = $.length(S);
   if ($.condition(Number.MAX_SAFE_INTEGER - 484, $.is(position, $.lit<undefined>(undefined))))
   {
@@ -23,7 +23,7 @@ export function INTRINSICS_String_prototype_startsWith ($ : SpecRuntime, $this :
   }
   else
   {
-    var pos = AO__ToIntegerOrInfinity($, (position as Wrapped<unknown>));
+    var pos = AO__ToIntegerOrInfinity($, (position as Lifted<unknown>));
   }
 
   var start = $.clamp(pos, $.lit<number>(0), len);
@@ -33,13 +33,13 @@ export function INTRINSICS_String_prototype_startsWith ($ : SpecRuntime, $this :
     return $.lit<boolean>(true);
   }
 
-  var end = $.add((start as Wrapped<number>), (searchLength as Wrapped<number>));
+  var end = $.add((start as Lifted<number>), (searchLength as Lifted<number>));
   if ($.condition(Number.MAX_SAFE_INTEGER - 486, $.greaterThan(end, len)))
   {
     return $.lit<boolean>(false);
   }
 
-  var substring = $.substring(S, (start as Wrapped<number>), (end as Wrapped<number>));
+  var substring = $.substring(S, (start as Lifted<number>), (end as Lifted<number>));
   if ($.condition(Number.MAX_SAFE_INTEGER - 487, $.is(substring, searchStr)))
   {
     return $.lit<boolean>(true);

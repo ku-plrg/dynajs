@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "../type.js";
+import type { Lifted, SpecRuntime } from "../type.js";
 
 import { AO__DeletePropertyOrThrow } from "./AO__DeletePropertyOrThrow.js";
 import { AO__Get } from "./AO__Get.js";
@@ -8,21 +8,21 @@ import { AO__Set } from "./AO__Set.js";
 import { AO__ToObject } from "./AO__ToObject.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_Array_prototype_pop ($ : SpecRuntime, $this : Wrapped<unknown>) {
+export function INTRINSICS_Array_prototype_pop ($ : SpecRuntime, $this : Lifted<unknown>) {
   var O = AO__ToObject($, $this);
-  var len = AO__LengthOfArrayLike($, (O as Wrapped<unknown>));
+  var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
   if ($.condition(Number.MAX_SAFE_INTEGER - 175, $.is(len, $.lit<number>(0))))
   {
-    AO__Set($, (O as Wrapped<unknown>), ($.lit<string>("length") as Wrapped<unknown>), ($.lit<number>(0) as Wrapped<unknown>), ($.lit<boolean>(true) as Wrapped<boolean>));
+    AO__Set($, (O as Lifted<unknown>), ($.lit<string>("length") as Lifted<unknown>), ($.lit<number>(0) as Lifted<unknown>), ($.lit<boolean>(true) as Lifted<boolean>));
     return $.lit<undefined>(undefined);
   }
   else
   {
-    var newLen = $.subtract((len as Wrapped<number>), ($.lit<number>(1) as Wrapped<number>));
-    var index = AO__ToString($, (newLen as Wrapped<unknown>));
-    var element = AO__Get($, (O as Wrapped<unknown>), (index as Wrapped<unknown>));
-    AO__DeletePropertyOrThrow($, (O as Wrapped<unknown>), (index as Wrapped<unknown>));
-    AO__Set($, (O as Wrapped<unknown>), ($.lit<string>("length") as Wrapped<unknown>), (newLen as Wrapped<unknown>), ($.lit<boolean>(true) as Wrapped<boolean>));
+    var newLen = $.subtract((len as Lifted<number>), ($.lit<number>(1) as Lifted<number>));
+    var index = AO__ToString($, (newLen as Lifted<unknown>));
+    var element = AO__Get($, (O as Lifted<unknown>), (index as Lifted<unknown>));
+    AO__DeletePropertyOrThrow($, (O as Lifted<unknown>), (index as Lifted<unknown>));
+    AO__Set($, (O as Lifted<unknown>), ($.lit<string>("length") as Lifted<unknown>), (newLen as Lifted<unknown>), ($.lit<boolean>(true) as Lifted<boolean>));
     return element;
   }
 

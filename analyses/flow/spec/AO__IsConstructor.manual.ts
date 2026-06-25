@@ -1,7 +1,7 @@
 import { CAPTURED } from '@/captured.js';
-import type { Wrapped, SpecRuntime } from "../type.js";
+import type { Lifted, SpecRuntime } from "../type.js";
 
-export function AO__IsConstructor ($ : SpecRuntime, argument : Wrapped<unknown>) {
+export function AO__IsConstructor ($ : SpecRuntime, argument : Lifted<unknown>) {
   // this is incorrect because side-effect happens?
   const f = $.peek(argument);
   if (typeof f !== 'function') {

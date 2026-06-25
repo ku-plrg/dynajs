@@ -1,20 +1,20 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "../type.js";
+import type { Lifted, SpecRuntime } from "../type.js";
 
 import { AO__ToNumber } from "./AO__ToNumber.js";
 
-export function INTRINSICS_Math_min ($ : SpecRuntime, $this : Wrapped<unknown>, ...args : Wrapped<unknown>[]) {
-  var coerced = [] as Wrapped<never>[];
+export function INTRINSICS_Math_min ($ : SpecRuntime, $this : Lifted<unknown>, ...args : Lifted<unknown>[]) {
+  var coerced = [] as Lifted<never>[];
   for (var arg of args)
   {
-    var n = AO__ToNumber($, (arg as Wrapped<unknown>));
+    var n = AO__ToNumber($, (arg as Lifted<unknown>));
     $.append(coerced, n)
   }
 
   var lowest = $.lit<number>(Infinity);
   for (var number of coerced)
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 303, $.isNaN(number as Wrapped<number>)))
+    if ($.condition(Number.MAX_SAFE_INTEGER - 303, $.isNaN(number as Lifted<number>)))
     {
       return $.lit<number>(NaN);
     }

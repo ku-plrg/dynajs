@@ -1,11 +1,11 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Wrapped, SpecRuntime } from "../type.js";
+import type { Lifted, SpecRuntime } from "../type.js";
 
 import { AO__ToNumber } from "./AO__ToNumber.js";
 
-export function INTRINSICS_Math_abs ($ : SpecRuntime, $this : Wrapped<unknown>, x : Wrapped<unknown>) {
-  var n = AO__ToNumber($, (x as Wrapped<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 283, $.isNaN(n as Wrapped<number>)))
+export function INTRINSICS_Math_abs ($ : SpecRuntime, $this : Lifted<unknown>, x : Lifted<unknown>) {
+  var n = AO__ToNumber($, (x as Lifted<unknown>));
+  if ($.condition(Number.MAX_SAFE_INTEGER - 283, $.isNaN(n as Lifted<number>)))
   {
     return $.lit<number>(NaN);
   }
@@ -22,7 +22,7 @@ export function INTRINSICS_Math_abs ($ : SpecRuntime, $this : Wrapped<unknown>, 
 
   if ($.condition(Number.MAX_SAFE_INTEGER - 286, $.lessThan(n, $.lit<number>(0))))
   {
-    return $.negate((n as Wrapped<number>));
+    return $.negate((n as Lifted<number>));
   }
 
   return n;

@@ -1,8 +1,8 @@
-import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+import type { SpecRuntime, Lifted, Unwrapped, Primitive } from "../type.js";
 
 import { AO__IsCallable } from "./AO__IsCallable.js";
 
-export function AO__Call($ : SpecRuntime, F : Wrapped<unknown>, V : Wrapped<unknown>, argumentsList ?: Wrapped<unknown>[]): Wrapped<unknown> {
+export function AO__Call($ : SpecRuntime, F : Lifted<unknown>, V : Lifted<unknown>, argumentsList ?: Lifted<unknown>[]): Lifted<unknown> {
   "use strict";
 
   // 1. If argumentsList is not present, set argumentsList to a new empty List.

@@ -1,9 +1,9 @@
-import type { SpecRuntime, Wrapped, Unwrapped, Primitive } from "../type.js";
+import type { SpecRuntime, Lifted, Unwrapped, Primitive } from "../type.js";
 
 import { AO__ToString } from "./AO__ToString.js";
 import { AO__ToNumber } from "./AO__ToNumber.js";
 
-function SYNTAX__add_primitive($: SpecRuntime, lPrim: Wrapped<Primitive>, rPrim: Wrapped<Primitive>): Wrapped<string> | Wrapped<number> {
+function SYNTAX__add_primitive($: SpecRuntime, lPrim: Lifted<Primitive>, rPrim: Lifted<Primitive>): Lifted<string> | Lifted<number> {
   //   c. If lPrim is a String or rPrim is a String, then
   if ($.peek($.isType(lPrim, 'string')) || $.peek($.isType(rPrim, 'string'))) {
     //     i. Let lStr be ? ToString(lPrim).
@@ -36,7 +36,7 @@ function SYNTAX__add_primitive($: SpecRuntime, lPrim: Wrapped<Primitive>, rPrim:
 
 // ApplyStringOrNumericBinaryOperator (13.15.3), specialized to opText = `+`
 // (split out of the former Model.applyBinary, one file per operator).
-export function SYNTAX__add($: SpecRuntime, lVal: Wrapped<unknown>, rVal: Wrapped<unknown>): Wrapped<string> | Wrapped<number> {
+export function SYNTAX__add($: SpecRuntime, lVal: Lifted<unknown>, rVal: Lifted<unknown>): Lifted<string> | Lifted<number> {
   if ($.peek($.isType(lVal, 'object')) || $.peek($.isType(rVal, 'object'))) {
     const l: Unwrapped<unknown> = $.peek(lVal);
     const r: Unwrapped<unknown> = $.peek(rVal);
@@ -45,6 +45,6 @@ export function SYNTAX__add($: SpecRuntime, lVal: Wrapped<unknown>, rVal: Wrappe
     // over-approximate the result type as unknown, since it could be either string or number
     return $.base(v, [lVal, rVal]);
   } else {
-    return SYNTAX__add_primitive($, lVal as Wrapped<Primitive>, rVal as Wrapped<Primitive>);
+    return SYNTAX__add_primitive($, lVal as Lifted<Primitive>, rVal as Lifted<Primitive>);
   }
 }
