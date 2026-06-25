@@ -18,6 +18,15 @@ type ValuedGeneral<Shape extends {}, Value = unknown> = Shape & {
 
 type IdValuePair = ValuedGeneral<{ id: symbol }, unknown>;
 
+// `instanceof` and `in` are type/membership predicates, not value-algebra
+// operators: the boolean they yield is decided by the prototype chain / property
+// table, never by a modelable function of the operands' values. The op-aware
+// `binaryInfo` hook is for value ops, so the framework does not route these to it
+// — their result carries only operand provenance (baseInfo). Without this an
+// op-aware analysis would forge a `{binary, instanceof, …}` symbol no solver can
+// translate, which (for concolic) poisons the path condition.
+const NON_VALUE_BINARY_OPS = new Set(['instanceof', 'in']);
+
 type BinFrame = { ty: 'bin'; op: string; left: Wrapped; right: Wrapped };
 type UnFrame = { ty: 'un'; op: string; operand: Wrapped };
 type GetFieldFrame = { ty: 'getField'; base: Wrapped; prop: Wrapped };
@@ -758,9 +767,10 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       // execution — info lives only on the frame's wrapped operands.
       const left = this.valued(f.left);
       const right = this.valued(f.right);
-      const resultInfo =
-        this.binaryInfo?.(f.op, left, right) ??
-        this.baseInfo(result, [left, right]);
+      const resultInfo = NON_VALUE_BINARY_OPS.has(f.op)
+        ? this.baseInfo(result, [left, right])
+        : (this.binaryInfo?.(f.op, left, right) ??
+          this.baseInfo(result, [left, right]));
       return { result: this.lift(result, resultInfo) };
     }
   }
