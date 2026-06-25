@@ -789,12 +789,6 @@ const CONDITION_CB: Record<string, keyof Analysis> = {
   switch: 'switchCondition',
 };
 
-// hook for update operations. Threads pre/post results like B/U: the pre's
-// (possibly unwrapped) operand feeds the `-(-x)` ToNumber idiom — a wrapped
-// operand has no valueOf, so coercing it directly would yield NaN — and the
-// binary post's result (e.g. a wrapped value) is what gets written back. The
-// unary `skip` is ignored: ++/-- has no single native op to skip, only the
-// decomposed binary, whose own `skip` is respected below.
 function Up(
   id: number,
   binaryId: number,
