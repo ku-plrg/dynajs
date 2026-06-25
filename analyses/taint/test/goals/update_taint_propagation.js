@@ -1,5 +1,5 @@
 // Known hole: Up() hands binaryPre the peeked raw oldValue (`-(-operand)`),
-// so the frame carries no wrapped identity and info dies across ++/-- — while
+// so the frame carries no lifted identity and info dies across ++/-- — while
 // the same value survives a plain binary `+` (asserted below as a guard, so
 // this goal only turns on the ++ fix, not on taint-on-numbers breaking).
 var n = 1;

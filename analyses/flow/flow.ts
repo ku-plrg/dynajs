@@ -81,7 +81,7 @@ function execWithIndices(regex: RegExp, s: string): RegExpExecArray | null {
 }
 
 export abstract class FlowAnalysis<Info> implements Analysis {
-  private primitiveWrapper = new WeakSet<object>();
+  private liftedPrimitives = new WeakSet<object>();
   private valueMap = new WeakMap<object, IdValuePair>();
   private infoMap = new Map<symbol, Info>();
 
@@ -257,10 +257,10 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     } else {
       const proxy = {
         [util.inspect.custom]() {
-          return '<wrapped-primitive>';
+          return '<lifted-primitive>';
         },
       };
-      this.primitiveWrapper.add(proxy);
+      this.liftedPrimitives.add(proxy);
       this.valueMap.set(proxy, { id: this.freshId(), value });
       w = proxy as T as Lifted<T>;
     }
@@ -304,7 +304,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     );
   }
 
-  /** internal(flow.ts) — operands are Wrapped<unknown>: ordering comparisons pass
+  /** internal(flow.ts) — operands are Lifted<unknown>: ordering comparisons pass
    * numbers, but `is`/`isNot` compare strings, sentinels, etc. */
   private cmpOp(
     op: string,
@@ -415,7 +415,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
     // RegexOps
     regexExec: (regex, string) => {
-      // Run `regex.exec(string)` concretely on the raw values (no wrapped
+      // Run `regex.exec(string)` concretely on the raw values (no lifted
       // primitive leaks into the engine), then let the analysis supply the
       // symbolic match facts. The spec models assemble the observable result.
       const rawRegex = this.unlift(regex as Lifted<RegExp>);
@@ -716,7 +716,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
           parents.map((p) => this.valued(p)),
         ),
       ),
-    peek: <T>(wrapped: Lifted<T>) => this.unlift(wrapped),
+    peek: <T>(lifted: Lifted<T>) => this.unlift(lifted),
     // A field read (`base[prop]`) from within a spec model, routed through the
     // same getFieldInfo the core `getField` hook uses for user-code `o[p]` — so a
     // model (e.g. AO__Get) observes a symbolic-array element / symbolic-object
@@ -740,7 +740,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       const fn = this.unlift(f as Lifted<Function>); // caller (AO__Call) ensured IsCallable
       // Route to the model when the callee is a known builtin — so a builtin
       // reached through a spec AO (a regex's @@match, an iterator protocol, …)
-      // is modeled like a direct call, not run opaquely on wrapped args. Mirrors
+      // is modeled like a direct call, not run opaquely on lifted args. Mirrors
       // invokeFun's modeled-call dispatch (incl. the builtin site).
       if (Model.support(fn)) {
         const modelFn = Model.ofBuiltin(fn);
@@ -801,7 +801,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     } else {
       // assert : result is given
       // The hook's own l/r are the peeked raws binaryPre handed to native
-      // execution — info lives only on the frame's wrapped operands.
+      // execution — info lives only on the frame's lifted operands.
       const left = this.valued(f.left);
       const right = this.valued(f.right);
       const resultInfo = NON_VALUE_BINARY_OPS.has(f.op)
@@ -968,7 +968,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
           this.domain.isBottom(this.getInfo(e)),
       )
     ) {
-      // model takes wrapped args and returns a wrapped result; runtime will dispatch via Model.of(f)
+      // model takes lifted args and returns a lifted result; runtime will dispatch via Model.of(f)
       return {
         skip: true,
         f: _f,
@@ -979,7 +979,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     }
     // fall through: A modeled builtin with all-bottom-primitive inputs
 
-    // The callee reaches the engine's Function.prototype.apply site; a wrapped
+    // The callee reaches the engine's Function.prototype.apply site; a lifted
     // primitive (a symbolic value used as a function) would leak its proxy there
     // ("called on #<Object>") instead of raising an ordinary "not a function"
     // TypeError. Peek it: a raw non-callable produces the natural error, while
@@ -1039,7 +1039,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     const transformed = (() => {
       switch (f.ty) {
         case 'opaque': {
-          // when modeled, the model dispatched above already returned a Wrapped value
+          // when modeled, the model dispatched above already returned a Lifted value
           if (f.modeled) return result as unknown as Lifted<unknown>;
           if (f.escaped.length > 0) this.escaper.restore(f.escaped);
           const opaqueInfo = this.opaqueCallInfo?.(
@@ -1143,7 +1143,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   }
 
   private isPrimitiveProxy(v: unknown): v is Lifted<unknown> {
-    return this.isObjectish(v) && this.primitiveWrapper.has(v);
+    return this.isObjectish(v) && this.liftedPrimitives.has(v);
   }
   private unlift<T = unknown>(value: Lifted<T>): Unlifted<T> {
     if (!this.isObjectish(value)) return value as T as Unlifted<T>; // should not happen;

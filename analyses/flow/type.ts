@@ -1,12 +1,12 @@
-declare const WrappedValueBrand: unique symbol;
+declare const LiftedValueBrand: unique symbol;
 
-type WrapBrand<B extends boolean> = { readonly [WrappedValueBrand]: B };
+type LiftBrand<B extends boolean> = { readonly [LiftedValueBrand]: B };
 
-export type Lifted<T = unknown> = T & WrapBrand<true>;
+export type Lifted<T = unknown> = T & LiftBrand<true>;
 
-export type Unlifted<T = unknown> = T & WrapBrand<false>;
+export type Unlifted<T = unknown> = T & LiftBrand<false>;
 
-/** Primitives <: Unwrapped, but not vice versa (e.g. it can be an object that has been unwrapped) */
+/** Primitives <: Unlifted, but not vice versa (e.g. it can be an object that has been unlifted) */
 export type Primitive =
   | string
   | number
@@ -26,10 +26,10 @@ interface SpecOps
     ListOps,
     RangeOps,
     RegexOps {
-  /** an injection (`unwrapped -> wrapped`). inverse of `$.peek`. default information transformation */
+  /** an injection (`unlifted -> lifted`). inverse of `$.peek`. default information transformation */
   base: <T extends Unlifted | Primitive>(v: T, parent: Lifted[]) => Lifted<T>;
-  /** a projection (`wrapped -> unwrapped`). inverse of `$.base`. lost of information happens due to concretization */
-  peek: <T>(wrapped: Lifted<T>) => Unlifted<T>;
+  /** a projection (`lifted -> unlifted`). inverse of `$.base`. lost of information happens due to concretization */
+  peek: <T>(lifted: Lifted<T>) => Unlifted<T>;
   /** a field read (`base[prop]`) routed through the analysis's `getFieldInfo`, so a
    *  spec model observes element/property reads exactly as user code `o[p]` does
    *  (e.g. concolic's symbolic-array `select`). Without it a model read concretizes
@@ -41,7 +41,7 @@ interface SpecOps
     thisArg: Lifted<unknown>,
     args: Lifted<unknown>[],
   ) => Lifted<unknown>;
-  /** a projection to use Wrapped value as a condition */
+  /** a projection to use Lifted value as a condition */
   condition: (bid: number, cond: Lifted<boolean>) => boolean;
 }
 

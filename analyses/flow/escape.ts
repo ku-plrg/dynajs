@@ -3,7 +3,7 @@ import type { Lifted } from './type.js';
 export type EscapeRecord = {
   container: object;
   prop: string | symbol;
-  wrapped: Lifted<unknown>;
+  lifted: Lifted<unknown>;
 };
 
 // Result of escaping one opaque call's receiver + args across the boundary.
@@ -11,24 +11,24 @@ export type Escaped = {
   base: unknown;
   args: unknown[];
   log: EscapeRecord[]; // in-place container mutations, replayed by restore()
-  crossed: Lifted<unknown>[]; // wrapped primitives that left controlled code (for escapedInfo)
+  crossed: Lifted<unknown>[]; // lifted primitives that left controlled code (for escapedInfo)
 };
 
-/** Strips wrapped primitives out of values flowing into an uninstrumented
+/** Strips lifted primitives out of values flowing into an uninstrumented
  * ("opaque") native call and restores them afterward */
 export class BoundaryEscape {
-  // Fast-path flag: until some store places a wrapped primitive into a
+  // Fast-path flag: until some store places a lifted primitive into a
   // container, the recursive scan is skipped entirely.
-  private containersMayHoldWrapped = false;
+  private containersMayHoldLifted = false;
 
   constructor(
     private readonly isPrimitiveProxy: (v: unknown) => v is Lifted<unknown>,
-    private readonly unwrap: (w: Lifted<unknown>) => unknown,
+    private readonly unlift: (w: Lifted<unknown>) => unknown,
   ) {}
 
   markEscapable(value: unknown): void {
-    if (!this.containersMayHoldWrapped && this.isPrimitiveProxy(value)) {
-      this.containersMayHoldWrapped = true;
+    if (!this.containersMayHoldLifted && this.isPrimitiveProxy(value)) {
+      this.containersMayHoldLifted = true;
     }
   }
 
@@ -36,7 +36,7 @@ export class BoundaryEscape {
    * fires; shallow-scan own props so the flag stays sound. */
   markEscapableLiteral(value: unknown): void {
     if (
-      this.containersMayHoldWrapped ||
+      this.containersMayHoldLifted ||
       typeof value !== 'object' ||
       value === null
     )
@@ -48,7 +48,7 @@ export class BoundaryEscape {
         'value' in desc &&
         this.isPrimitiveProxy(desc.value)
       ) {
-        this.containersMayHoldWrapped = true;
+        this.containersMayHoldLifted = true;
         return;
       }
     }
@@ -61,21 +61,21 @@ export class BoundaryEscape {
     const escapedBase = this.escapeValue(base, log, visited);
     const crossed = [
       ...entries.filter((e) => this.isPrimitiveProxy(e)),
-      ...log.map((e) => e.wrapped),
+      ...log.map((e) => e.lifted),
     ];
     return { base: escapedBase, args: escapedArgs, log, crossed };
   }
 
   restore(log: EscapeRecord[]): void {
-    for (const { container, prop, wrapped } of log) {
+    for (const { container, prop, lifted } of log) {
       const desc = Object.getOwnPropertyDescriptor(container, prop);
       if (
         desc !== undefined &&
         'value' in desc &&
         desc.writable === true &&
-        Object.is(desc.value, this.unwrap(wrapped))
+        Object.is(desc.value, this.unlift(lifted))
       ) {
-        (container as Record<string | symbol, unknown>)[prop] = wrapped;
+        (container as Record<string | symbol, unknown>)[prop] = lifted;
       }
     }
   }
@@ -85,8 +85,8 @@ export class BoundaryEscape {
     log: EscapeRecord[],
     visited: Set<object>,
   ): unknown {
-    if (this.isPrimitiveProxy(v)) return this.unwrap(v);
-    if (this.containersMayHoldWrapped && typeof v === 'object' && v !== null) {
+    if (this.isPrimitiveProxy(v)) return this.unlift(v);
+    if (this.containersMayHoldLifted && typeof v === 'object' && v !== null) {
       this.escapeInto(v, log, visited);
     }
     return v;
@@ -105,8 +105,8 @@ export class BoundaryEscape {
         continue;
       const child: unknown = desc.value;
       if (this.isPrimitiveProxy(child)) {
-        (obj as Record<string | symbol, unknown>)[key] = this.unwrap(child);
-        log.push({ container: obj, prop: key, wrapped: child });
+        (obj as Record<string | symbol, unknown>)[key] = this.unlift(child);
+        log.push({ container: obj, prop: key, lifted: child });
       } else if (typeof child === 'object' && child !== null) {
         this.escapeInto(child, log, visited);
       }

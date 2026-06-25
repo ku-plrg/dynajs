@@ -1,5 +1,5 @@
-// ++/-- (the Up hook) must coerce via the pre-hook's unwrapped operand — a
-// wrapped operand has no valueOf, so skipping that step yields NaN.
+// ++/-- (the Up hook) must coerce via the pre-hook's unlifted operand — a
+// lifted operand has no valueOf, so skipping that step yields NaN.
 var n = 1;
 n++;
 __assert__(n === 2);

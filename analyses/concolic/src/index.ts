@@ -414,7 +414,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
 
   // ToBoolean at a branch site (ExpoSE SymbolicState.toBool): a branch condition
   // must be a Bool, but `if (x)` hands us `x` itself before coercion (the core
-  // passes the raw value to `condition`, no ToBoolean wrap). A comparison/logical
+  // passes the raw value to `condition`, no ToBoolean lift). A comparison/logical
   // sym is already Bool and passes through; a String coerces to `x !== ""`, a
   // number to `x !== 0`. Anything else (object/array/seq) has no z3 truthiness
   // image — ExpoSE concretizes it, so we drop the branch (undefined).
@@ -555,8 +555,8 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   // ExpoSE's AssertToolkit gives every symbol a process-unique name (first `X`
   // stays `X`, the next becomes `X_2`, …) so reused names are independent SMT
   // variables. We do the same per run, on the *raw* name — running this over a
-  // Wrapped string would coerce it to "[object Object]" at the Map key (see the
-  // raw-vs-wrapped seam). `makeSymbolic`/`__symbolic__` deliberately skip this:
+  // Lifted string would coerce it to "[object Object]" at the Map key (see the
+  // raw-vs-lifted seam). `makeSymbolic`/`__symbolic__` deliberately skip this:
   // the microbench already hands out distinct names and snapshots its SMT vars.
   private nameCounts = new Map<string, number>();
   private rename(name: string): string {
@@ -568,7 +568,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   // `S$.symbol(name, seed)`: unique the name, then mint as usual. Deterministic
   // renaming keeps replay sound — a child run re-issues the same calls, so the
   // same renamed names line up with the child input's keys.
-  symbolNamed(name: unknown, seed: unknown): unknown /* Wrapped */ {
+  symbolNamed(name: unknown, seed: unknown): unknown /* Lifted */ {
     return this.makeSymbolic(
       this.rename(String(this.valued(name).value)),
       seed,
@@ -618,7 +618,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   // which the matching arm mints a typed symbol via makeSymbolic — no engine
   // machinery beyond the existing alternatives()/replay loop. The per-type seeds
   // match createSymbolicValue ("seed_string"/0/false/{}/[0]/[""]/[false]/null).
-  pureSymbolNamed(name: unknown): unknown /* Wrapped */ {
+  pureSymbolNamed(name: unknown): unknown /* Lifted */ {
     const varName = this.rename(String(this.valued(name).value));
     const typeVar: Sym = { kind: 'var', name: `${varName}_t`, sort: 'String' };
     const input = this.seedInput();
@@ -644,7 +644,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     return undefined; // ExpoSE's `else`: an unconstrained type yields undefined
   }
 
-  // Introduce symbolic variable `name`, returning a wrapped value the program
+  // Introduce symbolic variable `name`, returning a lifted value the program
   // runs concretely on. Replay (M3): if the Distributor's seed input carries a
   // concrete for this variable (a child input from a negated branch), drive
   // execution with THAT value so we follow the intended path; otherwise keep the
@@ -657,15 +657,15 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   //   - scalar -> a `var` whose sort follows the seed (String / Bool / else Int).
   // Array/object replay inputs don't round-trip the scalar SMT model parser, so
   // only the scalar case is re-seeded from a child input.
-  makeSymbolic(name: unknown, seed: unknown): unknown /* Wrapped */ {
+  makeSymbolic(name: unknown, seed: unknown): unknown /* Lifted */ {
     const varName = String(this.valued(name).value);
     const input = this.seedInput();
     const concrete =
       varName in input ? input[varName] : this.valued(seed).value;
 
     if (Array.isArray(concrete)) {
-      // Array elements are still individually wrapped (only the array itself was
-      // unwrapped), so project the first through `valued` to read its type.
+      // Array elements are still individually lifted (only the array itself was
+      // unlifted), so project the first through `valued` to read its type.
       const sort = this.seqSortOf(
         concrete.length ? this.valued(concrete[0]).value : undefined,
       );
@@ -767,7 +767,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   // Corpus findings ARE these throws (`throw "Reachable"`), and the corpus oracle
   // counts them, so we record one per escaping exception. `assume(false)` throws
   // the bridge's NotAnErrorException to prune a path — that is not a program error,
-  // so we drop it. The thrown value is Wrapped (instrumented code), hence unwrap.
+  // so we drop it. The thrown value is Lifted (instrumented code), hence unlift.
   recordUncaught(e: unknown): void {
     const v: unknown = this.valued(e).value;
     const NotAnError = (globalThis as Record<string, unknown>).__NotAnError__;

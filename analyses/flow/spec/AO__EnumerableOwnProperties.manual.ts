@@ -1,6 +1,6 @@
 // @manual EnumerableOwnProperties (ECMA-262 7.3.27)
 // O.[[OwnPropertyKeys]], O.[[GetOwnProperty]] and desc.[[Enumerable]] are object
-// essential-internal-methods that are not exposed on the wrapped value domain,
+// essential-internal-methods that are not exposed on the lifted value domain,
 // so — like AO__Get / AO__CreateDataProperty / AO__MakeBasicObject — this is
 // modeled directly against the host object. For an ordinary object, the
 // enumerable own STRING keys in [[OwnPropertyKeys]] order are exactly what

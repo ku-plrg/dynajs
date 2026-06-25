@@ -14,6 +14,6 @@ export function AO__Call($ : SpecRuntime, F : Lifted<unknown>, V : Lifted<unknow
 
   // 3. Return ? F.[[Call]](V, argumentsList).
   // Delegated to the framework so a modeled builtin reached here (e.g. a regex's
-  // @@match) dispatches to its model rather than running opaquely on wrapped args.
+  // @@match) dispatches to its model rather than running opaquely on lifted args.
   return $.apply(F, V, argumentsList);
 }

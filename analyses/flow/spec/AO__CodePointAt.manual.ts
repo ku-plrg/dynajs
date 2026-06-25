@@ -4,7 +4,7 @@
 // `$.codeUnitAt`, i.e. single code-unit strings, so we read their numeric value
 // with `charCodeAt` and test the surrogate ranges directly. The surrogate-range
 // branches are intentionally concrete (native `if`) — UTF-16 decoding is not a
-// path constraint we track symbolically — while the values stay Wrapped.
+// path constraint we track symbolically — while the values stay Lifted.
 import type { SpecRuntime, Lifted, Unlifted, Primitive } from "../type.js";
 
 import { AO__UTF16SurrogatePairToCodePoint } from "./AO__UTF16SurrogatePairToCodePoint.js";
@@ -19,24 +19,24 @@ export function AO__CodePointAt(
   // 2. Assert: position ≥ 0 and position < size.
   // 3. Let first be the code unit at index position within string.
   var first : Lifted<string> = $.substring(string, position, $.add(position, $.base(1, [])));
-  var firstUnwrapped : number = $.peek(first).charCodeAt(0);
+  var firstUnlifted : number = $.peek(first).charCodeAt(0);
   // 4. Let cp be the code point whose numeric value is the numeric value of first.
-  var cp = $.base<number>(firstUnwrapped, [first]);
+  var cp = $.base<number>(firstUnlifted, [first]);
   // 5. If first is neither a leading surrogate nor a trailing surrogate, then
-  if (!(firstUnwrapped >= 0xd800 && firstUnwrapped <= 0xdfff)) {
+  if (!(firstUnlifted >= 0xd800 && firstUnlifted <= 0xdfff)) {
     // a. Return the Record { [[CodePoint]]: cp, [[CodeUnitCount]]: 1, [[IsUnpairedSurrogate]]: false }.
     return { "CodePoint": cp, "CodeUnitCount": $.base<number>(1, []), "IsUnpairedSurrogate": $.base<boolean>(false, []) };
   }
   // 6. If first is a trailing surrogate or position + 1 = size, then
-  if ((firstUnwrapped >= 0xdc00 && firstUnwrapped <= 0xdfff) || $.peek(position) + 1 === $.peek(size)) {
+  if ((firstUnlifted >= 0xdc00 && firstUnlifted <= 0xdfff) || $.peek(position) + 1 === $.peek(size)) {
     // a. Return the Record { [[CodePoint]]: cp, [[CodeUnitCount]]: 1, [[IsUnpairedSurrogate]]: true }.
     return { "CodePoint": cp, "CodeUnitCount": $.base<number>(1, []), "IsUnpairedSurrogate": $.base<boolean>(true, []) };
   }
   // 7. Let second be the code unit at index position + 1 within string.
   var second = $.substring(string, $.add(position, $.base<number>(1, [])), $.add(position, $.base<number>(2, [])));
-  var secondUnwrapped : number = $.peek(second).charCodeAt(0);
+  var secondUnlifted : number = $.peek(second).charCodeAt(0);
   // 8. If second is not a trailing surrogate, then
-  if (!(secondUnwrapped >= 0xdc00 && secondUnwrapped <= 0xdfff)) {
+  if (!(secondUnlifted >= 0xdc00 && secondUnlifted <= 0xdfff)) {
     // a. Return the Record { [[CodePoint]]: cp, [[CodeUnitCount]]: 1, [[IsUnpairedSurrogate]]: true }.
     return { "CodePoint": cp, "CodeUnitCount": $.base<number>(1, []), "IsUnpairedSurrogate": $.base<boolean>(true, []) };
   }

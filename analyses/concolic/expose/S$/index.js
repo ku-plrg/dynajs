@@ -25,7 +25,7 @@ globalThis.__NotAnError__ = NotAnErrorException;
 
 // Two args (name, concrete) => seeded symbol; one arg => typeless pure symbol.
 // A genuinely-absent second argument is the only `undefined` case here, so this
-// holds whether or not `typeof` sees through the wrapper.
+// holds whether or not `typeof` sees through the lifted value.
 S$.symbol = function (name, concrete) {
   if (typeof concrete !== 'undefined') {
     return globalThis.__s_symbol__(name, concrete);

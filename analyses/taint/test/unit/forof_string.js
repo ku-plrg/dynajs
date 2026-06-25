@@ -1,5 +1,5 @@
-// A wrapped primitive RHS of for-of is a plain object (not iterable), so the
-// forInOfObject hook must unwrap it before native iteration.
+// A lifted primitive RHS of for-of is a plain object (not iterable), so the
+// forInOfObject hook must unlift it before native iteration.
 var s = 'ab';
 __set_taint__(s);
 

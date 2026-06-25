@@ -1,6 +1,6 @@
-// Known hole: an instrumented function returning a wrapped primitive into a
+// Known hole: an instrumented function returning a lifted primitive into a
 // native coercion site escapes the hook protocol — `valueOf` returns
-// Wrapped(5), native `+` sees an object and falls back to toString, so `r`
+// Lifted(5), native `+` sees an object and falls back to toString, so `r`
 // becomes "[object Object]1" instead of 6. Tied to the ToPrimitive-for-objects
 // TODO / function-return boundary.
 var calls = 0;

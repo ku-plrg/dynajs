@@ -46,7 +46,7 @@ function __s_pure__(name: unknown): unknown {
 }
 
 // Installs the symbolic ghost seams and returns them as the set of transparent
-// callees: they run analysis code over wrapped values, so they must NOT be
+// callees: they run analysis code over lifted values, so they must NOT be
 // stripped at the opaque boundary like a real native would be.
 export function installPrelude(): ReadonlySet<unknown> {
   const g = globalThis as Record<string, unknown>;
