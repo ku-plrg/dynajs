@@ -1,6 +1,7 @@
 // @type concolic
 // @target es6+ Array.prototype.entries
 // @feature builtin entries
+// @done
 
 function __test_symbolic__(symbolic) {
   if (symbolic[0] === 5) {

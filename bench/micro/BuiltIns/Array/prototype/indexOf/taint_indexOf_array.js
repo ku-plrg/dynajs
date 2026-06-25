@@ -3,8 +3,7 @@
 // @feature builtin array-indexOf
 
 function __test_taint__(tainted) {
-    // tainted = whole-tainted array WITH elements (["x","y","z"])
-    var r1 = tainted.indexOf("x");
+    var r1 = tainted.indexOf("a");
     // @witness always indexOf returns position number => clean
     __assert_taint__(r1, false);
     var r2 = tainted.indexOf("zzz");
@@ -12,4 +11,4 @@ function __test_taint__(tainted) {
     __assert_taint__(r2, false);
 }
 
-__test_taint__(__set_taint__(["x", "y", "z"]));
+__test_taint__(__set_taint__(["a", "b", "c"]));

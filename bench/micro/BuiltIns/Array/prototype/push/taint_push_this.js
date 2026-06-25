@@ -7,7 +7,7 @@ function __test_taint__(tainted) {
     var len = a.push("c");
     // @witness push returns a length (number), clean
     __assert_taint__(len, false);
-    // @witness __test_taint__('hello') => a[0] = 'hello' tainted
+    // @witness __test_taint__('x') => a[0] = 'x' tainted
     __assert_taint__(a[0], true);
     // @witness always a[1] = "b", clean
     __assert_taint__(a[1], false);

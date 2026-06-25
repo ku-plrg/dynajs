@@ -9,7 +9,7 @@ function __test_taint__(tainted) {
     __assert_taint__(r[0], false);
     // @witness always r[1] = "b", clean
     __assert_taint__(r[1], false);
-    // @witness __test_taint__('hello') => r[2] = 'hello' tainted
+    // @witness __test_taint__('x') => r[2] = 'x' tainted
     __assert_taint__(r[2], true);
 }
 

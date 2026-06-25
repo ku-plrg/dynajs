@@ -11,7 +11,7 @@ function __test_taint__(tainted) {
     __assert_taint__(a[0], false);
     // @witness always a[1] = "b", clean
     __assert_taint__(a[1], false);
-    // @witness __test_taint__('hello') => a[a.length - 1] = 'hello' tainted
+    // @witness __test_taint__('x') => a[a.length - 1] = 'x' tainted
     __assert_taint__(a[a.length - 1], true);
 }
 

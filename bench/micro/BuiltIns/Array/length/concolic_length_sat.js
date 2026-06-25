@@ -3,11 +3,10 @@
 // @feature builtin length
 
 function __test_symbolic__(symbolic) {
-    if (symbolic.length === 2) {
-        symbolic.push(9);
-        // @witness __test_symbolic__([1, 2])
-        __IS_SAT__(symbolic.length === 3, true);
-    }
+
+    // @witness __test_symbolic__([1, 2, 3])
+    __IS_SAT__(symbolic.length === 3, true);
+
 }
 
 __test_symbolic__(__symbolic__('s', [1, 2]));

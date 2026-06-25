@@ -1,6 +1,7 @@
 // @type concolic
 // @target es6+ Array.prototype.find
 // @feature builtin find
+// @done
 
 function __test_symbolic__(symbolic) {
   if (symbolic[0] > 10) {

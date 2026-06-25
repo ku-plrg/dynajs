@@ -1,6 +1,7 @@
 // @type concolic
 // @target es5 Array.prototype.filter
 // @feature builtin filter
+// @done
 
 function __test_symbolic__(symbolic) {
   if (symbolic.length === 2) {

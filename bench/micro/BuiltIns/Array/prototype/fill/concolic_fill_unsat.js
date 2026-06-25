@@ -1,6 +1,7 @@
 // @type concolic
 // @target es6+ Array.prototype.fill
 // @feature builtin fill
+// @done
 
 function __test_symbolic__(symbolic) {
 

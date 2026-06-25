@@ -3,11 +3,10 @@
 // @feature builtin array-forEach
 
 function __test_taint__(tainted) {
-    // tainted = whole-tainted array WITH elements (["x","y","z"])
     var g;
     tainted.forEach(function(v) { g = v; });
-    // @witness __test_taint__(["x","y","z"]) => g = "z" tainted (last element assigned)
+    // @witness __test_taint__(["x","x","x"]) => g = "x" tainted (last element assigned)
     __assert_taint__(g, true);
 }
 
-__test_taint__(__set_taint__(["x", "y", "z"]));
+__test_taint__(__set_taint__(["a", "b", "c"]));

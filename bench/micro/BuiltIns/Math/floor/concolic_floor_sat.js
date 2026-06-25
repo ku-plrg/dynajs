@@ -1,6 +1,7 @@
 // @type concolic
 // @target es5 Math.floor
 // @feature builtin floor
+// @done
 
 function __test_symbolic__(symbolic) {
 

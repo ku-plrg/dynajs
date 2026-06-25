@@ -4,11 +4,8 @@
 
 function __test_symbolic__(symbolic) {
     var a = ["a", "b", "c"];
-    var r = a.join(symbolic);
-    if (r.includes("a")) {
-        // @witness __test_symbolic__("Z")
-        __IS_SAT__(r.includes("aZb"), true);
-    }
+    // @witness __test_symbolic__("Z")
+    __IS_SAT__(a.join(symbolic).includes("aZb"), true);
 }
 
 __test_symbolic__(__symbolic__('s', '-'));

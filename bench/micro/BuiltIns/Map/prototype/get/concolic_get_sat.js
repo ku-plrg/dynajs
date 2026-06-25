@@ -3,12 +3,10 @@
 // @feature builtin get
 
 function __test_symbolic__(symbolic) {
-    var m = new Map();
-    m.set("a", 1);
-    if (symbolic.length >= 1) {
-        // @witness __test_symbolic__("a")
-        __IS_SAT__(m.get(symbolic) === 1, true);
-    }
+  var m = new Map();
+  m.set("a", 1);
+  // @witness __test_symbolic__("a")
+  __IS_SAT__(m.get(symbolic) === 1, true);
 }
 
-__test_symbolic__(__symbolic__('s', "a"));
+__test_symbolic__(__symbolic__('s', "z"));

@@ -5,7 +5,7 @@
 function __test_taint__(tainted) {
     var a = ["a", "b", "c"];
     var r = a.reduce(function (acc, v) { return acc + v; }, tainted);
-    // @witness __test_taint__('hello') => r = 'hello'+"a"+"b"+"c" tainted
+    // @witness __test_taint__('x') => r = 'x'+"a"+"b"+"c" tainted
     __assert_taint__(r, true);
 }
 

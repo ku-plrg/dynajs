@@ -4,10 +4,8 @@
 
 function __test_symbolic__(symbolic) {
 
-  if (symbolic.indexOf(7) !== -1) {
     // @witness __test_symbolic__([1, 7])
-    __IS_SAT__(symbolic.indexOf(7) > 0, true);
-  }
+    __IS_SAT__(symbolic.indexOf(7) === 1, true);
 
 }
 

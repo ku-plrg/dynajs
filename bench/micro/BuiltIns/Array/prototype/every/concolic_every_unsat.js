@@ -1,6 +1,7 @@
 // @type concolic
 // @target es5 Array.prototype.every
 // @feature builtin every
+// @done
 
 function __test_symbolic__(symbolic) {
   if (symbolic.length === 2 && symbolic.every(function (v) { return v > 0; })) {

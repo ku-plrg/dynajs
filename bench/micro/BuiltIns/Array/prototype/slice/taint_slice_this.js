@@ -7,7 +7,7 @@ function __test_taint__(tainted) {
     var r = a.slice(1, 3);
     // @witness always r[0] = "b", clean
     __assert_taint__(r[0], false);
-    // @witness __test_taint__('hello') => r[1] = 'hello' tainted
+    // @witness __test_taint__('x') => r[1] = 'x' tainted
     __assert_taint__(r[1], true);
 }
 

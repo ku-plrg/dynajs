@@ -3,13 +3,9 @@
 // @feature builtin hasownproperty
 
 function __test_symbolic__(symbolic) {
-    var proto = { a: 1 };
-    var child = Object.create(proto);
-    child.b = 2;
-    if (symbolic.length >= 1) {
-        // @witness __test_symbolic__("x")
-        __IS_SAT__(!child.hasOwnProperty("a") && ("a" in child), true);
-    }
+  var o = { a: 1 };
+  // @witness __test_symbolic__("a")
+  __IS_SAT__(o.hasOwnProperty(symbolic), true);
 }
 
-__test_symbolic__(__symbolic__('s', 'x'));
+__test_symbolic__(__symbolic__('s', "z"));

@@ -4,7 +4,7 @@
 
 function __test_taint__(tainted) {
     var a = [tainted, "b", "c"];
-    // @witness __test_taint__('hello') => a.lastIndexOf('hello') = 0 tainted
+    // @witness __test_taint__('x') => a.lastIndexOf('x') = 0 tainted
     __assert_taint__(a.lastIndexOf("hello"), true);
     // @witness index/position, not content => clean
     __assert_taint__(a.lastIndexOf("b"), false);

@@ -4,10 +4,10 @@
 
 function __test_taint__(tainted) {
     var a = ["a", "b", "c", "d"];
-    var r = a.slice(1, tainted);
-    // @witness 'hello' clean; tainted is only the end index
+    var r = a.slice(1, tainted);   // ["b","c"]
+    // @witness r[0] = "b" clean; tainted is only the end index
     __assert_taint__(r[0], false);
-    // @witness 'hello' clean; tainted is only the end index
+    // @witness r[1] = "c" clean; tainted is only the end index
     __assert_taint__(r[1], false);
 }
 

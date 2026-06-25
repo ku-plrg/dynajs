@@ -4,7 +4,7 @@
 
 function __test_taint__(tainted) {
     var a = [tainted, "b", "c"];
-    // @witness __test_taint__('hello') => a.shift() = 'hello' tainted
+    // @witness __test_taint__('x') => a.shift() = 'x' tainted
     __assert_taint__(a.shift(), true);
     // @witness always a.shift() = "b", clean
     __assert_taint__(a.shift(), false);

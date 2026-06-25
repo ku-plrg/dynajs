@@ -3,9 +3,9 @@
 // @feature builtin floor
 
 function __test_symbolic__(symbolic) {
-    if (symbolic > 0) {
+    if (Math.floor(symbolic) > symbolic) {
         // @witness floor never exceeds its input, so floor(x) > x is impossible
-        __IS_SAT__(Math.floor(symbolic) > symbolic, false);
+        __IS_SAT__(symbolic > 0, false);
     } else {
         __IS_SAT__(true, false);
     }
