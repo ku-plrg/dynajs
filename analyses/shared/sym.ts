@@ -95,9 +95,12 @@ export function sortOf(s: Sym): Sort | undefined {
     case 'var':
       return s.sort;
     case 'unary':
-      // `!` and the integrality predicate `isInteger` yield Bool; arithmetic
-      // unaries (`-`/`+`) keep the operand's sort.
-      return s.op === '!' || s.op === 'isInteger' ? 'Bool' : sortOf(s.operand);
+      // `!` and the integrality predicate `isInteger` yield Bool; the rounding ops
+      // floor/ceil/round yield a Real (their z3 encoding uses to_int/to_real);
+      // arithmetic unaries (`-`/`+`) keep the operand's sort.
+      if (s.op === '!' || s.op === 'isInteger') return 'Bool';
+      if (s.op === 'floor' || s.op === 'ceil' || s.op === 'round') return 'Real';
+      return sortOf(s.operand);
     case 'binary':
       if (BOOL_BINARY_OPS.has(s.op)) return 'Bool';
       if (s.op === '/') return 'Real'; // JS division is always real (7/2 === 3.5)

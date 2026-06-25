@@ -182,6 +182,15 @@ function symToSmt(s: Sym, vars: Map<string, Sort>): string {
         const r = operand(s.operand, vars, 'Real');
         return `(= (to_real (to_int ${r})) ${r})`;
       }
+      // Rounding ops via z3 `to_int` (floor toward -∞), all returning a Real:
+      //   floor(x) = ⌊x⌋;  ceil(x) = -⌊-x⌋;  Math.round(x) = ⌊x + 0.5⌋ (JS rounds
+      //   half toward +∞, which floor(x+0.5) reproduces for every finite x).
+      if (s.op === 'floor' || s.op === 'ceil' || s.op === 'round') {
+        const r = operand(s.operand, vars, 'Real');
+        if (s.op === 'floor') return `(to_real (to_int ${r}))`;
+        if (s.op === 'ceil') return `(to_real (- (to_int (- ${r}))))`;
+        return `(to_real (to_int (+ ${r} 0.5)))`;
+      }
       const x = symToSmt(s.operand, vars);
       if (s.op === '!') return `(not ${x})`;
       if (s.op === '-') return `(- ${x})`;

@@ -604,9 +604,12 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     max: (...xs) =>
       this.numOp(Math.max(...xs.map((x) => this.unwrap(x) as number)), xs),
     abs: (x) => this.numOp(Math.abs(this.unwrap(x) as number), [x]),
-    floor: (x) => this.numOp(Math.floor(this.unwrap(x) as number), [x]),
-    ceil: (x) => this.numOp(Math.ceil(this.unwrap(x) as number), [x]),
-    round: (x) => this.numOp(Math.round(this.unwrap(x) as number), [x]),
+    // floor/ceil/round route through unaryInfo (op-keyed, like $.isInteger) so an
+    // analysis can model the rounding symbolically; without a hook they fall back
+    // to baseInfo, same as numOp.
+    floor: (x) => this.unOp('floor', x, Math.floor(this.unwrap(x) as number)),
+    ceil: (x) => this.unOp('ceil', x, Math.ceil(this.unwrap(x) as number)),
+    round: (x) => this.unOp('round', x, Math.round(this.unwrap(x) as number)),
     truncate: (x) => {
       const v = Math.trunc(this.unwrap(x) as number);
       return this.lift(

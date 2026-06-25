@@ -6450,8 +6450,8 @@
     "BuiltIns__Math__ceil__concolic_ceil_sat": [
       {
         "expected": "sat",
-        "actual": "unsat",
-        "result": "FN"
+        "actual": "sat",
+        "result": "TP"
       }
     ],
     "BuiltIns__Math__ceil__concolic_ceil_unsat": [
@@ -6464,15 +6464,15 @@
     "BuiltIns__Math__floor__concolic_floor_sat": [
       {
         "expected": "sat",
-        "actual": "unsat",
-        "result": "FN"
+        "actual": "sat",
+        "result": "TP"
       }
     ],
     "BuiltIns__Math__floor__concolic_floor_unsat": [
       {
         "expected": "unsat",
-        "actual": "sat",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__Math__max__concolic_max_sat": [
@@ -6527,8 +6527,8 @@
     "BuiltIns__Math__round__concolic_round_unsat": [
       {
         "expected": "unsat",
-        "actual": "sat",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__Math__sign__concolic_sign_sat": [
@@ -6569,8 +6569,8 @@
     "BuiltIns__Math__trunc__concolic_trunc_unsat": [
       {
         "expected": "unsat",
-        "actual": "sat",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__Number__isFinite_static__concolic_isFinite_sat": [
