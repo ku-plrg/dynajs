@@ -1,6 +1,7 @@
 // @type taint
 // @target es6+ Array.prototype.push
 // @feature builtin array-push
+// @done
 
 function __test_taint__(tainted) {
     var a = ["a", "b"];

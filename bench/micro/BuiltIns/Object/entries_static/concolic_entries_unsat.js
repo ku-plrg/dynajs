@@ -3,14 +3,12 @@
 // @feature builtin entries
 
 function __test_symbolic__(symbolic) {
-  var o = { a: 1 };
-  if (symbolic.length >= 1) {
-    var e = Object.entries(o);
-    // @witness o's only key is "a", so the first entry's key cannot differ from "a"
-    __IS_SAT__(e[0][0] !== "a", false);
+  if (Object.entries(symbolic)[0][1] === 5) {
+    // @witness the object's only entry is ["a", symbolic.a], so entry value 5 forces symbolic.a to 5
+    __IS_SAT__(symbolic.a !== 5, false);
   } else {
     __IS_SAT__(true, false);
   }
 }
 
-__test_symbolic__(__symbolic__('s', "x"));
+__test_symbolic__(__symbolic__('s', { a: 5 }));

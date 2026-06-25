@@ -3,10 +3,9 @@
 // @feature builtin unshift
 
 function __test_symbolic__(symbolic) {
-  if (symbolic.length === 2) {
-    var n = symbolic.unshift(0);
-    // @witness unshift prepends one element and returns the new length 3
-    __IS_SAT__(n !== 3, false);
+  if (symbolic.unshift(0) === 3) {
+    // @witness unshift prepends 0 (returning the new length 3), so index 0 becomes 0
+    __IS_SAT__(symbolic[0] !== 0, false);
   } else {
     __IS_SAT__(true, false);
   }

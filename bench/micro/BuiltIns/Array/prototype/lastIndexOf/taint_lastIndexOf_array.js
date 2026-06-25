@@ -1,6 +1,7 @@
 // @type taint
 // @target es5 Array.prototype.lastIndexOf
 // @feature builtin array-lastIndexOf
+// @done
 
 function __test_taint__(tainted) {
     var r = tainted.lastIndexOf("a");

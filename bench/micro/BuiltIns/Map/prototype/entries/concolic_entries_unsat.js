@@ -5,10 +5,9 @@
 function __test_symbolic__(symbolic) {
   var m = new Map();
   m.set(symbolic, 5);
-  if (m.has(symbolic)) {
-    var first = m.entries().next().value;
-    // @witness the only entry maps symbolic -> 5, so the entry value cannot differ from 5
-    __IS_SAT__(first[1] !== 5, false);
+  if (m.entries().next().value[0] === symbolic) {
+    // @witness the only entry is [symbolic, 5], so its value component is 5
+    __IS_SAT__(m.entries().next().value[1] !== 5, false);
   } else {
     __IS_SAT__(true, false);
   }

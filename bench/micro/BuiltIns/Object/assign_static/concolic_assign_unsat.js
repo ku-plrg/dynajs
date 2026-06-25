@@ -3,10 +3,9 @@
 // @feature builtin assign
 
 function __test_symbolic__(symbolic) {
-  var r = Object.assign({ a: 1 }, { a: symbolic });
-  if (symbolic === 7) {
-    // @witness assign copies the source's a over the target, so r.a is exactly symbolic (7)
-    __IS_SAT__(r.a !== 7, false);
+  if (Object.assign({}, { x: symbolic }).x === 7) {
+    // @witness assign copies x: symbolic into the target, so result.x === 7 forces symbolic to 7
+    __IS_SAT__(symbolic !== 7, false);
   } else {
     __IS_SAT__(true, false);
   }

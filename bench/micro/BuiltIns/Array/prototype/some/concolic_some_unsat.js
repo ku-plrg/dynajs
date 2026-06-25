@@ -1,6 +1,7 @@
 // @type concolic
 // @target es5 Array.prototype.some
 // @feature builtin some
+// @done
 
 function __test_symbolic__(symbolic) {
   if (symbolic.length === 2 && !symbolic.some(function (v) { return v > 0; })) {

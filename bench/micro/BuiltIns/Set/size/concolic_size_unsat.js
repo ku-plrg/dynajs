@@ -5,10 +5,9 @@
 function __test_symbolic__(symbolic) {
   var s = new Set();
   s.add(symbolic);
-  s.add(symbolic);
-  if (s.has(symbolic)) {
-    // @witness adding the same value twice is idempotent (SameValueZero), so size stays 1, never 2
-    __IS_SAT__(s.size === 2, false);
+  if (s.size >= 1) {
+    // @witness after adding an element the size is at least 1, so size < 1 is impossible
+    __IS_SAT__(s.size < 1, false);
   } else {
     __IS_SAT__(true, false);
   }

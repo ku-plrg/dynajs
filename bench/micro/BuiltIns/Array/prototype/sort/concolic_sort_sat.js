@@ -1,6 +1,7 @@
 // @type concolic
 // @target es5 Array.prototype.sort
 // @feature builtin sort
+// @done
 
 function __test_symbolic__(symbolic) {
     symbolic.sort(function (a, b) { return a - b; });

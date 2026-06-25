@@ -3,10 +3,11 @@
 // @feature builtin valueof
 
 function __test_symbolic__(symbolic) {
-  var o = { v: 1 };
-  if (symbolic > 0) {
-    // @witness valueOf on a plain object returns the object itself, so it can never differ from o
-    __IS_SAT__(o.valueOf() !== o, false);
+  var o = {};
+  var t = symbolic > 0 ? o : {};
+  if (o.valueOf() === t) {
+    // @witness valueOf returns the object itself, so it equals t only on the symbolic > 0 branch where t is o
+    __IS_SAT__(symbolic <= 0, false);
   } else {
     __IS_SAT__(true, false);
   }

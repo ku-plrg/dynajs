@@ -1,6 +1,7 @@
 // @type concolic
 // @target es5 Array.prototype.push
 // @feature builtin push
+// @done
 
 function __test_symbolic__(symbolic) {
     symbolic.push(42);

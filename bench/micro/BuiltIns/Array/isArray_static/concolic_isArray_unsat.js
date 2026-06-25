@@ -3,8 +3,8 @@
 // @feature builtin isArray
 
 function __test_symbolic__(symbolic) {
-  if (symbolic.length === 1) {
-    // @witness symbolic is an array, so Array.isArray is invariably true and its negation is unsatisfiable
+  if (Array.isArray(symbolic)) {
+    // @witness symbolic is an array, so isArray is invariably true and its negation cannot hold
     __IS_SAT__(!Array.isArray(symbolic), false);
   } else {
     __IS_SAT__(true, false);

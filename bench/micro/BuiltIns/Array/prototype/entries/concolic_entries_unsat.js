@@ -4,10 +4,9 @@
 // @done
 
 function __test_symbolic__(symbolic) {
-  if (symbolic[0] === 5) {
-    var first = symbolic.entries().next().value;
-    // @witness the first entry pairs index 0 with element 0, which the guard pins to 5
-    __IS_SAT__(first[1] !== 5, false);
+  if (symbolic.entries().next().value[1] === 5) {
+    // @witness the first entry is [0, symbolic[0]], so its value component pins symbolic[0] to 5
+    __IS_SAT__(symbolic[0] !== 5, false);
   } else {
     __IS_SAT__(true, false);
   }

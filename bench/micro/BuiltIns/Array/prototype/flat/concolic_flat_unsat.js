@@ -4,10 +4,9 @@
 // @done
 
 function __test_symbolic__(symbolic) {
-  if (symbolic.length === 2) {
-    var r = symbolic.flat();
-    // @witness flat on an already-flat array copies every element, preserving length 2
-    __IS_SAT__(r.length !== 2, false);
+  if (symbolic.flat().length >= 1) {
+    // @witness flat() draws its elements from the source, so a non-empty result forces source length >= 1
+    __IS_SAT__(symbolic.length < 1, false);
   } else {
     __IS_SAT__(true, false);
   }

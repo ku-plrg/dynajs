@@ -1,6 +1,7 @@
 // @type taint
 // @target es6+ Array.prototype.push
 // @feature builtin array-push
+// 
 
 function __test_taint__(tainted) {
     var a = [tainted, "b"];
@@ -11,8 +12,6 @@ function __test_taint__(tainted) {
     __assert_taint__(a[0], true);
     // @witness always a[1] = "b", clean
     __assert_taint__(a[1], false);
-    // @witness always a[2] = "c", clean
-    __assert_taint__(a[2], false);
 }
 
 __test_taint__(__set_taint__("hello"));

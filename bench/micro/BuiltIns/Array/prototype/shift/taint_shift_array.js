@@ -1,6 +1,7 @@
 // @type taint
 // @target es5 Array.prototype.shift
 // @feature builtin array-shift
+// @done
 
 function __test_taint__(tainted) {
     var r = tainted.shift();

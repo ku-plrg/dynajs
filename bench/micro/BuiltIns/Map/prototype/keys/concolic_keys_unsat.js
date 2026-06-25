@@ -5,9 +5,9 @@
 function __test_symbolic__(symbolic) {
   var m = new Map();
   m.set(symbolic, 1);
-  if (m.has(symbolic)) {
-    // @witness keys() yields the stored keys, so the first equals symbolic
-    __IS_SAT__(m.keys().next().value !== symbolic, false);
+  if (m.keys().next().value === symbolic) {
+    // @witness keys() yields the stored key (symbolic), so the map is non-empty
+    __IS_SAT__(m.size < 1, false);
   } else {
     __IS_SAT__(true, false);
   }

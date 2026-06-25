@@ -1,6 +1,7 @@
 // @type concolic
 // @target es5 Array.prototype.toLocaleString
 // @feature builtin toLocaleString
+// @done
 
 function __test_symbolic__(symbolic) {
 

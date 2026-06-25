@@ -1,6 +1,7 @@
 // @type concolic
 // @target es5 Array.prototype.pop
 // @feature builtin pop
+// @done
 
 function __test_symbolic__(symbolic) {
     symbolic.pop();

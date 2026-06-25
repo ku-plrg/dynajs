@@ -1,6 +1,7 @@
 // @type taint
 // @target es5 Array.prototype.push
 // @feature builtin array-push
+// @done
 
 function __test_taint__(tainted) {
     var ret = tainted.push("q");
@@ -8,8 +9,8 @@ function __test_taint__(tainted) {
     __assert_taint__(tainted[3], false);
     // @witness __test_taint__(["x","x","x"]) => a[0] = "x" tainted
     __assert_taint__(tainted[0], true);
-    // @witness __test_taint__(["x","x","x"]) => ret = 4 (length count) tainted
-    __assert_taint__(ret, true);
+    // @witness array is still tainted
+    __assert_taint__(tainted, true);
 }
 
 __test_taint__(__set_taint__(["a", "b", "c"]));

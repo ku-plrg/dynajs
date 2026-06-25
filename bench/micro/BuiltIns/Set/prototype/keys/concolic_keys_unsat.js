@@ -4,9 +4,9 @@
 
 function __test_symbolic__(symbolic) {
   var s = new Set([symbolic]);
-  if (s.has(symbolic)) {
-    // @witness keys() yields the stored elements, so the first key equals symbolic
-    __IS_SAT__(s.keys().next().value !== symbolic, false);
+  if (s.keys().next().value === symbolic) {
+    // @witness keys() yields the stored element, so a first key means the set is non-empty
+    __IS_SAT__(s.size < 1, false);
   } else {
     __IS_SAT__(true, false);
   }

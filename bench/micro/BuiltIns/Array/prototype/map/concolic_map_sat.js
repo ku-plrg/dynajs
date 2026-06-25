@@ -1,6 +1,7 @@
 // @type concolic
 // @target es5 Array.prototype.map
 // @feature builtin map
+// @done
 
 function __test_symbolic__(symbolic) {
 

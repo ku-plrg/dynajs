@@ -4,9 +4,9 @@
 // @done
 
 function __test_symbolic__(symbolic) {
-  if (symbolic.length === 2 && symbolic[1] > 10) {
-    // @witness the last element matches, so findLastIndex returns 1
-    __IS_SAT__(symbolic.findLastIndex(function (v) { return v > 10; }) !== 1, false);
+  if (symbolic.length === 2 && symbolic.findLastIndex(function (v) { return v > 10; }) === 1) {
+    // @witness findLastIndex === 1 means index 1 is the last match, so symbolic[1] > 10
+    __IS_SAT__(symbolic[1] <= 10, false);
   } else {
     __IS_SAT__(true, false);
   }

@@ -1,6 +1,7 @@
 // @type concolic
 // @target es5 Array.prototype.reverse
 // @feature builtin reverse
+// @done
 
 function __test_symbolic__(symbolic) {
     symbolic.reverse();

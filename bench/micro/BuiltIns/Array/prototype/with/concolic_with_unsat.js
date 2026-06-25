@@ -3,13 +3,12 @@
 // @feature builtin with
 
 function __test_symbolic__(symbolic) {
-  if (symbolic.length === 2) {
-    var r = symbolic.with(0, 5);
-    // @witness with(0, 5) returns a copy whose index 0 is 5
-    __IS_SAT__(r[0] !== 5, false);
+  if (symbolic.with(0, 5)[1] === 7) {
+    // @witness with(0,5) changes only index 0, so result[1] equals symbolic[1]
+    __IS_SAT__(symbolic[1] !== 7, false);
   } else {
     __IS_SAT__(true, false);
   }
 }
 
-__test_symbolic__(__symbolic__('s', [1, 2]));
+__test_symbolic__(__symbolic__('s', [1, 7]));

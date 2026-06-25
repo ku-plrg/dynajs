@@ -4,14 +4,12 @@
 // @done
 
 function __test_symbolic__(symbolic) {
-
-  if (symbolic[0] === 5) {
-    // @witness element at index 0 is 5, so includes(5) is forced true
-    __IS_SAT__(!(symbolic.includes(5)), false);
+  if (symbolic.includes(5)) {
+    // @witness includes(5) holds only if an element exists, so the array is non-empty
+    __IS_SAT__(symbolic.length < 1, false);
   } else {
     __IS_SAT__(true, false);
   }
-
 }
 
 __test_symbolic__(__symbolic__('s', [5]));

@@ -1,6 +1,7 @@
 // @type concolic
 // @target es5 Array.prototype.shift
 // @feature builtin shift
+// @done
 
 function __test_symbolic__(symbolic) {
     var f = symbolic.shift();

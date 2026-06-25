@@ -4,10 +4,10 @@
 
 function __test_symbolic__(symbolic) {
   var base = {};
-  var derived = Object.create(base);
-  if (symbolic > 0) {
-    // @witness derived is created from base, so base is always in its prototype chain
-    __IS_SAT__(!base.isPrototypeOf(derived), false);
+  var o = symbolic > 0 ? Object.create(base) : {};
+  if (base.isPrototypeOf(o)) {
+    // @witness base is o's prototype only on the symbolic > 0 branch (where o is created from base), so symbolic <= 0 is impossible
+    __IS_SAT__(symbolic <= 0, false);
   } else {
     __IS_SAT__(true, false);
   }

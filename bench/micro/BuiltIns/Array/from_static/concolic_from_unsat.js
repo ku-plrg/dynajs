@@ -3,10 +3,9 @@
 // @feature builtin from
 
 function __test_symbolic__(symbolic) {
-  if (symbolic.length === 2) {
-    var r = Array.from(symbolic);
-    // @witness Array.from copies every element, so the result keeps length 2
-    __IS_SAT__(r.length !== 2, false);
+  if (Array.from(symbolic).length === 2) {
+    // @witness Array.from copies every element, so a copy of length 2 forces the source length to 2
+    __IS_SAT__(symbolic.length !== 2, false);
   } else {
     __IS_SAT__(true, false);
   }

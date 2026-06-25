@@ -4,9 +4,9 @@
 // @done
 
 function __test_symbolic__(symbolic) {
-  if (symbolic[0] > 10) {
-    // @witness element 0 matches, so findIndex returns 0
-    __IS_SAT__(symbolic.findIndex(function (v) { return v > 10; }) !== 0, false);
+  if (symbolic.findIndex(function (v) { return v > 10; }) === 0) {
+    // @witness findIndex === 0 means index 0 is the first match, so symbolic[0] > 10
+    __IS_SAT__(symbolic[0] <= 10, false);
   } else {
     __IS_SAT__(true, false);
   }

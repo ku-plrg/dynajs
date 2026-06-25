@@ -1,10 +1,11 @@
 // @type taint
 // @target es6+ Array.prototype.slice
 // @feature builtin array-slice
+// @done
 
 function __test_taint__(tainted) {
     var a = ["a", "b", "c", "d"];
-    var r = a.slice(1, tainted);   // ["b","c"]
+    var r = a.slice(1, tainted); 
     // @witness r[0] = "b" clean; tainted is only the end index
     __assert_taint__(r[0], false);
     // @witness r[1] = "c" clean; tainted is only the end index

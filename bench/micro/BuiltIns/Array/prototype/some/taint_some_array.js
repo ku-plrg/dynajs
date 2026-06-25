@@ -1,6 +1,7 @@
 // @type taint
 // @target es5 Array.prototype.some
 // @feature builtin array-some
+// @done
 
 function __test_taint__(tainted) {
     var r = tainted.some(function() { return true; });

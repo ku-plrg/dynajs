@@ -1,6 +1,7 @@
 // @type taint
 // @target es6+ Array.prototype.map
 // @feature builtin array-map
+// @done
 
 function __test_taint__(tainted) {
     var a = [tainted, "b", "c"];

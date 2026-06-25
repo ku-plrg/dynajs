@@ -1,6 +1,7 @@
 // @type concolic
 // @target es5 Array.prototype.splice
 // @feature builtin splice
+// @done
 
 function __test_symbolic__(symbolic) {
     symbolic.splice(1, 1);

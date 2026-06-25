@@ -3,13 +3,12 @@
 // @feature builtin tolocalestring
 
 function __test_symbolic__(symbolic) {
-  var s = ({}).toLocaleString();
-  if (symbolic.length >= 0) {
-    // @witness a plain object's toLocaleString defaults to toString, always "[object Object]"
-    __IS_SAT__(s !== "[object Object]", false);
+  if (({}).toLocaleString().length === symbolic) {
+    // @witness a plain object's toLocaleString is "[object Object]" (length 15), so matching its length pins symbolic to 15
+    __IS_SAT__(symbolic !== 15, false);
   } else {
     __IS_SAT__(true, false);
   }
 }
 
-__test_symbolic__(__symbolic__('s', "x"));
+__test_symbolic__(__symbolic__('s', 15));

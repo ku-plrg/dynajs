@@ -1,6 +1,7 @@
 // @type concolic
 // @target es5 Array.prototype.lastIndexOf
 // @feature builtin lastindexof
+// @done
 
 function __test_symbolic__(symbolic) {
 

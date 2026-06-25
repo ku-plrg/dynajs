@@ -3,13 +3,12 @@
 // @feature builtin of
 
 function __test_symbolic__(symbolic) {
-  if (symbolic.length === 1) {
-    var r = Array.of(symbolic[0], 9);
-    // @witness Array.of with two arguments always builds a length-2 array
-    __IS_SAT__(r.length !== 2, false);
+  if (Array.of(symbolic[0], 9)[0] === 7) {
+    // @witness Array.of puts its first argument at index 0, so result[0] === 7 pins symbolic[0] to 7
+    __IS_SAT__(symbolic[0] !== 7, false);
   } else {
     __IS_SAT__(true, false);
   }
 }
 
-__test_symbolic__(__symbolic__('s', [3]));
+__test_symbolic__(__symbolic__('s', [7]));

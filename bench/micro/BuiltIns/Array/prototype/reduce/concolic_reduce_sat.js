@@ -1,6 +1,7 @@
 // @type concolic
 // @target es5 Array.prototype.reduce
 // @feature builtin reduce
+// @done
 
 function __test_symbolic__(symbolic) {
 

@@ -3,10 +3,9 @@
 // @feature builtin toString
 
 function __test_symbolic__(symbolic) {
-  if (symbolic.length === 2) {
-    var s = symbolic.toString();
-    // @witness toString joins two elements with a comma, so the comma is always present
-    __IS_SAT__(!s.includes(","), false);
+  if (symbolic.toString().length >= 1) {
+    // @witness a non-empty toString output requires at least one source element, so length < 1 is impossible
+    __IS_SAT__(symbolic.length < 1, false);
   } else {
     __IS_SAT__(true, false);
   }

@@ -3,13 +3,12 @@
 // @feature builtin values
 
 function __test_symbolic__(symbolic) {
-  var o = { a: 1, b: 2 };
-  if (symbolic.length >= 1) {
-    // @witness o has exactly two own enumerable props, so Object.values length is 2, never not-2
-    __IS_SAT__(Object.values(o).length !== 2, false);
+  if (Object.values(symbolic)[0] === 5) {
+    // @witness the object's only value is symbolic.a, so values[0] === 5 forces symbolic.a to 5
+    __IS_SAT__(symbolic.a !== 5, false);
   } else {
     __IS_SAT__(true, false);
   }
 }
 
-__test_symbolic__(__symbolic__('s', "x"));
+__test_symbolic__(__symbolic__('s', { a: 5 }));

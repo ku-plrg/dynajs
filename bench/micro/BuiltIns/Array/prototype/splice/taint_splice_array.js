@@ -1,6 +1,7 @@
 // @type taint
 // @target es6+ Array.prototype.splice
 // @feature builtin array-splice
+// @done
 
 function __test_taint__(tainted) {
     var r = tainted.splice(0, 1);

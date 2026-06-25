@@ -4,10 +4,10 @@
 
 function __test_symbolic__(symbolic) {
   var proto = { tag: 1 };
-  var o = Object.create(proto);
-  if (symbolic > 0) {
-    // @witness o was created from proto, so getPrototypeOf(o) is exactly proto
-    __IS_SAT__(Object.getPrototypeOf(o) !== proto, false);
+  var o = symbolic > 0 ? Object.create(proto) : {};
+  if (Object.getPrototypeOf(o) === proto) {
+    // @witness o's prototype is proto only on the symbolic > 0 branch (where o is created from proto)
+    __IS_SAT__(symbolic <= 0, false);
   } else {
     __IS_SAT__(true, false);
   }
