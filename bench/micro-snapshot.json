@@ -5715,8 +5715,8 @@
     "BuiltIns__Array__prototype__at__concolic_at_unsat": [
       {
         "expected": "unsat",
-        "actual": "sat",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__Array__prototype__concat__concolic_concat_sat": [
@@ -5974,15 +5974,15 @@
     "BuiltIns__Array__prototype__map__concolic_map_sat": [
       {
         "expected": "sat",
-        "actual": "unsat",
-        "result": "FN"
+        "actual": "sat",
+        "result": "TP"
       }
     ],
     "BuiltIns__Array__prototype__map__concolic_map_unsat": [
       {
         "expected": "unsat",
-        "actual": "sat",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__Array__prototype__pop__concolic_pop_sat": [
@@ -6016,29 +6016,29 @@
     "BuiltIns__Array__prototype__reduce__concolic_reduce_sat": [
       {
         "expected": "sat",
-        "actual": "unsat",
-        "result": "FN"
+        "actual": "sat",
+        "result": "TP"
       }
     ],
     "BuiltIns__Array__prototype__reduce__concolic_reduce_unsat": [
       {
         "expected": "unsat",
-        "actual": "sat",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__Array__prototype__reduceRight__concolic_reduceRight_sat": [
       {
         "expected": "sat",
-        "actual": "unsat",
-        "result": "FN"
+        "actual": "sat",
+        "result": "TP"
       }
     ],
     "BuiltIns__Array__prototype__reduceRight__concolic_reduceRight_unsat": [
       {
         "expected": "unsat",
-        "actual": "sat",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__Array__prototype__reverse__concolic_reverse_sat": [
@@ -6058,8 +6058,8 @@
     "BuiltIns__Array__prototype__shift__concolic_shift_sat": [
       {
         "expected": "sat",
-        "actual": "unsat",
-        "result": "FN"
+        "actual": "sat",
+        "result": "TP"
       }
     ],
     "BuiltIns__Array__prototype__shift__concolic_shift_unsat": [
