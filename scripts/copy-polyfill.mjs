@@ -88,7 +88,7 @@ const NO_CHECK = [
   'AO__GetSubstitution',
   // JSON serialization: esmeta gen-poly emits sound runtime code but with type
   // noise it can't yet resolve — the State Record (a non-escaping scratch object)
-  // is typed Wrapped<unknown> with internal-slot-style field access, plus never[]
+  // is typed Lifted<unknown> with internal-slot-style field access, plus never[]
   // list inits and a gap redeclaration. @ts-nocheck accepts these until gen-poly
   // emits a typed Record. NOT a substitute for AO__EnumerableOwnProperties, which
   // reads object internal methods → hand-authored manual shim (a runtime crash,
