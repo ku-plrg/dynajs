@@ -239,13 +239,6 @@ function symToSmt(s: Sym, vars: Map<string, Sort>): string {
       return `(str.in_re ${symToSmt(s.str, vars)} ${reToSmt(s.re)})`;
     case 'ite':
       return `(ite ${symToSmt(s.cond, vars)} ${symToSmt(s.then, vars)} ${symToSmt(s.else, vars)})`;
-    case 'lost':
-      // Defensive: branches drop `lost` constraints and asserts concretize over
-      // them, so a `lost` should never reach the solver — if one does, refuse to
-      // translate rather than fabricate (caller -> `error`).
-      throw new UnsupportedSym(
-        'information lost: symbolic value through an unmodeled op',
-      );
   }
 }
 

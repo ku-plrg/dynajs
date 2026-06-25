@@ -8,7 +8,6 @@ import {
   type Sym,
   type Sort,
   seqElementSort,
-  containsLost,
   sortOf,
   sortsComparable,
   isNumericSort,
@@ -115,7 +114,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
       enc = encodeRegex(singleCasePattern, () => this.mintRegexVar());
     } catch (e) {
       console.error(`[concolic] case-fold regex unmodeled: ${String(e)}`);
-      return undefined; // -> baseInfo lifts to `lost`; the verdict concretizes
+      return undefined; // -> baseInfo concretizes (bottom -> const); the verdict falls back to concrete
     }
     for (const a of enc.assertions) this.pushConstraint(a, true);
     this.pushConstraint({ kind: 'inRe', str: src, re: enc.ast }, true);
@@ -329,7 +328,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
       enc = encodeRegex(re.source, () => this.mintRegexVar());
     } catch (e) {
       console.error(`[concolic] regex unmodeled: ${String(e)}`);
-      return undefined; // -> baseInfo lifts to `lost`; the verdict concretizes
+      return undefined; // -> baseInfo concretizes (bottom -> const); the verdict falls back to concrete
     }
 
     this.enableCaptures(enc, strSym);
@@ -375,8 +374,8 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
 
   // clamp(x, lo, hi) = max(lo, min(x, hi)). Modeled symbolically (not via baseInfo)
   // so a clamp over a symbolic bound — e.g. a search loop's start index clamped to
-  // a symbolic length — stays a real Sym instead of a `lost` that would drop the
-  // loop-bound constraint. min/max render to ite in smt.ts.
+  // a symbolic length — stays a real Sym instead of a concretized const that would
+  // drop the loop-bound constraint. min/max render to ite in smt.ts.
   protected clampInfo(
     x: Valued<Sym>,
     lower: Valued<Sym>,
@@ -401,11 +400,10 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   // sources funnel here through FlowAnalysis.condition.
   protected conditionInfo(id: number, cond: Valued<Sym>, taken: boolean): void {
     const sym = this.symOf(cond);
-    // A constant branch carries no constraint; a `lost` one we cannot express, so
-    // we drop it (the branch already ran concretely) — the path condition is then
-    // weaker, never wrong. Matches ExpoSE, which concretizes such a branch to a
-    // vacuous `true`.
-    if (sym.kind === 'const' || containsLost(sym)) return;
+    // A constant branch carries no constraint — including a condition whose value
+    // came (concretized) through an unmodeled op (baseInfo -> bottom -> const);
+    // it already ran concretely. Matches ExpoSE.
+    if (sym.kind === 'const') return;
     const bool = this.toBool(sym);
     if (bool !== undefined) this.pathConstraints.push({ id, constraint: bool, taken });
   }
@@ -691,10 +689,9 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
 
     const cond = this.valued(condArg);
     const sym = this.symOf(cond);
-    if (sym.kind === 'const' || containsLost(sym)) {
-      // No symbolic dependency, OR the condition rests on a value lost to an
-      // unmodeled op. For a fair single-path comparison we DON'T error on loss
-      // (for now): we fall back to the concrete truth value, as ExpoSE does.
+    if (sym.kind === 'const') {
+      // No symbolic dependency (or a value concretized through an unmodeled op, now
+      // a const): fall back to the concrete truth value, as ExpoSE does.
       emit(cond.value ? 'detected' : 'clean');
       return;
     }
@@ -726,10 +723,10 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
 
     const cond = this.valued(condArg);
     const sym = this.symOf(cond);
-    if (sym.kind === 'const' || containsLost(sym)) {
-      // No symbolic dependency, OR a value lost to an unmodeled op. A constant
-      // query is satisfiable iff it is concretely true on this path; we fall
-      // back to that truth value (as ExpoSE does), never erroring on loss.
+    if (sym.kind === 'const') {
+      // No symbolic dependency (or a value concretized through an unmodeled op): a
+      // constant query is satisfiable iff it is concretely true on this path; fall
+      // back to that truth value, as ExpoSE does.
       emit(cond.value ? 'sat' : 'unsat');
       return;
     }

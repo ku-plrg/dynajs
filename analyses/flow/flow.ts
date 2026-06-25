@@ -558,8 +558,9 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     // isNaN/isFinite/isType go through baseInfo, not unaryInfo: unlike isInteger
     // (a genuine symbolic predicate over the SMT Real), these aren't modelable —
     // NaN/∞ aren't in the Real theory and a value's type is concrete. baseInfo
-    // yields `lost` for a symbolic operand, which conditionInfo drops (the branch
-    // concretizes, ExpoSE-faithful), while taint still flows operand→result.
+    // carries no op model, so for concolic the result is concretized and the
+    // branch runs concretely (ExpoSE-faithful), while taint still flows
+    // operand→result.
     isNaN: (x) => {
       const v = Number.isNaN(this.unwrap(x) as number);
       return this.lift(v, this.baseInfo(v, [this.valued(x)]));

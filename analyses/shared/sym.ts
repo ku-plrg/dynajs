@@ -72,7 +72,7 @@ const BOOL_BINARY_OPS = new Set([
 ]);
 
 // The SMT sort a Sym denotes when statically determinable from its structure;
-// undefined when not (a seq kind, or `lost`). A concolic value has one definite
+// undefined when not (a seq kind). A concolic value has one definite
 // sort per path, so this lets equality drop a cross-sort comparison — e.g. a
 // numeric StringIndexOf result vs the "not-found" string sentinel (a discriminated
 // union arm) is concretely false, not a (ill-typed) symbolic constraint.
@@ -119,7 +119,7 @@ export function sortOf(s: Sym): Sort | undefined {
     case 'ite':
       return sortOf(s.then); // both arms share a sort by construction
     default:
-      return undefined; // seq*, lost
+      return undefined; // seq*
   }
 }
 
@@ -174,28 +174,7 @@ export type Sym =
   | { kind: 'inRe'; str: Sym; re: ReNode }
   // if-then-else over Syms (`(ite c t e)`); both arms share a sort. Used by
   // `search` (match index, else -1) and the min/max encodings.
-  | { kind: 'ite'; cond: Sym; then: Sym; else: Sym }
-  // A symbolic value that flowed through an op with no symbolic model, so its
-  // expression was dropped. NOT a constant: it depended on a symbolic input, we
-  // just can't represent it. Tracked + propagated so a verdict that rests on it
-  // can be recognised as info-loss rather than a faithful symbolic result.
-  | { kind: 'lost' };
-
-// Does a Sym contain a `lost` subexpression anywhere? (Children are the Sym-typed
-// fields, so a generic walk over object values suffices.)
-export function containsLost(s: Sym): boolean {
-  if (s.kind === 'lost') return true;
-  for (const v of Object.values(s)) {
-    if (
-      v !== null &&
-      typeof v === 'object' &&
-      'kind' in v &&
-      containsLost(v as Sym)
-    )
-      return true;
-  }
-  return false;
-}
+  | { kind: 'ite'; cond: Sym; then: Sym; else: Sym };
 
 // Thrown when a Sym uses an operator/constant outside the translatable scope;
 // callers turn it into an `error` verdict rather than silently mis-translating.
@@ -238,8 +217,6 @@ export function symToString(s: Sym): string {
       return `${symToString(s.str)} ∈ /${reToString(s.re)}/`;
     case 'ite':
       return `(${symToString(s.cond)} ? ${symToString(s.then)} : ${symToString(s.else)})`;
-    case 'lost':
-      return '⊘';
   }
 }
 
