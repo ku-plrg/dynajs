@@ -5,5 +5,5 @@ import { AO__TrimString } from "./AO__TrimString.js";
 
 export function INTRINSICS_String_prototype_trim ($ : SpecRuntime, $this : Lifted<unknown>) {
   var S = $this;
-  return AO__TrimString($, (S as Lifted<unknown>), ($.lit<string>("start+end") as Lifted<unknown>));
+  return AO__TrimString($, (S as Lifted<unknown>), ($.default<string>("start+end", []) as Lifted<unknown>));
 }

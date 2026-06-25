@@ -10,10 +10,10 @@ export function INTRINSICS_String_prototype_charAt ($ : SpecRuntime, $this : Lif
   var S = AO__ToString($, (O as Lifted<unknown>));
   var position = AO__ToIntegerOrInfinity($, (pos as Lifted<unknown>));
   var size = $.length(S);
-  if ($.condition(Number.MAX_SAFE_INTEGER - 418, $.lessThan(position, $.lit<number>(0))) || $.condition(Number.MAX_SAFE_INTEGER - 419, $.greaterThanEqual(position, size)))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 418, $.lessThan(position, $.default<number>(0, [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 419, $.greaterThanEqual(position, size))))
   {
-    return $.lit<string>("");
+    return $.default<string>("", []);
   }
 
-  return $.substring(S, (position as Lifted<number>), ($.add((position as Lifted<number>), ($.lit<number>(1) as Lifted<number>)) as Lifted<number>));
+  return $.substring(S, (position as Lifted<number>), ($.add((position as Lifted<number>), ($.default<number>(1, []) as Lifted<number>)) as Lifted<number>));
 }

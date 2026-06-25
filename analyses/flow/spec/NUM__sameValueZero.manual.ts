@@ -1,8 +1,8 @@
 import type { SpecRuntime, Lifted, Unlifted, Primitive } from "../type.js";
 
 export function NUM__sameValueZero($: SpecRuntime, xW: Lifted<number>, yW: Lifted<number>) {
-  const x = $.peek(xW);
-  const y = $.peek(yW);
+  const x = $.value(xW);
+  const y = $.value(yW);
 
   // 1. If x is NaN and y is NaN, return true.
   if (isNaN(x) && isNaN(y)) return true;

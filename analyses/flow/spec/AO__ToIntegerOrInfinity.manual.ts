@@ -7,11 +7,11 @@ export function AO__ToIntegerOrInfinity($: SpecRuntime, argument: Lifted<unknown
 
   // 1. Let number be ? ToNumber(argument).
   var number = AO__ToNumber($, argument);
-  var n = $.peek(number);
+  var n = $.value(number);
 
   // 2. If number is one of NaN, +0𝔽, or -0𝔽, return 0.
   if (isNaN(n)) {
-    return $.base<number>(0, []);
+    return $.default<number>(0, []);
   }
 
   // To improve precision;
@@ -22,7 +22,7 @@ export function AO__ToIntegerOrInfinity($: SpecRuntime, argument: Lifted<unknown
   // 3. If number is +∞𝔽, return +∞.
   // 4. If number is -∞𝔽, return -∞.
   if (!isFinite(n)) {
-    return $.base<number>(n, []);
+    return $.default<number>(n, []);
   }
 
   // 5. Return truncate(ℝ(number)).

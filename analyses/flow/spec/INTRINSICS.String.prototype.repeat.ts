@@ -9,15 +9,15 @@ export function INTRINSICS_String_prototype_repeat ($ : SpecRuntime, $this : Lif
   var O = AO__RequireObjectCoercible($, $this);
   var S = AO__ToString($, (O as Lifted<unknown>));
   var n = AO__ToIntegerOrInfinity($, (count as Lifted<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 447, $.lessThan(n, $.lit<number>(0))) || $.condition(Number.MAX_SAFE_INTEGER - 448, $.is(n, $.lit<number>(Infinity))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 447, $.lessThan(n, $.default<number>(0, [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 448, $.is(n, $.default<number>(Infinity, [])))))
   {
     throw new RangeError;
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 449, $.is(n, $.lit<number>(0))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 449, $.is(n, $.default<number>(0, [])))))
   {
-    return $.lit<string>("");
+    return $.default<string>("", []);
   }
 
-  return $.base($.peek(S).repeat($.peek(n)), [S, n]);
+  return $.default($.value(S).repeat($.value(n)), [S, n]);
 }

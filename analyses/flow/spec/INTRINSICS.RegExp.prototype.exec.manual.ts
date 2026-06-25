@@ -10,18 +10,18 @@ import { AO__ArrayCreate } from "./AO__ArrayCreate.js";
 import { AO__CreateDataPropertyOrThrow } from "./AO__CreateDataPropertyOrThrow.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_RegExp_prototype_exec($: SpecRuntime, $this: Lifted<unknown>, S: Lifted<unknown> = $.undef) {
+export function INTRINSICS_RegExp_prototype_exec($: SpecRuntime, $this: Lifted<unknown>, S: Lifted<unknown> = $.default(undefined, [])) {
   var string = AO__ToString($, (S as Lifted<unknown>));
   var m = $.regexExec($this, (string as Lifted<string>));
   if (!$.condition(Number.MAX_SAFE_INTEGER - 900, m.matched)) {
-    return $.base<null>(null, []);
+    return $.default<null>(null, []);
   }
 
-  var A = AO__ArrayCreate($, ($.base<number>(m.captures.length, []) as Lifted<number>));
+  var A = AO__ArrayCreate($, ($.default<number>(m.captures.length, []) as Lifted<number>));
   for (var i = 0; i < m.captures.length; i++) {
-    AO__CreateDataPropertyOrThrow($, (A as Lifted<unknown>), ($.base<string>(String(i), []) as Lifted<unknown>), (m.captures[i] as Lifted<unknown>));
+    AO__CreateDataPropertyOrThrow($, (A as Lifted<unknown>), ($.default<string>(String(i), []) as Lifted<unknown>), (m.captures[i] as Lifted<unknown>));
   }
-  AO__CreateDataPropertyOrThrow($, (A as Lifted<unknown>), ($.base<string>("index", []) as Lifted<unknown>), (m.index as Lifted<unknown>));
-  AO__CreateDataPropertyOrThrow($, (A as Lifted<unknown>), ($.base<string>("input", []) as Lifted<unknown>), (m.input as Lifted<unknown>));
+  AO__CreateDataPropertyOrThrow($, (A as Lifted<unknown>), ($.default<string>("index", []) as Lifted<unknown>), (m.index as Lifted<unknown>));
+  AO__CreateDataPropertyOrThrow($, (A as Lifted<unknown>), ($.default<string>("input", []) as Lifted<unknown>), (m.input as Lifted<unknown>));
   return A;
 }

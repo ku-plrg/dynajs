@@ -6,13 +6,13 @@ import { AO__IsArray } from "./AO__IsArray.js";
 import { AO__ToBoolean } from "./AO__ToBoolean.js";
 
 export function AO__IsConcatSpreadable ($ : SpecRuntime, O : Lifted<unknown>) {
-  if (!($.condition(Number.MAX_SAFE_INTEGER - 549, $.isType(O, "object"))))
+  if (!($.value($.condition(Number.MAX_SAFE_INTEGER - 549, $.isType(O, "object")))))
   {
-    return $.lit<boolean>(false);
+    return $.default<boolean>(false, []);
   }
 
-  var spreadable = AO__Get($, (O as Lifted<unknown>), ($.lit<symbol>(Symbol.isConcatSpreadable) as Lifted<unknown>));
-  if (!$.condition(Number.MAX_SAFE_INTEGER - 550, $.is(spreadable, $.lit<undefined>(undefined))))
+  var spreadable = AO__Get($, (O as Lifted<unknown>), ($.default<symbol>(Symbol.isConcatSpreadable, []) as Lifted<unknown>));
+  if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 550, $.is(spreadable, $.default<undefined>(undefined, [])))))
   {
     return AO__ToBoolean($, (spreadable as Lifted<unknown>));
   }

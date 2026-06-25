@@ -3,14 +3,14 @@ import type { Lifted, SpecRuntime } from "../type.js";
 
 export function AO__IsConstructor ($ : SpecRuntime, argument : Lifted<unknown>) {
   // this is incorrect because side-effect happens?
-  const f = $.peek(argument);
+  const f = $.value(argument);
   if (typeof f !== 'function') {
-    return $.base<boolean>(false, []);
+    return $.default<boolean>(false, []);
   }
 
   const stringified = CAPTURED.FunctionToString.call(f).replaceAll(' ', '');
   if (stringified.startsWith('class') || stringified.startsWith('function')) {
-    return $.base<boolean>(true, []);
+    return $.default<boolean>(true, []);
   }
-  return $.base<boolean>(false, []);
+  return $.default<boolean>(false, []);
 }

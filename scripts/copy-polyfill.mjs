@@ -248,10 +248,6 @@ while (queue.length > 0) {
       continue;
     }
     content = readFileSync(from, 'utf8');
-    // gen-poly emits `@/model/type.js`; the spec model now lives under
-    // analyses/flow, so rewrite that import to the sibling type module
-    // (spec/ sits one level below flow/).
-    content = content.replace(/@\/model\/type\.js/g, '../type.js');
     if (isNoCheck(base)) content = `// @ts-nocheck\n${content}`;
     writeFileSync(join(destDir, file), content);
     if (roots.has(base)) copiedNames.push(base);

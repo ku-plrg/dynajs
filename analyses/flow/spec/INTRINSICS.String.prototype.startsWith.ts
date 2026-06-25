@@ -6,44 +6,44 @@ import { AO__RequireObjectCoercible } from "./AO__RequireObjectCoercible.js";
 import { AO__ToIntegerOrInfinity } from "./AO__ToIntegerOrInfinity.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_String_prototype_startsWith ($ : SpecRuntime, $this : Lifted<unknown>, searchString : Lifted<unknown>, position : Lifted<unknown> = $.undef) {
+export function INTRINSICS_String_prototype_startsWith ($ : SpecRuntime, $this : Lifted<unknown>, searchString : Lifted<unknown>, position : Lifted<unknown> = $.default<undefined>(undefined, [])) {
   var O = AO__RequireObjectCoercible($, $this);
   var S = AO__ToString($, (O as Lifted<unknown>));
   var isRegExp = AO__IsRegExp($, (searchString as Lifted<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 483, $.is(isRegExp, $.lit<boolean>(true))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 483, $.is(isRegExp, $.default<boolean>(true, [])))))
   {
     throw new TypeError;
   }
 
   var searchStr = AO__ToString($, (searchString as Lifted<unknown>));
   var len = $.length(S);
-  if ($.condition(Number.MAX_SAFE_INTEGER - 484, $.is(position, $.lit<undefined>(undefined))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 484, $.is(position, $.default<undefined>(undefined, [])))))
   {
-    var pos = $.lit<number>(0);
+    var pos = $.default<number>(0, []);
   }
   else
   {
     var pos = AO__ToIntegerOrInfinity($, (position as Lifted<unknown>));
   }
 
-  var start = $.clamp(pos, $.lit<number>(0), len);
+  var start = $.clamp(pos, $.default<number>(0, []), len);
   var searchLength = $.length(searchStr);
-  if ($.condition(Number.MAX_SAFE_INTEGER - 485, $.is(searchLength, $.lit<number>(0))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 485, $.is(searchLength, $.default<number>(0, [])))))
   {
-    return $.lit<boolean>(true);
+    return $.default<boolean>(true, []);
   }
 
   var end = $.add((start as Lifted<number>), (searchLength as Lifted<number>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 486, $.greaterThan(end, len)))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 486, $.greaterThan(end, len))))
   {
-    return $.lit<boolean>(false);
+    return $.default<boolean>(false, []);
   }
 
   var substring = $.substring(S, (start as Lifted<number>), (end as Lifted<number>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 487, $.is(substring, searchStr)))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 487, $.is(substring, searchStr))))
   {
-    return $.lit<boolean>(true);
+    return $.default<boolean>(true, []);
   }
 
-  return $.lit<boolean>(false);
+  return $.default<boolean>(false, []);
 }

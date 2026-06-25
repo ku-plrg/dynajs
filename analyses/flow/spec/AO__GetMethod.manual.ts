@@ -7,7 +7,7 @@ export function AO__GetMethod($: SpecRuntime, V: Lifted<unknown>, P: Lifted<unkn
   // 1. Let _func_ be ? GetV(_V_, _P_).
   var func = AO__GetV($, V, P);
   // 1. If _func_ is either *undefined* or *null*, return *undefined*.
-  if (func === undefined || func === null) return $.base<undefined>(undefined, []);
+  if (func === undefined || func === null) return $.default<undefined>(undefined, []);
   // 1. If IsCallable(_func_) is *false*, throw a *TypeError* exception.
   if (AO__IsCallable($, func) === false) throw new TypeError();
   // 1. Return _func_.

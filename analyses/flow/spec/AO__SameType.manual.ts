@@ -3,45 +3,45 @@
 import type { Lifted, SpecRuntime } from "../type.js";
 
 export function AO__SameType ($ : SpecRuntime, x : Lifted<unknown>, y : Lifted<unknown>) {
-  if ($.condition(Number.MAX_SAFE_INTEGER - 537, $.is(x, $.base<undefined>(undefined, []))) && $.condition(Number.MAX_SAFE_INTEGER - 538, $.is(y, $.base<undefined>(undefined, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 537, $.is(x, $.default<undefined>(undefined, []))) && $.condition(Number.MAX_SAFE_INTEGER - 538, $.is(y, $.default<undefined>(undefined, []))))
   {
-    return $.base<boolean>(true, []);
+    return $.default<boolean>(true, []);
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 539, $.is(x, $.base<null>(null, []))) && $.condition(Number.MAX_SAFE_INTEGER - 540, $.is(y, $.base<null>(null, []))))
+  if ($.condition(Number.MAX_SAFE_INTEGER - 539, $.is(x, $.default<null>(null, []))) && $.condition(Number.MAX_SAFE_INTEGER - 540, $.is(y, $.default<null>(null, []))))
   {
-    return $.base<boolean>(true, []);
+    return $.default<boolean>(true, []);
   }
 
-  if (($.peek($.isType(x, "boolean"))) && ($.peek($.isType(y, "boolean"))))
+  if (($.value($.isType(x, "boolean"))) && ($.value($.isType(y, "boolean"))))
   {
-    return $.base<boolean>(true, []);
+    return $.default<boolean>(true, []);
   }
 
-  if (($.peek($.isType(x, "number"))) && ($.peek($.isType(y, "number"))))
+  if (($.value($.isType(x, "number"))) && ($.value($.isType(y, "number"))))
   {
-    return $.base<boolean>(true, []);
+    return $.default<boolean>(true, []);
   }
 
-  if (($.peek($.isType(x, "bigint"))) && ($.peek($.isType(y, "bigint"))))
+  if (($.value($.isType(x, "bigint"))) && ($.value($.isType(y, "bigint"))))
   {
-    return $.base<boolean>(true, []);
+    return $.default<boolean>(true, []);
   }
 
-  if (($.peek($.isType(x, "symbol"))) && ($.peek($.isType(y, "symbol"))))
+  if (($.value($.isType(x, "symbol"))) && ($.value($.isType(y, "symbol"))))
   {
-    return $.base<boolean>(true, []);
+    return $.default<boolean>(true, []);
   }
 
-  if (($.peek($.isType(x, "string"))) && ($.peek($.isType(y, "string"))))
+  if (($.value($.isType(x, "string"))) && ($.value($.isType(y, "string"))))
   {
-    return $.base<boolean>(true, []);
+    return $.default<boolean>(true, []);
   }
 
-  if (($.peek($.isType(x, "object"))) && ($.peek($.isType(y, "object"))))
+  if (($.value($.isType(x, "object"))) && ($.value($.isType(y, "object"))))
   {
-    return $.base<boolean>(true, []);
+    return $.default<boolean>(true, []);
   }
 
-  return $.base<boolean>(false, []);
+  return $.default<boolean>(false, []);
 }

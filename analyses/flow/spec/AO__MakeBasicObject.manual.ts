@@ -27,7 +27,7 @@ export function AO__MakeBasicObject(
   //      responsibility — no-ops here.
   // 8. If internalSlotsList contains [[Extensible]], set obj.[[Extensible]] to true.
   if ($.contains(internalSlotsList, "Extensible" as Lifted<string>)) {
-    obj["Extensible"] = $.base<boolean>(true, []);
+    obj["Extensible"] = $.default<boolean>(true, []);
   }
   // 9. Return obj.
   return obj;

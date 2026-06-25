@@ -15,15 +15,15 @@ export function INTRINSICS_Array_prototype_slice ($ : SpecRuntime, $this : Lifte
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
   var relativeStart = AO__ToIntegerOrInfinity($, (start as Lifted<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 205, $.is(relativeStart, $.lit<number>(-Infinity))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 205, $.is(relativeStart, $.default<number>(-Infinity, [])))))
   {
-    var k = $.lit<number>(0);
+    var k = $.default<number>(0, []);
   }
   else
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 206, $.lessThan(relativeStart, $.lit<number>(0))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 206, $.lessThan(relativeStart, $.default<number>(0, [])))))
     {
-      var k = $.max($.add((len as Lifted<number>), (relativeStart as Lifted<number>)), $.lit<number>(0));
+      var k = $.max($.add((len as Lifted<number>), (relativeStart as Lifted<number>)), $.default<number>(0, []));
     }
     else
     {
@@ -32,7 +32,7 @@ export function INTRINSICS_Array_prototype_slice ($ : SpecRuntime, $this : Lifte
 
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 207, $.is(end, $.lit<undefined>(undefined))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 207, $.is(end, $.default<undefined>(undefined, [])))))
   {
     var relativeEnd = len;
   }
@@ -41,15 +41,15 @@ export function INTRINSICS_Array_prototype_slice ($ : SpecRuntime, $this : Lifte
     var relativeEnd = AO__ToIntegerOrInfinity($, (end as Lifted<unknown>));
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 208, $.is(relativeEnd, $.lit<number>(-Infinity))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 208, $.is(relativeEnd, $.default<number>(-Infinity, [])))))
   {
-    var final = $.lit<number>(0);
+    var final = $.default<number>(0, []);
   }
   else
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 209, $.lessThan(relativeEnd, $.lit<number>(0))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 209, $.lessThan(relativeEnd, $.default<number>(0, [])))))
     {
-      var final = $.max($.add((len as Lifted<number>), (relativeEnd as Lifted<number>)), $.lit<number>(0));
+      var final = $.max($.add((len as Lifted<number>), (relativeEnd as Lifted<number>)), $.default<number>(0, []));
     }
     else
     {
@@ -58,23 +58,23 @@ export function INTRINSICS_Array_prototype_slice ($ : SpecRuntime, $this : Lifte
 
   }
 
-  var count = $.max($.subtract((final as Lifted<number>), (k as Lifted<number>)), $.lit<number>(0));
+  var count = $.max($.subtract((final as Lifted<number>), (k as Lifted<number>)), $.default<number>(0, []));
   var A = AO__ArraySpeciesCreate($, (O as Lifted<unknown>), (count as Lifted<number>));
-  var n = $.lit<number>(0);
-  while ($.condition(Number.MAX_SAFE_INTEGER - 210, $.lessThan(k, final)))
+  var n = $.default<number>(0, []);
+  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 210, $.lessThan(k, final))))
   {
     var Pk = AO__ToString($, (k as Lifted<unknown>));
     var kPresent = AO__HasProperty($, (O as Lifted<unknown>), (Pk as Lifted<unknown>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 211, $.is(kPresent, $.lit<boolean>(true))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 211, $.is(kPresent, $.default<boolean>(true, [])))))
     {
       var kValue = AO__Get($, (O as Lifted<unknown>), (Pk as Lifted<unknown>));
       AO__CreateDataPropertyOrThrow($, (A as Lifted<unknown>), (AO__ToString($, (n as Lifted<unknown>)) as Lifted<unknown>), (kValue as Lifted<unknown>));
     }
 
-    k = $.add((k as Lifted<number>), ($.lit<number>(1) as Lifted<number>));
-    n = $.add((n as Lifted<number>), ($.lit<number>(1) as Lifted<number>));
+    k = $.add((k as Lifted<number>), ($.default<number>(1, []) as Lifted<number>));
+    n = $.add((n as Lifted<number>), ($.default<number>(1, []) as Lifted<number>));
   }
 
-  AO__Set($, (A as Lifted<unknown>), ($.lit<string>("length") as Lifted<unknown>), (n as Lifted<unknown>), ($.lit<boolean>(true) as Lifted<boolean>));
+  AO__Set($, (A as Lifted<unknown>), ($.default<string>("length", []) as Lifted<unknown>), (n as Lifted<unknown>), ($.default<boolean>(true, []) as Lifted<boolean>));
   return A;
 }

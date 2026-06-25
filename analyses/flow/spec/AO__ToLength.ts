@@ -5,10 +5,10 @@ import { AO__ToIntegerOrInfinity } from "./AO__ToIntegerOrInfinity.js";
 
 export function AO__ToLength ($ : SpecRuntime, argument : Lifted<unknown>) {
   var len = AO__ToIntegerOrInfinity($, (argument as Lifted<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 743, $.lessThanEqual(len, $.lit<number>(0))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 743, $.lessThanEqual(len, $.default<number>(0, [])))))
   {
-    return $.lit<number>(0);
+    return $.default<number>(0, []);
   }
 
-  return $.min(len, $.subtract(($.exponentiate($.lit<number>(2), $.lit<number>(53)) as Lifted<number>), ($.lit<number>(1) as Lifted<number>)));
+  return $.min(len, $.subtract(($.exponentiate($.default<number>(2, []), $.default<number>(53, [])) as Lifted<number>), ($.default<number>(1, []) as Lifted<number>)));
 }

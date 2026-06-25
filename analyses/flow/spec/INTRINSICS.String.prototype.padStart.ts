@@ -4,7 +4,7 @@ import type { Lifted, SpecRuntime } from "../type.js";
 import { AO__RequireObjectCoercible } from "./AO__RequireObjectCoercible.js";
 import { AO__StringPaddingBuiltinsImpl } from "./AO__StringPaddingBuiltinsImpl.js";
 
-export function INTRINSICS_String_prototype_padStart ($ : SpecRuntime, $this : Lifted<unknown>, maxLength : Lifted<unknown>, fillString : Lifted<unknown> = $.undef) {
+export function INTRINSICS_String_prototype_padStart ($ : SpecRuntime, $this : Lifted<unknown>, maxLength : Lifted<unknown>, fillString : Lifted<unknown> = $.default<undefined>(undefined, [])) {
   var O = AO__RequireObjectCoercible($, $this);
-  return AO__StringPaddingBuiltinsImpl($, (O as Lifted<unknown>), (maxLength as Lifted<unknown>), (fillString as Lifted<unknown>), ($.lit<string>("start") as Lifted<unknown>));
+  return AO__StringPaddingBuiltinsImpl($, (O as Lifted<unknown>), (maxLength as Lifted<unknown>), (fillString as Lifted<unknown>), ($.default<string>("start", []) as Lifted<unknown>));
 }

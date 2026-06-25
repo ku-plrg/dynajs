@@ -10,7 +10,7 @@ export function INTRINSICS_String_prototype_at ($ : SpecRuntime, $this : Lifted<
   var S = AO__ToString($, (O as Lifted<unknown>));
   var len = $.length(S);
   var relativeIndex = AO__ToIntegerOrInfinity($, (index as Lifted<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 415, $.greaterThanEqual(relativeIndex, $.lit<number>(0))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 415, $.greaterThanEqual(relativeIndex, $.default<number>(0, [])))))
   {
     var k = relativeIndex;
   }
@@ -19,10 +19,10 @@ export function INTRINSICS_String_prototype_at ($ : SpecRuntime, $this : Lifted<
     var k = $.add((len as Lifted<number>), (relativeIndex as Lifted<number>));
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 416, $.lessThan(k, $.lit<number>(0))) || $.condition(Number.MAX_SAFE_INTEGER - 417, $.greaterThanEqual(k, len)))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 416, $.lessThan(k, $.default<number>(0, [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 417, $.greaterThanEqual(k, len))))
   {
-    return $.lit<undefined>(undefined);
+    return $.default<undefined>(undefined, []);
   }
 
-  return $.substring(S, (k as Lifted<number>), ($.add((k as Lifted<number>), ($.lit<number>(1) as Lifted<number>)) as Lifted<number>));
+  return $.substring(S, (k as Lifted<number>), ($.add((k as Lifted<number>), ($.default<number>(1, []) as Lifted<number>)) as Lifted<number>));
 }

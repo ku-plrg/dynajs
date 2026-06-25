@@ -11,9 +11,9 @@ export function INTRINSICS_String_prototype_codePointAt ($ : SpecRuntime, $this 
   var S = AO__ToString($, (O as Lifted<unknown>));
   var position = AO__ToIntegerOrInfinity($, (pos as Lifted<unknown>));
   var size = $.length(S);
-  if ($.condition(Number.MAX_SAFE_INTEGER - 422, $.lessThan(position, $.lit<number>(0))) || $.condition(Number.MAX_SAFE_INTEGER - 423, $.greaterThanEqual(position, size)))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 422, $.lessThan(position, $.default<number>(0, [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 423, $.greaterThanEqual(position, size))))
   {
-    return $.lit<undefined>(undefined);
+    return $.default<undefined>(undefined, []);
   }
 
   var cp = AO__CodePointAt($, (S as Lifted<string>), (position as Lifted<number>));

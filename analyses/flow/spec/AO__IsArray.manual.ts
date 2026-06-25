@@ -2,15 +2,15 @@
 import type { Lifted, SpecRuntime } from "../type.js";
 
 export function AO__IsArray ($ : SpecRuntime, argument : Lifted<unknown>) {
-  if (!($.peek($.isType(argument, "object"))))
+  if (!($.value($.isType(argument, "object"))))
   {
-    return $.base<boolean>(false, []);
+    return $.default<boolean>(false, []);
   }
 
-  if (Array.isArray($.peek(argument)))
+  if (Array.isArray($.value(argument)))
   {
-    return $.base<boolean>(true, []);
+    return $.default<boolean>(true, []);
   }
 
-  return $.base<boolean>(false, []);
+  return $.default<boolean>(false, []);
 }

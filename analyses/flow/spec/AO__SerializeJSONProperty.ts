@@ -15,44 +15,44 @@ import { AO__ToString } from "./AO__ToString.js";
 
 export function AO__SerializeJSONProperty ($ : SpecRuntime, state : Lifted<unknown>, key : Lifted<string>, holder : Lifted<unknown>) {
   var value = AO__Get($, (holder as Lifted<unknown>), (key as Lifted<unknown>));
-  if (($.condition(Number.MAX_SAFE_INTEGER - 683, $.isType(value, "object"))) || ($.condition(Number.MAX_SAFE_INTEGER - 684, $.isType(value, "bigint"))))
+  if (($.value($.condition(Number.MAX_SAFE_INTEGER - 683, $.isType(value, "object")))) || ($.value($.condition(Number.MAX_SAFE_INTEGER - 684, $.isType(value, "bigint")))))
   {
-    var toJSON = AO__GetV($, (value as Lifted<unknown>), ($.lit<string>("toJSON") as Lifted<unknown>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 685, $.is(AO__IsCallable($, (toJSON as Lifted<unknown>)), $.lit<boolean>(true))))
+    var toJSON = AO__GetV($, (value as Lifted<unknown>), ($.default<string>("toJSON", []) as Lifted<unknown>));
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 685, $.is(AO__IsCallable($, (toJSON as Lifted<unknown>)), $.default<boolean>(true, [])))))
     {
       value = AO__Call($, (toJSON as Lifted<unknown>), (value as Lifted<unknown>), ([key] as Lifted<unknown>[]));
     }
 
   }
 
-  if (!$.condition(Number.MAX_SAFE_INTEGER - 686, $.is(state["ReplacerFunction" /* TODO INTERNAL : internal access */], $.lit<undefined>(undefined))))
+  if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 686, $.is(state["ReplacerFunction" /* TODO INTERNAL : internal access */], $.default<undefined>(undefined, [])))))
   {
     value = AO__Call($, (state["ReplacerFunction" /* TODO INTERNAL : internal access */] as Lifted<unknown>), (holder as Lifted<unknown>), ([key, value] as Lifted<unknown>[]));
   }
 
-  if (($.condition(Number.MAX_SAFE_INTEGER - 687, $.isType(value, "object"))))
+  if (($.value($.condition(Number.MAX_SAFE_INTEGER - 687, $.isType(value, "object")))))
   {
-    if (($.peek(value) instanceof Number))
+    if (($.value(value) instanceof Number))
     {
       value = AO__ToNumber($, (value as Lifted<unknown>));
     }
     else
     {
-      if (($.peek(value) instanceof String))
+      if (($.value(value) instanceof String))
       {
         value = AO__ToString($, (value as Lifted<unknown>));
       }
       else
       {
-        if (($.peek(value) instanceof Boolean))
+        if (($.value(value) instanceof Boolean))
         {
-          value = $.base($.peek(value).valueOf(), [value]);
+          value = $.default($.value(value).valueOf(), [value]);
         }
         else
         {
-          if (($.peek(value) instanceof BigInt))
+          if (($.value(value) instanceof BigInt))
           {
-            value = $.base($.peek(value).valueOf(), [value]);
+            value = $.default($.value(value).valueOf(), [value]);
           }
 
         }
@@ -63,45 +63,45 @@ export function AO__SerializeJSONProperty ($ : SpecRuntime, state : Lifted<unkno
 
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 688, $.is(value, $.lit<null>(null))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 688, $.is(value, $.default<null>(null, [])))))
   {
-    return $.lit<string>("null");
+    return $.default<string>("null", []);
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 689, $.is(value, $.lit<boolean>(true))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 689, $.is(value, $.default<boolean>(true, [])))))
   {
-    return $.lit<string>("true");
+    return $.default<string>("true", []);
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 690, $.is(value, $.lit<boolean>(false))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 690, $.is(value, $.default<boolean>(false, [])))))
   {
-    return $.lit<string>("false");
+    return $.default<string>("false", []);
   }
 
-  if (($.condition(Number.MAX_SAFE_INTEGER - 691, $.isType(value, "string"))))
+  if (($.value($.condition(Number.MAX_SAFE_INTEGER - 691, $.isType(value, "string")))))
   {
     return AO__QuoteJSONString($, (value as Lifted<string>));
   }
 
-  if (($.condition(Number.MAX_SAFE_INTEGER - 692, $.isType(value, "number"))))
+  if (($.value($.condition(Number.MAX_SAFE_INTEGER - 692, $.isType(value, "number")))))
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 693, $.isFinite(value)))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 693, $.isFinite(value))))
     {
       return AO__ToString($, (value as Lifted<unknown>));
     }
 
-    return $.lit<string>("null");
+    return $.default<string>("null", []);
   }
 
-  if (($.condition(Number.MAX_SAFE_INTEGER - 694, $.isType(value, "bigint"))))
+  if (($.value($.condition(Number.MAX_SAFE_INTEGER - 694, $.isType(value, "bigint")))))
   {
     throw new TypeError;
   }
 
-  if (($.condition(Number.MAX_SAFE_INTEGER - 695, $.isType(value, "object"))) && $.condition(Number.MAX_SAFE_INTEGER - 696, $.is(AO__IsCallable($, (value as Lifted<unknown>)), $.lit<boolean>(false))))
+  if (($.value($.condition(Number.MAX_SAFE_INTEGER - 695, $.isType(value, "object")))) && $.value($.condition(Number.MAX_SAFE_INTEGER - 696, $.is(AO__IsCallable($, (value as Lifted<unknown>)), $.default<boolean>(false, [])))))
   {
     var isArray = AO__IsArray($, (value as Lifted<unknown>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 697, $.is(isArray, $.lit<boolean>(true))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 697, $.is(isArray, $.default<boolean>(true, [])))))
     {
       return AO__SerializeJSONArray($, (state as Lifted<unknown>), (value as Lifted<unknown>));
     }
@@ -109,5 +109,5 @@ export function AO__SerializeJSONProperty ($ : SpecRuntime, state : Lifted<unkno
     return AO__SerializeJSONObject($, (state as Lifted<unknown>), (value as Lifted<unknown>));
   }
 
-  return $.lit<undefined>(undefined);
+  return $.default<undefined>(undefined, []);
 }

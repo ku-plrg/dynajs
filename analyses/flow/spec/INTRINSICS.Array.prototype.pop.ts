@@ -11,18 +11,18 @@ import { AO__ToString } from "./AO__ToString.js";
 export function INTRINSICS_Array_prototype_pop ($ : SpecRuntime, $this : Lifted<unknown>) {
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 175, $.is(len, $.lit<number>(0))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 175, $.is(len, $.default<number>(0, [])))))
   {
-    AO__Set($, (O as Lifted<unknown>), ($.lit<string>("length") as Lifted<unknown>), ($.lit<number>(0) as Lifted<unknown>), ($.lit<boolean>(true) as Lifted<boolean>));
-    return $.lit<undefined>(undefined);
+    AO__Set($, (O as Lifted<unknown>), ($.default<string>("length", []) as Lifted<unknown>), ($.default<number>(0, []) as Lifted<unknown>), ($.default<boolean>(true, []) as Lifted<boolean>));
+    return $.default<undefined>(undefined, []);
   }
   else
   {
-    var newLen = $.subtract((len as Lifted<number>), ($.lit<number>(1) as Lifted<number>));
+    var newLen = $.subtract((len as Lifted<number>), ($.default<number>(1, []) as Lifted<number>));
     var index = AO__ToString($, (newLen as Lifted<unknown>));
     var element = AO__Get($, (O as Lifted<unknown>), (index as Lifted<unknown>));
     AO__DeletePropertyOrThrow($, (O as Lifted<unknown>), (index as Lifted<unknown>));
-    AO__Set($, (O as Lifted<unknown>), ($.lit<string>("length") as Lifted<unknown>), (newLen as Lifted<unknown>), ($.lit<boolean>(true) as Lifted<boolean>));
+    AO__Set($, (O as Lifted<unknown>), ($.default<string>("length", []) as Lifted<unknown>), (newLen as Lifted<unknown>), ($.default<boolean>(true, []) as Lifted<boolean>));
     return element;
   }
 

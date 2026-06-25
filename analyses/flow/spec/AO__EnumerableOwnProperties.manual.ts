@@ -5,7 +5,7 @@
 // modeled directly against the host object. For an ordinary object, the
 // enumerable own STRING keys in [[OwnPropertyKeys]] order are exactly what
 // `Object.keys` yields. Keys are structural property names, so they are reborn
-// clean (`$.base(k, [])`); only the per-property VALUES (read through AO__Get)
+// clean (`$.default(k, [])`); only the per-property VALUES (read through AO__Get)
 // carry the holder's provenance.
 import type { Lifted, SpecRuntime } from "../type.js";
 
@@ -16,13 +16,13 @@ export function AO__EnumerableOwnProperties ($ : SpecRuntime, O : Lifted<unknown
   // 1. Let ownKeys be ? O.[[OwnPropertyKeys]]().
   // 3.a (key is a String) + 3.a.ii (desc is enumerable) are folded into
   //     Object.keys, which returns only enumerable own string-keyed names.
-  const ownKeys = Object.keys($.peek(O) as object);
-  const kindRaw = String($.peek(kind));
+  const ownKeys = Object.keys($.value(O) as object);
+  const kindRaw = String($.value(kind));
   // 2. Let results be a new empty List.
   const results = [] as Lifted<unknown>[];
   // 3. For each element key of ownKeys, do
   for (const key of ownKeys) {
-    const P = $.base(key, []) as Lifted<string>;
+    const P = $.default(key, []) as Lifted<string>;
     if (kindRaw === "key") {
       // 3.a.ii.1. If kind is key, append key to results.
       $.append(results, P);

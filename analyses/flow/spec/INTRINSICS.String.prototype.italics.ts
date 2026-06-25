@@ -5,5 +5,5 @@ import { AO__CreateHTML } from "./AO__CreateHTML.js";
 
 export function INTRINSICS_String_prototype_italics ($ : SpecRuntime, $this : Lifted<unknown>) {
   var S = $this;
-  return AO__CreateHTML($, (S as Lifted<unknown>), ($.lit<string>("i") as Lifted<string>), ($.lit<string>("") as Lifted<string>), ($.lit<string>("") as Lifted<unknown>));
+  return AO__CreateHTML($, (S as Lifted<unknown>), ($.default<string>("i", []) as Lifted<string>), ($.default<string>("", []) as Lifted<string>), ($.default<string>("", []) as Lifted<unknown>));
 }

@@ -7,14 +7,14 @@ import { AO__ToIntegerOrInfinity } from "./AO__ToIntegerOrInfinity.js";
 import { AO__ToNumber } from "./AO__ToNumber.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_String_prototype_lastIndexOf ($ : SpecRuntime, $this : Lifted<unknown>, searchString : Lifted<unknown>, position : Lifted<unknown> = $.undef) {
+export function INTRINSICS_String_prototype_lastIndexOf ($ : SpecRuntime, $this : Lifted<unknown>, searchString : Lifted<unknown>, position : Lifted<unknown> = $.default<undefined>(undefined, [])) {
   var O = AO__RequireObjectCoercible($, $this);
   var S = AO__ToString($, (O as Lifted<unknown>));
   var searchStr = AO__ToString($, (searchString as Lifted<unknown>));
   var numPos = AO__ToNumber($, (position as Lifted<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 432, $.isNaN(numPos as Lifted<number>)))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 432, $.isNaN(numPos as Lifted<number>))))
   {
-    var pos = $.lit<number>(Infinity);
+    var pos = $.default<number>(Infinity, []);
   }
   else
   {
@@ -23,16 +23,16 @@ export function INTRINSICS_String_prototype_lastIndexOf ($ : SpecRuntime, $this 
 
   var len = $.length(S);
   var searchLen = $.length(searchStr);
-  if ($.condition(Number.MAX_SAFE_INTEGER - 433, $.lessThan(len, searchLen)))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 433, $.lessThan(len, searchLen))))
   {
-    return $.lit<number>(-1);
+    return $.default<number>(-1, []);
   }
 
-  var start = $.clamp(pos, $.lit<number>(0), $.subtract((len as Lifted<number>), (searchLen as Lifted<number>)));
+  var start = $.clamp(pos, $.default<number>(0, []), $.subtract((len as Lifted<number>), (searchLen as Lifted<number>)));
   var result = AO__StringLastIndexOf($, (S as Lifted<string>), (searchStr as Lifted<string>), (start as Lifted<number>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 434, $.is(result, $.lit<string>("not-found"))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 434, $.is(result, $.default<string>("not-found", [])))))
   {
-    return $.lit<number>(-1);
+    return $.default<number>(-1, []);
   }
 
   return result;

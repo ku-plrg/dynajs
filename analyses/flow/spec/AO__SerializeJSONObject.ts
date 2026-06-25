@@ -15,26 +15,26 @@ export function AO__SerializeJSONObject ($ : SpecRuntime, state : Lifted<unknown
   $.append(state["Stack" /* TODO INTERNAL : internal access */], value)
   var stepBack = state["Indent" /* TODO INTERNAL : internal access */];
   state["Indent" /* TODO INTERNAL : internal access */] = $.concatenate(state["Indent" /* TODO INTERNAL : internal access */], state["Gap" /* TODO INTERNAL : internal access */]);
-  if (!$.condition(Number.MAX_SAFE_INTEGER - 679, $.is(state["PropertyList" /* TODO INTERNAL : internal access */], $.lit<undefined>(undefined))))
+  if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 679, $.is(state["PropertyList" /* TODO INTERNAL : internal access */], $.default<undefined>(undefined, [])))))
   {
     var K = state["PropertyList" /* TODO INTERNAL : internal access */];
   }
   else
   {
-    var K = AO__EnumerableOwnProperties($, (value as Lifted<unknown>), ($.lit<string>("key") as Lifted<unknown>));
+    var K = AO__EnumerableOwnProperties($, (value as Lifted<unknown>), ($.default<string>("key", []) as Lifted<unknown>));
   }
 
   var partial = [] as Lifted<never>[];
   for (var P of K)
   {
     var strP = AO__SerializeJSONProperty($, (state as Lifted<unknown>), (P as Lifted<string>), (value as Lifted<unknown>));
-    if (!$.condition(Number.MAX_SAFE_INTEGER - 680, $.is(strP, $.lit<undefined>(undefined))))
+    if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 680, $.is(strP, $.default<undefined>(undefined, [])))))
     {
       var member = AO__QuoteJSONString($, (P as Lifted<string>));
-      member = $.concatenate(member, $.lit<string>(":"));
-      if (!$.condition(Number.MAX_SAFE_INTEGER - 681, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.lit<string>(""))))
+      member = $.concatenate(member, $.default<string>(":", []));
+      if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 681, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.default<string>("", [])))))
       {
-        member = $.concatenate(member, $.lit<string>(" "));
+        member = $.concatenate(member, $.default<string>(" ", []));
       }
 
       member = $.concatenate(member, strP);
@@ -45,20 +45,20 @@ export function AO__SerializeJSONObject ($ : SpecRuntime, state : Lifted<unknown
 
   if ((partial.length === 0))
   {
-    var final = $.lit<string>("{}");
+    var final = $.default<string>("{}", []);
   }
   else
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 682, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.lit<string>(""))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 682, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.default<string>("", [])))))
     {
-      var properties = (partial as Lifted<string>[]).reduce((a, b) => $.concatenate(a, $.concatenate($.base<string>(",", []), b)));
-      var final = $.concatenate($.concatenate($.lit<string>("{"), properties), $.lit<string>("}"));
+      var properties = (partial as Lifted<string>[]).reduce((a, b) => $.concatenate(a, $.concatenate($.default<string>(",", []), b)));
+      var final = $.concatenate($.concatenate($.default<string>("{", []), properties), $.default<string>("}", []));
     }
     else
     {
-      var separator = $.concatenate($.concatenate($.lit<string>(","), $.lit<string>("\n")), state["Indent" /* TODO INTERNAL : internal access */]);
+      var separator = $.concatenate($.concatenate($.default<string>(",", []), $.default<string>("\n", [])), state["Indent" /* TODO INTERNAL : internal access */]);
       var properties = (partial as Lifted<string>[]).reduce((a, b) => $.concatenate(a, $.concatenate(separator, b)));
-      var final = $.concatenate($.concatenate($.concatenate($.concatenate($.concatenate($.concatenate($.lit<string>("{"), $.lit<string>("\n")), state["Indent" /* TODO INTERNAL : internal access */]), properties), $.lit<string>("\n")), stepBack), $.lit<string>("}"));
+      var final = $.concatenate($.concatenate($.concatenate($.concatenate($.concatenate($.concatenate($.default<string>("{", []), $.default<string>("\n", [])), state["Indent" /* TODO INTERNAL : internal access */]), properties), $.default<string>("\n", [])), stepBack), $.default<string>("}", []));
     }
 
   }

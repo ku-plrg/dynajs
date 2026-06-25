@@ -3,8 +3,8 @@ import type { SpecRuntime, Lifted, Unlifted, Primitive } from "../type.js";
 export function AO__CreateArrayIterator ($ : SpecRuntime, array : Lifted<unknown>, kind : Lifted<string>) {
   // error: typed array not supported
   // TODO array only...
-  const unliftedArray = $.peek(array);
-  const kindUnlifted = $.peek(kind);
+  const unliftedArray = $.value(array);
+  const kindUnlifted = $.value(kind);
   switch (kindUnlifted) {
     case "key":
       // @ts-ignore nextline

@@ -10,10 +10,10 @@ import { AO__ArrayCreate } from "./AO__ArrayCreate.js";
 import { AO__CreateDataPropertyOrThrow } from "./AO__CreateDataPropertyOrThrow.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_String_prototype_matchAll($: SpecRuntime, $this: Lifted<unknown>, regexp: Lifted<unknown> = $.undef) {
+export function INTRINSICS_String_prototype_matchAll($: SpecRuntime, $this: Lifted<unknown>, regexp: Lifted<unknown> = $.default(undefined, [])) {
   var string = AO__ToString($, ($this as Lifted<unknown>));
-  var re: unknown = $.peek(regexp);
-  var subject = $.peek(string) as string;
+  var re: unknown = $.value(regexp);
+  var subject = $.value(string) as string;
 
   if (!(re instanceof RegExp)) {
     return subject.matchAll(re as RegExp) as unknown as Lifted<unknown>;
@@ -25,16 +25,16 @@ export function INTRINSICS_String_prototype_matchAll($: SpecRuntime, $this: Lift
 
   var out: unknown[] = [];
   for (var m of subject.matchAll(reD)) {
-    var A = AO__ArrayCreate($, ($.base<number>(m.length, []) as Lifted<number>));
+    var A = AO__ArrayCreate($, ($.default<number>(m.length, []) as Lifted<number>));
     for (var i = 0; i < m.length; i++) {
       var span = m.indices ? m.indices[i] : undefined;
       var cap = span
-        ? $.substring((string as Lifted<string>), ($.base<number>(span[0], []) as Lifted<number>), ($.base<number>(span[1], []) as Lifted<number>))
-        : $.base<string>(m[i] == null ? "" : (m[i] as string), []);
-      AO__CreateDataPropertyOrThrow($, (A as Lifted<unknown>), ($.base<string>(String(i), []) as Lifted<unknown>), (cap as Lifted<unknown>));
+        ? $.substring((string as Lifted<string>), ($.default<number>(span[0], []) as Lifted<number>), ($.default<number>(span[1], []) as Lifted<number>))
+        : $.default<string>(m[i] == null ? "" : (m[i] as string), []);
+      AO__CreateDataPropertyOrThrow($, (A as Lifted<unknown>), ($.default<string>(String(i), []) as Lifted<unknown>), (cap as Lifted<unknown>));
     }
-    AO__CreateDataPropertyOrThrow($, (A as Lifted<unknown>), ($.base<string>("index", []) as Lifted<unknown>), ($.base<number>(m.index ?? 0, []) as Lifted<unknown>));
-    AO__CreateDataPropertyOrThrow($, (A as Lifted<unknown>), ($.base<string>("input", []) as Lifted<unknown>), (string as Lifted<unknown>));
+    AO__CreateDataPropertyOrThrow($, (A as Lifted<unknown>), ($.default<string>("index", []) as Lifted<unknown>), ($.default<number>(m.index ?? 0, []) as Lifted<unknown>));
+    AO__CreateDataPropertyOrThrow($, (A as Lifted<unknown>), ($.default<string>("input", []) as Lifted<unknown>), (string as Lifted<unknown>));
     out.push(A);
   }
   // Array of match arrays — iterable, so `[...s.matchAll(re)]` works. (A true

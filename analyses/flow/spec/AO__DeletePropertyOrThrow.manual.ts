@@ -5,8 +5,8 @@ import type { Lifted, SpecRuntime } from "../type.js";
 export function AO__DeletePropertyOrThrow ($ : SpecRuntime, O : Lifted<unknown>, P : Lifted<unknown>) {
   "use strict";
 
-  const Ou = $.peek(O);
-  const Pu = $.peek(P);
+  const Ou = $.value(O);
+  const Pu = $.value(P);
 
   // 1. Let success be ? O.[[Delete]](P).
   // @ts-ignore coerce as property key

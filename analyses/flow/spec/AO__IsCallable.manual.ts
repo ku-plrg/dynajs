@@ -3,7 +3,7 @@ import type { SpecRuntime, Lifted, Unlifted, Primitive } from "../type.js";
 export function AO__IsCallable($: SpecRuntime, argument : Lifted<unknown>) : Lifted<boolean> {
   "use strict";
 
-  const arg = $.peek(argument);
+  const arg = $.value(argument);
 
-  return $.base(typeof arg === "function", []);
+  return $.default(typeof arg === "function", []);
 }

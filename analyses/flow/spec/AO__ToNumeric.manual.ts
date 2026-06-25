@@ -5,9 +5,9 @@ import { AO__ToPrimitive } from './AO__ToPrimitive.js';
 
 export function AO__ToNumeric($: SpecRuntime, arg: Lifted<unknown>): Lifted<number | bigint> {
   // 1. Let primValue be ? ToPrimitive(value, number).
-  const primValue = AO__ToPrimitive($, arg, $.base('number', []));
+  const primValue = AO__ToPrimitive($, arg, $.default('number', []));
   // 2. If primValue is a BigInt, return primValue.
-  if ($.peek($.isType(primValue, 'bigint'))) {
+  if ($.value($.isType(primValue, 'bigint'))) {
     return primValue as Lifted<bigint>;
   }
   // 3. Return ? ToNumber(primValue).

@@ -17,38 +17,38 @@ export function AO__SerializeJSONArray ($ : SpecRuntime, state : Lifted<unknown>
   state["Indent" /* TODO INTERNAL : internal access */] = $.concatenate(state["Indent" /* TODO INTERNAL : internal access */], state["Gap" /* TODO INTERNAL : internal access */]);
   var partial = [] as Lifted<never>[];
   var len = AO__LengthOfArrayLike($, (value as Lifted<unknown>));
-  var index = $.lit<number>(0);
-  while ($.condition(Number.MAX_SAFE_INTEGER - 676, $.lessThan(index, len)))
+  var index = $.default<number>(0, []);
+  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 676, $.lessThan(index, len))))
   {
     var strP = AO__SerializeJSONProperty($, (state as Lifted<unknown>), (AO__ToString($, (index as Lifted<unknown>)) as Lifted<string>), (value as Lifted<unknown>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 677, $.is(strP, $.lit<undefined>(undefined))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 677, $.is(strP, $.default<undefined>(undefined, [])))))
     {
-      $.append(partial, $.lit<string>("null"))
+      $.append(partial, $.default<string>("null", []))
     }
     else
     {
       $.append(partial, strP)
     }
 
-    index = $.add((index as Lifted<number>), ($.lit<number>(1) as Lifted<number>));
+    index = $.add((index as Lifted<number>), ($.default<number>(1, []) as Lifted<number>));
   }
 
   if ((partial.length === 0))
   {
-    var final = $.lit<string>("[]");
+    var final = $.default<string>("[]", []);
   }
   else
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 678, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.lit<string>(""))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 678, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.default<string>("", [])))))
     {
-      var properties = (partial as Lifted<string>[]).reduce((a, b) => $.concatenate(a, $.concatenate($.base<string>(",", []), b)));
-      var final = $.concatenate($.concatenate($.lit<string>("["), properties), $.lit<string>("]"));
+      var properties = (partial as Lifted<string>[]).reduce((a, b) => $.concatenate(a, $.concatenate($.default<string>(",", []), b)));
+      var final = $.concatenate($.concatenate($.default<string>("[", []), properties), $.default<string>("]", []));
     }
     else
     {
-      var separator = $.concatenate($.concatenate($.lit<string>(","), $.lit<string>("\n")), state["Indent" /* TODO INTERNAL : internal access */]);
+      var separator = $.concatenate($.concatenate($.default<string>(",", []), $.default<string>("\n", [])), state["Indent" /* TODO INTERNAL : internal access */]);
       var properties = (partial as Lifted<string>[]).reduce((a, b) => $.concatenate(a, $.concatenate(separator, b)));
-      var final = $.concatenate($.concatenate($.concatenate($.concatenate($.concatenate($.concatenate($.lit<string>("["), $.lit<string>("\n")), state["Indent" /* TODO INTERNAL : internal access */]), properties), $.lit<string>("\n")), stepBack), $.lit<string>("]"));
+      var final = $.concatenate($.concatenate($.concatenate($.concatenate($.concatenate($.concatenate($.default<string>("[", []), $.default<string>("\n", [])), state["Indent" /* TODO INTERNAL : internal access */]), properties), $.default<string>("\n", [])), stepBack), $.default<string>("]", []));
     }
 
   }

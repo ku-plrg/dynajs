@@ -5,10 +5,10 @@ import { AO__ToNumber } from "./AO__ToNumber.js";
 export function AO__ToUint32($: SpecRuntime, arg: Lifted<unknown>): Lifted<number> {
   // 1. Let _number_ be ? ToNumber(_argument_).
   let number = AO__ToNumber($, arg);
-  let numberUnlifted = $.peek(number);
+  let numberUnlifted = $.value(number);
   // 1. If _number_ is not finite or _number_ is either *+0*<sub>𝔽</sub> or *-0*<sub>𝔽</sub>, return *+0*<sub>𝔽</sub>.
   if (!Number.isFinite(numberUnlifted) || numberUnlifted === 0) {
-    return $.base(0, [arg]);
+    return $.default(0, [arg]);
   }
   // 1. Let _int_ be truncate(ℝ(_number_)).
   let int_ = Math.trunc(numberUnlifted);
@@ -16,5 +16,5 @@ export function AO__ToUint32($: SpecRuntime, arg: Lifted<unknown>): Lifted<numbe
   var MOD = 4294967296; // 2^32
   let int32bit = ((int_ % MOD) + MOD) % MOD;
   // 1. [id="step-touint32-return"] Return 𝔽(_int32bit_).
-  return $.base(int32bit, [arg]);
+  return $.default(int32bit, [arg]);
 }

@@ -5,17 +5,17 @@ import { AO__ToNumber } from "./AO__ToNumber.js";
 
 export function INTRINSICS_Math_ceil ($ : SpecRuntime, $this : Lifted<unknown>, x : Lifted<unknown>) {
   var n = AO__ToNumber($, (x as Lifted<unknown>));
-  if (!$.condition(Number.MAX_SAFE_INTEGER - 287, $.isFinite(n)) || ($.condition(Number.MAX_SAFE_INTEGER - 288, $.is(n, $.lit<number>(0))) || $.condition(Number.MAX_SAFE_INTEGER - 289, $.is(n, $.lit<number>(0)))))
+  if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 287, $.isFinite(n))) || ($.value($.condition(Number.MAX_SAFE_INTEGER - 288, $.is(n, $.default<number>(0, [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 289, $.is(n, $.default<number>(0, []))))))
   {
     return n;
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 290, $.lessThan(n, $.lit<number>(0))) && $.condition(Number.MAX_SAFE_INTEGER - 291, $.greaterThan(n, $.lit<number>(-1))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 290, $.lessThan(n, $.default<number>(0, [])))) && $.value($.condition(Number.MAX_SAFE_INTEGER - 291, $.greaterThan(n, $.default<number>(-1, [])))))
   {
-    return $.lit<number>(0);
+    return $.default<number>(0, []);
   }
 
-  if (($.condition(Number.MAX_SAFE_INTEGER - 292, $.isInteger(n))))
+  if (($.value($.condition(Number.MAX_SAFE_INTEGER - 292, $.isInteger(n)))))
   {
     return n;
   }

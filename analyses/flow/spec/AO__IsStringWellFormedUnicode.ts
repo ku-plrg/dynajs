@@ -5,17 +5,17 @@ import { AO__CodePointAt } from "./AO__CodePointAt.js";
 
 export function AO__IsStringWellFormedUnicode ($ : SpecRuntime, string : Lifted<string>) {
   var len = $.length(string);
-  var k = $.lit<number>(0);
-  while ($.condition(Number.MAX_SAFE_INTEGER - 583, $.lessThan(k, len)))
+  var k = $.default<number>(0, []);
+  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 583, $.lessThan(k, len))))
   {
     var cp = AO__CodePointAt($, (string as Lifted<string>), (k as Lifted<number>));
-    if ($.condition(Number.MAX_SAFE_INTEGER - 584, $.is(cp["IsUnpairedSurrogate" /* TODO INTERNAL : internal access */], $.lit<boolean>(true))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 584, $.is(cp["IsUnpairedSurrogate" /* TODO INTERNAL : internal access */], $.default<boolean>(true, [])))))
     {
-      return $.lit<boolean>(false);
+      return $.default<boolean>(false, []);
     }
 
     k = $.add((k as Lifted<number>), (cp["CodeUnitCount" /* TODO INTERNAL : internal access */] as Lifted<number>));
   }
 
-  return $.lit<boolean>(true);
+  return $.default<boolean>(true, []);
 }

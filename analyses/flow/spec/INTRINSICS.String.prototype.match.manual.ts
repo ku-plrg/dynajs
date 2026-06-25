@@ -10,24 +10,24 @@ import { AO__ArrayCreate } from "./AO__ArrayCreate.js";
 import { AO__CreateDataPropertyOrThrow } from "./AO__CreateDataPropertyOrThrow.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_String_prototype_match($: SpecRuntime, $this: Lifted<unknown>, regexp: Lifted<unknown> = $.undef) {
+export function INTRINSICS_String_prototype_match($: SpecRuntime, $this: Lifted<unknown>, regexp: Lifted<unknown> = $.default(undefined, [])) {
   var string = AO__ToString($, ($this as Lifted<unknown>));
-  var re: unknown = $.peek(regexp);
+  var re: unknown = $.value(regexp);
   if (re instanceof RegExp && !re.global) {
     var m = $.regexExec((regexp as Lifted<unknown>), (string as Lifted<string>));
     if (!$.condition(Number.MAX_SAFE_INTEGER - 902, m.matched)) {
-      return $.base<null>(null, []);
+      return $.default<null>(null, []);
     }
-    var A = AO__ArrayCreate($, ($.base<number>(m.captures.length, []) as Lifted<number>));
+    var A = AO__ArrayCreate($, ($.default<number>(m.captures.length, []) as Lifted<number>));
     for (var i = 0; i < m.captures.length; i++) {
-      AO__CreateDataPropertyOrThrow($, (A as Lifted<unknown>), ($.base<string>(String(i), []) as Lifted<unknown>), (m.captures[i] as Lifted<unknown>));
+      AO__CreateDataPropertyOrThrow($, (A as Lifted<unknown>), ($.default<string>(String(i), []) as Lifted<unknown>), (m.captures[i] as Lifted<unknown>));
     }
-    AO__CreateDataPropertyOrThrow($, (A as Lifted<unknown>), ($.base<string>("index", []) as Lifted<unknown>), (m.index as Lifted<unknown>));
-    AO__CreateDataPropertyOrThrow($, (A as Lifted<unknown>), ($.base<string>("input", []) as Lifted<unknown>), (m.input as Lifted<unknown>));
+    AO__CreateDataPropertyOrThrow($, (A as Lifted<unknown>), ($.default<string>("index", []) as Lifted<unknown>), (m.index as Lifted<unknown>));
+    AO__CreateDataPropertyOrThrow($, (A as Lifted<unknown>), ($.default<string>("input", []) as Lifted<unknown>), (m.input as Lifted<unknown>));
     return A;
   }
   // Global all-matches iteration and string-pattern coercion aren't modeled
   // symbolically yet — return the native result so the concrete value is right
   // (untracked array at this boundary; no symbolic provenance).
-  return ($.peek(string) as string).match(re as RegExp | string) as unknown as Lifted<unknown>;
+  return ($.value(string) as string).match(re as RegExp | string) as unknown as Lifted<unknown>;
 }

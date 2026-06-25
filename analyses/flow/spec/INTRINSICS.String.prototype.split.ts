@@ -11,10 +11,10 @@ import { AO__ToUint32 } from "./AO__ToUint32.js";
 
 export function INTRINSICS_String_prototype_split ($ : SpecRuntime, $this : Lifted<unknown>, separator : Lifted<unknown>, limit : Lifted<unknown>) {
   var O = AO__RequireObjectCoercible($, $this);
-  if (!($.condition(Number.MAX_SAFE_INTEGER - 473, $.is(separator, $.lit<undefined>(undefined))) || $.condition(Number.MAX_SAFE_INTEGER - 474, $.is(separator, $.lit<null>(null)))))
+  if (!($.value($.condition(Number.MAX_SAFE_INTEGER - 473, $.is(separator, $.default<undefined>(undefined, [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 474, $.is(separator, $.default<null>(null, []))))))
   {
-    var splitter = AO__GetMethod($, (separator as Lifted<unknown>), ($.lit<symbol>(Symbol.split) as Lifted<unknown>));
-    if (!$.condition(Number.MAX_SAFE_INTEGER - 475, $.is(splitter, $.lit<undefined>(undefined))))
+    var splitter = AO__GetMethod($, (separator as Lifted<unknown>), ($.default<symbol>(Symbol.split, []) as Lifted<unknown>));
+    if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 475, $.is(splitter, $.default<undefined>(undefined, [])))))
     {
       return AO__Call($, (splitter as Lifted<unknown>), (separator as Lifted<unknown>), ([O, limit] as Lifted<unknown>[]));
     }
@@ -22,9 +22,9 @@ export function INTRINSICS_String_prototype_split ($ : SpecRuntime, $this : Lift
   }
 
   var S = AO__ToString($, (O as Lifted<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 476, $.is(limit, $.lit<undefined>(undefined))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 476, $.is(limit, $.default<undefined>(undefined, [])))))
   {
-    var lim = $.subtract(($.exponentiate($.lit<number>(2), $.lit<number>(32)) as Lifted<number>), ($.lit<number>(1) as Lifted<number>));
+    var lim = $.subtract(($.exponentiate($.default<number>(2, []), $.default<number>(32, [])) as Lifted<number>), ($.default<number>(1, []) as Lifted<number>));
   }
   else
   {
@@ -32,39 +32,39 @@ export function INTRINSICS_String_prototype_split ($ : SpecRuntime, $this : Lift
   }
 
   var R = AO__ToString($, (separator as Lifted<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 477, $.is(lim, $.lit<number>(0))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 477, $.is(lim, $.default<number>(0, [])))))
   {
     return AO__CreateArrayFromList($, ([] as Lifted<unknown>[]));
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 478, $.is(separator, $.lit<undefined>(undefined))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 478, $.is(separator, $.default<undefined>(undefined, [])))))
   {
     return AO__CreateArrayFromList($, ([S] as Lifted<unknown>[]));
   }
 
   var separatorLength = $.length(R);
-  if ($.condition(Number.MAX_SAFE_INTEGER - 479, $.is(separatorLength, $.lit<number>(0))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 479, $.is(separatorLength, $.default<number>(0, [])))))
   {
     var strLen = $.length(S);
-    var outLen = $.clamp(lim, $.lit<number>(0), strLen);
-    var head = $.substring(S, ($.lit<number>(0) as Lifted<number>), (outLen as Lifted<number>));
-    var codeUnits = $.peek(head).split("").map((c) => $.base<string>(c, [head]));
+    var outLen = $.clamp(lim, $.default<number>(0, []), strLen);
+    var head = $.substring(S, ($.default<number>(0, []) as Lifted<number>), (outLen as Lifted<number>));
+    var codeUnits = $.value(head).split("").map((c) => $.default<string>(c, [head]));
     return AO__CreateArrayFromList($, (codeUnits as Lifted<unknown>[]));
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 480, $.is(S, $.lit<string>(""))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 480, $.is(S, $.default<string>("", [])))))
   {
     return AO__CreateArrayFromList($, ([S] as Lifted<unknown>[]));
   }
 
   var substrings = [] as Lifted<never>[];
-  var i = $.lit<number>(0);
-  var j = AO__StringIndexOf($, (S as Lifted<string>), (R as Lifted<string>), ($.lit<number>(0) as Lifted<number>));
-  while (!$.condition(Number.MAX_SAFE_INTEGER - 481, $.is(j, $.lit<string>("not-found"))))
+  var i = $.default<number>(0, []);
+  var j = AO__StringIndexOf($, (S as Lifted<string>), (R as Lifted<string>), ($.default<number>(0, []) as Lifted<number>));
+  while (!$.value($.condition(Number.MAX_SAFE_INTEGER - 481, $.is(j, $.default<string>("not-found", [])))))
   {
     var T = $.substring(S, (i as Lifted<number>), (j as Lifted<number>));
     $.append(substrings, T)
-    if ($.condition(Number.MAX_SAFE_INTEGER - 482, $.is($.base<number>(substrings.length, []), lim)))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 482, $.is($.default<number>(substrings.length, []), lim))))
     {
       return AO__CreateArrayFromList($, (substrings as Lifted<unknown>[]));
     }

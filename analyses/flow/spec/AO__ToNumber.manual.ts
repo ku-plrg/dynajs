@@ -1,9 +1,9 @@
 import type { SpecRuntime, Lifted, Unlifted, Primitive } from "../type.js";
 
 export function AO__ToNumber($: SpecRuntime, arg: Lifted<unknown>): Lifted<number> {
-  const argument = $.peek(arg);
+  const argument = $.value(arg);
   if (typeof argument === 'number') {
     return arg as Lifted<number>;
   }
-  return $.base(+argument, [arg]);
+  return $.default(+argument, [arg]);
 }

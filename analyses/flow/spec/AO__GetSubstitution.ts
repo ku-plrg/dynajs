@@ -9,60 +9,60 @@ import { AO__ToString } from "./AO__ToString.js";
 
 export function AO__GetSubstitution ($ : SpecRuntime, matched : Lifted<string>, str : Lifted<string>, position : Lifted<number>, captures : Lifted<string | undefined>[], namedCaptures : Lifted<unknown>, replacementTemplate : Lifted<string>) {
   var stringLength = $.length(str);
-  var result = $.lit<string>("");
+  var result = $.default<string>("", []);
   var templateRemainder = replacementTemplate;
-  while (!$.condition(Number.MAX_SAFE_INTEGER - 72, $.is(templateRemainder, $.lit<string>(""))))
+  while (!$.value($.condition(Number.MAX_SAFE_INTEGER - 72, $.is(templateRemainder, $.default<string>("", [])))))
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 73, $.is($.substring(templateRemainder, $.base(0, []), $.base(2, [])), $.base("$$", []))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 73, $.is($.substring(templateRemainder, $.default(0, []), $.default(2, [])), $.default("$$", [])))))
     {
-      var ref = $.lit<string>("$$");
-      var refReplacement = $.lit<string>("$");
+      var ref = $.default<string>("$$", []);
+      var refReplacement = $.default<string>("$", []);
     }
     else
     {
-      if ($.condition(Number.MAX_SAFE_INTEGER - 74, $.is($.substring(templateRemainder, $.base(0, []), $.base(2, [])), $.base("$`", []))))
+      if ($.value($.condition(Number.MAX_SAFE_INTEGER - 74, $.is($.substring(templateRemainder, $.default(0, []), $.default(2, [])), $.default("$`", [])))))
       {
-        var ref = $.lit<string>("$`");
-        var refReplacement = $.substring(str, ($.lit<number>(0) as Lifted<number>), (position as Lifted<number>));
+        var ref = $.default<string>("$`", []);
+        var refReplacement = $.substring(str, ($.default<number>(0, []) as Lifted<number>), (position as Lifted<number>));
       }
       else
       {
-        if ($.condition(Number.MAX_SAFE_INTEGER - 75, $.is($.substring(templateRemainder, $.base(0, []), $.base(2, [])), $.base("$&", []))))
+        if ($.value($.condition(Number.MAX_SAFE_INTEGER - 75, $.is($.substring(templateRemainder, $.default(0, []), $.default(2, [])), $.default("$&", [])))))
         {
-          var ref = $.lit<string>("$&");
+          var ref = $.default<string>("$&", []);
           var refReplacement = matched;
         }
         else
         {
-          if ($.condition(Number.MAX_SAFE_INTEGER - 76, $.is($.substring(templateRemainder, $.base(0, []), $.base(2, [])), $.base("$'", []))))
+          if ($.value($.condition(Number.MAX_SAFE_INTEGER - 76, $.is($.substring(templateRemainder, $.default(0, []), $.default(2, [])), $.default("$'", [])))))
           {
-            var ref = $.lit<string>("$'");
+            var ref = $.default<string>("$'", []);
             var matchLength = $.length(matched);
             var tailPos = $.add((position as Lifted<number>), (matchLength as Lifted<number>));
             var refReplacement = $.substring(str, ($.min(tailPos, stringLength) as Lifted<number>), $.length(str));
           }
           else
           {
-            if ($.condition(Number.MAX_SAFE_INTEGER - 77, $.is($.substring(templateRemainder, $.base(0, []), $.base(1, [])), $.base("$", [])) && /[0-9]/.test($.peek($.substring(templateRemainder, $.base(1, []), $.base(2, []))))))
+            if ($.value($.condition(Number.MAX_SAFE_INTEGER - 77, $.is($.substring(templateRemainder, $.default(0, []), $.default(1, [])), $.default("$", [])) && /[0-9]/.test($.value($.substring(templateRemainder, $.default(1, []), $.default(2, [])))))))
             {
-              var digitCount = /[0-9]/.test($.peek($.substring(templateRemainder, $.base(2, []), $.base(3, [])))) ? $.base<number>(2, []) : $.base<number>(1, []);
-              var digits = $.substring(templateRemainder, ($.lit<number>(1) as Lifted<number>), ($.add(($.lit<number>(1) as Lifted<number>), (digitCount as Lifted<number>)) as Lifted<number>));
+              var digitCount = /[0-9]/.test($.value($.substring(templateRemainder, $.default(2, []), $.default(3, [])))) ? $.default<number>(2, []) : $.default<number>(1, []);
+              var digits = $.substring(templateRemainder, ($.default<number>(1, []) as Lifted<number>), ($.add(($.default<number>(1, []) as Lifted<number>), (digitCount as Lifted<number>)) as Lifted<number>));
               var index = AO__StringToNumber($, (digits as Lifted<string>));
-              var captureLen = $.base<number>(captures.length, []);
-              if ($.condition(Number.MAX_SAFE_INTEGER - 78, $.greaterThan(index, captureLen)) && $.condition(Number.MAX_SAFE_INTEGER - 79, $.is(digitCount, $.lit<number>(2))))
+              var captureLen = $.default<number>(captures.length, []);
+              if ($.value($.condition(Number.MAX_SAFE_INTEGER - 78, $.greaterThan(index, captureLen))) && $.value($.condition(Number.MAX_SAFE_INTEGER - 79, $.is(digitCount, $.default<number>(2, [])))))
               {
-                digitCount = $.lit<number>(1);
-                digits = $.substring(digits, ($.lit<number>(0) as Lifted<number>), ($.lit<number>(1) as Lifted<number>));
+                digitCount = $.default<number>(1, []);
+                digits = $.substring(digits, ($.default<number>(0, []) as Lifted<number>), ($.default<number>(1, []) as Lifted<number>));
                 index = AO__StringToNumber($, (digits as Lifted<string>));
               }
 
-              var ref = $.substring(templateRemainder, ($.lit<number>(0) as Lifted<number>), ($.add(($.lit<number>(1) as Lifted<number>), (digitCount as Lifted<number>)) as Lifted<number>));
-              if (($.condition(Number.MAX_SAFE_INTEGER - 80, $.greaterThanEqual(index, $.lit<number>(1))) && $.condition(Number.MAX_SAFE_INTEGER - 81, $.lessThanEqual(index, captureLen))))
+              var ref = $.substring(templateRemainder, ($.default<number>(0, []) as Lifted<number>), ($.add(($.default<number>(1, []) as Lifted<number>), (digitCount as Lifted<number>)) as Lifted<number>));
+              if (($.value($.condition(Number.MAX_SAFE_INTEGER - 80, $.greaterThanEqual(index, $.default<number>(1, [])))) && $.value($.condition(Number.MAX_SAFE_INTEGER - 81, $.lessThanEqual(index, captureLen)))))
               {
-                var capture = captures[$.subtract((index as Lifted<number>), ($.lit<number>(1) as Lifted<number>))];
-                if ($.condition(Number.MAX_SAFE_INTEGER - 82, $.is(capture, $.lit<undefined>(undefined))))
+                var capture = captures[$.subtract((index as Lifted<number>), ($.default<number>(1, []) as Lifted<number>))];
+                if ($.value($.condition(Number.MAX_SAFE_INTEGER - 82, $.is(capture, $.default<undefined>(undefined, [])))))
                 {
-                  var refReplacement = $.lit<string>("");
+                  var refReplacement = $.default<string>("", []);
                 }
                 else
                 {
@@ -78,22 +78,22 @@ export function AO__GetSubstitution ($ : SpecRuntime, matched : Lifted<string>, 
             }
             else
             {
-              if ($.condition(Number.MAX_SAFE_INTEGER - 83, $.is($.substring(templateRemainder, $.base(0, []), $.base(2, [])), $.base("$<", []))))
+              if ($.value($.condition(Number.MAX_SAFE_INTEGER - 83, $.is($.substring(templateRemainder, $.default(0, []), $.default(2, [])), $.default("$<", [])))))
               {
-                var gtPos = AO__StringIndexOf($, (templateRemainder as Lifted<string>), ($.lit<string>(">") as Lifted<string>), ($.lit<number>(0) as Lifted<number>));
-                if ($.condition(Number.MAX_SAFE_INTEGER - 84, $.is(gtPos, $.lit<string>("not-found"))) || $.condition(Number.MAX_SAFE_INTEGER - 85, $.is(namedCaptures, $.lit<undefined>(undefined))))
+                var gtPos = AO__StringIndexOf($, (templateRemainder as Lifted<string>), ($.default<string>(">", []) as Lifted<string>), ($.default<number>(0, []) as Lifted<number>));
+                if ($.value($.condition(Number.MAX_SAFE_INTEGER - 84, $.is(gtPos, $.default<string>("not-found", [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 85, $.is(namedCaptures, $.default<undefined>(undefined, [])))))
                 {
-                  var ref = $.lit<string>("$<");
+                  var ref = $.default<string>("$<", []);
                   var refReplacement = ref;
                 }
                 else
                 {
-                  var ref = $.substring(templateRemainder, ($.lit<number>(0) as Lifted<number>), ($.add((gtPos as Lifted<number>), ($.lit<number>(1) as Lifted<number>)) as Lifted<number>));
-                  var groupName = $.substring(templateRemainder, ($.lit<number>(2) as Lifted<number>), (gtPos as Lifted<number>));
+                  var ref = $.substring(templateRemainder, ($.default<number>(0, []) as Lifted<number>), ($.add((gtPos as Lifted<number>), ($.default<number>(1, []) as Lifted<number>)) as Lifted<number>));
+                  var groupName = $.substring(templateRemainder, ($.default<number>(2, []) as Lifted<number>), (gtPos as Lifted<number>));
                   var capture = AO__Get($, (namedCaptures as Lifted<unknown>), (groupName as Lifted<unknown>));
-                  if ($.condition(Number.MAX_SAFE_INTEGER - 86, $.is(capture, $.lit<undefined>(undefined))))
+                  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 86, $.is(capture, $.default<undefined>(undefined, [])))))
                   {
-                    var refReplacement = $.lit<string>("");
+                    var refReplacement = $.default<string>("", []);
                   }
                   else
                   {
@@ -105,7 +105,7 @@ export function AO__GetSubstitution ($ : SpecRuntime, matched : Lifted<string>, 
               }
               else
               {
-                var ref = $.substring(templateRemainder, ($.lit<number>(0) as Lifted<number>), ($.lit<number>(1) as Lifted<number>));
+                var ref = $.substring(templateRemainder, ($.default<number>(0, []) as Lifted<number>), ($.default<number>(1, []) as Lifted<number>));
                 var refReplacement = ref;
               }
 

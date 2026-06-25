@@ -321,16 +321,17 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
   condition(id: number, _op: string, value: unknown): { result: unknown } {
     if (_op !== 'model') this.currentId = id;
-    const raw = this.unlift(value as Lifted<unknown>);
-    this.conditionInfo?.(id, this.valued(value), Boolean(raw));
+    // is this correct...
+    const cond = this.$.condition(id, value as Lifted<unknown> as Lifted<boolean>);
+    const raw = this.$.value(cond);
     return { result: raw };
   }
 
   $: SpecRuntime = {
     // StringOps
     length: (s) => {
-      const v = (this.unlift(s) as string).length;
-      if (this.$.peek(this.$.isType(s, 'string'))) {
+      const v = (this.$.value(s) as string).length;
+      if (this.$.value(this.$.isType(s, 'string'))) {
         return this.lift(
           v,
           this.lengthOfStringInfo?.(this.valued(s)) ??
@@ -455,8 +456,8 @@ export abstract class FlowAnalysis<Info> implements Analysis {
           if (span)
             return this.$.substring(
               string,
-              this.$.base(span[0], []),
-              this.$.base(span[1], []),
+              this.$.default(span[0], []),
+              this.$.default(span[1], []),
             );
           return this.lift(v, this.baseInfo(v, [this.valued(string)]));
         }),
@@ -559,8 +560,11 @@ export abstract class FlowAnalysis<Info> implements Analysis {
         r,
         (this.unlift(l) as number) >= (this.unlift(r) as number),
       ),
-    condition: (bid, cond) =>
-      this.condition(bid, 'model', cond).result as boolean,
+    condition: (bid, cond) => {
+      const v = this.$.value(cond);
+      const info = (this.conditionInfo?.(bid, this.valued(cond), v) ?? this.baseInfo(v, [this.valued(cond)]));
+      return this.lift(v, info);
+    },
     is: <L extends Lifted<unknown>, R extends Lifted<unknown>>(
       l: L,
       r: R,
@@ -705,7 +709,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     },
 
     // SpecOps
-    base: <T extends Unlifted<unknown> | Primitive>(
+    default: <T extends Unlifted<unknown> | Primitive>(
       v: T,
       parents: Lifted<unknown>[],
     ): Lifted<T> =>
@@ -716,16 +720,12 @@ export abstract class FlowAnalysis<Info> implements Analysis {
           parents.map((p) => this.valued(p)),
         ),
       ),
-    peek: <T>(lifted: Lifted<T>) => this.unlift(lifted),
-    // A field read (`base[prop]`) from within a spec model, routed through the
-    // same getFieldInfo the core `getField` hook uses for user-code `o[p]` — so a
-    // model (e.g. AO__Get) observes a symbolic-array element / symbolic-object
-    // field as a real Sym instead of a concretized `base`. The raw read mirrors
-    // AO__Get's own (`peek(base)[peek(prop)]`).
+    value: <T>(lifted: Lifted<T>): Unlifted<T> => this.unlift(lifted),
+    info: <T>(lifted: Lifted<T>): unknown => this.getInfo(lifted),
     get: (base, prop) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result: unknown = (this.$.peek(base) as any)[
-        this.$.peek(prop) as any
+      const result: unknown = (this.$.value(base) as any)[
+        this.$.value(prop) as any
       ];
       return this.lift(
         result,
@@ -750,33 +750,26 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       }
       // Non-modeled (e.g. an instrumented user callback): plain call, provenance
       // from callee/receiver/args — what AO__Call did before delegating here.
-      return this.$.base(fn.call(thisArg, ...args), [f, thisArg, ...args]);
+      return this.$.default(fn.call(thisArg, ...args), [f, thisArg, ...args]);
     },
-    // Default for absent optional params (see SpecRuntime.undef / type.ts). `this`
-    // here is the runtime object, so `this.base` is the op above. An absent arg
-    // has no source, hence empty parents.
-    get undef(): Lifted<undefined> {
-      return this.base(undefined, []);
-    },
-    lit: <T extends Unlifted | Primitive>(v: T) => this.$.base(v, []),
   } satisfies SpecRuntime;
 
   literal(_id: number, value: unknown) {
     this.currentId = _id;
     this.escaper.markEscapableLiteral(value);
-    const w = this.$.base(value as Unlifted<unknown>, []);
+    const w = this.$.default(value as Unlifted<unknown>, []);
     return w === value ? undefined : { result: w };
   }
 
   /* for-in/of iterates natively, currently string iteration losts info */
   forInOfObject(_id: number, value: unknown, _isForIn: boolean) {
-    const raw = this.$.peek(value as Lifted<unknown>);
+    const raw = this.$.value(value as Lifted<unknown>);
     return raw === value ? undefined : { result: raw };
   }
 
   binaryPre(_id: number, op: string, left: Lifted, right: Lifted) {
-    const l = this.$.peek(left);
-    const r = this.$.peek(right);
+    const l = this.$.value(left);
+    const r = this.$.value(right);
     const frame: BinFrame = { ty: 'bin', op, left, right };
     return { op, left: l, right: r, skip: op === '+', frame };
   }
@@ -813,8 +806,8 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   }
 
   templateConcatPre(_id: number, left: Lifted, right: Lifted) {
-    const l = this.$.peek(left);
-    const r = this.$.peek(right);
+    const l = this.$.value(left);
+    const r = this.$.value(right);
     const frame: BinFrame = { ty: 'bin', op: '+', left, right };
     return { left: l, right: r, skip: true, frame };
   }
@@ -835,7 +828,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   }
 
   unaryPre(_id: number, op: string, _prefix: boolean, operand: Lifted) {
-    const e = this.$.peek(operand);
+    const e = this.$.value(operand);
     const frame: UnFrame = { ty: 'un', op, operand: operand };
     return { op, operand: e, skip: false, frame };
   }
@@ -866,8 +859,8 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       prop: prop as Lifted,
     };
     return {
-      base: this.$.peek(base as Lifted),
-      prop: this.$.peek(prop as Lifted),
+      base: this.$.value(base as Lifted),
+      prop: this.$.value(prop as Lifted),
       skip: false,
       frame,
     };
@@ -878,24 +871,24 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     this.currentId = _id;
     const transformed = (() => {
       const f = frame as GetFieldFrame;
-      const b: unknown = this.$.peek(f.base);
-      const p: unknown = this.$.peek(f.prop);
+      const b: unknown = this.$.value(f.base);
+      const p: unknown = this.$.value(f.prop);
       if (typeof b === 'string') {
-        const i: number | undefined = this.$.peek(
+        const i: number | undefined = this.$.value(
           AO__CanonicalNumericIndexString(
             this.$,
-            this.$.base((p as any).toString(), [f.prop]),
+            this.$.default((p as any).toString(), [f.prop]),
           ),
         );
         if (i !== undefined) {
           return this.$.substring(
             f.base as Lifted<string>,
-            this.$.base(i, [f.prop]),
-            this.$.base(i + 1, [f.prop]),
+            this.$.default(i, [f.prop]),
+            this.$.default(i + 1, [f.prop]),
           );
         }
         if (p === 'length') {
-          if (this.$.peek(this.$.isType(f.base, 'string'))) {
+          if (this.$.value(this.$.isType(f.base, 'string'))) {
             return this.lift(
               result,
               this.lengthOfStringInfo?.(
@@ -929,16 +922,16 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   }
 
   putFieldPre(_id: number, base: any, prop: any, value: any) {
-    const rawBase: unknown = this.$.peek(base as Lifted);
+    const rawBase: unknown = this.$.value(base as Lifted);
     let v: unknown = value;
     if (ArrayBuffer.isView(rawBase)) {
-      v = this.$.peek(value as Lifted);
+      v = this.$.value(value as Lifted);
     } else {
       this.escaper.markEscapable(value);
     }
     return {
       base: rawBase,
-      prop: this.$.peek(prop as Lifted),
+      prop: this.$.value(prop as Lifted),
       value: v,
       skip: false,
     };
@@ -964,7 +957,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       Model.support(_f) &&
       !entries.every(
         (e) =>
-          this.isPrimitive(this.$.peek(e)) &&
+          this.isPrimitive(this.$.value(e)) &&
           this.domain.isBottom(this.getInfo(e)),
       )
     ) {
@@ -984,7 +977,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     // ("called on #<Object>") instead of raising an ordinary "not a function"
     // TypeError. Peek it: a raw non-callable produces the natural error, while
     // instrumented/native function callees peek to themselves (no-op).
-    const callee = this.$.peek(_f as Lifted);
+    const callee = this.$.value(_f as Lifted);
 
     if (this.policy.isOpaque(_f)) {
       const esc = this.escaper.escape(_base, argArr, entries);
@@ -1055,7 +1048,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
             return result as Lifted<unknown>;
           }
           const parents = Array.from(f.entries) as Lifted[]; // can we do this without `as`?
-          return this.$.base(result, parents);
+          return this.$.default(result, parents);
         }
         case 'transparent': {
           if (
@@ -1065,7 +1058,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
             return result as Lifted<unknown>;
           }
           const parents = Array.from(f.entries) as Lifted[];
-          return this.$.base(result, parents);
+          return this.$.default(result, parents);
         }
       }
     })();
@@ -1079,20 +1072,20 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     lVal: Lifted<unknown>,
     rVal: Lifted<unknown>,
   ): Lifted<string> | Lifted<number> {
-    if ($.peek($.isType(lVal, 'object')) || $.peek($.isType(rVal, 'object'))) {
-      const l: Unlifted<unknown> = $.peek(lVal);
-      const r: Unlifted<unknown> = $.peek(rVal);
+    if ($.value($.isType(lVal, 'object')) || $.value($.isType(rVal, 'object'))) {
+      const l: Unlifted<unknown> = $.value(lVal);
+      const r: Unlifted<unknown> = $.value(rVal);
       // @ts-expect-error - it calls the plus
       const v = l + r;
       // over-approximate the result type as unknown, since it could be either string or number
-      return $.base(v, [lVal, rVal]);
+      return $.default(v, [lVal, rVal]);
     } else {
       const lPrim = lVal as Lifted<Primitive>;
       const rPrim = rVal as Lifted<Primitive>;
       //   c. If lPrim is a String or rPrim is a String, then
       if (
-        $.peek($.isType(lPrim, 'string')) ||
-        $.peek($.isType(rPrim, 'string'))
+        $.value($.isType(lPrim, 'string')) ||
+        $.value($.isType(rPrim, 'string'))
       ) {
         //     i. Let lStr be ? ToString(lPrim).
         const lStr = AO__ToString($, lPrim);
@@ -1109,7 +1102,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       // 4. Let rNum be ? ToNumeric(rVal).
       const rNum = AO__ToNumber($, rPrim);
       // 5. If SameType(lNum, rNum) is false, throw a TypeError exception.
-      if (!(typeof $.peek(lNum) === typeof $.peek(rNum))) {
+      if (!(typeof $.value(lNum) === typeof $.value(rNum))) {
         throw new TypeError('TypeError: Cannot mix BigInt and other types');
       }
       // 6. If lNum is a BigInt, then

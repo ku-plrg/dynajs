@@ -11,20 +11,20 @@ export function INTRINSICS_Math_max ($ : SpecRuntime, $this : Lifted<unknown>, .
     $.append(coerced, n)
   }
 
-  var highest = $.lit<number>(-Infinity);
+  var highest = $.default<number>(-Infinity, []);
   for (var number of coerced)
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 299, $.isNaN(number as Lifted<number>)))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 299, $.isNaN(number as Lifted<number>))))
     {
-      return $.lit<number>(NaN);
+      return $.default<number>(NaN, []);
     }
 
-    if ($.condition(Number.MAX_SAFE_INTEGER - 300, $.is(number, $.lit<number>(0))) && $.condition(Number.MAX_SAFE_INTEGER - 301, $.is(highest, $.lit<number>(0))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 300, $.is(number, $.default<number>(0, [])))) && $.value($.condition(Number.MAX_SAFE_INTEGER - 301, $.is(highest, $.default<number>(0, [])))))
     {
-      highest = $.lit<number>(0);
+      highest = $.default<number>(0, []);
     }
 
-    if ($.condition(Number.MAX_SAFE_INTEGER - 302, $.greaterThan(number, highest)))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 302, $.greaterThan(number, highest))))
     {
       highest = number;
     }

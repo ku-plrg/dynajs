@@ -9,18 +9,18 @@ import { AO__ToString } from "./AO__ToString.js";
 export function INTRINSICS_Array_prototype_push ($ : SpecRuntime, $this : Lifted<unknown>, ...items : Lifted<unknown>[]) {
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
-  var argCount = $.base<number>(items.length, []);
-  if ($.condition(Number.MAX_SAFE_INTEGER - 176, $.greaterThan($.add((len as Lifted<number>), (argCount as Lifted<number>)), $.subtract(($.exponentiate($.lit<number>(2), $.lit<number>(53)) as Lifted<number>), ($.lit<number>(1) as Lifted<number>)))))
+  var argCount = $.default<number>(items.length, []);
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 176, $.greaterThan($.add((len as Lifted<number>), (argCount as Lifted<number>)), $.subtract(($.exponentiate($.default<number>(2, []), $.default<number>(53, [])) as Lifted<number>), ($.default<number>(1, []) as Lifted<number>))))))
   {
     throw new TypeError;
   }
 
   for (var E of items)
   {
-    AO__Set($, (O as Lifted<unknown>), (AO__ToString($, (len as Lifted<unknown>)) as Lifted<unknown>), (E as Lifted<unknown>), ($.lit<boolean>(true) as Lifted<boolean>));
-    len = $.add((len as Lifted<number>), ($.lit<number>(1) as Lifted<number>));
+    AO__Set($, (O as Lifted<unknown>), (AO__ToString($, (len as Lifted<unknown>)) as Lifted<unknown>), (E as Lifted<unknown>), ($.default<boolean>(true, []) as Lifted<boolean>));
+    len = $.add((len as Lifted<number>), ($.default<number>(1, []) as Lifted<number>));
   }
 
-  AO__Set($, (O as Lifted<unknown>), ($.lit<string>("length") as Lifted<unknown>), (len as Lifted<unknown>), ($.lit<boolean>(true) as Lifted<boolean>));
+  AO__Set($, (O as Lifted<unknown>), ($.default<string>("length", []) as Lifted<unknown>), (len as Lifted<unknown>), ($.default<boolean>(true, []) as Lifted<boolean>));
   return len;
 }

@@ -18,30 +18,30 @@ export function AO__CodePointAt(
   var size = $.length(string);
   // 2. Assert: position ≥ 0 and position < size.
   // 3. Let first be the code unit at index position within string.
-  var first : Lifted<string> = $.substring(string, position, $.add(position, $.base(1, [])));
-  var firstUnlifted : number = $.peek(first).charCodeAt(0);
+  var first : Lifted<string> = $.substring(string, position, $.add(position, $.default(1, [])));
+  var firstUnlifted : number = $.value(first).charCodeAt(0);
   // 4. Let cp be the code point whose numeric value is the numeric value of first.
-  var cp = $.base<number>(firstUnlifted, [first]);
+  var cp = $.default<number>(firstUnlifted, [first]);
   // 5. If first is neither a leading surrogate nor a trailing surrogate, then
   if (!(firstUnlifted >= 0xd800 && firstUnlifted <= 0xdfff)) {
     // a. Return the Record { [[CodePoint]]: cp, [[CodeUnitCount]]: 1, [[IsUnpairedSurrogate]]: false }.
-    return { "CodePoint": cp, "CodeUnitCount": $.base<number>(1, []), "IsUnpairedSurrogate": $.base<boolean>(false, []) };
+    return { "CodePoint": cp, "CodeUnitCount": $.default<number>(1, []), "IsUnpairedSurrogate": $.default<boolean>(false, []) };
   }
   // 6. If first is a trailing surrogate or position + 1 = size, then
-  if ((firstUnlifted >= 0xdc00 && firstUnlifted <= 0xdfff) || $.peek(position) + 1 === $.peek(size)) {
+  if ((firstUnlifted >= 0xdc00 && firstUnlifted <= 0xdfff) || $.value(position) + 1 === $.value(size)) {
     // a. Return the Record { [[CodePoint]]: cp, [[CodeUnitCount]]: 1, [[IsUnpairedSurrogate]]: true }.
-    return { "CodePoint": cp, "CodeUnitCount": $.base<number>(1, []), "IsUnpairedSurrogate": $.base<boolean>(true, []) };
+    return { "CodePoint": cp, "CodeUnitCount": $.default<number>(1, []), "IsUnpairedSurrogate": $.default<boolean>(true, []) };
   }
   // 7. Let second be the code unit at index position + 1 within string.
-  var second = $.substring(string, $.add(position, $.base<number>(1, [])), $.add(position, $.base<number>(2, [])));
-  var secondUnlifted : number = $.peek(second).charCodeAt(0);
+  var second = $.substring(string, $.add(position, $.default<number>(1, [])), $.add(position, $.default<number>(2, [])));
+  var secondUnlifted : number = $.value(second).charCodeAt(0);
   // 8. If second is not a trailing surrogate, then
   if (!(secondUnlifted >= 0xdc00 && secondUnlifted <= 0xdfff)) {
     // a. Return the Record { [[CodePoint]]: cp, [[CodeUnitCount]]: 1, [[IsUnpairedSurrogate]]: true }.
-    return { "CodePoint": cp, "CodeUnitCount": $.base<number>(1, []), "IsUnpairedSurrogate": $.base<boolean>(true, []) };
+    return { "CodePoint": cp, "CodeUnitCount": $.default<number>(1, []), "IsUnpairedSurrogate": $.default<boolean>(true, []) };
   }
   // 9. Set cp to UTF16SurrogatePairToCodePoint(first, second).
   cp = AO__UTF16SurrogatePairToCodePoint($, first as Lifted<string>, second as Lifted<string>);
   // 10. Return the Record { [[CodePoint]]: cp, [[CodeUnitCount]]: 2, [[IsUnpairedSurrogate]]: false }.
-  return { "CodePoint": cp, "CodeUnitCount": $.base<number>(2, []), "IsUnpairedSurrogate": $.base<boolean>(false, []) };
+  return { "CodePoint": cp, "CodeUnitCount": $.default<number>(2, []), "IsUnpairedSurrogate": $.default<boolean>(false, []) };
 }

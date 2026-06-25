@@ -11,7 +11,7 @@ export function INTRINSICS_Array_prototype_at ($ : SpecRuntime, $this : Lifted<u
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
   var relativeIndex = AO__ToIntegerOrInfinity($, (index as Lifted<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 107, $.greaterThanEqual(relativeIndex, $.lit<number>(0))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 107, $.greaterThanEqual(relativeIndex, $.default<number>(0, [])))))
   {
     var k = relativeIndex;
   }
@@ -20,9 +20,9 @@ export function INTRINSICS_Array_prototype_at ($ : SpecRuntime, $this : Lifted<u
     var k = $.add((len as Lifted<number>), (relativeIndex as Lifted<number>));
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 108, $.lessThan(k, $.lit<number>(0))) || $.condition(Number.MAX_SAFE_INTEGER - 109, $.greaterThanEqual(k, len)))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 108, $.lessThan(k, $.default<number>(0, [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 109, $.greaterThanEqual(k, len))))
   {
-    return $.lit<undefined>(undefined);
+    return $.default<undefined>(undefined, []);
   }
 
   return AO__Get($, (O as Lifted<unknown>), (AO__ToString($, (k as Lifted<unknown>)) as Lifted<unknown>));

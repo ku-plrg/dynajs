@@ -6,7 +6,7 @@ import type { Lifted, SpecRuntime } from "../type.js";
 
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_RegExp_prototype_test($: SpecRuntime, $this: Lifted<unknown>, S: Lifted<unknown> = $.undef) {
+export function INTRINSICS_RegExp_prototype_test($: SpecRuntime, $this: Lifted<unknown>, S: Lifted<unknown> = $.default(undefined, [])) {
   var string = AO__ToString($, (S as Lifted<unknown>));
   return $.regexExec($this, (string as Lifted<string>)).matched;
 }

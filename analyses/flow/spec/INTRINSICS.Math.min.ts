@@ -11,20 +11,20 @@ export function INTRINSICS_Math_min ($ : SpecRuntime, $this : Lifted<unknown>, .
     $.append(coerced, n)
   }
 
-  var lowest = $.lit<number>(Infinity);
+  var lowest = $.default<number>(Infinity, []);
   for (var number of coerced)
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 303, $.isNaN(number as Lifted<number>)))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 303, $.isNaN(number as Lifted<number>))))
     {
-      return $.lit<number>(NaN);
+      return $.default<number>(NaN, []);
     }
 
-    if ($.condition(Number.MAX_SAFE_INTEGER - 304, $.is(number, $.lit<number>(0))) && $.condition(Number.MAX_SAFE_INTEGER - 305, $.is(lowest, $.lit<number>(0))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 304, $.is(number, $.default<number>(0, [])))) && $.value($.condition(Number.MAX_SAFE_INTEGER - 305, $.is(lowest, $.default<number>(0, [])))))
     {
-      lowest = $.lit<number>(0);
+      lowest = $.default<number>(0, []);
     }
 
-    if ($.condition(Number.MAX_SAFE_INTEGER - 306, $.lessThan(number, lowest)))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 306, $.lessThan(number, lowest))))
     {
       lowest = number;
     }

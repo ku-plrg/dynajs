@@ -2,10 +2,10 @@
 import type { Lifted, SpecRuntime } from "../type.js";
 
 export function AO__IsRegExp ($ : SpecRuntime, argument : Lifted<unknown>) {
-  if (!($.peek($.isType(argument, "object"))))
+  if (!($.value($.isType(argument, "object"))))
   {
-    return $.base<boolean>(false, []);
+    return $.default<boolean>(false, []);
   }
 
-  return $.base<boolean>($.peek(argument) instanceof RegExp, []);
+  return $.default<boolean>($.value(argument) instanceof RegExp, []);
 }

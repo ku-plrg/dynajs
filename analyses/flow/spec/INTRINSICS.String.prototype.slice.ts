@@ -10,15 +10,15 @@ export function INTRINSICS_String_prototype_slice ($ : SpecRuntime, $this : Lift
   var S = AO__ToString($, (O as Lifted<unknown>));
   var len = $.length(S);
   var intStart = AO__ToIntegerOrInfinity($, (start as Lifted<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 467, $.is(intStart, $.lit<number>(-Infinity))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 467, $.is(intStart, $.default<number>(-Infinity, [])))))
   {
-    var from = $.lit<number>(0);
+    var from = $.default<number>(0, []);
   }
   else
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 468, $.lessThan(intStart, $.lit<number>(0))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 468, $.lessThan(intStart, $.default<number>(0, [])))))
     {
-      var from = $.max($.add((len as Lifted<number>), (intStart as Lifted<number>)), $.lit<number>(0));
+      var from = $.max($.add((len as Lifted<number>), (intStart as Lifted<number>)), $.default<number>(0, []));
     }
     else
     {
@@ -27,7 +27,7 @@ export function INTRINSICS_String_prototype_slice ($ : SpecRuntime, $this : Lift
 
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 469, $.is(end, $.lit<undefined>(undefined))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 469, $.is(end, $.default<undefined>(undefined, [])))))
   {
     var intEnd = len;
   }
@@ -36,15 +36,15 @@ export function INTRINSICS_String_prototype_slice ($ : SpecRuntime, $this : Lift
     var intEnd = AO__ToIntegerOrInfinity($, (end as Lifted<unknown>));
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 470, $.is(intEnd, $.lit<number>(-Infinity))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 470, $.is(intEnd, $.default<number>(-Infinity, [])))))
   {
-    var to = $.lit<number>(0);
+    var to = $.default<number>(0, []);
   }
   else
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 471, $.lessThan(intEnd, $.lit<number>(0))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 471, $.lessThan(intEnd, $.default<number>(0, [])))))
     {
-      var to = $.max($.add((len as Lifted<number>), (intEnd as Lifted<number>)), $.lit<number>(0));
+      var to = $.max($.add((len as Lifted<number>), (intEnd as Lifted<number>)), $.default<number>(0, []));
     }
     else
     {
@@ -53,9 +53,9 @@ export function INTRINSICS_String_prototype_slice ($ : SpecRuntime, $this : Lift
 
   }
 
-  if ($.condition(Number.MAX_SAFE_INTEGER - 472, $.greaterThanEqual(from, to)))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 472, $.greaterThanEqual(from, to))))
   {
-    return $.lit<string>("");
+    return $.default<string>("", []);
   }
 
   return $.substring(S, (from as Lifted<number>), (to as Lifted<number>));

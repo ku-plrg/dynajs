@@ -2,7 +2,7 @@ import type { SpecRuntime, Lifted, Unlifted, Primitive } from "../type.js";
 
 export function AO__ToPrimitive($: SpecRuntime, arg: Lifted<unknown>, preferredType: Lifted<'string' | 'number'> | undefined = undefined): Lifted<Primitive> {
   // 1. If input is an Object, then
-  if ($.peek($.isType(arg, 'object'))) {
+  if ($.value($.isType(arg, 'object'))) {
     throw new Error('TODO: AO__ToPrimitive for objects');
     //    a. Let exoticToPrim be ? GetMethod(input, %Symbol.toPrimitive%).
     //    b. If exoticToPrim is not undefined, then

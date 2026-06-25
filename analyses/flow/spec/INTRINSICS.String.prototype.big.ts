@@ -5,5 +5,5 @@ import { AO__CreateHTML } from "./AO__CreateHTML.js";
 
 export function INTRINSICS_String_prototype_big ($ : SpecRuntime, $this : Lifted<unknown>) {
   var S = $this;
-  return AO__CreateHTML($, (S as Lifted<unknown>), ($.lit<string>("big") as Lifted<string>), ($.lit<string>("") as Lifted<string>), ($.lit<string>("") as Lifted<unknown>));
+  return AO__CreateHTML($, (S as Lifted<unknown>), ($.default<string>("big", []) as Lifted<string>), ($.default<string>("", []) as Lifted<string>), ($.default<string>("", []) as Lifted<unknown>));
 }

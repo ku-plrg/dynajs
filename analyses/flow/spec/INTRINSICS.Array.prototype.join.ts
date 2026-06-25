@@ -9,32 +9,32 @@ import { AO__ToString } from "./AO__ToString.js";
 export function INTRINSICS_Array_prototype_join ($ : SpecRuntime, $this : Lifted<unknown>, separator : Lifted<unknown>) {
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
-  if ($.condition(Number.MAX_SAFE_INTEGER - 161, $.is(separator, $.lit<undefined>(undefined))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 161, $.is(separator, $.default<undefined>(undefined, [])))))
   {
-    var sep = $.lit<string>(",");
+    var sep = $.default<string>(",", []);
   }
   else
   {
     var sep = AO__ToString($, (separator as Lifted<unknown>));
   }
 
-  var R = $.lit<string>("");
-  var k = $.lit<number>(0);
-  while ($.condition(Number.MAX_SAFE_INTEGER - 162, $.lessThan(k, len)))
+  var R = $.default<string>("", []);
+  var k = $.default<number>(0, []);
+  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 162, $.lessThan(k, len))))
   {
-    if ($.condition(Number.MAX_SAFE_INTEGER - 163, $.greaterThan(k, $.lit<number>(0))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 163, $.greaterThan(k, $.default<number>(0, [])))))
     {
       R = $.concatenate(R, sep);
     }
 
     var element = AO__Get($, (O as Lifted<unknown>), (AO__ToString($, (k as Lifted<unknown>)) as Lifted<unknown>));
-    if (!($.condition(Number.MAX_SAFE_INTEGER - 164, $.is(element, $.lit<undefined>(undefined))) || $.condition(Number.MAX_SAFE_INTEGER - 165, $.is(element, $.lit<null>(null)))))
+    if (!($.value($.condition(Number.MAX_SAFE_INTEGER - 164, $.is(element, $.default<undefined>(undefined, [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 165, $.is(element, $.default<null>(null, []))))))
     {
       var S = AO__ToString($, (element as Lifted<unknown>));
       R = $.concatenate(R, S);
     }
 
-    k = $.add((k as Lifted<number>), ($.lit<number>(1) as Lifted<number>));
+    k = $.add((k as Lifted<number>), ($.default<number>(1, []) as Lifted<number>));
   }
 
   return R;

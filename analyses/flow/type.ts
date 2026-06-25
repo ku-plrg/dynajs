@@ -16,8 +16,12 @@ export type Primitive =
   | null
   | undefined;
 
+export interface SpecRuntime extends SpecOps {}
+
 interface SpecOps
   extends
+    CondOps,
+    ObjectOps,
     StringOps,
     ArithmeticOps,
     BitwiseOps,
@@ -26,23 +30,31 @@ interface SpecOps
     ListOps,
     RangeOps,
     RegexOps {
-  /** an injection (`unlifted -> lifted`). inverse of `$.peek`. default information transformation */
-  base: <T extends Unlifted | Primitive>(v: T, parent: Lifted[]) => Lifted<T>;
+  /** an injection (`unlifted -> lifted`). inverse of `$.value`. default information transformation */
+  default: <T extends Unlifted | Primitive>(v: T, parent: Lifted[]) => Lifted<T>;
   /** a projection (`lifted -> unlifted`). inverse of `$.base`. lost of information happens due to concretization */
-  peek: <T>(lifted: Lifted<T>) => Unlifted<T>;
-  /** a field read (`base[prop]`) routed through the analysis's `getFieldInfo`, so a
-   *  spec model observes element/property reads exactly as user code `o[p]` does
-   *  (e.g. concolic's symbolic-array `select`). Without it a model read concretizes
-   *  via `base`. Falls back to `baseInfo` when no `getFieldInfo` applies. */
+  value: <T>(lifted: Lifted<T>) => Unlifted<T>;
+  /** a projection (`lifted -> info`). exists conceptually, but is not used in practice */
+  info: <T extends Unlifted | Primitive>(lifted: Lifted<T>) => unknown;
+}
+
+interface CondOps {
+  /* ... */
+  condition: (bid: number, cond: Lifted<boolean>) => Lifted<boolean>;
+}
+
+interface ObjectOps {
+  /** .[[Get]] */
   get: (base: Lifted<unknown>, prop: Lifted<unknown>) => Lifted<unknown>;
-  /** Invoke `f` (a callable) with receiver `thisArg` and `args`, routing to `f`'s */
+  /** .[[Set]] */
+  // set :
+
+  /** [[Call]] */
   apply: (
     f: Lifted<unknown>,
     thisArg: Lifted<unknown>,
     args: Lifted<unknown>[],
   ) => Lifted<unknown>;
-  /** a projection to use Lifted value as a condition */
-  condition: (bid: number, cond: Lifted<boolean>) => boolean;
 }
 
 interface StringOps {
@@ -151,10 +163,4 @@ interface RangeOps {
     ascending: boolean,
     bid: number,
   ) => Lifted<number>[];
-}
-
-export interface SpecRuntime extends SpecOps {
-  // constant
-  undef: Lifted<undefined>;
-  lit: <T extends Unlifted | Primitive>(v: T) => Lifted<T>;
 }

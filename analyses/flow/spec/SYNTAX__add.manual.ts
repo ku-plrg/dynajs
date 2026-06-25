@@ -5,7 +5,7 @@ import { AO__ToNumber } from "./AO__ToNumber.js";
 
 function SYNTAX__add_primitive($: SpecRuntime, lPrim: Lifted<Primitive>, rPrim: Lifted<Primitive>): Lifted<string> | Lifted<number> {
   //   c. If lPrim is a String or rPrim is a String, then
-  if ($.peek($.isType(lPrim, 'string')) || $.peek($.isType(rPrim, 'string'))) {
+  if ($.value($.isType(lPrim, 'string')) || $.value($.isType(rPrim, 'string'))) {
     //     i. Let lStr be ? ToString(lPrim).
     const lStr = AO__ToString($, lPrim);
     //     ii. Let rStr be ? ToString(rPrim).
@@ -21,7 +21,7 @@ function SYNTAX__add_primitive($: SpecRuntime, lPrim: Lifted<Primitive>, rPrim: 
   // 4. Let rNum be ? ToNumeric(rVal).
   const rNum = AO__ToNumber($, rPrim);
   // 5. If SameType(lNum, rNum) is false, throw a TypeError exception.
-  if (!(typeof $.peek(lNum) === typeof $.peek(rNum))) {
+  if (!(typeof $.value(lNum) === typeof $.value(rNum))) {
     throw new TypeError('TypeError: Cannot mix BigInt and other types');
   }
   // 6. If lNum is a BigInt, then
@@ -37,13 +37,13 @@ function SYNTAX__add_primitive($: SpecRuntime, lPrim: Lifted<Primitive>, rPrim: 
 // ApplyStringOrNumericBinaryOperator (13.15.3), specialized to opText = `+`
 // (split out of the former Model.applyBinary, one file per operator).
 export function SYNTAX__add($: SpecRuntime, lVal: Lifted<unknown>, rVal: Lifted<unknown>): Lifted<string> | Lifted<number> {
-  if ($.peek($.isType(lVal, 'object')) || $.peek($.isType(rVal, 'object'))) {
-    const l: Unlifted<unknown> = $.peek(lVal);
-    const r: Unlifted<unknown> = $.peek(rVal);
+  if ($.value($.isType(lVal, 'object')) || $.value($.isType(rVal, 'object'))) {
+    const l: Unlifted<unknown> = $.value(lVal);
+    const r: Unlifted<unknown> = $.value(rVal);
     // @ts-expect-error - it calls the plus
     const v = l + r;
     // over-approximate the result type as unknown, since it could be either string or number
-    return $.base(v, [lVal, rVal]);
+    return $.default(v, [lVal, rVal]);
   } else {
     return SYNTAX__add_primitive($, lVal as Lifted<Primitive>, rVal as Lifted<Primitive>);
   }
