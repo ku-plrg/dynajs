@@ -322,7 +322,10 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   condition(id: number, _op: string, value: unknown): { result: unknown } {
     if (_op !== 'model') this.currentId = id;
     // is this correct...
-    const cond = this.$.condition(id, value as Lifted<unknown> as Lifted<boolean>);
+    const cond = this.$.condition(
+      id,
+      value as Lifted<unknown> as Lifted<boolean>,
+    );
     const raw = this.$.value(cond);
     return { result: raw };
   }
@@ -562,7 +565,9 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       ),
     condition: (bid, cond) => {
       const v = this.$.value(cond);
-      const info = (this.conditionInfo?.(bid, this.valued(cond), v) ?? this.baseInfo(v, [this.valued(cond)]));
+      const info =
+        this.conditionInfo?.(bid, this.valued(cond), v) ??
+        this.baseInfo(v, [this.valued(cond)]);
       return this.lift(v, info);
     },
     is: <L extends Lifted<unknown>, R extends Lifted<unknown>>(
@@ -1072,7 +1077,10 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     lVal: Lifted<unknown>,
     rVal: Lifted<unknown>,
   ): Lifted<string> | Lifted<number> {
-    if ($.value($.isType(lVal, 'object')) || $.value($.isType(rVal, 'object'))) {
+    if (
+      $.value($.isType(lVal, 'object')) ||
+      $.value($.isType(rVal, 'object'))
+    ) {
       const l: Unlifted<unknown> = $.value(lVal);
       const r: Unlifted<unknown> = $.value(rVal);
       // @ts-expect-error - it calls the plus
