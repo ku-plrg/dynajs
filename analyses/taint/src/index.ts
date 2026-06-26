@@ -1,4 +1,4 @@
-import type { Analysis } from '@/types/analysis.js';
+import type { Analysis } from '../../../src/types/analysis.js';
 import {
   FlowAnalysis,
   type Valued,

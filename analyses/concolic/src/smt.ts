@@ -8,7 +8,7 @@ import {
   arithSort,
   sortOf,
   UnsupportedSym,
-} from '@shared/sym.js';
+} from '../../shared/sym.js';
 
 // ---------------------------------------------------------------------------
 // SMT-LIB translation + z3

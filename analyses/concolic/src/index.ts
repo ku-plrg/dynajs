@@ -12,8 +12,8 @@ import {
   sortsComparable,
   isNumericSort,
   symToString,
-} from '@shared/sym.js';
-import { encodeRegex, type EncodedRegex } from '@shared/regex.js';
+} from '../../shared/sym.js';
+import { encodeRegex, type EncodedRegex } from '../../shared/regex.js';
 import { solveValidity, solveModel, solveSat } from './smt.js';
 import { installPrelude } from './prelude.js';
 

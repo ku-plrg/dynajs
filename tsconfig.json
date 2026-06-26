@@ -12,9 +12,7 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "types": ["node"],
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "paths": {}
   },
   "include": ["src", "src/global.d.ts"]
 }

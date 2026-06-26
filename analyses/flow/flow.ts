@@ -1,6 +1,6 @@
 import util from 'node:util';
 import { required } from './utils.js';
-import type { Analysis } from '@/types/analysis.js';
+import type { Analysis } from '../../src/types/analysis.js';
 import type { SpecRuntime, Lifted, Unlifted, Primitive } from './type.js';
 import { Model } from './model.js';
 import {
