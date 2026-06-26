@@ -738,9 +738,9 @@
     ],
     "BuiltIns__Array__prototype__lastIndexOf__taint_lastIndexOf_fromIndex": [
       {
-        "expected": "detected",
+        "expected": "clean",
         "actual": "detected",
-        "result": "TP"
+        "result": "FP"
       },
       {
         "expected": "clean",
@@ -750,9 +750,9 @@
     ],
     "BuiltIns__Array__prototype__lastIndexOf__taint_lastIndexOf_searchElement": [
       {
-        "expected": "detected",
+        "expected": "clean",
         "actual": "detected",
-        "result": "TP"
+        "result": "FP"
       },
       {
         "expected": "clean",
@@ -761,16 +761,6 @@
       }
     ],
     "BuiltIns__Array__prototype__lastIndexOf__taint_lastIndexOf_this": [
-      {
-        "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
-      },
-      {
-        "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
-      },
       {
         "expected": "clean",
         "actual": "clean",
@@ -812,6 +802,11 @@
       }
     ],
     "BuiltIns__Array__prototype__pop__taint_pop_array": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
       {
         "expected": "detected",
         "actual": "detected",
@@ -894,11 +889,6 @@
         "expected": "clean",
         "actual": "clean",
         "result": "TN"
-      },
-      {
-        "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
       }
     ],
     "BuiltIns__Array__prototype__reduce__taint_reduce_array": [
@@ -944,6 +934,11 @@
       }
     ],
     "BuiltIns__Array__prototype__reverse__taint_reverse_array": [
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
+      },
       {
         "expected": "detected",
         "actual": "detected",
@@ -1004,8 +999,8 @@
       },
       {
         "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
+        "actual": "clean",
+        "result": "FN"
       }
     ],
     "BuiltIns__Array__prototype__slice__taint_slice_end": [
@@ -1068,6 +1063,11 @@
         "expected": "detected",
         "actual": "detected",
         "result": "TP"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
       }
     ],
     "BuiltIns__Array__prototype__sort__taint_sort_this": [
@@ -1075,16 +1075,6 @@
         "expected": "detected",
         "actual": "detected",
         "result": "TP"
-      },
-      {
-        "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
-      },
-      {
-        "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
       }
     ],
     "BuiltIns__Array__prototype__splice__taint_splice_array": [
@@ -1142,14 +1132,14 @@
     ],
     "BuiltIns__Array__prototype__splice__taint_splice_this": [
       {
-        "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
-      },
-      {
         "expected": "clean",
         "actual": "clean",
         "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "detected",
+        "result": "TP"
       },
       {
         "expected": "clean",
@@ -1162,11 +1152,6 @@
         "expected": "detected",
         "actual": "detected",
         "result": "TP"
-      },
-      {
-        "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
       }
     ],
     "BuiltIns__Array__prototype__toLocaleString__taint_toLocaleString_value": [
@@ -1184,11 +1169,6 @@
         "expected": "detected",
         "actual": "clean",
         "result": "FN"
-      },
-      {
-        "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
       },
       {
         "expected": "clean",
@@ -1324,11 +1304,6 @@
         "expected": "detected",
         "actual": "detected",
         "result": "TP"
-      },
-      {
-        "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
       }
     ],
     "BuiltIns__Array__prototype__toString__taint_toString_this": [
@@ -1346,11 +1321,6 @@
         "expected": "detected",
         "actual": "clean",
         "result": "FN"
-      },
-      {
-        "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
       },
       {
         "expected": "clean",
@@ -1465,11 +1435,6 @@
         "expected": "clean",
         "actual": "detected",
         "result": "FP"
-      },
-      {
-        "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
       }
     ],
     "BuiltIns__Array__prototype__with__taint_with_this": [
@@ -1477,11 +1442,6 @@
         "expected": "detected",
         "actual": "clean",
         "result": "FN"
-      },
-      {
-        "expected": "clean",
-        "actual": "clean",
-        "result": "TN"
       },
       {
         "expected": "clean",
@@ -5604,8 +5564,8 @@
     "BuiltIns__Array__from_static__concolic_from_unsat": [
       {
         "expected": "unsat",
-        "actual": "unsat",
-        "result": "TN"
+        "actual": "sat",
+        "result": "FP"
       }
     ],
     "BuiltIns__Array__isArray_static__concolic_isArray_sat": [
@@ -5646,8 +5606,8 @@
     "BuiltIns__Array__of_static__concolic_of_unsat": [
       {
         "expected": "unsat",
-        "actual": "unsat",
-        "result": "TN"
+        "actual": "sat",
+        "result": "FP"
       }
     ],
     "BuiltIns__Array__prototype__at__concolic_at_sat": [
@@ -5674,8 +5634,8 @@
     "BuiltIns__Array__prototype__concat__concolic_concat_unsat": [
       {
         "expected": "unsat",
-        "actual": "unsat",
-        "result": "TN"
+        "actual": "sat",
+        "result": "FP"
       }
     ],
     "BuiltIns__Array__prototype__copyWithin__concolic_copyWithin_sat": [
@@ -5702,8 +5662,8 @@
     "BuiltIns__Array__prototype__entries__concolic_entries_unsat": [
       {
         "expected": "unsat",
-        "actual": "unsat",
-        "result": "TN"
+        "actual": "sat",
+        "result": "FP"
       }
     ],
     "BuiltIns__Array__prototype__every__concolic_every_sat": [
@@ -5814,8 +5774,8 @@
     "BuiltIns__Array__prototype__flat__concolic_flat_unsat": [
       {
         "expected": "unsat",
-        "actual": "unsat",
-        "result": "TN"
+        "actual": "sat",
+        "result": "FP"
       }
     ],
     "BuiltIns__Array__prototype__flatMap__concolic_flatMap_sat": [
@@ -5828,8 +5788,8 @@
     "BuiltIns__Array__prototype__flatMap__concolic_flatMap_unsat": [
       {
         "expected": "unsat",
-        "actual": "unsat",
-        "result": "TN"
+        "actual": "sat",
+        "result": "FP"
       }
     ],
     "BuiltIns__Array__prototype__forEach__concolic_forEach_sat": [
@@ -5912,8 +5872,8 @@
     "BuiltIns__Array__prototype__lastIndexOf__concolic_lastIndexOf_unsat": [
       {
         "expected": "unsat",
-        "actual": "unsat",
-        "result": "TN"
+        "actual": "sat",
+        "result": "FP"
       }
     ],
     "BuiltIns__Array__prototype__map__concolic_map_sat": [
@@ -5926,8 +5886,8 @@
     "BuiltIns__Array__prototype__map__concolic_map_unsat": [
       {
         "expected": "unsat",
-        "actual": "unsat",
-        "result": "TN"
+        "actual": "sat",
+        "result": "FP"
       }
     ],
     "BuiltIns__Array__prototype__pop__concolic_pop_sat": [
@@ -5954,8 +5914,8 @@
     "BuiltIns__Array__prototype__push__concolic_push_unsat": [
       {
         "expected": "unsat",
-        "actual": "unsat",
-        "result": "TN"
+        "actual": "sat",
+        "result": "FP"
       }
     ],
     "BuiltIns__Array__prototype__reduce__concolic_reduce_sat": [
@@ -5996,8 +5956,8 @@
     "BuiltIns__Array__prototype__reverse__concolic_reverse_unsat": [
       {
         "expected": "unsat",
-        "actual": "sat",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__Array__prototype__shift__concolic_shift_sat": [
@@ -6024,8 +5984,8 @@
     "BuiltIns__Array__prototype__slice__concolic_slice_unsat": [
       {
         "expected": "unsat",
-        "actual": "sat",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__Array__prototype__some__concolic_some_sat": [
@@ -6080,8 +6040,8 @@
     "BuiltIns__Array__prototype__toLocaleString__concolic_toLocaleString_unsat": [
       {
         "expected": "unsat",
-        "actual": "unsat",
-        "result": "TN"
+        "actual": "sat",
+        "result": "FP"
       }
     ],
     "BuiltIns__Array__prototype__toReversed__concolic_toReversed_sat": [
@@ -6136,8 +6096,8 @@
     "BuiltIns__Array__prototype__toString__concolic_toString_unsat": [
       {
         "expected": "unsat",
-        "actual": "unsat",
-        "result": "TN"
+        "actual": "sat",
+        "result": "FP"
       }
     ],
     "BuiltIns__Array__prototype__unshift__concolic_unshift_sat": [
@@ -6150,8 +6110,8 @@
     "BuiltIns__Array__prototype__unshift__concolic_unshift_unsat": [
       {
         "expected": "unsat",
-        "actual": "unsat",
-        "result": "TN"
+        "actual": "sat",
+        "result": "FP"
       }
     ],
     "BuiltIns__Array__prototype__values__concolic_values_sat": [
@@ -6164,8 +6124,8 @@
     "BuiltIns__Array__prototype__values__concolic_values_unsat": [
       {
         "expected": "unsat",
-        "actual": "unsat",
-        "result": "TN"
+        "actual": "sat",
+        "result": "FP"
       }
     ],
     "BuiltIns__Array__prototype__with__concolic_with_sat": [
@@ -6178,8 +6138,8 @@
     "BuiltIns__Array__prototype__with__concolic_with_unsat": [
       {
         "expected": "unsat",
-        "actual": "unsat",
-        "result": "TN"
+        "actual": "sat",
+        "result": "FP"
       }
     ],
     "BuiltIns__Function__prototype__apply__concolic_apply_sat": [
@@ -6388,8 +6348,8 @@
     "BuiltIns__Map__prototype__get__concolic_get_unsat": [
       {
         "expected": "unsat",
-        "actual": "unsat",
-        "result": "TN"
+        "actual": "sat",
+        "result": "FP"
       }
     ],
     "BuiltIns__Map__prototype__has__concolic_has_sat": [
@@ -6402,8 +6362,8 @@
     "BuiltIns__Map__prototype__has__concolic_has_unsat": [
       {
         "expected": "unsat",
-        "actual": "unsat",
-        "result": "TN"
+        "actual": "sat",
+        "result": "FP"
       }
     ],
     "BuiltIns__Map__prototype__keys__concolic_keys_sat": [
@@ -6416,8 +6376,8 @@
     "BuiltIns__Map__prototype__keys__concolic_keys_unsat": [
       {
         "expected": "unsat",
-        "actual": "sat",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__Map__prototype__set__concolic_set_sat": [
@@ -6430,8 +6390,8 @@
     "BuiltIns__Map__prototype__set__concolic_set_unsat": [
       {
         "expected": "unsat",
-        "actual": "unsat",
-        "result": "TN"
+        "actual": "sat",
+        "result": "FP"
       }
     ],
     "BuiltIns__Map__prototype__symbol_iterator__concolic_symbol_iterator_sat": [
@@ -6458,8 +6418,8 @@
     "BuiltIns__Map__prototype__values__concolic_values_unsat": [
       {
         "expected": "unsat",
-        "actual": "sat",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__Map__size__concolic_size_sat": [
@@ -6710,8 +6670,8 @@
     "BuiltIns__Object__assign_static__concolic_assign_unsat": [
       {
         "expected": "unsat",
-        "actual": "unsat",
-        "result": "TN"
+        "actual": "sat",
+        "result": "FP"
       }
     ],
     "BuiltIns__Object__entries_static__concolic_entries_sat": [
@@ -6724,8 +6684,8 @@
     "BuiltIns__Object__entries_static__concolic_entries_unsat": [
       {
         "expected": "unsat",
-        "actual": "unsat",
-        "result": "TN"
+        "actual": "sat",
+        "result": "FP"
       }
     ],
     "BuiltIns__Object__freeze_static__concolic_freeze_sat": [
@@ -6752,8 +6712,8 @@
     "BuiltIns__Object__fromEntries_static__concolic_fromEntries_unsat": [
       {
         "expected": "unsat",
-        "actual": "unsat",
-        "result": "TN"
+        "actual": "sat",
+        "result": "FP"
       }
     ],
     "BuiltIns__Object__getOwnPropertyNames_static__concolic_getOwnPropertyNames_sat": [
@@ -6934,8 +6894,8 @@
     "BuiltIns__Object__values_static__concolic_values_unsat": [
       {
         "expected": "unsat",
-        "actual": "unsat",
-        "result": "TN"
+        "actual": "sat",
+        "result": "FP"
       }
     ],
     "BuiltIns__RegExp__prototype__exec__concolic_captures_anchors_01": [
@@ -9748,8 +9708,8 @@
     "BuiltIns__Set__prototype__keys__concolic_keys_unsat": [
       {
         "expected": "unsat",
-        "actual": "sat",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__Set__prototype__symbol_iterator__concolic_symbol_iterator_sat": [
@@ -9762,8 +9722,8 @@
     "BuiltIns__Set__prototype__symbol_iterator__concolic_symbol_iterator_unsat": [
       {
         "expected": "unsat",
-        "actual": "sat",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__Set__prototype__values__concolic_values_sat": [
@@ -9776,8 +9736,8 @@
     "BuiltIns__Set__prototype__values__concolic_values_unsat": [
       {
         "expected": "unsat",
-        "actual": "sat",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__Set__size__concolic_size_sat": [
