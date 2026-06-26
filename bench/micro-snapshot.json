@@ -7466,15 +7466,15 @@
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_callback_capture_01": [
       {
         "expected": "sat",
-        "actual": "sat",
-        "result": "TP"
+        "actual": "unsat",
+        "result": "FN"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_callback_capture_02": [
       {
         "expected": "sat",
-        "actual": "sat",
-        "result": "TP"
+        "actual": "unsat",
+        "result": "FN"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_callback_capture_03": [
@@ -7494,15 +7494,15 @@
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_global_callback_01": [
       {
         "expected": "sat",
-        "actual": "sat",
-        "result": "TP"
+        "actual": "unsat",
+        "result": "FN"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_global_callback_02": [
       {
         "expected": "sat",
-        "actual": "sat",
-        "result": "TP"
+        "actual": "unsat",
+        "result": "FN"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_global_charclass_01": [
@@ -7536,8 +7536,8 @@
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_single_anchored_01": [
       {
         "expected": "sat",
-        "actual": "sat",
-        "result": "TP"
+        "actual": "unsat",
+        "result": "FN"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_single_anchored_02": [
@@ -7557,22 +7557,22 @@
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_single_charclass_01": [
       {
         "expected": "sat",
-        "actual": "sat",
-        "result": "TP"
+        "actual": "unsat",
+        "result": "FN"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_single_charclass_02": [
       {
         "expected": "sat",
-        "actual": "sat",
-        "result": "TP"
+        "actual": "unsat",
+        "result": "FN"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_single_fixed_width_01": [
       {
         "expected": "sat",
-        "actual": "sat",
-        "result": "TP"
+        "actual": "unsat",
+        "result": "FN"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_single_fixed_width_02": [
@@ -7725,8 +7725,8 @@
     "BuiltIns__RegExp__prototype__symbol_split__concolic_split_0": [
       {
         "expected": "sat",
-        "actual": "sat",
-        "result": "TP"
+        "actual": "unsat",
+        "result": "FN"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_split__concolic_split_1_01": [
@@ -7746,8 +7746,8 @@
     "BuiltIns__RegExp__prototype__symbol_split__concolic_split_1_03": [
       {
         "expected": "sat",
-        "actual": "sat",
-        "result": "TP"
+        "actual": "unsat",
+        "result": "FN"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_split__concolic_split_2": [
@@ -7795,8 +7795,8 @@
     "BuiltIns__RegExp__prototype__symbol_split__concolic_split_lhs": [
       {
         "expected": "sat",
-        "actual": "sat",
-        "result": "TP"
+        "actual": "unsat",
+        "result": "FN"
       }
     ],
     "BuiltIns__RegExp__prototype__test__concolic_alt_simple": [
