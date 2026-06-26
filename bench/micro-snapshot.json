@@ -293,8 +293,8 @@
     "BuiltIns__Array__prototype__every__taint_every_array": [
       {
         "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
+        "actual": "clean",
+        "result": "TN"
       }
     ],
     "BuiltIns__Array__prototype__every__taint_every_this": [
@@ -499,18 +499,18 @@
     "BuiltIns__Array__prototype__flat__taint_flat_depth": [
       {
         "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
+        "actual": "clean",
+        "result": "TN"
       },
       {
         "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
+        "actual": "clean",
+        "result": "TN"
       },
       {
         "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
+        "actual": "clean",
+        "result": "TN"
       }
     ],
     "BuiltIns__Array__prototype__flat__taint_flat_this": [
@@ -526,8 +526,8 @@
       },
       {
         "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
+        "actual": "detected",
+        "result": "TP"
       },
       {
         "expected": "clean",
@@ -545,8 +545,8 @@
     "BuiltIns__Array__prototype__flatMap__taint_flatMap_this": [
       {
         "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
+        "actual": "detected",
+        "result": "TP"
       },
       {
         "expected": "clean",
@@ -562,8 +562,8 @@
     "BuiltIns__Array__prototype__forEach__taint_forEach_array": [
       {
         "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
+        "actual": "detected",
+        "result": "TP"
       }
     ],
     "BuiltIns__Array__prototype__forEach__taint_forEach_this": [
@@ -576,27 +576,27 @@
     "BuiltIns__Array__prototype__includes__taint_includes_array": [
       {
         "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
+        "actual": "clean",
+        "result": "TN"
       }
     ],
     "BuiltIns__Array__prototype__includes__taint_includes_fromIndex": [
       {
         "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
+        "actual": "clean",
+        "result": "TN"
       },
       {
         "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
+        "actual": "clean",
+        "result": "TN"
       }
     ],
     "BuiltIns__Array__prototype__includes__taint_includes_searchElement": [
       {
         "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
+        "actual": "clean",
+        "result": "TN"
       }
     ],
     "BuiltIns__Array__prototype__includes__taint_includes_this": [
@@ -744,20 +744,20 @@
       },
       {
         "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
+        "actual": "clean",
+        "result": "TN"
       }
     ],
     "BuiltIns__Array__prototype__lastIndexOf__taint_lastIndexOf_searchElement": [
       {
         "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
+        "actual": "clean",
+        "result": "TN"
       },
       {
         "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
+        "actual": "clean",
+        "result": "TN"
       }
     ],
     "BuiltIns__Array__prototype__lastIndexOf__taint_lastIndexOf_this": [
@@ -958,8 +958,8 @@
       },
       {
         "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
+        "actual": "detected",
+        "result": "TP"
       }
     ],
     "BuiltIns__Array__prototype__shift__taint_shift_array": [
@@ -1092,13 +1092,13 @@
     "BuiltIns__Array__prototype__splice__taint_splice_deleteCount": [
       {
         "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
+        "actual": "clean",
+        "result": "TN"
       },
       {
         "expected": "clean",
-        "actual": "detected",
-        "result": "FP"
+        "actual": "clean",
+        "result": "TN"
       }
     ],
     "BuiltIns__Array__prototype__splice__taint_splice_items": [
@@ -1109,8 +1109,8 @@
       },
       {
         "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
+        "actual": "detected",
+        "result": "TP"
       },
       {
         "expected": "clean",
@@ -5674,15 +5674,15 @@
     "BuiltIns__Array__prototype__every__concolic_every_sat": [
       {
         "expected": "sat",
-        "actual": "sat",
-        "result": "TP"
+        "actual": "unsat",
+        "result": "FN"
       }
     ],
     "BuiltIns__Array__prototype__every__concolic_every_unsat": [
       {
         "expected": "unsat",
-        "actual": "sat",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__Array__prototype__fill__concolic_fill_sat": [
@@ -5779,8 +5779,8 @@
     "BuiltIns__Array__prototype__flat__concolic_flat_unsat": [
       {
         "expected": "unsat",
-        "actual": "sat",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__Array__prototype__flatMap__concolic_flatMap_sat": [
@@ -5800,29 +5800,29 @@
     "BuiltIns__Array__prototype__forEach__concolic_forEach_sat": [
       {
         "expected": "sat",
-        "actual": "unsat",
-        "result": "FN"
+        "actual": "sat",
+        "result": "TP"
       }
     ],
     "BuiltIns__Array__prototype__forEach__concolic_forEach_unsat": [
       {
         "expected": "unsat",
-        "actual": "sat",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__Array__prototype__includes__concolic_includes_sat": [
       {
         "expected": "sat",
-        "actual": "sat",
-        "result": "TP"
+        "actual": "unsat",
+        "result": "FN"
       }
     ],
     "BuiltIns__Array__prototype__includes__concolic_includes_unsat": [
       {
         "expected": "unsat",
-        "actual": "unsat",
-        "result": "TN"
+        "actual": "sat",
+        "result": "FP"
       }
     ],
     "BuiltIns__Array__prototype__indexOf__concolic_indexOf_sat": [
@@ -5877,7 +5877,7 @@
     "BuiltIns__Array__prototype__lastIndexOf__concolic_lastIndexOf_unsat": [
       {
         "expected": "unsat",
-        "actual": "sat",
+        "actual": "error",
         "result": "FP"
       }
     ],
