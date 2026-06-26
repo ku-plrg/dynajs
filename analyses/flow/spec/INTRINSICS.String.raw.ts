@@ -11,7 +11,7 @@ export function INTRINSICS_String_raw ($ : SpecRuntime, $this : Lifted<unknown>,
   var cooked = AO__ToObject($, template);
   var literals = AO__ToObject($, AO__Get($, (cooked as Lifted<unknown>), ($.default<string>("raw", []) as Lifted<unknown>)));
   var literalCount = AO__LengthOfArrayLike($, (literals as Lifted<unknown>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 498, $.lessThanEqual(literalCount, $.default<number>(0, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 501, $.lessThanEqual(literalCount, $.default<number>(0, [])))))
   {
     return $.default<string>("", []);
   }
@@ -23,12 +23,12 @@ export function INTRINSICS_String_raw ($ : SpecRuntime, $this : Lifted<unknown>,
     var nextLiteralVal = AO__Get($, (literals as Lifted<unknown>), (AO__ToString($, (nextIndex as Lifted<unknown>)) as Lifted<unknown>));
     var nextLiteral = AO__ToString($, (nextLiteralVal as Lifted<unknown>));
     R = $.concatenate(R, nextLiteral);
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 499, $.is($.add((nextIndex as Lifted<number>), ($.default<number>(1, []) as Lifted<number>)), literalCount))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 502, $.is($.add((nextIndex as Lifted<number>), ($.default<number>(1, []) as Lifted<number>)), literalCount))))
     {
       return R;
     }
 
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 500, $.lessThan(nextIndex, substitutionCount))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 503, $.lessThan(nextIndex, substitutionCount))))
     {
       var nextSubVal = substitutions[nextIndex];
       var nextSub = AO__ToString($, (nextSubVal as Lifted<unknown>));

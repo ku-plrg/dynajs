@@ -15,45 +15,7 @@ import chalk from 'chalk';
 const INCLUDE = [
   // Bulk-select with a RegExp, then carve out exceptions in EXCLUDE below, e.g.:
   // /^INTRINSICS\.Array\./,
-  // /^INTRINSICS\.Array\.prototype\./,
-  'INTRINSICS.Array.prototype.at',
-  'INTRINSICS.Array.prototype.concat',
-  'INTRINSICS.Array.prototype.copyWithin',
-  // "INTRINSICS.Array.prototype.entries",s
-  // "INTRINSICS.Array.prototype.every",
-  'INTRINSICS.Array.prototype.fill',
-  'INTRINSICS.Array.prototype.filter',
-  'INTRINSICS.Array.prototype.find',
-  'INTRINSICS.Array.prototype.findIndex',
-  'INTRINSICS.Array.prototype.findLast',
-  'INTRINSICS.Array.prototype.findLastIndex',
-  // "INTRINSICS.Array.prototype.flat",
-  // "INTRINSICS.Array.prototype.flatMap",
-  // "INTRINSICS.Array.prototype.forEach",
-  // "INTRINSICS.Array.prototype.includes",
-  // "INTRINSICS.Array.prototype.indexOf",
-  'INTRINSICS.Array.prototype.join',
-  // "INTRINSICS.Array.prototype.keys",
-  // "INTRINSICS.Array.prototype.lastIndexOf",
-  'INTRINSICS.Array.prototype.map',
-  'INTRINSICS.Array.prototype.pop',
-  'INTRINSICS.Array.prototype.push',
-  'INTRINSICS.Array.prototype.reduce',
-  'INTRINSICS.Array.prototype.reduceRight',
-  // "INTRINSICS.Array.prototype.reverse",
-  'INTRINSICS.Array.prototype.shift',
-  'INTRINSICS.Array.prototype.slice',
-  'INTRINSICS.Array.prototype.some',
-  // "INTRINSICS.Array.prototype.sort",
-  // "INTRINSICS.Array.prototype.splice",
-  // "INTRINSICS.Array.prototype.toLocaleString",
-  'INTRINSICS.Array.prototype.toReversed',
-  // "INTRINSICS.Array.prototype.toSorted",
-  'INTRINSICS.Array.prototype.toSpliced',
-  // "INTRINSICS.Array.prototype.toString",
-  'INTRINSICS.Array.prototype.unshift',
-  // "INTRINSICS.Array.prototype.values",
-  // "INTRINSICS.Array.prototype.with",
+  /^INTRINSICS\.Array\.prototype\./,
 
   // /^INTRINSICS\.Boolean\./,
   // /^INTRINSICS\.Function\./,
@@ -78,12 +40,23 @@ const EXCLUDE = [
   // (INTRINSICS.*.manual.ts -> $.regexOp); keep them out of esmeta extraction
   // (the generated versions delegate to the spec matcher) but DO let their
   // manual shims be barreled, so they are not excluded here.
+  'INTRINSICS.Array.prototype.entries',
+  'INTRINSICS.Array.prototype.indexOf',
+  'INTRINSICS.Array.prototype.keys',
+  'INTRINSICS.Array.prototype.sort',
+  'INTRINSICS.Array.prototype.toLocaleString',
+  'INTRINSICS.Array.prototype.toSorted',
+  'INTRINSICS.Array.prototype.toString',
+  'INTRINSICS.Array.prototype.values',
+  'INTRINSICS.Array.prototype.with',
   'INTRINSICS.String.prototypeLeftBracketPercentSymbol.iteratorPercentRightBracket',
 ];
 
 const NO_CHECK = [
   'INTRINSICS.Array.prototype.reduce',
   'INTRINSICS.Array.prototype.reduceRight',
+  'INTRINSICS.Array.prototype.reverse',
+  'AO__FlattenIntoArray',
   'AO__GetSubstitution',
   // JSON serialization: esmeta gen-poly emits sound runtime code but with type
   // noise it can't yet resolve — the State Record (a non-escaping scratch object)

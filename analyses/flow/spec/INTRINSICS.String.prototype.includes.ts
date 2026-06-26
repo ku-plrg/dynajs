@@ -11,7 +11,7 @@ export function INTRINSICS_String_prototype_includes ($ : SpecRuntime, $this : L
   var O = AO__RequireObjectCoercible($, $this);
   var S = AO__ToString($, (O as Lifted<unknown>));
   var isRegExp = AO__IsRegExp($, (searchString as Lifted<unknown>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 430, $.is(isRegExp, $.default<boolean>(true, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 433, $.is(isRegExp, $.default<boolean>(true, [])))))
   {
     throw new TypeError;
   }
@@ -21,7 +21,7 @@ export function INTRINSICS_String_prototype_includes ($ : SpecRuntime, $this : L
   var len = $.length(S);
   var start = $.clamp(pos, $.default<number>(0, []), len);
   var index = AO__StringIndexOf($, (S as Lifted<string>), (searchStr as Lifted<string>), (start as Lifted<number>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 431, $.is(index, $.default<string>("not-found", [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 434, $.is(index, $.default<string>("not-found", [])))))
   {
     return $.default<boolean>(false, []);
   }

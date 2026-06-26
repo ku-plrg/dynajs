@@ -13,20 +13,20 @@ export function INTRINSICS_Array_prototype_unshift ($ : SpecRuntime, $this : Lif
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
   var argCount = $.default<number>(items.length, []);
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 246, $.greaterThan(argCount, $.default<number>(0, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 249, $.greaterThan(argCount, $.default<number>(0, [])))))
   {
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 247, $.greaterThan($.add((len as Lifted<number>), (argCount as Lifted<number>)), $.subtract(($.exponentiate($.default<number>(2, []), $.default<number>(53, [])) as Lifted<number>), ($.default<number>(1, []) as Lifted<number>))))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 250, $.greaterThan($.add((len as Lifted<number>), (argCount as Lifted<number>)), $.subtract(($.exponentiate($.default<number>(2, []), $.default<number>(53, [])) as Lifted<number>), ($.default<number>(1, []) as Lifted<number>))))))
     {
       throw new TypeError;
     }
 
     var k = len;
-    while ($.value($.condition(Number.MAX_SAFE_INTEGER - 248, $.greaterThan(k, $.default<number>(0, [])))))
+    while ($.value($.condition(Number.MAX_SAFE_INTEGER - 251, $.greaterThan(k, $.default<number>(0, [])))))
     {
       var from = AO__ToString($, ($.subtract((k as Lifted<number>), ($.default<number>(1, []) as Lifted<number>)) as Lifted<unknown>));
       var to = AO__ToString($, ($.subtract(($.add((k as Lifted<number>), (argCount as Lifted<number>)) as Lifted<number>), ($.default<number>(1, []) as Lifted<number>)) as Lifted<unknown>));
       var fromPresent = AO__HasProperty($, (O as Lifted<unknown>), (from as Lifted<unknown>));
-      if ($.value($.condition(Number.MAX_SAFE_INTEGER - 249, $.is(fromPresent, $.default<boolean>(true, [])))))
+      if ($.value($.condition(Number.MAX_SAFE_INTEGER - 252, $.is(fromPresent, $.default<boolean>(true, [])))))
       {
         var fromValue = AO__Get($, (O as Lifted<unknown>), (from as Lifted<unknown>));
         AO__Set($, (O as Lifted<unknown>), (to as Lifted<unknown>), (fromValue as Lifted<unknown>), ($.default<boolean>(true, []) as Lifted<boolean>));

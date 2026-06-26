@@ -13,7 +13,7 @@ export function INTRINSICS_Array_prototype_toReversed ($ : SpecRuntime, $this : 
   var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
   var A = AO__ArrayCreate($, (len as Lifted<number>));
   var k = $.default<number>(0, []);
-  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 236, $.lessThan(k, len))))
+  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 239, $.lessThan(k, len))))
   {
     var from = AO__ToString($, ($.subtract(($.subtract((len as Lifted<number>), (k as Lifted<number>)) as Lifted<number>), ($.default<number>(1, []) as Lifted<number>)) as Lifted<unknown>));
     var Pk = AO__ToString($, (k as Lifted<unknown>));

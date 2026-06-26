@@ -14,13 +14,13 @@ export function INTRINSICS_Array_prototype_copyWithin ($ : SpecRuntime, $this : 
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
   var relativeTarget = AO__ToIntegerOrInfinity($, (target as Lifted<unknown>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 115, $.is(relativeTarget, $.default<number>(-Infinity, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 118, $.is(relativeTarget, $.default<number>(-Infinity, [])))))
   {
     var to = $.default<number>(0, []);
   }
   else
   {
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 116, $.lessThan(relativeTarget, $.default<number>(0, [])))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 119, $.lessThan(relativeTarget, $.default<number>(0, [])))))
     {
       var to = $.max($.add((len as Lifted<number>), (relativeTarget as Lifted<number>)), $.default<number>(0, []));
     }
@@ -32,13 +32,13 @@ export function INTRINSICS_Array_prototype_copyWithin ($ : SpecRuntime, $this : 
   }
 
   var relativeStart = AO__ToIntegerOrInfinity($, (start as Lifted<unknown>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 117, $.is(relativeStart, $.default<number>(-Infinity, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 120, $.is(relativeStart, $.default<number>(-Infinity, [])))))
   {
     var from = $.default<number>(0, []);
   }
   else
   {
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 118, $.lessThan(relativeStart, $.default<number>(0, [])))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 121, $.lessThan(relativeStart, $.default<number>(0, [])))))
     {
       var from = $.max($.add((len as Lifted<number>), (relativeStart as Lifted<number>)), $.default<number>(0, []));
     }
@@ -49,7 +49,7 @@ export function INTRINSICS_Array_prototype_copyWithin ($ : SpecRuntime, $this : 
 
   }
 
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 119, $.is(end, $.default<undefined>(undefined, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 122, $.is(end, $.default<undefined>(undefined, [])))))
   {
     var relativeEnd = len;
   }
@@ -58,13 +58,13 @@ export function INTRINSICS_Array_prototype_copyWithin ($ : SpecRuntime, $this : 
     var relativeEnd = AO__ToIntegerOrInfinity($, (end as Lifted<unknown>));
   }
 
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 120, $.is(relativeEnd, $.default<number>(-Infinity, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 123, $.is(relativeEnd, $.default<number>(-Infinity, [])))))
   {
     var final = $.default<number>(0, []);
   }
   else
   {
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 121, $.lessThan(relativeEnd, $.default<number>(0, [])))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 124, $.lessThan(relativeEnd, $.default<number>(0, [])))))
     {
       var final = $.max($.add((len as Lifted<number>), (relativeEnd as Lifted<number>)), $.default<number>(0, []));
     }
@@ -76,7 +76,7 @@ export function INTRINSICS_Array_prototype_copyWithin ($ : SpecRuntime, $this : 
   }
 
   var count = $.min($.subtract((final as Lifted<number>), (from as Lifted<number>)), $.subtract((len as Lifted<number>), (to as Lifted<number>)));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 122, $.lessThan(from, to))) && $.value($.condition(Number.MAX_SAFE_INTEGER - 123, $.lessThan(to, $.add((from as Lifted<number>), (count as Lifted<number>))))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 125, $.lessThan(from, to))) && $.value($.condition(Number.MAX_SAFE_INTEGER - 126, $.lessThan(to, $.add((from as Lifted<number>), (count as Lifted<number>))))))
   {
     var direction = $.negate(($.default<number>(1, []) as Lifted<number>));
     from = $.subtract(($.add((from as Lifted<number>), (count as Lifted<number>)) as Lifted<number>), ($.default<number>(1, []) as Lifted<number>));
@@ -87,12 +87,12 @@ export function INTRINSICS_Array_prototype_copyWithin ($ : SpecRuntime, $this : 
     var direction = $.default<number>(1, []);
   }
 
-  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 124, $.greaterThan(count, $.default<number>(0, [])))))
+  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 127, $.greaterThan(count, $.default<number>(0, [])))))
   {
     var fromKey = AO__ToString($, (from as Lifted<unknown>));
     var toKey = AO__ToString($, (to as Lifted<unknown>));
     var fromPresent = AO__HasProperty($, (O as Lifted<unknown>), (fromKey as Lifted<unknown>));
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 125, $.is(fromPresent, $.default<boolean>(true, [])))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 128, $.is(fromPresent, $.default<boolean>(true, [])))))
     {
       var fromValue = AO__Get($, (O as Lifted<unknown>), (fromKey as Lifted<unknown>));
       AO__Set($, (O as Lifted<unknown>), (toKey as Lifted<unknown>), (fromValue as Lifted<unknown>), ($.default<boolean>(true, []) as Lifted<boolean>));

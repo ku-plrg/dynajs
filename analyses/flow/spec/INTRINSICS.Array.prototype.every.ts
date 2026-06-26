@@ -10,26 +10,26 @@ import { AO__ToBoolean } from "./AO__ToBoolean.js";
 import { AO__ToObject } from "./AO__ToObject.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_Array_prototype_some ($ : SpecRuntime, $this : Lifted<unknown>, callback : Lifted<unknown>, thisArg : Lifted<unknown> = $.default<undefined>(undefined, [])) {
+export function INTRINSICS_Array_prototype_every ($ : SpecRuntime, $this : Lifted<unknown>, callback : Lifted<unknown>, thisArg : Lifted<unknown> = $.default<undefined>(undefined, [])) {
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 215, $.is(AO__IsCallable($, (callback as Lifted<unknown>)), $.default<boolean>(false, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 129, $.is(AO__IsCallable($, (callback as Lifted<unknown>)), $.default<boolean>(false, [])))))
   {
     throw new TypeError;
   }
 
   var k = $.default<number>(0, []);
-  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 216, $.lessThan(k, len))))
+  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 130, $.lessThan(k, len))))
   {
     var Pk = AO__ToString($, (k as Lifted<unknown>));
     var kPresent = AO__HasProperty($, (O as Lifted<unknown>), (Pk as Lifted<unknown>));
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 217, $.is(kPresent, $.default<boolean>(true, [])))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 131, $.is(kPresent, $.default<boolean>(true, [])))))
     {
       var kValue = AO__Get($, (O as Lifted<unknown>), (Pk as Lifted<unknown>));
       var testResult = AO__ToBoolean($, (AO__Call($, (callback as Lifted<unknown>), (thisArg as Lifted<unknown>), ([kValue, k, O] as Lifted<unknown>[])) as Lifted<unknown>));
-      if ($.value($.condition(Number.MAX_SAFE_INTEGER - 218, $.is(testResult, $.default<boolean>(true, [])))))
+      if ($.value($.condition(Number.MAX_SAFE_INTEGER - 132, $.is(testResult, $.default<boolean>(false, [])))))
       {
-        return $.default<boolean>(true, []);
+        return $.default<boolean>(false, []);
       }
 
     }
@@ -37,5 +37,5 @@ export function INTRINSICS_Array_prototype_some ($ : SpecRuntime, $this : Lifted
     k = $.add((k as Lifted<number>), ($.default<number>(1, []) as Lifted<number>));
   }
 
-  return $.default<boolean>(false, []);
+  return $.default<boolean>(true, []);
 }

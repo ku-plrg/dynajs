@@ -10,13 +10,13 @@ export function INTRINSICS_String_prototype_slice ($ : SpecRuntime, $this : Lift
   var S = AO__ToString($, (O as Lifted<unknown>));
   var len = $.length(S);
   var intStart = AO__ToIntegerOrInfinity($, (start as Lifted<unknown>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 470, $.is(intStart, $.default<number>(-Infinity, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 473, $.is(intStart, $.default<number>(-Infinity, [])))))
   {
     var from = $.default<number>(0, []);
   }
   else
   {
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 471, $.lessThan(intStart, $.default<number>(0, [])))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 474, $.lessThan(intStart, $.default<number>(0, [])))))
     {
       var from = $.max($.add((len as Lifted<number>), (intStart as Lifted<number>)), $.default<number>(0, []));
     }
@@ -27,7 +27,7 @@ export function INTRINSICS_String_prototype_slice ($ : SpecRuntime, $this : Lift
 
   }
 
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 472, $.is(end, $.default<undefined>(undefined, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 475, $.is(end, $.default<undefined>(undefined, [])))))
   {
     var intEnd = len;
   }
@@ -36,13 +36,13 @@ export function INTRINSICS_String_prototype_slice ($ : SpecRuntime, $this : Lift
     var intEnd = AO__ToIntegerOrInfinity($, (end as Lifted<unknown>));
   }
 
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 473, $.is(intEnd, $.default<number>(-Infinity, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 476, $.is(intEnd, $.default<number>(-Infinity, [])))))
   {
     var to = $.default<number>(0, []);
   }
   else
   {
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 474, $.lessThan(intEnd, $.default<number>(0, [])))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 477, $.lessThan(intEnd, $.default<number>(0, [])))))
     {
       var to = $.max($.add((len as Lifted<number>), (intEnd as Lifted<number>)), $.default<number>(0, []));
     }
@@ -53,7 +53,7 @@ export function INTRINSICS_String_prototype_slice ($ : SpecRuntime, $this : Lift
 
   }
 
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 475, $.greaterThanEqual(from, to))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 478, $.greaterThanEqual(from, to))))
   {
     return $.default<string>("", []);
   }

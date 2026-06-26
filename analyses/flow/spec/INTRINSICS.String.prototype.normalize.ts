@@ -7,7 +7,7 @@ import { AO__ToString } from "./AO__ToString.js";
 export function INTRINSICS_String_prototype_normalize ($ : SpecRuntime, $this : Lifted<unknown>, form : Lifted<unknown> = $.default<undefined>(undefined, [])) {
   var O = AO__RequireObjectCoercible($, $this);
   var S = AO__ToString($, (O as Lifted<unknown>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 444, $.is(form, $.default<undefined>(undefined, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 447, $.is(form, $.default<undefined>(undefined, [])))))
   {
     var f = $.default<string>("NFC", []);
   }
@@ -16,7 +16,7 @@ export function INTRINSICS_String_prototype_normalize ($ : SpecRuntime, $this : 
     var f = AO__ToString($, (form as Lifted<unknown>));
   }
 
-  if (!((($.value($.condition(Number.MAX_SAFE_INTEGER - 445, $.is(f, $.default<string>("NFC", [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 446, $.is(f, $.default<string>("NFD", []))))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 447, $.is(f, $.default<string>("NFKC", []))))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 448, $.is(f, $.default<string>("NFKD", []))))))
+  if (!((($.value($.condition(Number.MAX_SAFE_INTEGER - 448, $.is(f, $.default<string>("NFC", [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 449, $.is(f, $.default<string>("NFD", []))))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 450, $.is(f, $.default<string>("NFKC", []))))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 451, $.is(f, $.default<string>("NFKD", []))))))
   {
     throw new RangeError;
   }

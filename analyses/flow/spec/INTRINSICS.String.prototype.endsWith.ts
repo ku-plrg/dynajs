@@ -10,14 +10,14 @@ export function INTRINSICS_String_prototype_endsWith ($ : SpecRuntime, $this : L
   var O = AO__RequireObjectCoercible($, $this);
   var S = AO__ToString($, (O as Lifted<unknown>));
   var isRegExp = AO__IsRegExp($, (searchString as Lifted<unknown>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 425, $.is(isRegExp, $.default<boolean>(true, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 428, $.is(isRegExp, $.default<boolean>(true, [])))))
   {
     throw new TypeError;
   }
 
   var searchStr = AO__ToString($, (searchString as Lifted<unknown>));
   var len = $.length(S);
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 426, $.is(endPosition, $.default<undefined>(undefined, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 429, $.is(endPosition, $.default<undefined>(undefined, [])))))
   {
     var pos = len;
   }
@@ -28,19 +28,19 @@ export function INTRINSICS_String_prototype_endsWith ($ : SpecRuntime, $this : L
 
   var end = $.clamp(pos, $.default<number>(0, []), len);
   var searchLength = $.length(searchStr);
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 427, $.is(searchLength, $.default<number>(0, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 430, $.is(searchLength, $.default<number>(0, [])))))
   {
     return $.default<boolean>(true, []);
   }
 
   var start = $.subtract((end as Lifted<number>), (searchLength as Lifted<number>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 428, $.lessThan(start, $.default<number>(0, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 431, $.lessThan(start, $.default<number>(0, [])))))
   {
     return $.default<boolean>(false, []);
   }
 
   var substring = $.substring(S, (start as Lifted<number>), (end as Lifted<number>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 429, $.is(substring, searchStr))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 432, $.is(substring, searchStr))))
   {
     return $.default<boolean>(true, []);
   }

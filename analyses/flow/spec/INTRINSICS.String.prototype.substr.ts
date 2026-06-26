@@ -10,13 +10,13 @@ export function INTRINSICS_String_prototype_substr ($ : SpecRuntime, $this : Lif
   var S = AO__ToString($, (O as Lifted<unknown>));
   var size = $.length(S);
   var intStart = AO__ToIntegerOrInfinity($, (start as Lifted<unknown>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 491, $.is(intStart, $.default<number>(-Infinity, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 494, $.is(intStart, $.default<number>(-Infinity, [])))))
   {
     intStart = $.default<number>(0, []);
   }
   else
   {
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 492, $.lessThan(intStart, $.default<number>(0, [])))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 495, $.lessThan(intStart, $.default<number>(0, [])))))
     {
       intStart = $.max($.add((size as Lifted<number>), (intStart as Lifted<number>)), $.default<number>(0, []));
     }
@@ -27,7 +27,7 @@ export function INTRINSICS_String_prototype_substr ($ : SpecRuntime, $this : Lif
 
   }
 
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 493, $.is(length, $.default<undefined>(undefined, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 496, $.is(length, $.default<undefined>(undefined, [])))))
   {
     var intLength = size;
   }

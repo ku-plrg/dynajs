@@ -10,7 +10,7 @@ import type {
 import Model from './internal/model.js';
 import * as site from './internal/site.js';
 import type * as escape from './internal/escape.js';
-import { AO__CanonicalNumericIndexString, SYNTAX__add, } from './spec/index.js';
+import { AO__CanonicalNumericIndexString, SYNTAX__add } from './spec/index.js';
 import * as lift from './internal/lift.js';
 
 // `instanceof` and `in` are type/membership predicates, not value-algebra

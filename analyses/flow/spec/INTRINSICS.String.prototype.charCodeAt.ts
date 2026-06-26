@@ -10,7 +10,7 @@ export function INTRINSICS_String_prototype_charCodeAt ($ : SpecRuntime, $this :
   var S = AO__ToString($, (O as Lifted<unknown>));
   var position = AO__ToIntegerOrInfinity($, (pos as Lifted<unknown>));
   var size = $.length(S);
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 421, $.lessThan(position, $.default<number>(0, [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 422, $.greaterThanEqual(position, size))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 424, $.lessThan(position, $.default<number>(0, [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 425, $.greaterThanEqual(position, size))))
   {
     return $.default<number>(NaN, []);
   }

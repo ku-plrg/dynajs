@@ -26,7 +26,7 @@ export { AO__IsCallable } from "./AO__IsCallable.js";
 export { AO__IsConcatSpreadable } from "./AO__IsConcatSpreadable.js";
 export { AO__IsConstructor } from "./AO__IsConstructor.js";
 export { AO__IsRegExp } from "./AO__IsRegExp.js";
-export { AO__IsStrictlyEqual } from "./AO__IsStrictlyEqual.manual.js";
+export { AO__IsStrictlyEqual } from "./AO__IsStrictlyEqual.js";
 export { AO__IsStringWellFormedUnicode } from "./AO__IsStringWellFormedUnicode.js";
 export { AO__LengthOfArrayLike } from "./AO__LengthOfArrayLike.js";
 export { AO__MakeBasicObject } from "./AO__MakeBasicObject.js";
@@ -150,5 +150,5 @@ export { INTRINSICS_String_prototype_trimEnd } from "./INTRINSICS.String.prototy
 export { INTRINSICS_String_prototype_trimStart } from "./INTRINSICS.String.prototype.trimStart.js";
 export { INTRINSICS_String_prototype_valueOf } from "./INTRINSICS.String.prototype.valueOf.js";
 export { INTRINSICS_String_raw } from "./INTRINSICS.String.raw.js";
-export { NUM__sameValueZero } from "./NUM__sameValueZero.js";
+export { Number__equal } from "./Number__equal.js";
 export { SYNTAX__add } from "./SYNTAX__add.js";

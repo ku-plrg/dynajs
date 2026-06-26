@@ -12,7 +12,7 @@ import { AO__ToString } from "./AO__ToString.js";
 export function INTRINSICS_Array_prototype_shift ($ : SpecRuntime, $this : Lifted<unknown>) {
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 202, $.is(len, $.default<number>(0, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 205, $.is(len, $.default<number>(0, [])))))
   {
     AO__Set($, (O as Lifted<unknown>), ($.default<string>("length", []) as Lifted<unknown>), ($.default<number>(0, []) as Lifted<unknown>), ($.default<boolean>(true, []) as Lifted<boolean>));
     return $.default<undefined>(undefined, []);
@@ -20,12 +20,12 @@ export function INTRINSICS_Array_prototype_shift ($ : SpecRuntime, $this : Lifte
 
   var first = AO__Get($, (O as Lifted<unknown>), ($.default<string>("0", []) as Lifted<unknown>));
   var k = $.default<number>(1, []);
-  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 203, $.lessThan(k, len))))
+  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 206, $.lessThan(k, len))))
   {
     var from = AO__ToString($, (k as Lifted<unknown>));
     var to = AO__ToString($, ($.subtract((k as Lifted<number>), ($.default<number>(1, []) as Lifted<number>)) as Lifted<unknown>));
     var fromPresent = AO__HasProperty($, (O as Lifted<unknown>), (from as Lifted<unknown>));
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 204, $.is(fromPresent, $.default<boolean>(true, [])))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 207, $.is(fromPresent, $.default<boolean>(true, [])))))
     {
       var fromValue = AO__Get($, (O as Lifted<unknown>), (from as Lifted<unknown>));
       AO__Set($, (O as Lifted<unknown>), (to as Lifted<unknown>), (fromValue as Lifted<unknown>), ($.default<boolean>(true, []) as Lifted<boolean>));

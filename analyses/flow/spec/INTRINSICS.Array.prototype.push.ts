@@ -10,7 +10,7 @@ export function INTRINSICS_Array_prototype_push ($ : SpecRuntime, $this : Lifted
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
   var argCount = $.default<number>(items.length, []);
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 176, $.greaterThan($.add((len as Lifted<number>), (argCount as Lifted<number>)), $.subtract(($.exponentiate($.default<number>(2, []), $.default<number>(53, [])) as Lifted<number>), ($.default<number>(1, []) as Lifted<number>))))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 179, $.greaterThan($.add((len as Lifted<number>), (argCount as Lifted<number>)), $.subtract(($.exponentiate($.default<number>(2, []), $.default<number>(53, [])) as Lifted<number>), ($.default<number>(1, []) as Lifted<number>))))))
   {
     throw new TypeError;
   }

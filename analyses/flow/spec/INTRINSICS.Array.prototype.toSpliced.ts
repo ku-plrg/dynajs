@@ -15,13 +15,13 @@ export function INTRINSICS_Array_prototype_toSpliced ($ : SpecRuntime, $this : L
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
   var relativeStart = AO__ToIntegerOrInfinity($, (start as Lifted<unknown>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 240, $.is(relativeStart, $.default<number>(-Infinity, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 243, $.is(relativeStart, $.default<number>(-Infinity, [])))))
   {
     var actualStart = $.default<number>(0, []);
   }
   else
   {
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 241, $.lessThan(relativeStart, $.default<number>(0, [])))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 244, $.lessThan(relativeStart, $.default<number>(0, [])))))
     {
       var actualStart = $.max($.add((len as Lifted<number>), (relativeStart as Lifted<number>)), $.default<number>(0, []));
     }
@@ -52,7 +52,7 @@ export function INTRINSICS_Array_prototype_toSpliced ($ : SpecRuntime, $this : L
   }
 
   var newLen = $.subtract(($.add((len as Lifted<number>), (insertCount as Lifted<number>)) as Lifted<number>), (actualSkipCount as Lifted<number>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 242, $.greaterThan(newLen, $.subtract(($.exponentiate($.default<number>(2, []), $.default<number>(53, [])) as Lifted<number>), ($.default<number>(1, []) as Lifted<number>))))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 245, $.greaterThan(newLen, $.subtract(($.exponentiate($.default<number>(2, []), $.default<number>(53, [])) as Lifted<number>), ($.default<number>(1, []) as Lifted<number>))))))
   {
     throw new TypeError;
   }
@@ -60,7 +60,7 @@ export function INTRINSICS_Array_prototype_toSpliced ($ : SpecRuntime, $this : L
   var A = AO__ArrayCreate($, (newLen as Lifted<number>));
   var i = $.default<number>(0, []);
   var r = $.add((actualStart as Lifted<number>), (actualSkipCount as Lifted<number>));
-  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 243, $.lessThan(i, actualStart))))
+  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 246, $.lessThan(i, actualStart))))
   {
     var Pi = AO__ToString($, (i as Lifted<unknown>));
     var iValue = AO__Get($, (O as Lifted<unknown>), (Pi as Lifted<unknown>));
@@ -75,7 +75,7 @@ export function INTRINSICS_Array_prototype_toSpliced ($ : SpecRuntime, $this : L
     i = $.add((i as Lifted<number>), ($.default<number>(1, []) as Lifted<number>));
   }
 
-  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 244, $.lessThan(i, newLen))))
+  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 247, $.lessThan(i, newLen))))
   {
     var Pi = AO__ToString($, (i as Lifted<unknown>));
     var from = AO__ToString($, (r as Lifted<unknown>));

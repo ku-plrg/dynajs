@@ -7,7 +7,7 @@ import { AO__QuoteJSONString } from "./AO__QuoteJSONString.js";
 import { AO__SerializeJSONProperty } from "./AO__SerializeJSONProperty.js";
 
 export function AO__SerializeJSONObject ($ : SpecRuntime, state : Lifted<unknown>, value : Lifted<unknown>) {
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 684, $.contains(state["Stack" /* TODO INTERNAL : internal access */], value))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 732, $.contains(state["Stack" /* TODO INTERNAL : internal access */], value))))
   {
     throw new TypeError("JSON.stringify: cannot serialize cyclic structure");
   }
@@ -15,7 +15,7 @@ export function AO__SerializeJSONObject ($ : SpecRuntime, state : Lifted<unknown
   $.append(state["Stack" /* TODO INTERNAL : internal access */], value)
   var stepBack = state["Indent" /* TODO INTERNAL : internal access */];
   state["Indent" /* TODO INTERNAL : internal access */] = $.concatenate(state["Indent" /* TODO INTERNAL : internal access */], state["Gap" /* TODO INTERNAL : internal access */]);
-  if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 685, $.is(state["PropertyList" /* TODO INTERNAL : internal access */], $.default<undefined>(undefined, [])))))
+  if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 733, $.is(state["PropertyList" /* TODO INTERNAL : internal access */], $.default<undefined>(undefined, [])))))
   {
     var K = state["PropertyList" /* TODO INTERNAL : internal access */];
   }
@@ -28,11 +28,11 @@ export function AO__SerializeJSONObject ($ : SpecRuntime, state : Lifted<unknown
   for (var P of K)
   {
     var strP = AO__SerializeJSONProperty($, (state as Lifted<unknown>), (P as Lifted<string>), (value as Lifted<unknown>));
-    if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 686, $.is(strP, $.default<undefined>(undefined, [])))))
+    if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 734, $.is(strP, $.default<undefined>(undefined, [])))))
     {
       var member = AO__QuoteJSONString($, (P as Lifted<string>));
       member = $.concatenate(member, $.default<string>(":", []));
-      if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 687, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.default<string>("", [])))))
+      if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 735, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.default<string>("", [])))))
       {
         member = $.concatenate(member, $.default<string>(" ", []));
       }
@@ -49,7 +49,7 @@ export function AO__SerializeJSONObject ($ : SpecRuntime, state : Lifted<unknown
   }
   else
   {
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 688, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.default<string>("", [])))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 736, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.default<string>("", [])))))
     {
       var properties = (partial as Lifted<string>[]).reduce((a, b) => $.concatenate(a, $.concatenate($.default<string>(",", []), b)));
       var final = $.concatenate($.concatenate($.default<string>("{", []), properties), $.default<string>("}", []));

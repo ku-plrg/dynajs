@@ -15,22 +15,22 @@ import { AO__ToString } from "./AO__ToString.js";
 
 export function AO__SerializeJSONProperty ($ : SpecRuntime, state : Lifted<unknown>, key : Lifted<string>, holder : Lifted<unknown>) {
   var value = AO__Get($, (holder as Lifted<unknown>), (key as Lifted<unknown>));
-  if (($.value($.condition(Number.MAX_SAFE_INTEGER - 689, $.isType(value, "object")))) || ($.value($.condition(Number.MAX_SAFE_INTEGER - 690, $.isType(value, "bigint")))))
+  if (($.value($.condition(Number.MAX_SAFE_INTEGER - 737, $.isType(value, "object")))) || ($.value($.condition(Number.MAX_SAFE_INTEGER - 738, $.isType(value, "bigint")))))
   {
     var toJSON = AO__GetV($, (value as Lifted<unknown>), ($.default<string>("toJSON", []) as Lifted<unknown>));
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 691, $.is(AO__IsCallable($, (toJSON as Lifted<unknown>)), $.default<boolean>(true, [])))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 739, $.is(AO__IsCallable($, (toJSON as Lifted<unknown>)), $.default<boolean>(true, [])))))
     {
       value = AO__Call($, (toJSON as Lifted<unknown>), (value as Lifted<unknown>), ([key] as Lifted<unknown>[]));
     }
 
   }
 
-  if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 692, $.is(state["ReplacerFunction" /* TODO INTERNAL : internal access */], $.default<undefined>(undefined, [])))))
+  if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 740, $.is(state["ReplacerFunction" /* TODO INTERNAL : internal access */], $.default<undefined>(undefined, [])))))
   {
     value = AO__Call($, (state["ReplacerFunction" /* TODO INTERNAL : internal access */] as Lifted<unknown>), (holder as Lifted<unknown>), ([key, value] as Lifted<unknown>[]));
   }
 
-  if (($.value($.condition(Number.MAX_SAFE_INTEGER - 693, $.isType(value, "object")))))
+  if (($.value($.condition(Number.MAX_SAFE_INTEGER - 741, $.isType(value, "object")))))
   {
     if (($.value(value) instanceof Number))
     {
@@ -63,29 +63,29 @@ export function AO__SerializeJSONProperty ($ : SpecRuntime, state : Lifted<unkno
 
   }
 
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 694, $.is(value, $.default<null>(null, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 742, $.is(value, $.default<null>(null, [])))))
   {
     return $.default<string>("null", []);
   }
 
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 695, $.is(value, $.default<boolean>(true, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 743, $.is(value, $.default<boolean>(true, [])))))
   {
     return $.default<string>("true", []);
   }
 
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 696, $.is(value, $.default<boolean>(false, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 744, $.is(value, $.default<boolean>(false, [])))))
   {
     return $.default<string>("false", []);
   }
 
-  if (($.value($.condition(Number.MAX_SAFE_INTEGER - 697, $.isType(value, "string")))))
+  if (($.value($.condition(Number.MAX_SAFE_INTEGER - 745, $.isType(value, "string")))))
   {
     return AO__QuoteJSONString($, (value as Lifted<string>));
   }
 
-  if (($.value($.condition(Number.MAX_SAFE_INTEGER - 698, $.isType(value, "number")))))
+  if (($.value($.condition(Number.MAX_SAFE_INTEGER - 746, $.isType(value, "number")))))
   {
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 699, $.isFinite(value))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 747, $.isFinite(value))))
     {
       return AO__ToString($, (value as Lifted<unknown>));
     }
@@ -93,15 +93,15 @@ export function AO__SerializeJSONProperty ($ : SpecRuntime, state : Lifted<unkno
     return $.default<string>("null", []);
   }
 
-  if (($.value($.condition(Number.MAX_SAFE_INTEGER - 700, $.isType(value, "bigint")))))
+  if (($.value($.condition(Number.MAX_SAFE_INTEGER - 748, $.isType(value, "bigint")))))
   {
     throw new TypeError;
   }
 
-  if (($.value($.condition(Number.MAX_SAFE_INTEGER - 701, $.isType(value, "object")))) && $.value($.condition(Number.MAX_SAFE_INTEGER - 702, $.is(AO__IsCallable($, (value as Lifted<unknown>)), $.default<boolean>(false, [])))))
+  if (($.value($.condition(Number.MAX_SAFE_INTEGER - 749, $.isType(value, "object")))) && $.value($.condition(Number.MAX_SAFE_INTEGER - 750, $.is(AO__IsCallable($, (value as Lifted<unknown>)), $.default<boolean>(false, [])))))
   {
     var isArray = AO__IsArray($, (value as Lifted<unknown>));
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 703, $.is(isArray, $.default<boolean>(true, [])))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 751, $.is(isArray, $.default<boolean>(true, [])))))
     {
       return AO__SerializeJSONArray($, (state as Lifted<unknown>), (value as Lifted<unknown>));
     }
