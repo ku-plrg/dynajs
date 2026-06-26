@@ -951,6 +951,11 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     this.escaper.markEscapable(value);
   }
 
+  // the native instrumenter needs a raw string
+  instrumentCodePre(_id: number, code: any, _isDirect: boolean) {
+    return { code: this.$.value(code as Lifted), skip: false };
+  }
+
   invokeFunPre(
     _id: number,
     _f: any,
