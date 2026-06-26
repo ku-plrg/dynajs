@@ -15,6 +15,31 @@ type InfoDomain<Info> = {
   isBottom: (info: Info) => boolean;
 };
 
+class ProxiedPrimitive {
+  constructor(private readonly value: Primitive) {}
+
+  [Symbol.toPrimitive](hint: 'string' | 'number' | 'default') {
+    // TODO print a coercion warning if DEBUG is given
+
+    if (this.value === null || this.value === undefined) return this.value;
+    // if (hint === 'string') return this.value.toString();
+    // else return this.value.valueOf();
+    return this.value; // this is more faithful?
+  }
+
+  // this is to support [...str]
+  [Symbol.iterator]() {
+    if (typeof this.value === 'string') {
+      return this.value[Symbol.iterator]();
+    }
+    throw new TypeError('not iterable');
+  }
+
+  [util.inspect.custom]() {
+    return '<lifted-primitive>';
+  }
+}
+
 export abstract class LiftedDomain<Info> {
   private liftedPrimitives = new WeakSet<object>();
   private valueMap = new WeakMap<object, IdValuePair>();
@@ -72,18 +97,7 @@ export abstract class LiftedDomain<Info> {
       }
       w = value as Lifted<T>;
     } else {
-      const proxy = {
-        [Symbol.toPrimitive]: (hint: 'string' | 'number' | 'default') => {
-          // TODO print a coercion warning if DEBUG is given
-
-          if (value === null || value === undefined) return value;
-          if (hint === 'string') return value.toString();
-          else return value.valueOf();
-        },
-        [util.inspect.custom]() {
-          return '<lifted-primitive>';
-        },
-      };
+      const proxy = new ProxiedPrimitive(value as Primitive) satisfies object;
       this.liftedPrimitives.add(proxy);
       this.valueMap.set(proxy, { id: this.freshId(), value });
       w = proxy as T as Lifted<T>;
