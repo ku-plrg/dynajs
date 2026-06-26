@@ -83,7 +83,7 @@ function execWithIndices(regex: RegExp, s: string): RegExpExecArray | null {
 export abstract class FlowAnalysis<Info> implements Analysis {
   private liftedPrimitives = new WeakSet<object>();
   private valueMap = new WeakMap<object, IdValuePair>();
-  private infoMap = new Map<symbol, Info>();
+  private infoMap = new WeakMap<symbol, Info>();
 
   private currentId: number | undefined = undefined;
   private currentBuiltin: string | undefined = undefined;
