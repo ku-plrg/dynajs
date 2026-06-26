@@ -1,6 +1,7 @@
 // @type concolic
 // @target es6+ Array.prototype.values
 // @feature builtin values
+// @done
 
 function __test_symbolic__(symbolic) {
   if (symbolic.values().next().value === 5) {

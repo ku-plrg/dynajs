@@ -1,6 +1,7 @@
 // @type concolic
 // @target es6+ Array.prototype.with
 // @feature builtin with
+// @done
 
 function __test_symbolic__(symbolic) {
   if (symbolic.with(0, 5)[1] === 7) {

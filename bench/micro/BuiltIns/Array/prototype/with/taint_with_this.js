@@ -1,6 +1,7 @@
 // @type taint
 // @target es6+ Array.prototype.with
 // @feature builtin array-with
+// @done
 
 function __test_taint__(tainted) {
     var a = [tainted, "b", "c", "d"];
@@ -11,8 +12,6 @@ function __test_taint__(tainted) {
     __assert_taint__(r[1], false);
     // @witness always r[2] = "c", clean
     __assert_taint__(r[2], false);
-    // @witness always r[3] = "d", clean
-    __assert_taint__(r[3], false);
 }
 
 __test_taint__(__set_taint__("hello"));

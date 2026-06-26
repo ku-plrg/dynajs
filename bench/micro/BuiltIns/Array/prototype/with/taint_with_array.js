@@ -1,6 +1,7 @@
 // @type taint
 // @target es6+ Array.prototype.with
 // @feature builtin array-with
+// @done
 
 function __test_taint__(tainted) {
     var r = tainted.with(0, "q");
