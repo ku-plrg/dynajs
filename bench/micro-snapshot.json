@@ -3797,8 +3797,18 @@
     "BuiltIns__String__prototype__symbol_iterator__taint_symbol_iterator_this": [
       {
         "expected": "clean",
-        "actual": "error",
-        "result": "FP"
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "detected",
+        "actual": "clean",
+        "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
       }
     ],
     "BuiltIns__String__prototype__toLocaleLowerCase__taint_toLocaleLowerCase_locales": [
@@ -10210,7 +10220,7 @@
     "BuiltIns__String__prototype__symbol_iterator__concolic_symbol_iterator_sat": [
       {
         "expected": "sat",
-        "actual": "error",
+        "actual": "unsat",
         "result": "FN"
       }
     ],
