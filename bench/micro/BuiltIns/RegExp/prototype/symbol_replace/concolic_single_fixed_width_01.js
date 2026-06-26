@@ -8,4 +8,4 @@ function __test_symbolic__(symbolic) {
   __IS_SAT__(symbolic === "hello", true);
 }
 
-__test_symbolic__(__symbolic__("s", "hello"));
+__test_symbolic__(__symbolic__("s", "HELLO"));

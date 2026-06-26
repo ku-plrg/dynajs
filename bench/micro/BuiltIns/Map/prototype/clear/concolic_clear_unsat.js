@@ -1,6 +1,7 @@
 // @type concolic
 // @target es6+ Map.prototype.clear
 // @feature builtin clear
+// @done
 
 function __test_symbolic__(symbolic) {
   var m = new Map();
@@ -14,4 +15,4 @@ function __test_symbolic__(symbolic) {
   }
 }
 
-__test_symbolic__(__symbolic__('s', 7));
+__test_symbolic__(__symbolic__('s', "a"));

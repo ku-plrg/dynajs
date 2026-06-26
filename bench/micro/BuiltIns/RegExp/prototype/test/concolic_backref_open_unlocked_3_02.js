@@ -9,4 +9,4 @@ function __test_symbolic__(symbolic) {
   }
 }
 
-__test_symbolic__(__symbolic__('s', "HHeelloo"));
+__test_symbolic__(__symbolic__('s', "HHEELLOO"));

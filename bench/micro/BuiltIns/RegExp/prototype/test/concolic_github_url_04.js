@@ -9,4 +9,4 @@ function __test_symbolic__(symbolic) {
   }
 }
 
-__test_symbolic__(__symbolic__("s", "git://github.com/user/repo.git"));
+__test_symbolic__(__symbolic__("s", "git://github.com/ser/repo.git"));

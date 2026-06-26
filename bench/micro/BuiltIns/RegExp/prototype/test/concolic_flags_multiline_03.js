@@ -9,4 +9,4 @@ function __test_symbolic__(symbolic) {
   }
 }
 
-__test_symbolic__(__symbolic__('s', "hello\nabc\nworld"));
+__test_symbolic__(__symbolic__('s', "hello\nabc\nworldhello\nabc\nworld"));

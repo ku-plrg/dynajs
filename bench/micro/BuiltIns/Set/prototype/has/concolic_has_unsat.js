@@ -1,6 +1,7 @@
 // @type concolic
 // @target es6+ Set.prototype.has
 // @feature builtin has
+// @done
 
 function __test_symbolic__(symbolic) {
   var s = new Set([1, 2]);

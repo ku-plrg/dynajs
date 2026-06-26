@@ -9,4 +9,4 @@ function __test_symbolic__(symbolic) {
   }
 }
 
-__test_symbolic__(__symbolic__("s", "\t"));
+__test_symbolic__(__symbolic__("s", "\n"));

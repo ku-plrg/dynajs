@@ -12,4 +12,4 @@ function __test_symbolic__(symbolic) {
   }
 }
 
-__test_symbolic__(__symbolic__("s", "hab"));
+__test_symbolic__(__symbolic__("s", "bah"));

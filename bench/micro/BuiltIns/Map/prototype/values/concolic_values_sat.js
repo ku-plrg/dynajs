@@ -1,6 +1,7 @@
 // @type concolic
 // @target es6+ Map.prototype.values
 // @feature builtin values
+// @done
 
 function __test_symbolic__(symbolic) {
   var m = new Map();

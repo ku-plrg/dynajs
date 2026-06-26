@@ -9,4 +9,4 @@ function __test_symbolic__(symbolic) {
   }
 }
 
-__test_symbolic__(__symbolic__('s', "bb"));
+__test_symbolic__(__symbolic__('s', "BB"));

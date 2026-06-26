@@ -10,4 +10,4 @@ function __test_symbolic__(symbolic) {
   }
 }
 
-__test_symbolic__(__symbolic__("s", "aa"));
+__test_symbolic__(__symbolic__("s", "AA"));

@@ -9,4 +9,4 @@ function __test_symbolic__(symbolic) {
   __IS_SAT__(symbolic === "abdef", true);
 }
 
-__test_symbolic__(__symbolic__("s", "abc"));
+__test_symbolic__(__symbolic__("s", "ABC"));
