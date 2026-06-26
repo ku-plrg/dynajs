@@ -4022,8 +4022,8 @@
       },
       {
         "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
+        "actual": "detected",
+        "result": "TP"
       },
       {
         "expected": "clean",
@@ -4503,8 +4503,8 @@
     "Syntax__Literals__computed-property__taint_computed_property_tcpv": [
       {
         "expected": "detected",
-        "actual": "clean",
-        "result": "FN"
+        "actual": "detected",
+        "result": "TP"
       }
     ],
     "Syntax__Literals__hashbang__taint_hashbang": [
@@ -6073,8 +6073,8 @@
     "BuiltIns__Array__prototype__toSorted__concolic_toSorted_unsat": [
       {
         "expected": "unsat",
-        "actual": "sat",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__Array__prototype__toSpliced__concolic_toSpliced_sat": [
@@ -10392,8 +10392,8 @@
     "BuiltIns__String__raw_static__concolic_raw_unsat": [
       {
         "expected": "unsat",
-        "actual": "error",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "Syntax__Classes__class__concolic_class_s": [

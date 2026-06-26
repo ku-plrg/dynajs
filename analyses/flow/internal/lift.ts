@@ -73,6 +73,13 @@ export abstract class LiftedDomain<Info> {
       w = value as Lifted<T>;
     } else {
       const proxy = {
+        [Symbol.toPrimitive]: (hint: 'string' | 'number' | 'default') => {
+          // TODO print a coercion warning if DEBUG is given
+
+          if (value === null || value === undefined) return value;
+          if (hint === 'string') return value.toString();
+          else return value.valueOf();
+        },
         [util.inspect.custom]() {
           return '<lifted-primitive>';
         },

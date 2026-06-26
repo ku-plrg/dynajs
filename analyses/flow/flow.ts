@@ -668,9 +668,11 @@ export abstract class FlowAnalysis<Info>
       if (kind === 'opaque') {
         // Crosses into uninstrumented native code: strip lifted primitives out
         // of the receiver/args first — otherwise a lifted-primitive proxy hits
-        // a native coercion site and reads as "[object Object]" / NaN (e.g.
-        // String.prototype.replace delegating to a regex's @@replace, whose
-        // @@replace is not modeled), then restore.
+        // a native protocol site it can't satisfy (ToBoolean reads truthy,
+        // iteration throws, typeof is "object"; ToNumber/ToString now read
+        // through via Symbol.toPrimitive, see lift.ts), then restore. The
+        // symmetric "unlift the callback's RETURN" seam is deliberately not
+        // handled — see the note in invokeFunPre's opaque branch.
         const esc = this.escaper.escape(thisArg, argArr, entries);
         if (esc.crossed.length > 0)
           this.escapedInfo?.(
@@ -982,6 +984,25 @@ export abstract class FlowAnalysis<Info>
     const callee = this.$.value(_f as Lifted);
 
     if (kind === 'opaque') {
+      // RETURN-SIDE SEAM (the mirror of the arg escape below — deliberately NOT
+      // handled). The wrapper would be: replace any instrumented-function
+      // arg/receiver with `(...a) => this.unlift(orig.apply(this, a))`, so the
+      // value the callback RETURNS is unlifted before native (which invoked it)
+      // coerces it. We don't, because it cannot be made sound:
+      //  - The boundary can't tell whether native will COERCE the return (wants
+      //    raw) or STORE it as data and hand it back to instrumented code (wants
+      //    lifted). A blanket unlift breaks the store path — e.g. unmodeled
+      //    Array.prototype.flatMap would lose per-element info.
+      //  - Unlike escape (which strips THEN restores into a container we own), a
+      //    return lands in native's container: no restore point, so the unlift
+      //    is permanent loss.
+      //  - Number/string coercion of a returned lifted value is already lossless
+      //    via Symbol.toPrimitive read-through (lift.ts), so the only residual
+      //    case is native ToBoolean (e.g. unmodeled `every`) — intrinsically
+      //    unsound to unlift (a native bool site needs a raw boolean, which
+      //    carries no info; any object is truthy). That is closed by MODELING
+      //    the builtin instead: a wrapper is sound only when scoped to a known
+      //    callee, which is exactly what a model entry is.
       const esc = this.escaper.escape(_base, argArr, entries);
       if (esc.crossed.length > 0)
         this.escapedInfo?.(
