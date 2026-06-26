@@ -37,7 +37,10 @@ export class TaintAnalysis extends FlowAnalysis<TaintInfo> {
       !info.bit && (info.chars === undefined || info.chars.every((c) => !c)),
   };
 
-  protected baseInfo(value: unknown, parents: Valued<TaintInfo>[]): TaintInfo {
+  protected defaultInfo(
+    value: unknown,
+    parents: Valued<TaintInfo>[],
+  ): TaintInfo {
     if (!parents.some((p) => infoTainted(p.info))) return { bit: false };
     const origin = inheritedOrigin(parents);
     if (typeof value === 'string') {

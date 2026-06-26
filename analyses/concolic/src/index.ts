@@ -56,7 +56,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   // mode-specific trick). A stale concretization can mislead a branch, but in the
   // Distributor concrete re-execution + the divergence guard self-correct it, and
   // in the single-path microbench it is the same imprecision ExpoSE itself has.
-  protected baseInfo(
+  protected defaultInfo(
     _value: unknown,
     _parents: Valued<Sym>[],
   ): Sym | undefined {

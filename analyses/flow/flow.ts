@@ -130,7 +130,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       !this.transparentCalls.has(f),
   };
 
-  protected abstract baseInfo(value: unknown, parents: Valued<Info>[]): Info;
+  protected abstract defaultInfo(value: unknown, parents: Valued<Info>[]): Info;
 
   protected substringInfo?(
     _src: Valued<Info, string>,
@@ -274,7 +274,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   private numOp(v: number, parents: Lifted<unknown>[]): Lifted<number> {
     return this.lift(
       v,
-      this.baseInfo(
+      this.defaultInfo(
         v,
         parents.map((p) => this.valued(p)),
       ),
@@ -291,7 +291,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     return this.lift(
       v,
       this.binaryInfo?.(op, this.valued(l), this.valued(r)) ??
-        this.baseInfo(v, [this.valued(l), this.valued(r)]),
+        this.defaultInfo(v, [this.valued(l), this.valued(r)]),
     );
   }
 
@@ -300,7 +300,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     return this.lift(
       v,
       this.unaryInfo?.(op, this.valued(x)) ??
-        this.baseInfo(v, [this.valued(x)]),
+        this.defaultInfo(v, [this.valued(x)]),
     );
   }
 
@@ -315,7 +315,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     return this.lift(
       v,
       this.binaryInfo?.(op, this.valued(l), this.valued(r)) ??
-        this.baseInfo(v, [this.valued(l), this.valued(r)]),
+        this.defaultInfo(v, [this.valued(l), this.valued(r)]),
     );
   }
 
@@ -338,10 +338,10 @@ export abstract class FlowAnalysis<Info> implements Analysis {
         return this.lift(
           v,
           this.lengthOfStringInfo?.(this.valued(s)) ??
-            this.baseInfo(v, [this.valued(s)]),
+            this.defaultInfo(v, [this.valued(s)]),
         );
       }
-      return this.lift(v, this.baseInfo(v, [this.valued(s)]));
+      return this.lift(v, this.defaultInfo(v, [this.valued(s)]));
     },
     substring: (s, from, to) => {
       const startN = this.unlift(from) as number;
@@ -357,7 +357,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
           this.valued(to),
           r.length,
         ) ??
-          this.baseInfo(r, [
+          this.defaultInfo(r, [
             this.valued(s),
             this.valued(from),
             this.valued(to),
@@ -375,7 +375,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
           r1.length,
           this.valued(r),
           r2.length,
-        ) ?? this.baseInfo(res, [this.valued(l), this.valued(r)]),
+        ) ?? this.defaultInfo(res, [this.valued(l), this.valued(r)]),
       );
     },
     codeUnitAt: (s, i) => {
@@ -388,7 +388,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
           this.valued(i),
           this.valued(i),
           r.length,
-        ) ?? this.baseInfo(r, [this.valued(s), this.valued(i)]),
+        ) ?? this.defaultInfo(r, [this.valued(s), this.valued(i)]),
       );
     },
     trim: (s, leading, trailing) => {
@@ -398,14 +398,14 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       else if (trailing) r = r.trimEnd();
       // Result is a substring of `s`; propagate via baseInfo so taint/symbolic
       // provenance flows from the source string.
-      return this.lift(r, this.baseInfo(r, [this.valued(s)]));
+      return this.lift(r, this.defaultInfo(r, [this.valued(s)]));
     },
     toLower: (s) => {
       const r = (this.unlift(s) as string).toLowerCase();
       return this.lift(
         r,
         this.toLowerInfo?.(this.valued(s)) ??
-          this.baseInfo(r, [this.valued(s)]),
+          this.defaultInfo(r, [this.valued(s)]),
       );
     },
     toUpper: (s) => {
@@ -413,7 +413,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       return this.lift(
         r,
         this.toUpperInfo?.(this.valued(s)) ??
-          this.baseInfo(r, [this.valued(s)]),
+          this.defaultInfo(r, [this.valued(s)]),
       );
     },
 
@@ -441,11 +441,14 @@ export abstract class FlowAnalysis<Info> implements Analysis {
         matched: this.lift(
           matched,
           info?.matched ??
-            this.baseInfo(matched, [this.valued(regex), this.valued(string)]),
+            this.defaultInfo(matched, [
+              this.valued(regex),
+              this.valued(string),
+            ]),
         ),
         index: this.lift(
           concrete === null ? -1 : concrete.index,
-          info?.index ?? this.baseInfo(-1, []),
+          info?.index ?? this.defaultInfo(-1, []),
         ),
         captures: elems.map((c, i) => {
           const v = c ?? '';
@@ -462,7 +465,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
               this.$.default(span[0], []),
               this.$.default(span[1], []),
             );
-          return this.lift(v, this.baseInfo(v, [this.valued(string)]));
+          return this.lift(v, this.defaultInfo(v, [this.valued(string)]));
         }),
         input: string,
       };
@@ -567,7 +570,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       const v = this.$.value(cond);
       const info =
         this.conditionInfo?.(bid, this.valued(cond), v) ??
-        this.baseInfo(v, [this.valued(cond)]);
+        this.defaultInfo(v, [this.valued(cond)]);
       return this.lift(v, info);
     },
     is: <L extends Lifted<unknown>, R extends Lifted<unknown>>(
@@ -588,18 +591,18 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     // operand→result.
     isNaN: (x) => {
       const v = Number.isNaN(this.unlift(x) as number);
-      return this.lift(v, this.baseInfo(v, [this.valued(x)]));
+      return this.lift(v, this.defaultInfo(v, [this.valued(x)]));
     },
     isFinite: (x) => {
       const v = Number.isFinite(this.unlift(x) as number);
-      return this.lift(v, this.baseInfo(v, [this.valued(x)]));
+      return this.lift(v, this.defaultInfo(v, [this.valued(x)]));
     },
     isInteger: (x) => {
       const v = Number.isInteger(this.unlift(x) as number);
       return this.lift(
         v,
         this.unaryInfo?.('isInteger', this.valued(x)) ??
-          this.baseInfo(v, [this.valued(x)]),
+          this.defaultInfo(v, [this.valued(x)]),
       );
     },
     isType: (x, ty) => {
@@ -622,7 +625,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
         default:
           v = typeof raw === ty;
       }
-      return this.lift(v, this.baseInfo(v, [this.valued(x)]));
+      return this.lift(v, this.defaultInfo(v, [this.valued(x)]));
     },
 
     // MathOps
@@ -642,7 +645,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       return this.lift(
         v,
         this.truncateInfo?.(this.valued(x)) ??
-          this.baseInfo(v, [this.valued(x)]),
+          this.defaultInfo(v, [this.valued(x)]),
       );
     },
     clamp: (x, lower, upper) => {
@@ -657,7 +660,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
           this.valued(lower),
           this.valued(upper),
         ) ??
-          this.baseInfo(v, [
+          this.defaultInfo(v, [
             this.valued(x),
             this.valued(lower),
             this.valued(upper),
@@ -705,7 +708,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
               hiInclusive,
               ascending,
               bid,
-            ) ?? this.baseInfo(i, [this.valued(lo), this.valued(hi)]),
+            ) ?? this.defaultInfo(i, [this.valued(lo), this.valued(hi)]),
           ),
         );
       }
@@ -720,7 +723,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     ): Lifted<T> =>
       this.lift(
         v,
-        this.baseInfo(
+        this.defaultInfo(
           v,
           parents.map((p) => this.valued(p)),
         ),
@@ -738,7 +741,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
           this.valued(base),
           this.valued(prop),
           this.valued(result),
-        ) ?? this.baseInfo(result, [this.valued(base), this.valued(prop)]),
+        ) ?? this.defaultInfo(result, [this.valued(base), this.valued(prop)]),
       );
     },
     apply: (f, thisArg, args) => {
@@ -803,9 +806,9 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       const left = this.valued(f.left);
       const right = this.valued(f.right);
       const resultInfo = NON_VALUE_BINARY_OPS.has(f.op)
-        ? this.baseInfo(result, [left, right])
+        ? this.defaultInfo(result, [left, right])
         : (this.binaryInfo?.(f.op, left, right) ??
-          this.baseInfo(result, [left, right]));
+          this.defaultInfo(result, [left, right]));
       return { result: this.lift(result, resultInfo) };
     }
   }
@@ -852,7 +855,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     const transformed: Lifted<unknown> = this.lift(
       result,
       this.unaryInfo?.(f.op, this.valued(f.operand)) ??
-        this.baseInfo(result, [this.valued(f.operand)]),
+        this.defaultInfo(result, [this.valued(f.operand)]),
     );
     return { result: transformed };
   }
@@ -898,12 +901,12 @@ export abstract class FlowAnalysis<Info> implements Analysis {
               result,
               this.lengthOfStringInfo?.(
                 this.valued(f.base as Lifted<string>),
-              ) ?? this.baseInfo(result, [this.valued(f.base)]),
+              ) ?? this.defaultInfo(result, [this.valued(f.base)]),
             );
           } else {
             return this.lift(
               result,
-              this.baseInfo(result, [this.valued(f.base)]),
+              this.defaultInfo(result, [this.valued(f.base)]),
             );
           }
         }
@@ -920,7 +923,8 @@ export abstract class FlowAnalysis<Info> implements Analysis {
           this.valued(f.base),
           this.valued(f.prop),
           this.valued(result),
-        ) ?? this.baseInfo(result, [this.valued(f.base), this.valued(f.prop)]),
+        ) ??
+          this.defaultInfo(result, [this.valued(f.base), this.valued(f.prop)]),
       );
     })();
     return { result: transformed };
