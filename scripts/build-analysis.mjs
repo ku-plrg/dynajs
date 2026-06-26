@@ -15,6 +15,10 @@ const entryPoints = [
     entry: 'analyses/concolic/src/index.ts',
     outfile: 'analyses/dist/Concolic.mjs',
   },
+  {
+    entry: 'analyses/noop/index.ts',
+    outfile: 'analyses/dist/Noop.mjs',
+  },
 ];
 
 const results = await Promise.allSettled(

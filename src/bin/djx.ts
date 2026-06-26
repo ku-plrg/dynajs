@@ -17,6 +17,7 @@ const DYNAJS_HOME =
 const BUILT_PRESETS: Record<string, string> = {
   taint: 'analyses/dist/Taint.mjs',
   concolic: 'analyses/dist/Concolic.mjs',
+  noop: 'analyses/dist/Noop.mjs',
 };
 
 function sampleMap(): Record<string, string> {
