@@ -1,6 +1,7 @@
 // @type taint
 // @target es6+ Map.prototype.delete
 // @feature builtin map-delete
+// @done
 
 function __test_taint__(tainted) {
     // tainted = whole-tainted Map WITH entries (new Map([["k1","v1"],["k2","v2"]]))

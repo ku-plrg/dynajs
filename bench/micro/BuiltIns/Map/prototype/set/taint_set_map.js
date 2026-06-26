@@ -1,9 +1,9 @@
 // @type taint
 // @target es6+ Map.prototype.set
 // @feature builtin map-set
+// @done
 
 function __test_taint__(tainted) {
-    // tainted = whole-tainted Map WITH entries (new Map([["k1","v1"],["k2","v2"]]))
     tainted.set("k3", "clean");
     // @witness __test_taint__(new Map([["k1","v1"],["k2","v2"]])) => tainted = whole map, still tainted
     __assert_taint__(tainted, true);

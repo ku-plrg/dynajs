@@ -1,6 +1,7 @@
 // @type taint
 // @target es6+ Map.prototype.keys
 // @feature builtin keys
+// @done
 
 function __test_taint__(tainted) {
     var m = new Map();

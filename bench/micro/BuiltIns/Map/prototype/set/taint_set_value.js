@@ -1,12 +1,13 @@
 // @type taint
 // @target es6+ Map.prototype.set
 // @feature builtin set
+// @done
 
 function __test_taint__(tainted) {
     var m = new Map();
     m.set('k', tainted);
 
-    // @witness __test_taint__('hello') => m = Map{'k'=>'hello'} tainted
+    // @witness __test_taint__('x') => m = Map{'k'=>'x'} tainted
     __assert_taint__(m, true);
 
     var m2 = new Map();
