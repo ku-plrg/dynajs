@@ -5613,8 +5613,8 @@
     "BuiltIns__Array__prototype__at__concolic_at_sat": [
       {
         "expected": "sat",
-        "actual": "unsat",
-        "result": "FN"
+        "actual": "sat",
+        "result": "TP"
       }
     ],
     "BuiltIns__Array__prototype__at__concolic_at_unsat": [

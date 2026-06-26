@@ -6,8 +6,11 @@
 
 // SMT sort a symbolic variable is declared with. A symbolic `number` is Real
 // (ExpoSE-faithful; integer *literals* stay Int and z3 promotes them), strings
-// String, and symbolic arrays the `*Seq` sorts (z3 Sequence theory: a JS array
-// maps to `(Seq T)`, which carries both length and elements).
+// String, and symbolic arrays the `*Seq` sorts. Despite the name, those map to
+// z3 *Array* theory `(Array Int T)` (ExpoSE's mkArray), not Sequence theory: z3
+// returns `unknown` on string content over `(Seq String)` but decides it over
+// `(Array Int String)`. A z3 array has no length, so the element sort lives here
+// and the array's length is a separate Int variable (see ConcolicAnalysis).
 export type Sort =
   | 'Int'
   | 'Real'
@@ -112,18 +115,21 @@ export function sortOf(s: Sym): Sort | undefined {
     case 'truncate':
       return 'Real'; // ToIntegerOrInfinity yields a (Real) number
     case 'strlen':
-    case 'arrlen':
-    case 'seqIndexOf':
       return 'Int';
     case 'select':
       return s.elemSort;
-    case 'seqContains':
+    case 'store':
+      return sortOf(s.arr); // a `(Array Int T)` sort (the base array's)
+    case 'bvar':
+      return s.sort;
+    case 'forall':
+    case 'exists':
     case 'inRe':
       return 'Bool';
     case 'ite':
       return sortOf(s.then); // both arms share a sort by construction
     default:
-      return undefined; // seq*
+      return undefined;
   }
 }
 
@@ -159,19 +165,22 @@ export type Sym =
   // ToIntegerOrInfinity's truncate-toward-zero (ℝ -> integer-valued Real),
   // encoded over the Real domain as sign(x) * floor(|x|) (ite + to_int/to_real).
   | { kind: 'truncate'; src: Sym }
-  // symbolic-array structure (z3 Sequence theory). `select`/`arrlen` are the
-  // element-read and length of a symbolic array; the rest model the array
-  // operations ExpoSE's ArrayModels covers (push -> seqConcat over a seqUnit,
-  // pop/slice -> seqExtract, indexOf -> seqIndexOf, includes -> seqContains).
-  // `elemSort` is the scalar sort of the read element (so it can be coerced when
-  // it meets a value of another numeric sort); the index is coerced to Int.
+  // symbolic-array structure (z3 Array theory, ExpoSE-faithful). A JS array maps
+  // to `(Array Int T)`; z3 arrays carry no length, so each symbolic array's
+  // length is a separate Int variable tracked in the analysis's ArrayMeta (not in
+  // this IR). Modeling arrays as `(Array Int String)` rather than `(Seq String)`
+  // is what makes element *content* solvable: z3 returns `unknown` on string
+  // content over `seq.nth`, but decides `(select a i)`. `select`/`store` are the
+  // element read/write; `elemSort` is the scalar sort of the read element (coerced
+  // when it meets another numeric sort), the index coerced to Int. indexOf and
+  // includes are assembled in the hook from a fresh result symbol plus quantified
+  // constraints, so the IR carries the quantifier forms over a bound variable
+  // `bvar` (ExpoSE's mkForAll/mkExists for "no prior match" / "some index").
   | { kind: 'select'; arr: Sym; index: Sym; elemSort: Sort }
-  | { kind: 'arrlen'; arr: Sym }
-  | { kind: 'seqUnit'; elem: Sym }
-  | { kind: 'seqConcat'; left: Sym; right: Sym }
-  | { kind: 'seqExtract'; src: Sym; offset: Sym; length: Sym }
-  | { kind: 'seqIndexOf'; arr: Sym; sub: Sym; from: Sym }
-  | { kind: 'seqContains'; arr: Sym; sub: Sym }
+  | { kind: 'store'; arr: Sym; index: Sym; value: Sym }
+  | { kind: 'forall'; bound: string; boundSort: Sort; body: Sym; pattern?: Sym }
+  | { kind: 'exists'; bound: string; boundSort: Sort; body: Sym; pattern?: Sym }
+  | { kind: 'bvar'; name: string; sort: Sort }
   // regex membership (z3 String theory): does `str` match the regular
   // expression `re`? The boolean a regex `test`/`exec`/`match`/`search` forks
   // on. `re` is an engine-neutral `ReNode`, not a `Sym`.
@@ -205,18 +214,14 @@ export function symToString(s: Sym): string {
       return `trunc(${symToString(s.src)})`;
     case 'select':
       return `${symToString(s.arr)}[${symToString(s.index)}]`;
-    case 'arrlen':
-      return `len(${symToString(s.arr)})`;
-    case 'seqUnit':
-      return `[${symToString(s.elem)}]`;
-    case 'seqConcat':
-      return `(${symToString(s.left)} ++ ${symToString(s.right)})`;
-    case 'seqExtract':
-      return `${symToString(s.src)}[${symToString(s.offset)}..+${symToString(s.length)}]`;
-    case 'seqIndexOf':
-      return `indexOf(${symToString(s.arr)}, ${symToString(s.sub)}, ${symToString(s.from)})`;
-    case 'seqContains':
-      return `contains(${symToString(s.arr)}, ${symToString(s.sub)})`;
+    case 'store':
+      return `${symToString(s.arr)}{${symToString(s.index)}:=${symToString(s.value)}}`;
+    case 'forall':
+      return `(∀${s.bound}. ${symToString(s.body)})`;
+    case 'exists':
+      return `(∃${s.bound}. ${symToString(s.body)})`;
+    case 'bvar':
+      return s.name;
     case 'inRe':
       return `${symToString(s.str)} ∈ /${reToString(s.re)}/`;
     case 'ite':

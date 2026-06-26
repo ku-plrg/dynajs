@@ -27,7 +27,7 @@ type PathConstraint = {
   taken: boolean;
   binder?: boolean;
 };
-type ArrayMeta = { elemSort: Sort };
+type ArrayMeta = { elemSort: Sort; lenSym: Sym };
 type ObjectMeta = { name: string; counter: number; fields: Map<string, Sym> };
 
 export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
@@ -38,6 +38,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   private arrayMeta = new WeakMap<object, ArrayMeta>();
   private objectMeta = new WeakMap<object, ObjectMeta>();
   private regexVarCounter = 0;
+  private arrayOpCounter = 0;
 
   protected transparentCalls = GHOSTS;
 
@@ -202,10 +203,9 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     const meta = this.arrayMeta.get(container);
     const arr = base.info;
     if (meta !== undefined && arr !== undefined) {
-      if (prop.value === 'length') return { kind: 'arrlen', arr };
+      if (prop.value === 'length') return meta.lenSym;
       const index = this.arrayIndex(prop);
       if (index !== undefined) {
-        const length: Sym = { kind: 'arrlen', arr };
         this.pushConstraint(
           {
             kind: 'binary',
@@ -216,7 +216,12 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
               left: index,
               right: { kind: 'const', value: 0 },
             },
-            right: { kind: 'binary', op: '<', left: index, right: length },
+            right: {
+              kind: 'binary',
+              op: '<',
+              left: index,
+              right: meta.lenSym,
+            },
           },
           true,
         );
@@ -252,55 +257,143 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
         this.arrayMeta.delete(base);
         return undefined;
       }
-      const grown: Sym = {
-        kind: 'seqConcat',
-        left: arr,
-        right: { kind: 'seqUnit', elem: this.symOf(arg) },
+      // a' = (store a oldLen v); length' = oldLen + 1 (ExpoSE setField/setLength).
+      const oldLen = meta.lenSym;
+      this.setInfo(base, {
+        kind: 'store',
+        arr,
+        index: oldLen,
+        value: this.symOf(arg),
+      });
+      const newLen: Sym = {
+        kind: 'binary',
+        op: '+',
+        left: oldLen,
+        right: { kind: 'const', value: 1 },
       };
-      this.setInfo(base, grown);
-      return { kind: 'arrlen', arr: grown }; // push returns the new length
+      meta.lenSym = newLen;
+      return newLen; // push returns the new length
     }
 
     if (f === Array.prototype.pop) {
+      // The z3 array content is unchanged; pop only shrinks the tracked length
+      // (ExpoSE setLength(len-1)), logically dropping the last element.
       const lastIndex: Sym = {
         kind: 'binary',
         op: '-',
-        left: { kind: 'arrlen', arr },
+        left: meta.lenSym,
         right: { kind: 'const', value: 1 },
       };
-      this.setInfo(base, {
-        kind: 'seqExtract',
-        src: arr,
-        offset: { kind: 'const', value: 0 },
-        length: lastIndex,
-      });
-      return {
+      const result: Sym = {
         kind: 'select',
         arr,
         index: lastIndex,
         elemSort: seqElementSort(meta.elemSort) ?? 'Int',
-      }; // the removed last element
+      };
+      meta.lenSym = lastIndex;
+      return result; // the removed last element
     }
 
+    // indexOf/includes are quantifier formulas over the Array, ported from
+    // ExpoSE's ArrayModels (mkForAll/mkExists). The target is the element value
+    // directly (no seqUnit wrapper — Array theory selects scalars).
     if (f === Array.prototype.indexOf) {
-      const sub: Sym = {
-        kind: 'seqUnit',
-        elem: this.symOf(this.valued(entries[1])),
+      const target = this.symOf(this.valued(entries[1]));
+      const elemSort = seqElementSort(meta.elemSort) ?? 'Int';
+      const len = meta.lenSym;
+      const minusOne: Sym = { kind: 'const', value: -1 };
+      // result is a fresh Int, the path-concrete indexOf value; the constraints
+      // describe it symbolically (ExpoSE): -1 <= result < length, result is -1 or
+      // points at a matching element, and if found nothing earlier matches.
+      const result: Sym = {
+        kind: 'var',
+        name: `arrIndexOf$${this.arrayOpCounter++}`,
+        sort: 'Int',
       };
-      return {
-        kind: 'seqIndexOf',
-        arr,
-        sub,
-        from: { kind: 'const', value: 0 },
-      };
+      const at = (index: Sym): Sym => ({ kind: 'select', arr, index, elemSort });
+      this.pushConstraint(
+        { kind: 'binary', op: '>=', left: result, right: minusOne },
+        true,
+      );
+      this.pushConstraint(
+        { kind: 'binary', op: '<', left: result, right: len },
+        true,
+      );
+      this.pushConstraint(
+        {
+          kind: 'binary',
+          op: '||',
+          left: { kind: 'binary', op: '===', left: result, right: minusOne },
+          right: { kind: 'binary', op: '===', left: at(result), right: target },
+        },
+        true,
+      );
+      const i: Sym = { kind: 'bvar', name: 'i$idx', sort: 'Int' };
+      this.pushConstraint(
+        {
+          kind: 'binary',
+          op: '=>',
+          left: { kind: 'binary', op: '>', left: result, right: minusOne },
+          right: {
+            kind: 'forall',
+            bound: 'i$idx',
+            boundSort: 'Int',
+            pattern: at(i),
+            body: {
+              kind: 'binary',
+              op: '=>',
+              left: {
+                kind: 'binary',
+                op: '&&',
+                left: {
+                  kind: 'binary',
+                  op: '>=',
+                  left: i,
+                  right: { kind: 'const', value: 0 },
+                },
+                right: { kind: 'binary', op: '<', left: i, right: result },
+              },
+              right: {
+                kind: 'unary',
+                op: '!',
+                operand: { kind: 'binary', op: '===', left: at(i), right: target },
+              },
+            },
+          },
+        },
+        true,
+      );
+      return result;
     }
 
     if (f === Array.prototype.includes) {
-      const sub: Sym = {
-        kind: 'seqUnit',
-        elem: this.symOf(this.valued(entries[1])),
+      const target = this.symOf(this.valued(entries[1]));
+      const elemSort = seqElementSort(meta.elemSort) ?? 'Int';
+      const i: Sym = { kind: 'bvar', name: 'i$inc', sort: 'Int' };
+      const selI: Sym = { kind: 'select', arr, index: i, elemSort };
+      // ∃ i. 0 <= i < length ∧ a[i] === target
+      return {
+        kind: 'exists',
+        bound: 'i$inc',
+        boundSort: 'Int',
+        pattern: selI,
+        body: {
+          kind: 'binary',
+          op: '&&',
+          left: {
+            kind: 'binary',
+            op: '&&',
+            left: {
+              kind: 'binary',
+              op: '>=',
+              left: i,
+              right: { kind: 'const', value: 0 },
+            },
+            right: { kind: 'binary', op: '<', left: i, right: meta.lenSym },
+          },
+          right: { kind: 'binary', op: '===', left: selI, right: target },
+        },
       };
-      return { kind: 'seqContains', arr, sub };
     }
 
     if (f === Array.prototype.join)
@@ -670,12 +763,17 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
         concrete.length ? this.valued(concrete[0]).value : undefined,
       );
       const arrSym: Sym = { kind: 'var', name: varName, sort };
-      this.arrayMeta.set(concrete, { elemSort: sort });
+      // z3 `(Array Int T)` carries no length, so track it as a standalone Int
+      // variable (ExpoSE's `_length`); push/pop update it, and element reads /
+      // `.length` resolve against it (getFieldInfo). Naming it `<name>_len` lets
+      // solveModel find it when materialising the array model.
+      const lenSym: Sym = { kind: 'var', name: `${varName}_len`, sort: 'Int' };
+      this.arrayMeta.set(concrete, { elemSort: sort, lenSym });
       this.pushConstraint(
         {
           kind: 'binary',
           op: '>=',
-          left: { kind: 'arrlen', arr: arrSym },
+          left: lenSym,
           right: { kind: 'const', value: 0 },
         },
         true,

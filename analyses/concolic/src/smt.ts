@@ -32,9 +32,9 @@ const SORT_SMT: Record<Sort, string> = {
   Real: 'Real',
   String: 'String',
   Bool: 'Bool',
-  IntSeq: '(Seq Int)',
-  StringSeq: '(Seq String)',
-  BoolSeq: '(Seq Bool)',
+  IntSeq: '(Array Int Int)',
+  StringSeq: '(Array Int String)',
+  BoolSeq: '(Array Int Bool)',
 };
 
 // op -> SMT-LIB builder. Comparisons/arith map almost 1:1; equality and
@@ -231,19 +231,25 @@ function symToSmt(s: Sym, vars: Map<string, Sort>): string {
     case 'truncate':
       return realTrunc(coerce(symToSmt(s.src, vars), sortOf(s.src), 'Real'));
     case 'select':
-      return `(seq.nth ${symToSmt(s.arr, vars)} ${operand(s.index, vars, 'Int')})`;
-    case 'arrlen':
-      return `(seq.len ${symToSmt(s.arr, vars)})`;
-    case 'seqUnit':
-      return `(seq.unit ${symToSmt(s.elem, vars)})`;
-    case 'seqConcat':
-      return `(seq.++ ${symToSmt(s.left, vars)} ${symToSmt(s.right, vars)})`;
-    case 'seqExtract':
-      return `(seq.extract ${symToSmt(s.src, vars)} ${operand(s.offset, vars, 'Int')} ${operand(s.length, vars, 'Int')})`;
-    case 'seqIndexOf':
-      return `(seq.indexof ${symToSmt(s.arr, vars)} ${symToSmt(s.sub, vars)} ${operand(s.from, vars, 'Int')})`;
-    case 'seqContains':
-      return `(seq.contains ${symToSmt(s.arr, vars)} ${symToSmt(s.sub, vars)})`;
+      return `(select ${symToSmt(s.arr, vars)} ${operand(s.index, vars, 'Int')})`;
+    case 'store':
+      return `(store ${symToSmt(s.arr, vars)} ${operand(s.index, vars, 'Int')} ${symToSmt(s.value, vars)})`;
+    case 'bvar':
+      // A quantifier-bound variable: it carries its own sort but is NOT free, so
+      // it must not be collected into `vars` (it gets no declare-const — the
+      // enclosing forall/exists binds it).
+      return s.name;
+    case 'forall':
+    case 'exists': {
+      const q = s.kind;
+      const body = symToSmt(s.body, vars);
+      const decl = `((${s.bound} ${SORT_SMT[s.boundSort]}))`;
+      // A `:pattern` (ExpoSE's mkPattern) bounds z3's instantiation so an array
+      // quantifier stays decidable instead of returning `unknown`.
+      if (s.pattern !== undefined)
+        return `(${q} ${decl} (! ${body} :pattern (${symToSmt(s.pattern, vars)})))`;
+      return `(${q} ${decl} ${body})`;
+    }
     case 'inRe':
       return `(str.in_re ${symToSmt(s.str, vars)} ${reToSmt(s.re)})`;
     case 'ite':
@@ -363,16 +369,42 @@ export function solveSat(
 // Returns the satisfying assignment for every variable that appears, or null
 // when unsat / unknown / variable-free. The model-extraction counterpart to
 // solveValidity: alternatives() negates one branch and reads back a child input.
+// How many elements we read back per symbolic array. z3 `(Array Int T)` has no
+// length, so we materialise a bounded prefix (ExpoSE bounds arrays too); pure
+// symbols seed length-1 arrays, so this is generous.
+const ARRAY_READBACK_BOUND = 64;
+
 export function solveModel(pc: readonly Polarized[]): Solution | null {
   const vars = new Map<string, Sort>();
   const assertions = assertPath(pc, vars);
   if (vars.size === 0) return null; // no symbol -> no input to derive
-  const names = [...vars.keys()];
+
+  // A z3 array prints as a store/lambda form `(get-value (a))` can't decode, and
+  // it carries no length. Mirror ExpoSE's asConstant instead: read each array's
+  // separate length var `<a>_len` (a plain Int free var) as a scalar, and request
+  // `(select a i)` for a bounded index range; parseGetValue reassembles the JS
+  // array from those. Without this an array child input is dropped and a
+  // negated-branch replay can never steer the array's contents.
+  const scalarNames: string[] = [];
+  const arrayNames: string[] = [];
+  for (const [name, sort] of vars)
+    (isSeqSort(sort) ? arrayNames : scalarNames).push(name);
+  const selectTerms = arrayNames.flatMap((a) =>
+    Array.from(
+      { length: ARRAY_READBACK_BOUND },
+      (_, i) => `(select ${a} ${i})`,
+    ),
+  );
+
   const out = runZ3(
-    buildSmt(vars, assertions, `(check-sat)\n(get-value (${names.join(' ')}))`),
+    buildSmt(
+      vars,
+      assertions,
+      `(check-sat)\n(get-value (${[...scalarNames, ...selectTerms].join(' ')}))`,
+    ),
   );
   if (!out.startsWith('sat')) return null; // unsat or unknown
-  return parseGetValue(out.slice(out.indexOf('\n') + 1));
+  return parseGetValue(out.slice(out.indexOf('\n') + 1), arrayNames);
 }
 
 // --- z3 (get-value) response parser ----------------------------------------
@@ -481,7 +513,6 @@ function valueOf(node: SExp): unknown {
   if (typeof node === 'string') {
     if (node === 'true') return true;
     if (node === 'false') return false;
-    if (node === 'seq.empty') return []; // bare empty sequence
     const n = Number(node);
     return Number.isNaN(n) ? node : n;
   }
@@ -498,44 +529,50 @@ function valueOf(node: SExp): unknown {
       const den = valueOf(node[2]);
       if (typeof num === 'number' && typeof den === 'number') return num / den;
     }
-    // Sequence (symbolic array) model values — z3's image of ExpoSE's symbolic
-    // arrays. Decode them to a concrete JS array, the text-side equivalent of
-    // z3javascript's `asConstant` (which ExpoSE's getSolution calls natively):
-    // without this, an array child input is dropped (JSON.stringify omits the
-    // `undefined`), so a negated-branch replay falls back to the program's seed
-    // array and can never steer the array's shape.
-    //   (as seq.empty (Seq T))  -> []
-    //   (seq.unit V)            -> [V]
-    //   (seq.++ a b ...)        -> concatenation of the parts
-    if (head === 'as' && node[1] === 'seq.empty') return [];
-    if (head === 'seq.unit' && node.length === 2) return [valueOf(node[1])];
-    if (head === 'seq.++') {
-      const out: unknown[] = [];
-      for (let i = 1; i < node.length; i++) {
-        const part = valueOf(node[i]);
-        if (!Array.isArray(part)) return undefined; // unexpected non-seq operand
-        out.push(...part);
-      }
-      return out;
-    }
+    // Symbolic arrays are `(Array Int T)` now (not sequences): their model values
+    // are never read as a whole `(get-value (a))` — solveModel materialises them
+    // element-by-element via `(select a i)`, so valueOf only sees scalar leaves.
     return undefined; // structured value we don't model
   }
   return node.str; // string literal
 }
 
-function parseGetValue(body: string): Solution {
+function parseGetValue(body: string, arrayNames: string[] = []): Solution {
   const top = parseSexp(lex(body));
   const model: Solution = new Map();
+  // `(select <arr> <i>)` responses, bucketed by array name then index.
+  const selects = new Map<string, Map<number, unknown>>();
   if (Array.isArray(top)) {
     for (const pair of top) {
-      if (
-        Array.isArray(pair) &&
-        pair.length === 2 &&
-        typeof pair[0] === 'string'
+      if (!Array.isArray(pair) || pair.length !== 2) continue;
+      const key = pair[0];
+      if (typeof key === 'string') {
+        model.set(key, valueOf(pair[1])); // scalar var
+      } else if (
+        Array.isArray(key) &&
+        key.length === 3 &&
+        key[0] === 'select' &&
+        typeof key[1] === 'string'
       ) {
-        model.set(pair[0], valueOf(pair[1]));
+        const idx = Number(key[2]);
+        if (!Number.isInteger(idx)) continue;
+        let bucket = selects.get(key[1]);
+        if (bucket === undefined) selects.set(key[1], (bucket = new Map()));
+        bucket.set(idx, valueOf(pair[1]));
       }
     }
+  }
+  // Reassemble each symbolic array from its length var and per-index selects.
+  for (const arr of arrayNames) {
+    const rawLen = model.get(`${arr}_len`);
+    const len = Math.max(
+      0,
+      Math.min(typeof rawLen === 'number' ? rawLen : 0, ARRAY_READBACK_BOUND),
+    );
+    const bucket = selects.get(arr);
+    const built: unknown[] = [];
+    for (let i = 0; i < len; i++) built.push(bucket?.get(i));
+    model.set(arr, built);
   }
   return model;
 }
