@@ -1,4 +1,4 @@
-import type { Lifted } from './type.js';
+import type { Lifted } from '../type.js';
 
 export type EscapeRecord = {
   container: object;

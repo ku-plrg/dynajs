@@ -1284,7 +1284,7 @@ type GENERATED = {
   // on-the-fly instrumentation API
   instrument: (code: string, filename: string | undefined) => string;
 };
-type DynaJSType = typeof BASE & GENERATED;
+export type DynaJSType = typeof BASE & GENERATED;
 
 export function setBaseObj(runtimeOpts: RuntimeOptions) {
   let counter = 0;

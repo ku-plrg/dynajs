@@ -2,7 +2,6 @@ import { writeFileSync } from 'node:fs';
 import {
   FlowAnalysis,
   type Valued,
-  type InfoDomain,
 } from '../../flow/index.js';
 import {
   type Sym,
@@ -48,9 +47,9 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
 
   protected transparentCalls = GHOSTS;
 
-  domain: InfoDomain<Sym | undefined> = {
+  domain = {
     getBottom: () => undefined,
-    isBottom: (info): info is undefined => info === undefined,
+    isBottom: (info : Sym | undefined): info is undefined => info === undefined,
   };
 
   // An unmodeled op (no specific Info hook, or one whose core operation has no z3

@@ -3,5 +3,6 @@
 // (Lifted / SpecRuntime / Model / the spec polyfills) stay unexported: a user
 // analysis only ever touches `Info` + `Valued` + `Site`.
 export { FlowAnalysis } from './flow.js';
-export type { Valued, InfoDomain, CallPolicy } from './flow.js';
-export type { Site, CodeSite, Pos } from './site.js';
+export type { CallPolicy } from './flow.js';
+export type { Valued, Lifted, Unlifted, Primitive } from './type.js';
+export type { Site, CodeSite, Pos } from './internal/site.js';

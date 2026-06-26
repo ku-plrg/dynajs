@@ -1,5 +1,5 @@
-import type { SpecRuntime } from './type.js';
-import * as generated from './spec/index.js';
+import type { SpecRuntime } from '../type.js';
+import * as generated from '../spec/index.js';
 
 export class Model {
   // --- static properties and methods ---

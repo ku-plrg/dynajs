@@ -2,7 +2,6 @@ import type { Analysis } from '../../../src/types/analysis.js';
 import {
   FlowAnalysis,
   type Valued,
-  type InfoDomain,
   type Site,
 } from '../../flow/index.js';
 import { installPrelude } from './prelude.js';
@@ -31,9 +30,9 @@ function inheritedOrigin(parents: Valued<TaintInfo>[]): Site | undefined {
 export class TaintAnalysis extends FlowAnalysis<TaintInfo> {
   protected transparentCalls = GHOSTS;
 
-  domain: InfoDomain<TaintInfo> = {
+  domain = {
     getBottom: () => ({ bit: false }),
-    isBottom: (info) =>
+    isBottom: (info: TaintInfo) =>
       !info.bit && (info.chars === undefined || info.chars.every((c) => !c)),
   };
 

@@ -6,6 +6,16 @@ export type Lifted<T = unknown> = T & LiftBrand<true>;
 
 export type Unlifted<T = unknown> = T & LiftBrand<false>;
 
+
+export type ValuedGeneral<Shape extends {}, Value = unknown> = Shape & {
+  value: Value;
+};
+
+export type Valued<Info, Value = unknown> = ValuedGeneral<
+  { info: Info | undefined },
+  Value
+>;
+
 /** Primitives <: Unlifted, but not vice versa (e.g. it can be an object that has been unlifted) */
 export type Primitive =
   | string

@@ -1,26 +1,16 @@
-import util from 'node:util';
-import { required } from './utils.js';
+import { isInstrumentedFn, required } from './utils.js';
 import type { Analysis } from '../../src/types/analysis.js';
-import type { SpecRuntime, Lifted, Unlifted, Primitive } from './type.js';
-import { Model } from './model.js';
-import {
-  type Site,
-  UNKNOWN_SITE,
-  resolveCodeSite,
-  builtinName,
-} from './site.js';
-import { BoundaryEscape, type EscapeRecord } from './escape.js';
+import type { SpecRuntime, Lifted, Unlifted, Primitive, Valued } from './type.js';
+import { Model } from './internal/model.js';
+import { type Site, SiteResolver, } from './internal/site.js';
+import  type { EscapeRecord } from './internal/escape.js';
 import {
   AO__CanonicalNumericIndexString,
   AO__ToString,
   AO__ToNumber,
+  SYNTAX__add,
 } from './spec/index.js';
-
-type ValuedGeneral<Shape extends {}, Value = unknown> = Shape & {
-  value: Value;
-};
-
-type IdValuePair = ValuedGeneral<{ id: symbol }, unknown>;
+import { LiftedDomain } from './internal/chain.js';
 
 // `instanceof` and `in` are type/membership predicates, not value-algebra
 // operators: the boolean they yield is decided by the prototype chain / property
@@ -45,23 +35,6 @@ type OpaqueCall = {
 };
 type TransparentCall = { ty: 'transparent'; entries: unknown[] };
 
-function isInstrumentedFn(f: unknown): boolean {
-  const d$ = (
-    globalThis as { D$?: { isInstrumented?: (f: unknown) => boolean } }
-  ).D$;
-  return d$?.isInstrumented?.(f) ?? false;
-}
-
-export type Valued<Info, Value = unknown> = ValuedGeneral<
-  { info: Info | undefined },
-  Value
->;
-
-export type InfoDomain<Info> = {
-  getBottom: () => Info;
-  isBottom: (info: Info) => boolean;
-};
-
 export type CallPolicy = {
   isOpaque: (f: unknown) => boolean;
 };
@@ -80,55 +53,21 @@ function execWithIndices(regex: RegExp, s: string): RegExpExecArray | null {
   return match;
 }
 
-export abstract class FlowAnalysis<Info> implements Analysis {
-  private liftedPrimitives = new WeakSet<object>();
-  private valueMap = new WeakMap<object, IdValuePair>();
-  private infoMap = new WeakMap<symbol, Info>();
+export abstract class FlowAnalysis<Info> extends LiftedDomain<Info> implements Analysis {
 
-  private currentId: number | undefined = undefined;
-  private currentBuiltin: string | undefined = undefined;
-
-  private escaper = new BoundaryEscape(
-    this.isPrimitiveProxy.bind(this),
-    this.unlift.bind(this),
-  );
-
-  protected site(): Site {
-    if (this.currentBuiltin !== undefined) {
-      const call =
-        this.currentId !== undefined
-          ? resolveCodeSite(this.currentId)
-          : UNKNOWN_SITE;
-      return {
-        kind: 'builtin',
-        name: this.currentBuiltin,
-        call: call.kind === 'code' ? call : undefined,
-      };
-    }
-    if (this.currentId !== undefined) return resolveCodeSite(this.currentId);
-    return UNKNOWN_SITE;
-  }
-
-  private withBuiltinSite<T>(name: string, body: () => T): T {
-    const savedBuiltin = this.currentBuiltin;
-    this.currentBuiltin = name;
-    try {
-      return body();
-    } finally {
-      this.currentBuiltin = savedBuiltin;
-    }
-  }
-
-  abstract domain: InfoDomain<Info>;
+  protected siteResolver = new SiteResolver();
+  protected site(): Site { return this.siteResolver.resolve(); }
 
   protected transparentCalls: ReadonlySet<unknown> = new Set();
-
   policy: CallPolicy = {
     isOpaque: (f) =>
       typeof f === 'function' &&
       !isInstrumentedFn(f) &&
       !this.transparentCalls.has(f),
   };
+
+
+  ////////// transfer functions /////////
 
   protected abstract defaultInfo(value: unknown, parents: Valued<Info>[]): Info;
 
@@ -210,66 +149,6 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     _result: unknown,
   ): { matched: Info; index: Info; captures: Info[] } | undefined;
 
-  // ---- Info storage helpers ----
-
-  protected /* final */ getInfo(value: unknown): Info {
-    const e = this.getEntry(value);
-    return e === undefined
-      ? this.domain.getBottom()
-      : (this.infoMap.get(e.id) ?? this.domain.getBottom());
-  }
-
-  protected setInfo(value: unknown, info: Info): void {
-    const e = this.getEntry(value);
-    if (e === undefined) return;
-    this.infoMap.set(e.id, info);
-  }
-
-  protected getOrCreateInfo(value: unknown, makeEmpty: () => Info): Info {
-    const e = this.getEntry(value);
-    if (e === undefined) return this.domain.getBottom();
-    let info = this.infoMap.get(e.id);
-    if (info === undefined) {
-      info = makeEmpty();
-      this.infoMap.set(e.id, info);
-    }
-    return info;
-  }
-
-  protected valued<V>(v: V): Valued<Info, V> {
-    return {
-      info: this.getInfo(v) satisfies Info,
-      value: this.unlift(v as Lifted<V>),
-    } satisfies Valued<Info, V>;
-  }
-
-  /** NOTE never override this method */
-  protected /* final */ lift<T>(
-    value: T,
-    info: Info = this.domain.getBottom(),
-  ): Lifted<T> {
-    let w: Lifted<T>;
-    if (this.isObjectish(value)) {
-      if (!this.valueMap.has(value as object)) {
-        this.valueMap.set(value as object, { id: this.freshId(), value });
-      }
-      w = value as Lifted<T>;
-    } else {
-      const proxy = {
-        [util.inspect.custom]() {
-          return '<lifted-primitive>';
-        },
-      };
-      this.liftedPrimitives.add(proxy);
-      this.valueMap.set(proxy, { id: this.freshId(), value });
-      w = proxy as T as Lifted<T>;
-    }
-
-    /* Bottom carries no information, so skip */
-    if (!this.domain.isBottom(info)) this.setInfo(w, info);
-    return w;
-  }
-
   /** internal(flow.ts) */
   private numOp(v: number, parents: Lifted<unknown>[]): Lifted<number> {
     return this.lift(
@@ -320,7 +199,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   }
 
   condition(id: number, _op: string, value: unknown): { result: unknown } {
-    if (_op !== 'model') this.currentId = id;
+    if (_op !== 'model') this.siteResolver.reportId(id);
     // is this correct...
     const cond = this.$.condition(
       id,
@@ -776,7 +655,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
   } satisfies SpecRuntime;
 
   literal(_id: number, value: unknown) {
-    this.currentId = _id;
+    this.siteResolver.reportId(_id);
     this.escaper.markEscapableLiteral(value);
     const w = this.$.default(value as Unlifted<unknown>, []);
     return w === value ? undefined : { result: w };
@@ -806,11 +685,11 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     required(frame !== undefined, 'binary hook missing frame');
     // A binary op (including `+`/template via SYNTAX__add) attributes to the
     // user-code site, like NodeMedic stamps the source location on `binary`.
-    this.currentId = _id;
+    this.siteResolver.reportId(_id);
     const f = frame as BinFrame;
     if (f.op === '+') {
       return {
-        result: this.SYNTAX__add(this.$, f.left, f.right) as Lifted<unknown>,
+        result: SYNTAX__add(this.$, f.left, f.right) as Lifted<unknown>,
       };
     } else {
       // assert : result is given
@@ -841,10 +720,10 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     frame: unknown,
   ) {
     required(frame !== undefined, 'templateConcat hook missing frame');
-    this.currentId = _id;
+    this.siteResolver.reportId(_id);
     const f = frame as BinFrame;
     return {
-      result: this.SYNTAX__add(this.$, f.left, f.right) as Lifted<string>,
+      result: SYNTAX__add(this.$, f.left, f.right) as Lifted<string>,
     };
   }
 
@@ -863,7 +742,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     frame: unknown,
   ) {
     required(frame !== undefined, 'unary hook missing frame');
-    this.currentId = _id;
+    this.siteResolver.reportId(_id);
     const f = frame as UnFrame;
     const transformed: Lifted<unknown> = this.lift(
       result,
@@ -889,7 +768,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
 
   getField(_id: number, _base: any, _prop: any, result: any, frame: unknown) {
     required(frame !== undefined, 'getField hook missing frame');
-    this.currentId = _id;
+    this.siteResolver.reportId(_id);
     const transformed = (() => {
       const f = frame as GetFieldFrame;
       const b: unknown = this.$.value(f.base);
@@ -1003,7 +882,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     args: Lifted[],
   ): Lifted<unknown> {
     const modelFn = Model.ofBuiltin(f);
-    return this.withBuiltinSite(builtinName(f), () =>
+    return this.siteResolver.withBuiltinSite(this.siteResolver.builtinName(f), () =>
       modelFn(this.$, base, ...args),
     ) as Lifted<unknown>;
   }
@@ -1042,7 +921,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     _isConstructor: boolean,
     _isMethod: boolean,
   ) {
-    this.currentId = _id;
+    this.siteResolver.reportId(_id);
     const argArr = Array.from(args) as Lifted[]; // can we do this without `as`?
     const entries: Lifted[] = _isMethod ? [_base as Lifted, ...argArr] : argArr;
     const kind = this.callKind(_f, entries);
@@ -1106,7 +985,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     frame: unknown,
   ) {
     required(frame !== undefined, 'invokeFun hook missing frame');
-    this.currentId = _id;
+    this.siteResolver.reportId(_id);
     const f = frame as CallFrame;
     if (f.ty === 'transparent')
       return { result: this.carryOrDefault(result, f.entries as Lifted[]) };
@@ -1119,93 +998,5 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     return {
       result: this.opaqueResult(_f, f.entries as Lifted[], result, f.escaped),
     };
-  }
-
-  ////////// syntax model ////////////
-  private SYNTAX__add(
-    $: SpecRuntime,
-    lVal: Lifted<unknown>,
-    rVal: Lifted<unknown>,
-  ): Lifted<string> | Lifted<number> {
-    if (
-      $.value($.isType(lVal, 'object')) ||
-      $.value($.isType(rVal, 'object'))
-    ) {
-      const l: Unlifted<unknown> = $.value(lVal);
-      const r: Unlifted<unknown> = $.value(rVal);
-      // @ts-expect-error - it calls the plus
-      const v = l + r;
-      // over-approximate the result type as unknown, since it could be either string or number
-      return $.default(v, [lVal, rVal]);
-    } else {
-      const lPrim = lVal as Lifted<Primitive>;
-      const rPrim = rVal as Lifted<Primitive>;
-      //   c. If lPrim is a String or rPrim is a String, then
-      if (
-        $.value($.isType(lPrim, 'string')) ||
-        $.value($.isType(rPrim, 'string'))
-      ) {
-        //     i. Let lStr be ? ToString(lPrim).
-        const lStr = AO__ToString($, lPrim);
-        //     ii. Let rStr be ? ToString(rPrim).
-        const rStr = AO__ToString($, rPrim);
-        //     iii. Return the string-concatenation of lStr and rStr.
-        return $.concatenate(lStr, rStr);
-      }
-      //   d. Set lVal to lPrim.
-      //   e. Set rVal to rPrim.
-      // 2. NOTE: At this point, it must be a numeric operation.
-      // 3. Let lNum be ? ToNumeric(lVal).
-      const lNum = AO__ToNumber($, lPrim);
-      // 4. Let rNum be ? ToNumeric(rVal).
-      const rNum = AO__ToNumber($, rPrim);
-      // 5. If SameType(lNum, rNum) is false, throw a TypeError exception.
-      if (!(typeof $.value(lNum) === typeof $.value(rNum))) {
-        throw new TypeError('TypeError: Cannot mix BigInt and other types');
-      }
-      // 6. If lNum is a BigInt, then
-      //   a. Return ? BigInt::add(lNum, rNum). // ???
-      // 7. Else,
-      //   a. Assert: lNum is a Number.
-      //   b. Let operation be Number::add.
-      // 8. Return operation(lNum, rNum).
-      return $.add(lNum, rNum);
-    }
-  }
-
-  ////////// lift-hanlders //////////
-  private id = 0;
-  private freshId() {
-    return Symbol(this.id++);
-  }
-
-  private isObjectish(v: unknown): v is object | Function {
-    return v !== null && (typeof v === 'object' || typeof v === 'function');
-  }
-
-  private isPrimitive(
-    v: unknown,
-  ): v is string | number | boolean | bigint | symbol | null | undefined {
-    return !this.isObjectish(v);
-  }
-
-  private isLifted(v: unknown): v is Lifted<unknown> {
-    return this.isObjectish(v) && this.valueMap.has(v);
-  }
-
-  private isPrimitiveProxy(v: unknown): v is Lifted<unknown> {
-    return this.isObjectish(v) && this.liftedPrimitives.has(v);
-  }
-  private unlift<T = unknown>(value: Lifted<T>): Unlifted<T> {
-    if (!this.isObjectish(value)) return value as T as Unlifted<T>; // should not happen;
-    const entry = this.valueMap.get(value);
-    return entry === undefined
-      ? (value as T as Unlifted<T>)
-      : (entry.value as T as Unlifted<T>);
-  }
-
-  private getEntry(value: unknown): IdValuePair | undefined {
-    if (!this.isObjectish(value)) return undefined;
-    return this.valueMap.get(value);
   }
 }
