@@ -12,6 +12,7 @@ export type RuntimeOptions = {
   ignoreNodeModules: boolean;
   pos: PosMode;
   includeRoots: string[];
+  excludeRoots: string[];
 };
 
 function getStringValue(value: unknown): string | undefined {
@@ -37,9 +38,42 @@ function collectIncludeRoots(parsed: parseArgs.Arguments): string[] {
     }
   }
 
+  return dedupeResolved(collected);
+}
+
+// Directories excluded from instrumentation even when they fall inside an include
+// root (which the always-present cwd makes broad). The motivating case is the
+// analysis's own runtime dependencies — e.g. concolic's z3javascript solver, a
+// native FFI binding that segfaults if its JS is rewritten — so this carves out a
+// specific directory rather than blanket-skipping node_modules (still legitimate
+// to instrument). Collected from `--exclude` (repeatable) and DYNAJS_EXCLUDE
+// (path-delimited); no default.
+function collectExcludeRoots(parsed: parseArgs.Arguments): string[] {
+  const collected: string[] = [];
+
+  const fromEnv = process.env.DYNAJS_EXCLUDE;
+  if (fromEnv && fromEnv.length > 0) {
+    for (const entry of fromEnv.split(path.delimiter)) {
+      if (entry.length > 0) collected.push(entry);
+    }
+  }
+
+  const fromArgs = parsed.exclude;
+  if (typeof fromArgs === 'string' && fromArgs.length > 0) {
+    collected.push(fromArgs);
+  } else if (Array.isArray(fromArgs)) {
+    for (const entry of fromArgs) {
+      if (typeof entry === 'string' && entry.length > 0) collected.push(entry);
+    }
+  }
+
+  return dedupeResolved(collected);
+}
+
+function dedupeResolved(entries: string[]): string[] {
   const seen = new Set<string>();
   const resolved: string[] = [];
-  for (const entry of collected) {
+  for (const entry of entries) {
     const abs = path.resolve(entry);
     if (!seen.has(abs)) {
       seen.add(abs);
@@ -82,6 +116,8 @@ Options:
   --pos <mode>          Position tracking mode: ${PosMode.PERSIST} | ${PosMode.MEMORY} | ${PosMode.OFF} (default: ${POS_MODE_DEFAULT})
   --include <path>      Additional directory to instrument (repeatable; cwd is always included).
                         Also configurable via DYNAJS_INCLUDE env var (path-delimited list).
+  --exclude <path>      Directory to skip even when inside an include root (repeatable).
+                        Also configurable via DYNAJS_EXCLUDE env var (path-delimited list).
 `);
 }
 
@@ -93,7 +129,7 @@ export function getRuntimeOptions(): RuntimeOptions {
     },
     boolean: ['help', 'verbose', 'partial', 'full', 'ignore-node-modules'],
     string: ['analysis', 'home', 'pos'],
-    array: ['include'],
+    array: ['include', 'exclude'],
     configuration: {
       'short-option-groups': false,
     },
@@ -118,5 +154,6 @@ export function getRuntimeOptions(): RuntimeOptions {
         : false,
     pos: parseLocMode(getStringValue(parsed.pos)),
     includeRoots: collectIncludeRoots(parsed),
+    excludeRoots: collectExcludeRoots(parsed),
   };
 }
