@@ -745,20 +745,33 @@ export abstract class FlowAnalysis<Info> implements Analysis {
       );
     },
     apply: (f, thisArg, args) => {
-      const fn = this.unlift(f as Lifted<Function>); // caller (AO__Call) ensured IsCallable
-      // Route to the model when the callee is a known builtin — so a builtin
-      // reached through a spec AO (a regex's @@match, an iterator protocol, …)
-      // is modeled like a direct call, not run opaquely on lifted args. Mirrors
-      // invokeFun's modeled-call dispatch (incl. the builtin site).
-      if (Model.support(fn)) {
-        const modelFn = Model.ofBuiltin(fn);
-        return this.withBuiltinSite(builtinName(fn), () =>
-          modelFn(this.$, thisArg, ...args),
-        ) as Lifted<unknown>;
+      // A function reached through a spec AO (AO__Call → a regex's @@replace, an
+      // iterator's next, a user callback, …). Same dispatch as a call from
+      // instrumented code, but made here in one shot since no engine hook
+      // straddles it. See callKind/callModeled/opaqueResult.
+      const fn = this.unlift(f as Lifted<Function>); // AO__Call ensured IsCallable
+      const argArr = args as Lifted[];
+      const entries = [thisArg, ...argArr] as Lifted[];
+      const kind = this.callKind(fn, entries);
+      if (kind === 'modeled') return this.callModeled(fn, thisArg, argArr);
+      if (kind === 'opaque') {
+        // Crosses into uninstrumented native code: strip lifted primitives out
+        // of the receiver/args first — otherwise a lifted-primitive proxy hits
+        // a native coercion site and reads as "[object Object]" / NaN (e.g.
+        // String.prototype.replace delegating to a regex's @@replace, whose
+        // @@replace is not modeled), then restore.
+        const esc = this.escaper.escape(thisArg, argArr, entries);
+        if (esc.crossed.length > 0)
+          this.escapedInfo?.(
+            fn,
+            esc.crossed.map((w) => this.valued(w)),
+          );
+        const result = fn.call(esc.base, ...esc.args);
+        return this.opaqueResult(fn, entries, result, esc.log);
       }
-      // Non-modeled (e.g. an instrumented user callback): plain call, provenance
-      // from callee/receiver/args — what AO__Call did before delegating here.
-      return this.$.default(fn.call(thisArg, ...args), [f, thisArg, ...args]);
+      // transparent: instrumented callback — lifted values flow straight through
+      // so the callee propagates info internally.
+      return this.carryOrDefault(fn.call(thisArg, ...argArr), entries);
     },
   } satisfies SpecRuntime;
 
@@ -956,6 +969,71 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     return { code: this.$.value(code as Lifted), skip: false };
   }
 
+  // ---- shared call dispatch (used by invokeFunPre/invokeFun and $.apply) ----
+  // A call from instrumented code is split across invokeFunPre (decide + escape
+  // args) and invokeFun (run the model / shape the result) because the engine
+  // makes the native call between the two hooks. $.apply makes the call itself,
+  // so it runs the same pieces back-to-back. The classification and the
+  // result-shaping live here so neither path can drift from the other.
+
+  /** modeled  — a supported builtin with at least one non-bottom or non-primitive
+   *             input (all-bottom-primitive inputs skip the model for speed);
+   *  opaque   — crosses into uninstrumented native code (escape args, run, restore);
+   *  transparent — an instrumented callee; lifted values flow straight through. */
+  private callKind(
+    f: unknown,
+    entries: Lifted[],
+  ): 'modeled' | 'opaque' | 'transparent' {
+    if (
+      Model.support(f as Function) &&
+      !entries.every(
+        (e) =>
+          this.isPrimitive(this.$.value(e)) &&
+          this.domain.isBottom(this.getInfo(e)),
+      )
+    )
+      return 'modeled';
+    return this.policy.isOpaque(f) ? 'opaque' : 'transparent';
+  }
+
+  /** Run a modeled builtin's polyfill under the builtin's Site. */
+  private callModeled(
+    f: Function,
+    base: Lifted,
+    args: Lifted[],
+  ): Lifted<unknown> {
+    const modelFn = Model.ofBuiltin(f);
+    return this.withBuiltinSite(builtinName(f), () =>
+      modelFn(this.$, base, ...args),
+    ) as Lifted<unknown>;
+  }
+
+  /** Keep an already-informative lifted result; otherwise derive default info
+   *  from the parents that flowed into the call. */
+  private carryOrDefault(
+    result: unknown,
+    parents: Lifted[],
+  ): Lifted<unknown> {
+    if (this.isLifted(result) && !this.domain.isBottom(this.getInfo(result)))
+      return result as Lifted<unknown>;
+    return this.$.default(result as Unlifted<unknown>, parents);
+  }
+
+  /** Provenance for a value returned from an uninstrumented (opaque) native
+   *  call: restore the primitives escaped on the way in, then attach info from
+   *  the analysis hook or fall back to default propagation. */
+  private opaqueResult(
+    f: unknown,
+    entries: Lifted[],
+    result: unknown,
+    escaped: EscapeRecord[],
+  ): Lifted<unknown> {
+    if (escaped.length > 0) this.escaper.restore(escaped);
+    const opaqueInfo = this.opaqueCallInfo?.(f, entries, result);
+    if (opaqueInfo !== undefined) return this.lift(result, opaqueInfo);
+    return this.carryOrDefault(result, entries);
+  }
+
   invokeFunPre(
     _id: number,
     _f: any,
@@ -967,15 +1045,10 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     this.currentId = _id;
     const argArr = Array.from(args) as Lifted[]; // can we do this without `as`?
     const entries: Lifted[] = _isMethod ? [_base as Lifted, ...argArr] : argArr;
-    if (
-      Model.support(_f) &&
-      !entries.every(
-        (e) =>
-          this.isPrimitive(this.$.value(e)) &&
-          this.domain.isBottom(this.getInfo(e)),
-      )
-    ) {
-      // model takes lifted args and returns a lifted result; runtime will dispatch via Model.of(f)
+    const kind = this.callKind(_f, entries);
+    if (kind === 'modeled') {
+      // model takes lifted args and returns a lifted result; the engine skips
+      // the native call (skip:true) and invokeFun runs the model.
       return {
         skip: true,
         f: _f,
@@ -984,7 +1057,6 @@ export abstract class FlowAnalysis<Info> implements Analysis {
         frame: { ty: 'opaque', f: _f, modeled: true, entries, escaped: [] },
       };
     }
-    // fall through: A modeled builtin with all-bottom-primitive inputs
 
     // The callee reaches the engine's Function.prototype.apply site; a lifted
     // primitive (a symbolic value used as a function) would leak its proxy there
@@ -993,7 +1065,7 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     // instrumented/native function callees peek to themselves (no-op).
     const callee = this.$.value(_f as Lifted);
 
-    if (this.policy.isOpaque(_f)) {
+    if (kind === 'opaque') {
       const esc = this.escaper.escape(_base, argArr, entries);
       if (esc.crossed.length > 0)
         this.escapedInfo?.(
@@ -1036,48 +1108,17 @@ export abstract class FlowAnalysis<Info> implements Analysis {
     required(frame !== undefined, 'invokeFun hook missing frame');
     this.currentId = _id;
     const f = frame as CallFrame;
-    if (f.ty === 'opaque' && f.modeled) {
-      const modelFn = Model.ofBuiltin(_f);
-      result = this.withBuiltinSite(builtinName(_f), () =>
-        modelFn(this.$, _base as Lifted, ...(_args as Lifted[])),
-      );
-    }
-
-    const transformed = (() => {
-      switch (f.ty) {
-        case 'opaque': {
-          // when modeled, the model dispatched above already returned a Lifted value
-          if (f.modeled) return result as unknown as Lifted<unknown>;
-          if (f.escaped.length > 0) this.escaper.restore(f.escaped);
-          const opaqueInfo = this.opaqueCallInfo?.(
-            _f,
-            Array.from(f.entries),
-            result,
-          );
-          if (opaqueInfo !== undefined) return this.lift(result, opaqueInfo);
-          if (
-            this.isLifted(result) &&
-            !this.domain.isBottom(this.getInfo(result))
-          ) {
-            return result as Lifted<unknown>;
-          }
-          const parents = Array.from(f.entries) as Lifted[]; // can we do this without `as`?
-          return this.$.default(result, parents);
-        }
-        case 'transparent': {
-          if (
-            this.isLifted(result) &&
-            !this.domain.isBottom(this.getInfo(result))
-          ) {
-            return result as Lifted<unknown>;
-          }
-          const parents = Array.from(f.entries) as Lifted[];
-          return this.$.default(result, parents);
-        }
-      }
-    })();
-
-    return { result: transformed };
+    if (f.ty === 'transparent')
+      return { result: this.carryOrDefault(result, f.entries as Lifted[]) };
+    // opaque: either the model runs now (the engine skipped the native call) or
+    // we shape the value the native call returned.
+    if (f.modeled)
+      return {
+        result: this.callModeled(_f, _base as Lifted, _args as Lifted[]),
+      };
+    return {
+      result: this.opaqueResult(_f, f.entries as Lifted[], result, f.escaped),
+    };
   }
 
   ////////// syntax model ////////////

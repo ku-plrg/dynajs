@@ -1623,8 +1623,8 @@
     "BuiltIns__global__eval__taint_eval_x": [
       {
         "expected": "detected",
-        "actual": "detected",
-        "result": "TP"
+        "actual": "clean",
+        "result": "FN"
       }
     ],
     "BuiltIns__global__isFinite__taint_isFinite_number": [
@@ -1853,6 +1853,11 @@
         "expected": "detected",
         "actual": "clean",
         "result": "FN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
       }
     ],
     "BuiltIns__Map__prototype__get__taint_get_key": [
@@ -6201,8 +6206,8 @@
     "BuiltIns__global__eval__concolic_eval_sat": [
       {
         "expected": "sat",
-        "actual": "unsat",
-        "result": "FN"
+        "actual": "sat",
+        "result": "TP"
       }
     ],
     "BuiltIns__global__eval__concolic_eval_unsat": [
@@ -7461,15 +7466,15 @@
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_callback_capture_01": [
       {
         "expected": "sat",
-        "actual": "unsat",
-        "result": "FN"
+        "actual": "sat",
+        "result": "TP"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_callback_capture_02": [
       {
         "expected": "sat",
-        "actual": "unsat",
-        "result": "FN"
+        "actual": "sat",
+        "result": "TP"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_callback_capture_03": [
@@ -7482,22 +7487,22 @@
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_global_anchored": [
       {
         "expected": "unsat",
-        "actual": "error",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_global_callback_01": [
       {
         "expected": "sat",
-        "actual": "unsat",
-        "result": "FN"
+        "actual": "sat",
+        "result": "TP"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_global_callback_02": [
       {
         "expected": "sat",
-        "actual": "unsat",
-        "result": "FN"
+        "actual": "sat",
+        "result": "TP"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_global_charclass_01": [
@@ -7510,29 +7515,29 @@
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_global_charclass_02": [
       {
         "expected": "unsat",
-        "actual": "sat",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_global_explosion": [
       {
         "expected": "sat",
-        "actual": "error",
-        "result": "FN"
+        "actual": "sat",
+        "result": "TP"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_global_remove_all": [
       {
         "expected": "unsat",
-        "actual": "error",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_single_anchored_01": [
       {
         "expected": "sat",
-        "actual": "unsat",
-        "result": "FN"
+        "actual": "sat",
+        "result": "TP"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_single_anchored_02": [
@@ -7552,22 +7557,22 @@
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_single_charclass_01": [
       {
         "expected": "sat",
-        "actual": "error",
-        "result": "FN"
+        "actual": "sat",
+        "result": "TP"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_single_charclass_02": [
       {
         "expected": "sat",
-        "actual": "error",
-        "result": "FN"
+        "actual": "sat",
+        "result": "TP"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_single_fixed_width_01": [
       {
         "expected": "sat",
-        "actual": "unsat",
-        "result": "FN"
+        "actual": "sat",
+        "result": "TP"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_single_fixed_width_02": [
@@ -7587,8 +7592,8 @@
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_single_fixed_width_04": [
       {
         "expected": "sat",
-        "actual": "unsat",
-        "result": "FN"
+        "actual": "sat",
+        "result": "TP"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_string_literal_remove": [
@@ -7601,8 +7606,8 @@
     "BuiltIns__RegExp__prototype__symbol_replace__concolic_substitute_dollar": [
       {
         "expected": "unsat",
-        "actual": "error",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_search__concolic_alt_anchored_01": [
@@ -7720,29 +7725,29 @@
     "BuiltIns__RegExp__prototype__symbol_split__concolic_split_0": [
       {
         "expected": "sat",
-        "actual": "unsat",
-        "result": "FN"
+        "actual": "sat",
+        "result": "TP"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_split__concolic_split_1_01": [
       {
         "expected": "unsat",
-        "actual": "error",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_split__concolic_split_1_02": [
       {
         "expected": "sat",
-        "actual": "error",
-        "result": "FN"
+        "actual": "sat",
+        "result": "TP"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_split__concolic_split_1_03": [
       {
         "expected": "sat",
-        "actual": "error",
-        "result": "FN"
+        "actual": "sat",
+        "result": "TP"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_split__concolic_split_2": [
@@ -7769,15 +7774,15 @@
     "BuiltIns__RegExp__prototype__symbol_split__concolic_split_5_01": [
       {
         "expected": "unsat",
-        "actual": "sat",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_split__concolic_split_5_02": [
       {
         "expected": "unsat",
-        "actual": "sat",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__RegExp__prototype__symbol_split__concolic_split_hard": [
@@ -7790,8 +7795,8 @@
     "BuiltIns__RegExp__prototype__symbol_split__concolic_split_lhs": [
       {
         "expected": "sat",
-        "actual": "error",
-        "result": "FN"
+        "actual": "sat",
+        "result": "TP"
       }
     ],
     "BuiltIns__RegExp__prototype__test__concolic_alt_simple": [
