@@ -6,7 +6,6 @@ export type Lifted<T = unknown> = T & LiftBrand<true>;
 
 export type Unlifted<T = unknown> = T & LiftBrand<false>;
 
-
 export type ValuedGeneral<Shape extends {}, Value = unknown> = Shape & {
   value: Value;
 };

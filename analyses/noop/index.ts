@@ -7,7 +7,7 @@ export class NoopAnalysis extends FlowAnalysis<undefined> {
   domain = {
     isBottom: (_info: undefined) => true,
     getBottom: () => undefined,
-  }
+  };
 
   defaultInfo(_op: unknown, _args: any[]): undefined {
     return undefined;

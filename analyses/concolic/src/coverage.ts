@@ -17,7 +17,10 @@ const CONDITIONAL_TRUE = 0x2;
 const CONDITIONAL_FALSE = 0x4;
 
 type Loc = [number, number, number, number];
-type FilePayload = { smap: Record<string, Loc>; branches: Record<string, number> };
+type FilePayload = {
+  smap: Record<string, Loc>;
+  branches: Record<string, number>;
+};
 
 export class Coverage {
   private touched = new Set<number>();

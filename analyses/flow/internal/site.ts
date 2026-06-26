@@ -83,7 +83,7 @@ export class SiteResolver {
     };
   }
 
-/* readable name for a modeled builtin (builtin-kind sites) */
+  /* readable name for a modeled builtin (builtin-kind sites) */
   builtinName(f: unknown): string {
     const n = typeof f === 'function' ? f.name : '';
     return n !== '' ? n : 'builtin';

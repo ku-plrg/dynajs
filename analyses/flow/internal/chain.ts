@@ -1,10 +1,16 @@
 import util from 'node:util';
-import type { Lifted, Unlifted, ValuedGeneral, Valued } from '../type.js';
+import type {
+  Lifted,
+  Unlifted,
+  Primitive,
+  ValuedGeneral,
+  Valued,
+} from '../type.js';
 import { BoundaryEscape } from './escape.js';
 
 type IdValuePair = ValuedGeneral<{ id: symbol }, unknown>;
 
-export type InfoDomain<Info> = {
+type InfoDomain<Info> = {
   getBottom: () => Info;
   isBottom: (info: Info) => boolean;
 };
@@ -91,9 +97,7 @@ export abstract class LiftedDomain<Info> {
     return v !== null && (typeof v === 'object' || typeof v === 'function');
   }
 
-  protected isPrimitive(
-    v: unknown,
-  ): v is string | number | boolean | bigint | symbol | null | undefined {
+  protected isPrimitive(v: unknown): v is Primitive {
     return !this.isObjectish(v);
   }
 

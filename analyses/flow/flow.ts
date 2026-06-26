@@ -1,9 +1,15 @@
 import { isInstrumentedFn, required } from './utils.js';
 import type { Analysis } from '../../src/types/analysis.js';
-import type { SpecRuntime, Lifted, Unlifted, Primitive, Valued } from './type.js';
+import type {
+  SpecRuntime,
+  Lifted,
+  Unlifted,
+  Primitive,
+  Valued,
+} from './type.js';
 import { Model } from './internal/model.js';
-import { type Site, SiteResolver, } from './internal/site.js';
-import  type { EscapeRecord } from './internal/escape.js';
+import { type Site, SiteResolver } from './internal/site.js';
+import type { EscapeRecord } from './internal/escape.js';
 import {
   AO__CanonicalNumericIndexString,
   AO__ToString,
@@ -53,10 +59,14 @@ function execWithIndices(regex: RegExp, s: string): RegExpExecArray | null {
   return match;
 }
 
-export abstract class FlowAnalysis<Info> extends LiftedDomain<Info> implements Analysis {
-
+export abstract class FlowAnalysis<Info>
+  extends LiftedDomain<Info>
+  implements Analysis
+{
   protected siteResolver = new SiteResolver();
-  protected site(): Site { return this.siteResolver.resolve(); }
+  protected site(): Site {
+    return this.siteResolver.resolve();
+  }
 
   protected transparentCalls: ReadonlySet<unknown> = new Set();
   policy: CallPolicy = {
@@ -65,7 +75,6 @@ export abstract class FlowAnalysis<Info> extends LiftedDomain<Info> implements A
       !isInstrumentedFn(f) &&
       !this.transparentCalls.has(f),
   };
-
 
   ////////// transfer functions /////////
 
@@ -882,17 +891,15 @@ export abstract class FlowAnalysis<Info> extends LiftedDomain<Info> implements A
     args: Lifted[],
   ): Lifted<unknown> {
     const modelFn = Model.ofBuiltin(f);
-    return this.siteResolver.withBuiltinSite(this.siteResolver.builtinName(f), () =>
-      modelFn(this.$, base, ...args),
+    return this.siteResolver.withBuiltinSite(
+      this.siteResolver.builtinName(f),
+      () => modelFn(this.$, base, ...args),
     ) as Lifted<unknown>;
   }
 
   /** Keep an already-informative lifted result; otherwise derive default info
    *  from the parents that flowed into the call. */
-  private carryOrDefault(
-    result: unknown,
-    parents: Lifted[],
-  ): Lifted<unknown> {
+  private carryOrDefault(result: unknown, parents: Lifted[]): Lifted<unknown> {
     if (this.isLifted(result) && !this.domain.isBottom(this.getInfo(result)))
       return result as Lifted<unknown>;
     return this.$.default(result as Unlifted<unknown>, parents);

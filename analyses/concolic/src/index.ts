@@ -1,8 +1,5 @@
 import { writeFileSync } from 'node:fs';
-import {
-  FlowAnalysis,
-  type Valued,
-} from '../../flow/index.js';
+import { FlowAnalysis, type Valued } from '../../flow/index.js';
 import {
   type Sym,
   type Sort,
@@ -49,7 +46,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
 
   domain = {
     getBottom: () => undefined,
-    isBottom: (info : Sym | undefined): info is undefined => info === undefined,
+    isBottom: (info: Sym | undefined): info is undefined => info === undefined,
   };
 
   // An unmodeled op (no specific Info hook, or one whose core operation has no z3
@@ -315,7 +312,12 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
         name: `arrIndexOf$${this.arrayOpCounter++}`,
         sort: 'Int',
       };
-      const at = (index: Sym): Sym => ({ kind: 'select', arr, index, elemSort });
+      const at = (index: Sym): Sym => ({
+        kind: 'select',
+        arr,
+        index,
+        elemSort,
+      });
       this.pushConstraint(
         { kind: 'binary', op: '>=', left: result, right: minusOne },
         true,
@@ -361,7 +363,12 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
               right: {
                 kind: 'unary',
                 op: '!',
-                operand: { kind: 'binary', op: '===', left: at(i), right: target },
+                operand: {
+                  kind: 'binary',
+                  op: '===',
+                  left: at(i),
+                  right: target,
+                },
               },
             },
           },
