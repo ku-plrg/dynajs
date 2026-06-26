@@ -1,7 +1,7 @@
 import type { SpecRuntime } from '../type.js';
 import * as generated from '../spec/index.js';
 
-export class Model {
+export default class Model {
   // --- static properties and methods ---
   static BUILTINS = new Map<Function, Function>(
     (

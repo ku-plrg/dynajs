@@ -7,16 +7,11 @@ import type {
   Primitive,
   Valued,
 } from './type.js';
-import { Model } from './internal/model.js';
-import { type Site, SiteResolver } from './internal/site.js';
-import type { EscapeRecord } from './internal/escape.js';
-import {
-  AO__CanonicalNumericIndexString,
-  AO__ToString,
-  AO__ToNumber,
-  SYNTAX__add,
-} from './spec/index.js';
-import { LiftedDomain } from './internal/lift.js';
+import Model from './internal/model.js';
+import * as site from './internal/site.js';
+import type * as escape from './internal/escape.js';
+import { AO__CanonicalNumericIndexString, SYNTAX__add, } from './spec/index.js';
+import * as lift from './internal/lift.js';
 
 // `instanceof` and `in` are type/membership predicates, not value-algebra
 // operators: the boolean they yield is decided by the prototype chain / property
@@ -37,7 +32,7 @@ type OpaqueCall = {
   f: unknown;
   modeled: boolean;
   entries: unknown[];
-  escaped: EscapeRecord[];
+  escaped: escape.EscapeRecord[];
 };
 type TransparentCall = { ty: 'transparent'; entries: unknown[] };
 
@@ -60,11 +55,11 @@ function execWithIndices(regex: RegExp, s: string): RegExpExecArray | null {
 }
 
 export abstract class FlowAnalysis<Info>
-  extends LiftedDomain<Info>
+  extends lift.LiftedDomain<Info>
   implements Analysis
 {
-  protected siteResolver = new SiteResolver();
-  protected site(): Site {
+  protected siteResolver = new site.SiteResolver();
+  protected site(): site.Site {
     return this.siteResolver.resolve();
   }
 
@@ -940,7 +935,7 @@ export abstract class FlowAnalysis<Info>
     f: unknown,
     entries: Lifted[],
     result: unknown,
-    escaped: EscapeRecord[],
+    escaped: escape.EscapeRecord[],
   ): Lifted<unknown> {
     if (escaped.length > 0) this.escaper.restore(escaped);
     const opaqueInfo = this.opaqueCallInfo?.(f, entries, result);
