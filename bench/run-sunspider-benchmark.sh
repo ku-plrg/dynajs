@@ -6,6 +6,7 @@ set -euo pipefail
 # matrix (like `npm run microbench`, but SunSpider has no taint/concolic oracle):
 #
 #   node            plain `node bench.cjs`               -- the correctness oracle
+#   noop            analyses/dist/Noop.mjs (--partial)   -- bare instrumentation cost
 #   taint           analyses/dist/Taint.mjs  (--partial --pos persist)
 #   concolic        analyses/dist/Concolic.mjs (--partial)
 #   TraceAllSilent  samples/TraceAllSilent.js (--partial) -- every hook, no stdout
@@ -25,15 +26,17 @@ REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
 # Runner registry. taint/concolic flags mirror bench/run-micro-benchmark.mjs
 # TYPE_CONFIG so the matrix runs each analysis exactly as the microbench suite
 # does; the samples reuse the same --partial scoping (instrument the bench only).
+NOOP_ANALYSIS="$REPO_ROOT/analyses/dist/Noop.mjs"
 TAINT_ANALYSIS="$REPO_ROOT/analyses/dist/Taint.mjs"
 CONCOLIC_ANALYSIS="$REPO_ROOT/analyses/dist/Concolic.mjs"
 TRACE_ANALYSIS="$REPO_ROOT/samples/TraceAllSilent.js"
 CHECKNAN_ANALYSIS="$REPO_ROOT/samples/CheckNaN.js"
-ALL_MODES=("node" "taint" "concolic" "TraceAllSilent" "CheckNaN")
+ALL_MODES=("node" "noop" "taint" "concolic" "TraceAllSilent" "CheckNaN")
 
 # DYNAJS_OPTIONS for a runner (empty for plain node).
 mode_options() {
   case "$1" in
+    noop) printf -- '--analysis=%s --partial' "$NOOP_ANALYSIS" ;;
     taint) printf -- '--analysis=%s --partial --pos persist' "$TAINT_ANALYSIS" ;;
     concolic) printf -- '--analysis=%s --partial' "$CONCOLIC_ANALYSIS" ;;
     TraceAllSilent) printf -- '--analysis=%s --partial' "$TRACE_ANALYSIS" ;;
@@ -44,6 +47,7 @@ mode_options() {
 # Analysis file backing a runner (empty for plain node), for the build check.
 mode_analysis_file() {
   case "$1" in
+    noop) printf '%s' "$NOOP_ANALYSIS" ;;
     taint) printf '%s' "$TAINT_ANALYSIS" ;;
     concolic) printf '%s' "$CONCOLIC_ANALYSIS" ;;
     TraceAllSilent) printf '%s' "$TRACE_ANALYSIS" ;;
@@ -55,7 +59,7 @@ mode_analysis_file() {
 # against the node oracle. Diagnostic runners (CheckNaN) are scored on exit only.
 mode_transparent() {
   case "$1" in
-    node | taint | concolic | TraceAllSilent) return 0 ;;
+    node | noop | taint | concolic | TraceAllSilent) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -70,14 +74,14 @@ usage() {
   cat <<'EOF'
 Usage: bench/run-sunspider-benchmark.sh [options]
 
-Runs the SunSpider suite under each runner (node, taint, concolic,
+Runs the SunSpider suite under each runner (node, noop, taint, concolic,
 TraceAllSilent, CheckNaN) and prints a benchmark x runner matrix of status +
 elapsed time. `node` is the correctness oracle: transparent runners are `ok`
 when their stdout matches node and `diff` when it diverges; CheckNaN is scored
 on exit status only.
 
 Options:
-  --mode MODE       Show only this runner: node, taint, concolic,
+  --mode MODE       Show only this runner: node, noop, taint, concolic,
                     TraceAllSilent, or CheckNaN (repeatable)
   --bench NAME      Run only benchmarks matching NAME or NAME.cjs (repeatable)
   --timeout SECONDS Per-run wall-clock limit (default 120; 0 disables)
