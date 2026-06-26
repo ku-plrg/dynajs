@@ -16,7 +16,7 @@ import {
   AO__ToNumber,
   SYNTAX__add,
 } from './spec/index.js';
-import { LiftedDomain } from './internal/chain.js';
+import { LiftedDomain } from './internal/lift.js';
 
 // `instanceof` and `in` are type/membership predicates, not value-algebra
 // operators: the boolean they yield is decided by the prototype chain / property
