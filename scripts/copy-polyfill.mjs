@@ -84,7 +84,6 @@ const EXCLUDE = [
 const NO_CHECK = [
   'INTRINSICS.Array.prototype.reduce',
   'INTRINSICS.Array.prototype.reduceRight',
-  'INTRINSICS.String.prototype.replaceAll',
   'AO__GetSubstitution',
   // JSON serialization: esmeta gen-poly emits sound runtime code but with type
   // noise it can't yet resolve — the State Record (a non-escaping scratch object)

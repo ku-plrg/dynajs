@@ -179,6 +179,15 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     return { kind: 'strlen', src };
   }
 
+  protected containsStrInfo(s: Valued<Sym>, sub: Valued<Sym>): Sym | undefined {
+    const str = this.symOf(s);
+    const needle = this.symOf(sub);
+    if (str.kind === 'const' && needle.kind === 'const') return undefined;
+    if (sortOf(str) !== 'String' || sortOf(needle) !== 'String')
+      return undefined;
+    return { kind: 'contains', str, sub: needle };
+  }
+
   protected getFieldInfo(
     base: Valued<Sym>,
     prop: Valued<Sym>,

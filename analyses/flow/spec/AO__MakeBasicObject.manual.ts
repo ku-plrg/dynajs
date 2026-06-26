@@ -26,7 +26,7 @@ export function AO__MakeBasicObject(
   // 6-7. Asserts about [[Prototype]] / [[Extensible]] presence are the caller's
   //      responsibility — no-ops here.
   // 8. If internalSlotsList contains [[Extensible]], set obj.[[Extensible]] to true.
-  if ($.contains(internalSlotsList, "Extensible" as Lifted<string>)) {
+  if ($.value($.contains(internalSlotsList, "Extensible" as Lifted<string>))) {
     obj["Extensible"] = $.default<boolean>(true, []);
   }
   // 9. Return obj.

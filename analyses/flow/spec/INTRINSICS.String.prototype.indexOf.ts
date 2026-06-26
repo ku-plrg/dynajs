@@ -14,7 +14,7 @@ export function INTRINSICS_String_prototype_indexOf ($ : SpecRuntime, $this : Li
   var len = $.length(S);
   var start = $.clamp(pos, $.default<number>(0, []), len);
   var result = AO__StringIndexOf($, (S as Lifted<string>), (searchStr as Lifted<string>), (start as Lifted<number>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 431, $.is(result, $.default<string>("not-found", [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 432, $.is(result, $.default<string>("not-found", [])))))
   {
     return $.default<number>(-1, []);
   }

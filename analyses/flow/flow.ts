@@ -93,6 +93,11 @@ export abstract class FlowAnalysis<Info>
     _rightLength: number,
   ): Info;
   protected lengthOfStringInfo?(_src: Valued<Info, string>): Info;
+  protected containsStrInfo?(
+    _s: Valued<Info, string>,
+    _sub: Valued<Info, string>,
+  ): Info;
+  protected containsListInfo?(_list: Valued<Info>, _x: Valued<Info>): Info;
   /* case folding (`$.toLower`/`$.toUpper`): no z3 string operator maps case, so an
    * analysis cannot encode the per-character mapping — return a model under which
    * the fold is observable (concolic: identity on a single-case path), or undefined
@@ -302,6 +307,16 @@ export abstract class FlowAnalysis<Info>
         r,
         this.toUpperInfo?.(this.valued(s)) ??
           this.defaultInfo(r, [this.valued(s)]),
+      );
+    },
+    // Both operands unlifted — a lifted proxy reaching native
+    // String.prototype.includes coerces to "[object Object]".
+    containsStr: (s, sub) => {
+      const v = (this.unlift(s) as string).includes(this.unlift(sub) as string);
+      return this.lift(
+        v,
+        this.containsStrInfo?.(this.valued(s), this.valued(sub)) ??
+          this.defaultInfo(v, [this.valued(s), this.valued(sub)]),
       );
     },
 
@@ -567,7 +582,20 @@ export abstract class FlowAnalysis<Info>
       list.unshift(x);
       return list;
     },
-    contains: <T>(list: T[], x: T): boolean => list.includes(x),
+    contains: <T>(seq: T[] | Lifted<string>, x: T): Lifted<boolean> =>
+      // Overloaded in the spec metalanguage (see DynamicOps.contains): a List
+      // is a native array, a String a lifted proxy. Recover the domain here.
+      Array.isArray(seq)
+        ? this.$.containsList(seq, x)
+        : this.$.containsStr(seq, x as Lifted<string>),
+    containsList: <T>(list: T[], x: T): Lifted<boolean> => {
+      const v = list.includes(x);
+      return this.lift(
+        v,
+        this.containsListInfo?.(this.valued(list), this.valued(x)) ??
+          this.defaultInfo(v, [this.valued(list), this.valued(x)]),
+      );
+    },
     range: (
       lo,
       loInclusive,

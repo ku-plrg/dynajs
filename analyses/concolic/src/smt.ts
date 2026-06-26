@@ -252,6 +252,8 @@ function symToSmt(s: Sym, vars: Map<string, Sort>): string {
     }
     case 'inRe':
       return `(str.in_re ${symToSmt(s.str, vars)} ${reToSmt(s.re)})`;
+    case 'contains':
+      return `(str.contains ${symToSmt(s.str, vars)} ${symToSmt(s.sub, vars)})`;
     case 'ite':
       return `(ite ${symToSmt(s.cond, vars)} ${symToSmt(s.then, vars)} ${symToSmt(s.else, vars)})`;
   }

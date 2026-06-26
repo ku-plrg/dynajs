@@ -125,6 +125,7 @@ export function sortOf(s: Sym): Sort | undefined {
     case 'forall':
     case 'exists':
     case 'inRe':
+    case 'contains':
       return 'Bool';
     case 'ite':
       return sortOf(s.then); // both arms share a sort by construction
@@ -185,6 +186,10 @@ export type Sym =
   // expression `re`? The boolean a regex `test`/`exec`/`match`/`search` forks
   // on. `re` is an engine-neutral `ReNode`, not a `Sym`.
   | { kind: 'inRe'; str: Sym; re: ReNode }
+  // substring containment (z3 String theory `str.contains`): does `str` contain
+  // `sub`? The boolean a String "contains" condition (e.g. replaceAll's
+  // global-flag check) forks on.
+  | { kind: 'contains'; str: Sym; sub: Sym }
   // if-then-else over Syms (`(ite c t e)`); both arms share a sort. Used by
   // `search` (match index, else -1) and the min/max encodings.
   | { kind: 'ite'; cond: Sym; then: Sym; else: Sym };
@@ -224,6 +229,8 @@ export function symToString(s: Sym): string {
       return s.name;
     case 'inRe':
       return `${symToString(s.str)} ∈ /${reToString(s.re)}/`;
+    case 'contains':
+      return `contains(${symToString(s.str)}, ${symToString(s.sub)})`;
     case 'ite':
       return `(${symToString(s.cond)} ? ${symToString(s.then)} : ${symToString(s.else)})`;
   }

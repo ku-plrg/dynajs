@@ -58,7 +58,7 @@ export function INTRINSICS_JSON_stringify ($ : SpecRuntime, $this : Lifted<unkno
 
           }
 
-          if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 262, $.is(item, $.default<undefined>(undefined, [])))) && !$.contains(PropertyList, item))
+          if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 262, $.is(item, $.default<undefined>(undefined, [])))) && !$.value($.condition(Number.MAX_SAFE_INTEGER - 263, $.contains(PropertyList, item))))
           {
             $.append(PropertyList, item)
           }
@@ -72,7 +72,7 @@ export function INTRINSICS_JSON_stringify ($ : SpecRuntime, $this : Lifted<unkno
 
   }
 
-  if (($.value($.condition(Number.MAX_SAFE_INTEGER - 263, $.isType(space, "object")))))
+  if (($.value($.condition(Number.MAX_SAFE_INTEGER - 264, $.isType(space, "object")))))
   {
     if (($.value(space) instanceof Number))
     {
@@ -89,11 +89,11 @@ export function INTRINSICS_JSON_stringify ($ : SpecRuntime, $this : Lifted<unkno
 
   }
 
-  if (($.value($.condition(Number.MAX_SAFE_INTEGER - 264, $.isType(space, "number")))))
+  if (($.value($.condition(Number.MAX_SAFE_INTEGER - 265, $.isType(space, "number")))))
   {
     var spaceMV = AO__ToIntegerOrInfinity($, (space as Lifted<unknown>));
     spaceMV = $.min($.default<number>(10, []), spaceMV);
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 265, $.lessThan(spaceMV, $.default<number>(1, [])))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 266, $.lessThan(spaceMV, $.default<number>(1, [])))))
     {
       var gap = $.default<string>("", []);
     }
@@ -105,9 +105,9 @@ export function INTRINSICS_JSON_stringify ($ : SpecRuntime, $this : Lifted<unkno
   }
   else
   {
-    if (($.value($.condition(Number.MAX_SAFE_INTEGER - 266, $.isType(space, "string")))))
+    if (($.value($.condition(Number.MAX_SAFE_INTEGER - 267, $.isType(space, "string")))))
     {
-      if ($.value($.condition(Number.MAX_SAFE_INTEGER - 267, $.lessThanEqual($.length(space), $.default<number>(10, [])))))
+      if ($.value($.condition(Number.MAX_SAFE_INTEGER - 268, $.lessThanEqual($.length(space), $.default<number>(10, [])))))
       {
         var gap = space;
       }

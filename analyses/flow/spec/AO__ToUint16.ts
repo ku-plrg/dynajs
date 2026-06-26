@@ -5,7 +5,7 @@ import { AO__ToNumber } from "./AO__ToNumber.js";
 
 export function AO__ToUint16 ($ : SpecRuntime, argument : Lifted<unknown>) {
   var number = AO__ToNumber($, (argument as Lifted<unknown>));
-  if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 766, $.isFinite(number))) || ($.value($.condition(Number.MAX_SAFE_INTEGER - 767, $.is(number, $.default<number>(0, [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 768, $.is(number, $.default<number>(0, []))))))
+  if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 772, $.isFinite(number))) || ($.value($.condition(Number.MAX_SAFE_INTEGER - 773, $.is(number, $.default<number>(0, [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 774, $.is(number, $.default<number>(0, []))))))
   {
     return $.default<number>(0, []);
   }

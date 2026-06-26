@@ -11,10 +11,10 @@ import { AO__ToUint32 } from "./AO__ToUint32.js";
 
 export function INTRINSICS_String_prototype_split ($ : SpecRuntime, $this : Lifted<unknown>, separator : Lifted<unknown>, limit : Lifted<unknown>) {
   var O = AO__RequireObjectCoercible($, $this);
-  if (!($.value($.condition(Number.MAX_SAFE_INTEGER - 473, $.is(separator, $.default<undefined>(undefined, [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 474, $.is(separator, $.default<null>(null, []))))))
+  if (!($.value($.condition(Number.MAX_SAFE_INTEGER - 476, $.is(separator, $.default<undefined>(undefined, [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 477, $.is(separator, $.default<null>(null, []))))))
   {
     var splitter = AO__GetMethod($, (separator as Lifted<unknown>), ($.default<symbol>(Symbol.split, []) as Lifted<unknown>));
-    if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 475, $.is(splitter, $.default<undefined>(undefined, [])))))
+    if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 478, $.is(splitter, $.default<undefined>(undefined, [])))))
     {
       return AO__Call($, (splitter as Lifted<unknown>), (separator as Lifted<unknown>), ([O, limit] as Lifted<unknown>[]));
     }
@@ -22,7 +22,7 @@ export function INTRINSICS_String_prototype_split ($ : SpecRuntime, $this : Lift
   }
 
   var S = AO__ToString($, (O as Lifted<unknown>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 476, $.is(limit, $.default<undefined>(undefined, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 479, $.is(limit, $.default<undefined>(undefined, [])))))
   {
     var lim = $.subtract(($.exponentiate($.default<number>(2, []), $.default<number>(32, [])) as Lifted<number>), ($.default<number>(1, []) as Lifted<number>));
   }
@@ -32,18 +32,18 @@ export function INTRINSICS_String_prototype_split ($ : SpecRuntime, $this : Lift
   }
 
   var R = AO__ToString($, (separator as Lifted<unknown>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 477, $.is(lim, $.default<number>(0, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 480, $.is(lim, $.default<number>(0, [])))))
   {
     return AO__CreateArrayFromList($, ([] as Lifted<unknown>[]));
   }
 
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 478, $.is(separator, $.default<undefined>(undefined, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 481, $.is(separator, $.default<undefined>(undefined, [])))))
   {
     return AO__CreateArrayFromList($, ([S] as Lifted<unknown>[]));
   }
 
   var separatorLength = $.length(R);
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 479, $.is(separatorLength, $.default<number>(0, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 482, $.is(separatorLength, $.default<number>(0, [])))))
   {
     var strLen = $.length(S);
     var outLen = $.clamp(lim, $.default<number>(0, []), strLen);
@@ -52,7 +52,7 @@ export function INTRINSICS_String_prototype_split ($ : SpecRuntime, $this : Lift
     return AO__CreateArrayFromList($, (codeUnits as Lifted<unknown>[]));
   }
 
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 480, $.is(S, $.default<string>("", [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 483, $.is(S, $.default<string>("", [])))))
   {
     return AO__CreateArrayFromList($, ([S] as Lifted<unknown>[]));
   }
@@ -60,11 +60,11 @@ export function INTRINSICS_String_prototype_split ($ : SpecRuntime, $this : Lift
   var substrings = [] as Lifted<never>[];
   var i = $.default<number>(0, []);
   var j = AO__StringIndexOf($, (S as Lifted<string>), (R as Lifted<string>), ($.default<number>(0, []) as Lifted<number>));
-  while (!$.value($.condition(Number.MAX_SAFE_INTEGER - 481, $.is(j, $.default<string>("not-found", [])))))
+  while (!$.value($.condition(Number.MAX_SAFE_INTEGER - 484, $.is(j, $.default<string>("not-found", [])))))
   {
     var T = $.substring(S, (i as Lifted<number>), (j as Lifted<number>));
     $.append(substrings, T)
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 482, $.is($.default<number>(substrings.length, []), lim))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 485, $.is($.default<number>(substrings.length, []), lim))))
     {
       return AO__CreateArrayFromList($, (substrings as Lifted<unknown>[]));
     }

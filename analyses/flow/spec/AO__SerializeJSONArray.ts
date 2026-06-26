@@ -7,7 +7,7 @@ import { AO__SerializeJSONProperty } from "./AO__SerializeJSONProperty.js";
 import { AO__ToString } from "./AO__ToString.js";
 
 export function AO__SerializeJSONArray ($ : SpecRuntime, state : Lifted<unknown>, value : Lifted<unknown>) {
-  if ($.contains(state["Stack" /* TODO INTERNAL : internal access */], value))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 680, $.contains(state["Stack" /* TODO INTERNAL : internal access */], value))))
   {
     throw new TypeError("JSON.stringify: cannot serialize cyclic structure");
   }
@@ -18,10 +18,10 @@ export function AO__SerializeJSONArray ($ : SpecRuntime, state : Lifted<unknown>
   var partial = [] as Lifted<never>[];
   var len = AO__LengthOfArrayLike($, (value as Lifted<unknown>));
   var index = $.default<number>(0, []);
-  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 676, $.lessThan(index, len))))
+  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 681, $.lessThan(index, len))))
   {
     var strP = AO__SerializeJSONProperty($, (state as Lifted<unknown>), (AO__ToString($, (index as Lifted<unknown>)) as Lifted<string>), (value as Lifted<unknown>));
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 677, $.is(strP, $.default<undefined>(undefined, [])))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 682, $.is(strP, $.default<undefined>(undefined, [])))))
     {
       $.append(partial, $.default<string>("null", []))
     }
@@ -39,7 +39,7 @@ export function AO__SerializeJSONArray ($ : SpecRuntime, state : Lifted<unknown>
   }
   else
   {
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 678, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.default<string>("", [])))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 683, $.is(state["Gap" /* TODO INTERNAL : internal access */], $.default<string>("", [])))))
     {
       var properties = (partial as Lifted<string>[]).reduce((a, b) => $.concatenate(a, $.concatenate($.default<string>(",", []), b)));
       var final = $.concatenate($.concatenate($.default<string>("[", []), properties), $.default<string>("]", []));

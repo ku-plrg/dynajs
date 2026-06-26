@@ -30,6 +30,7 @@ export interface SpecRuntime extends SpecOps {}
 interface SpecOps
   extends
     CondOps,
+    DynamicOps,
     ObjectOps,
     StringOps,
     ArithmeticOps,
@@ -53,6 +54,10 @@ interface SpecOps
 interface CondOps {
   /* ... */
   condition: (bid: number, cond: Lifted<boolean>) => Lifted<boolean>;
+}
+
+interface DynamicOps {
+  contains: <T>(seq: T[] | Lifted<string>, x: T) => Lifted<boolean>;
 }
 
 interface ObjectOps {
@@ -85,6 +90,8 @@ interface StringOps {
   ) => Lifted<string>;
   toLower: (s: Lifted<string>) => Lifted<string>;
   toUpper: (s: Lifted<string>) => Lifted<string>;
+  /** only exists for String.prototype.replaceAll - worth it? */
+  containsStr: (s: Lifted<string>, sub: Lifted<string>) => Lifted<boolean>;
 }
 
 export interface RegexMatch {
@@ -163,7 +170,8 @@ interface MathOps {
 interface ListOps {
   append: <T>(list: T[], x: T) => T[];
   prepend: <T>(list: T[], x: T) => T[];
-  contains: <T>(list: T[], x: T) => boolean;
+  /** List membership over a native array of (identity-)lifted elements, compared as-is. */
+  containsList: <T>(list: T[], x: T) => Lifted<boolean>;
 }
 
 interface RangeOps {
