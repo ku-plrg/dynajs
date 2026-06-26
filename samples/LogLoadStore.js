@@ -13,6 +13,7 @@
     return '    '.repeat(indentation);
   }
 
+  /** @param {string} str */
   function log(str) {
     console.log(indent() + str);
   }

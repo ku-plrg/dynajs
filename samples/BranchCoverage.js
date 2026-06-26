@@ -7,6 +7,7 @@
  */
 
 (function (D$) {
+  /** @type {Record<string, { id: number, op: string, trueCount: number, falseCount: number }>} */
   var branches = {};
 
   D$.analysis = {

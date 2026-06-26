@@ -406,7 +406,7 @@ function G(id: number, base: any, prop: any, optional: boolean = false): any {
   let skip = false;
   let value;
   let frame: unknown;
-  const pre = D$.analysis.getFieldPre?.(id, base, prop);
+  const pre = D$.analysis.getFieldPre?.(id, base, prop, false);
   if (pre) {
     base = pre.base;
     prop = pre.prop;
@@ -420,7 +420,7 @@ function G(id: number, base: any, prop: any, optional: boolean = false): any {
   const generalPost = D$.analysis.memoryAccess?.(id, value);
   if (generalPost) value = generalPost.result;
   // specific getField fires second and wins
-  const post = D$.analysis.getField?.(id, base, prop, value, frame);
+  const post = D$.analysis.getField?.(id, base, prop, value, false, frame);
   if (post) {
     value = post.result;
   }
@@ -442,7 +442,7 @@ function Gp(
   let skip = false;
   let value;
   let frame: unknown;
-  const pre = D$.analysis.getFieldPre?.(id, base, prop);
+  const pre = D$.analysis.getFieldPre?.(id, base, prop, true);
   if (pre) {
     base = pre.base;
     prop = pre.prop;
@@ -454,7 +454,7 @@ function Gp(
   }
   const generalPost = D$.analysis.memoryAccess?.(id, value);
   if (generalPost) value = generalPost.result;
-  const post = D$.analysis.getField?.(id, base, prop, value, frame);
+  const post = D$.analysis.getField?.(id, base, prop, value, true, frame);
   if (post) {
     value = post.result;
   }
@@ -471,7 +471,7 @@ function P(
 ): any {
   let skip = false;
   let frame: unknown;
-  const pre = D$.analysis.putFieldPre?.(id, base, prop, value);
+  const pre = D$.analysis.putFieldPre?.(id, base, prop, value, false);
   if (pre) {
     base = pre.base;
     prop = pre.prop;
@@ -492,7 +492,7 @@ function P(
   const generalPost = D$.analysis.memoryWrite?.(id, value);
   if (generalPost) value = generalPost.result;
   // specific putField fires second and wins
-  const post = D$.analysis.putField?.(id, base, prop, value, frame);
+  const post = D$.analysis.putField?.(id, base, prop, value, false, frame);
   if (post) {
     value = post.result;
   }
@@ -508,7 +508,7 @@ function Pp(
 ): any {
   let skip = false;
   let frame: unknown;
-  const pre = D$.analysis.putFieldPre?.(id, base, prop, value);
+  const pre = D$.analysis.putFieldPre?.(id, base, prop, value, true);
   if (pre) {
     base = pre.base;
     prop = pre.prop;
@@ -521,7 +521,7 @@ function Pp(
   }
   const generalPost = D$.analysis.memoryWrite?.(id, value);
   if (generalPost) value = generalPost.result;
-  const post = D$.analysis.putField?.(id, base, prop, value, frame);
+  const post = D$.analysis.putField?.(id, base, prop, value, true, frame);
   if (post) {
     value = post.result;
   }

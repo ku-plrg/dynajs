@@ -2,11 +2,13 @@
 
   // NOTE setting the first argument of StringBuilder `false` disables string concat, to prevent RangeError (still prints to console)
   var builder = new D$.utils.StringBuilder(false);
+  /** @param {string} str */
   function put(str) { builder.put(str); }
   var indentIn = builder.indentIn;
   var indentOut = builder.indentOut;
 
   const MAX_STRING_LENGTH = 20;
+  /** @param {any} v */
   function getValue(v) {
     var type = typeof v;
     if (v instanceof RegExp) {
@@ -28,6 +30,7 @@
     }
   }
 
+  /** @param {number} id */
   function getLoc(id) {
     return ' @ ' + D$.idToLoc(id);
   }

@@ -9,11 +9,13 @@
   var featureExecs = Object.create(null);
   var functionKindHits = Object.create(null);
 
+  /** @param {string} feature */
   function ensureFeature(feature) {
     if (!featureHits[feature]) featureHits[feature] = new Set();
     if (!featureExecs[feature]) featureExecs[feature] = 0;
   }
 
+  /** @param {number} id */
   function safeLoc(id) {
     try {
       return D$.idToLoc(id);
@@ -22,12 +24,14 @@
     }
   }
 
+  /** @param {string} feature @param {number} id */
   function record(feature, id) {
     ensureFeature(feature);
     featureHits[feature].add(safeLoc(id));
     featureExecs[feature] += 1;
   }
 
+  /** @param {string} feature @param {number} id */
   function recordFunctionKind(feature, id) {
     if (!functionKindHits[feature]) functionKindHits[feature] = new Set();
     functionKindHits[feature].add(safeLoc(id));

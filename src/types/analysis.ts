@@ -273,12 +273,14 @@ interface FullAnalysis {
    * @param id - Source location identifier.
    * @param base - The object being read from.
    * @param prop - The property key.
+   * @param isPrivate - `true` for a private field access (`base.#prop`).
    * @returns Replacement `{ base, prop, skip }`, or `void`.
    */
   getFieldPre: (
     id: number,
     base: any,
     prop: any,
+    isPrivate: boolean,
   ) => { base: any; prop: any; skip: boolean; frame?: unknown } | void;
 
   /**
@@ -290,6 +292,7 @@ interface FullAnalysis {
    * @param base - The object that was read from.
    * @param prop - The property key.
    * @param result - The value that was read.
+   * @param isPrivate - `true` for a private field access (`base.#prop`).
    * @returns `{ result }` to replace the read value, or `void`.
    */
   getField: (
@@ -297,6 +300,7 @@ interface FullAnalysis {
     base: any,
     prop: any,
     result: any,
+    isPrivate: boolean,
     frame: unknown,
   ) => { result: any } | void;
 
@@ -308,6 +312,7 @@ interface FullAnalysis {
    * @param base - The object being written to.
    * @param prop - The property key.
    * @param value - The value being written.
+   * @param isPrivate - `true` for a private field access (`base.#prop`).
    * @returns Replacement `{ base, prop, value, skip }`, or `void`.
    */
   putFieldPre: (
@@ -315,6 +320,7 @@ interface FullAnalysis {
     base: any,
     prop: any,
     value: any,
+    isPrivate: boolean,
   ) => {
     base: any;
     prop: any;
@@ -332,6 +338,7 @@ interface FullAnalysis {
    * @param base - The object that was written to.
    * @param prop - The property key.
    * @param value - The value that was written.
+   * @param isPrivate - `true` for a private field access (`base.#prop`).
    * @returns `{ result }` to replace the expression result, or `void`.
    */
   putField: (
@@ -339,6 +346,7 @@ interface FullAnalysis {
     base: any,
     prop: any,
     value: any,
+    isPrivate: boolean,
     frame: unknown,
   ) => { result: any } | void;
 

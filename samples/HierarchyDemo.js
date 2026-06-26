@@ -1,9 +1,11 @@
 (function (D$) {
 
   var builder = new D$.utils.StringBuilder(false /* prevent RangeError */);
+  /** @param {string} str */
   function put(str) { console.log(builder.put(str)); }
 
   const MAX_STRING_LENGTH = 20;
+  /** @param {any} v */
   function getValue(v) {
     var type = typeof v;
     if (v instanceof RegExp) {
@@ -25,6 +27,7 @@
     }
   }
 
+  /** @param {number} id */
   function getLoc(id) {
     return ' @ ' + D$.idToLoc(id);
   }

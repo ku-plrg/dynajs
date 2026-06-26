@@ -4,8 +4,10 @@
  */
 
 (function (D$) {
+  /** @type {Record<string, number>} */
   var info = {};
 
+  /** @param {number} id */
   function record(id) {
     info[id] = (info[id] | 0) + 1;
   }
@@ -31,7 +33,7 @@
       var ids = Object.keys(info).sort(function (a, b) { return info[b] - info[a]; });
       for (var i = 0; i < ids.length; i++) {
         var id = ids[i];
-        console.log('Observed NaN at ' + D$.idToLoc(id) + ' ' + info[id] + ' time(s).');
+        console.log('Observed NaN at ' + D$.idToLoc(Number(id)) + ' ' + info[id] + ' time(s).');
       }
     },
   };

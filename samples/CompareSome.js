@@ -1,141 +1,182 @@
-(function(){
+/**
+ * CompareSome — emits a depth-indented trace of analysis events, designed to be
+ * run under BOTH DynaJS and Jalangi so their event streams can be diffed.
+ *
+ * The trace logic is written once as a DynaJS `Analysis` (`analysis`, below,
+ * type-checked). Under DynaJS it is installed directly; under Jalangi (where
+ * `D$` is absent and the runtime injects `J$`) `installOnJalangi` adapts the
+ * hooks whose Jalangi calling convention differs from DynaJS's. `J$` is the only
+ * cross-runtime, untyped surface and is confined to that adapter.
+ */
+(function () {
+  let level = 0;
 
-    globalThis.__level = globalThis.__level ?? 0;
-
-    function noSideEffectStringify(val) {
-        switch (typeof val) {
-            case 'string':  return val;
-            case 'number':  return val.toString();
-            case 'boolean': return val.toString();
-            case 'undefined': return 'undefined';
-            case 'object': return val === null ? 'null' : '<object>';
-            case 'function': return '<function>';
-        }
+  /** @param {unknown} val */
+  function specToString(val) {
+    if (typeof val === 'symbol') {
+      return val.toString();
     }
+    return String(new String(val));
+  }
 
-    function specToString(val) {
-        if (typeof val === 'symbol') {
-            return val.toString();
-        }
-        return String(new String(val));
-    }
+  /** @param {unknown} prop */
+  function propLabel(prop) {
+    return typeof prop === 'object' || typeof prop === 'function'
+      ? '<side effect>'
+      : specToString(prop);
+  }
 
-    function stringify(val) {
-        console.log(JSON.stringify(val));
-    }
+  /** @param {unknown} val */
+  function stringify(val) {
+    console.log(JSON.stringify(val));
+  }
 
-    var isDynaJS = typeof D$ !== "undefined";
+  /** @type {import('../src/types/analysis.js').Analysis} */
+  const analysis = {
+    invokeFunPre: function (iid, f, base, args, isConstructor, isMethod) {
+      var fname = typeof f === 'function' ? f.name : '<not callable>';
+      stringify({ type: 'invokeFunPre', f: fname, level: level });
+      ++level;
+      return { f: f, base: base, args: args, skip: false };
+    },
 
-    // Pick the analysis object depending on whether we are running under Jalangi or DynaJS
-    var analysisObj = (function () {
-        return isDynaJS ? D$ : J$;
-    })();
+    invokeFun: function (iid, f, base, args, result, isConstructor, isMethod) {
+      var fname = typeof f === 'function' ? f.name : '<not callable>';
+      stringify({ type: 'invokeFun', f: fname, level: level });
+      --level;
+      return { result: result };
+    },
 
+    literal: function (iid, val) {
+      stringify({ type: 'literal', valueType: typeof val, level: level });
+      return { result: val };
+    },
 
-    analysisObj.analysis = {
+    forInOfObject: function (iid, val, isForIn) {
+      stringify({ type: 'forinObject', obj: 'todo', level: level });
+      return { result: val };
+    },
 
-        invokeFunPre: function (iid, f, base, args, isConstructor, isMethod) {
-            var isCallable = typeof f === 'function';
-            var fname = isCallable ? f.name : '<not callable>';
-            stringify({ type: "invokeFunPre", f: fname, level: __level });
-            ++__level;
-            return { f: f, base: base, args: args, skip: false };
-        },
+    declare: function (id, name, kind, init, value) {
+      stringify({ type: 'declare', name: name, level: level });
+    },
 
-        invokeFun: function (iid, f, base, args, result, isConstructor, isMethod) {
-            var isCallable = typeof f === 'function';
-            var fname = isCallable ? f.name : '<not callable>';
-            stringify({ type: "invokeFun", f: fname, level: __level });
-            --__level;
-            return { result: result };
-        },
+    getFieldPre: function (iid, base, prop) {
+      stringify({ type: 'getFieldPre', prop: propLabel(prop), level: level });
+      ++level;
+      return { base: base, prop: prop, skip: false };
+    },
 
-        literal: function (iid, val) {
-            stringify({ type: "literal", valueType: typeof val, level: __level });
-            return { result: val };
-        },
+    getField: function (iid, base, prop, result) {
+      stringify({ type: 'getField', prop: propLabel(prop), level: level });
+      --level;
+      return { result };
+    },
 
-        forInOfObject: function (iid, val, isForIn) {
-            var legacyTag = "forinObject";
-            stringify({ type: legacyTag, obj: 'todo', level: __level });
-            return { result: val };
-        },
+    putFieldPre: function (iid, base, prop, value) {
+      stringify({ type: 'putFieldPre', prop: propLabel(prop), level: level });
+      ++level;
+      return { base, prop, value, skip: false };
+    },
 
-        declare: function (id, name, kind, init, value) {
-            stringify({ type: "declare", name: name, level: __level });
-        },
+    putField: function (iid, base, prop, value) {
+      stringify({ type: 'putField', prop: propLabel(prop), level: level });
+      --level;
+      return { result: value };
+    },
 
-        getFieldPre: function (iid, base, prop) {
-            var proptoString = typeof prop === 'object' || typeof prop === 'function' ? '<side effect>' : specToString(prop);
-            stringify({ type: "getFieldPre", prop: proptoString, level: __level });
-            ++__level;
-            return { base: base, prop: prop, skip: false };
-        },
+    read: function (iid, name, val) {
+      stringify({ type: 'read', name: name, level: level });
+      return { result: val };
+    },
 
-        getField: function (iid, base, prop, result) {
-            var proptoString = typeof prop === 'object' || typeof prop === 'function' ? '<side effect>' : specToString(prop);
-            stringify({ type: "getField", prop: proptoString, level: __level });
-            --__level;
-            return { result };
-        },
+    write: function (iid, names, val) {
+      stringify({ type: 'write', name: names[0], level: level });
+      return { result: val };
+    },
 
-        putFieldPre: function (iid, base, prop, value) {
-            var proptoString = typeof prop === 'object' || typeof prop === 'function' ? '<side effect>' : specToString(prop);
-            stringify({ type: "putFieldPre", prop: proptoString, level: __level });
-            ++__level;
-            return { base, prop, value, skip: false };
-        },
+    functionEnter: function (iid, f, base, args, isAsync, isGenerator) {
+      stringify({ type: 'functionEnter', fo: '', level: level });
+      ++level;
+    },
 
-        putField: function (iid, base, prop, value) {
-            var proptoString = typeof prop === 'object' || typeof prop === 'function' ? '<side effect>' : specToString(prop);
-            stringify({ type: "putField", prop: proptoString, level: __level });
-            --__level;
-            return { result: value };
-        },
+    functionExit: function (iid, returnVal, wrappedExceptionVal, isAsync, isGenerator) {
+      stringify({ type: 'functionExit', fo: 'todo', level: level });
+      --level;
+    },
 
-        read: function (iid, name, val) {
-            stringify({ type: "read", name: name, level: __level });
-            return { result: val };
-        },
+    binaryPre: function (iid, op, left, right) {
+      stringify({ type: 'binaryPre', op, level: level });
+      ++level;
+      return { op: op, left: left, right: right, skip: false };
+    },
 
-        write: function (iid, names, val) {
-            // dynajs supports ES6+ features so it gives name as an array - temporal hack for now
-            stringify({ type: "write", name: names[0], level: __level });
-            return { result: val };
-        },
+    binary: function (iid, op, left, right, result) {
+      stringify({ type: 'binary', op, level: level });
+      --level;
+      return { result: result };
+    },
 
-        functionEnter: function (iid, f, base, args, isAsync, isGenerator) {
-            stringify({ type: "functionEnter", fo: '', level: __level });
-            ++__level;
-        },
+    unaryPre: function (iid, op, prefix, operand) {
+      stringify({ type: 'unaryPre', op, level: level });
+      ++level;
+      return { op: op, operand: operand, skip: false };
+    },
 
-        functionExit: function (iid, returnVal, wrappedExceptionVal, isAsync, isGenerator) {
-            stringify({ type: "functionExit", fo: 'todo', level: __level });
-            --__level;
-        },
+    unary: function (iid, op, prefix, operand, result) {
+      stringify({ type: 'unary', op, level: level });
+      --level;
+      return { result: result };
+    },
+  };
 
-        binaryPre: function (iid, op, left, right, isOpAssign, isSwitchCaseComparison, isComputed) {
-            stringify({ type: "binaryPre", op, level: __level });
-            ++__level;
-            return { op: op, left: left, right: right, skip: false };
-        },
+  if (typeof D$ !== 'undefined') {
+    D$.analysis = analysis;
+  } else {
+    installOnJalangi(analysis);
+  }
 
-        binary: function (iid, op, left, right, result, isOpAssign, isSwitchCaseComparison, isComputed, __isThrown) {
-            stringify({ type: "binary", op, level: __level, isThrown: __isThrown });
-            --__level;
-            return { result: result };
-        },
+  /**
+   * Drive the Jalangi global `J$` (injected by the Jalangi runtime) with the
+   * typed analysis. Most hooks share DynaJS's parameter positions and are reused
+   * verbatim; the few whose Jalangi convention differs are overridden here. This
+   * is the only place that touches `J$`, which has no type in this project.
+   *
+   * @param {import('../src/types/analysis.js').Analysis} a
+   */
+  function installOnJalangi(a) {
+    /** @type {Record<string, Function>} */
+    const hooks = Object.assign({}, /** @type {Record<string, Function>} */ (a));
 
-        unaryPre: function (iid, op, prefix, operand) {
-            stringify({ type: "unaryPre", op, level: __level });
-            ++__level;
-            return { op: op, operand: operand, skip: false };
-        },
-
-        unary: function (iid, op, prefix, operand, result) {
-            stringify({ type: "unary", op, level: __level });
-            --__level;
-            return { result: result };
-        },
+    // Jalangi passes the written name as a string; DynaJS as an array.
+    /** @param {number} iid @param {string} name @param {unknown} val */
+    hooks.write = function (iid, name, val) {
+      stringify({ type: 'write', name: name, level: level });
+      return { result: val };
     };
-}());
+
+    // Jalangi's for-in hook is named `forinObject` and takes (iid, val).
+    /** @param {number} iid @param {unknown} val */
+    hooks.forinObject = function (iid, val) {
+      stringify({ type: 'forinObject', obj: 'todo', level: level });
+      return { result: val };
+    };
+
+    // Jalangi adds (isOpAssign, isSwitchCaseComparison, isComputed, isThrown);
+    // re-emit `binary` with the Jalangi-only `isThrown` field for trace parity.
+    /**
+     * @param {number} iid @param {string} op @param {unknown} left
+     * @param {unknown} right @param {unknown} result @param {boolean} [isOpAssign]
+     * @param {boolean} [isSwitchCaseComparison] @param {boolean} [isComputed]
+     * @param {boolean} [isThrown]
+     */
+    hooks.binary = function (iid, op, left, right, result, isOpAssign, isSwitchCaseComparison, isComputed, isThrown) {
+      stringify({ type: 'binary', op, level: level, isThrown: isThrown });
+      --level;
+      return { result: result };
+    };
+
+    // @ts-ignore - `J$` is injected by the Jalangi runtime; it has no type here.
+    J$.analysis = hooks;
+  }
+})();

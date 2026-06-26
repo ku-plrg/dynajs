@@ -798,7 +798,14 @@ export abstract class FlowAnalysis<Info>
     };
   }
 
-  getField(_id: number, _base: any, _prop: any, result: any, frame: unknown) {
+  getField(
+    _id: number,
+    _base: any,
+    _prop: any,
+    result: any,
+    _isPrivate: boolean,
+    frame: unknown,
+  ) {
     required(frame !== undefined, 'getField hook missing frame');
     this.siteResolver.reportId(_id);
     const transformed = (() => {
