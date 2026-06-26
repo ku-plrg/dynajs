@@ -16,6 +16,7 @@ import {
 import { encodeRegex, type EncodedRegex } from '../../shared/regex.js';
 import { solveValidity, solveModel, solveSat } from './smt.js';
 import { installPrelude } from './prelude.js';
+import { Coverage } from './coverage.js';
 
 declare const D$: { analysis: ConcolicAnalysis } & Record<string, any>;
 
@@ -34,6 +35,11 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   result: unknown;
   private pathConstraints: PathConstraint[] = [];
   private errors: { error: string; stack?: string }[] = [];
+
+  // Statement coverage for the ExpoSE drop-in only (gated on the env the
+  // Distributor's Spawn.js sets); the single-path microbench leaves it undefined
+  // so its hot hooks below stay no-ops.
+  private cov = process.env.EXPOSE_COVERAGE_PATH ? new Coverage() : undefined;
 
   private arrayMeta = new WeakMap<object, ArrayMeta>();
   private objectMeta = new WeakMap<object, ObjectMeta>();
@@ -495,6 +501,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   // constraint; the concrete `taken` direction fixes its polarity. Both branch
   // sources funnel here through FlowAnalysis.condition.
   protected conditionInfo(id: number, cond: Valued<Sym>, taken: boolean): void {
+    this.cov?.decision(id, taken);
     const sym = this.symOf(cond);
     // A constant branch carries no constraint — including a condition whose value
     // came (concretized) through an unmodeled op (baseInfo -> bottom -> const);
@@ -503,6 +510,37 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     const bool = this.toBool(sym);
     if (bool !== undefined)
       this.pathConstraints.push({ id, constraint: bool, taken });
+  }
+
+  // Statement-coverage observers. FlowAnalysis sets currentId for only the seven
+  // op kinds it models (binary/unary/literal/get·putField/condition/call), so on
+  // their own those miss whole lines — bare `return x`, `var x = y`, a function's
+  // signature line. These are the core hooks flow leaves unimplemented, so adding
+  // them here is purely additive: core dispatches, flow skipped them, and a void
+  // return is a no-op (read/write/_return/_throw treat undefined as "unchanged").
+  // Every executed line carries at least one of these or a flow op, so collapsed
+  // to lines the union is complete statement coverage. Cost is one guarded touch
+  // per op, and only in coverage mode (this.cov set); the microbench pays nothing.
+  read(id: number): void {
+    this.cov?.touch(id);
+  }
+  write(id: number): void {
+    this.cov?.touch(id);
+  }
+  declare(id: number): void {
+    this.cov?.touch(id);
+  }
+  _return(id: number): void {
+    this.cov?.touch(id);
+  }
+  _throw(id: number): void {
+    this.cov?.touch(id);
+  }
+  functionEnter(id: number): void {
+    this.cov?.touch(id);
+  }
+  scriptEnter(id: number): void {
+    this.cov?.touch(id);
   }
 
   // ToBoolean at a branch site (ExpoSE SymbolicState.toBool): a branch condition
@@ -891,10 +929,10 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   // a seed input on argv and reads two result files on exit (Spawn.js + the
   // SymbolicExecution exitFn). We honour that contract: EXPOSE_OUT_PATH gets
   // { pc, input, errors, alternatives, stats }, EXPOSE_COVERAGE_PATH the coverage
-  // map. `alternatives` are the negated-branch child inputs the Distributor
-  // re-queues to drive multi-path search (M2); coverage stays empty until M4.
-  // Without the env vars (e.g. the microbench) this is a no-op; the @@DJX_VERDICT
-  // path is untouched.
+  // map (this.cov; see coverage.ts). `alternatives` are the negated-branch child
+  // inputs the Distributor re-queues to drive multi-path search (M2). Without the
+  // env vars (e.g. the microbench) this is a no-op; the @@DJX_VERDICT path is
+  // untouched.
   private writeExpoSEResult(): void {
     const outPath = process.env.EXPOSE_OUT_PATH;
     if (!outPath) return;
@@ -911,7 +949,11 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
       }),
     );
     const covPath = process.env.EXPOSE_COVERAGE_PATH;
-    if (covPath) writeFileSync(covPath, JSON.stringify({}));
+    if (covPath)
+      writeFileSync(
+        covPath,
+        JSON.stringify(this.cov ? this.cov.toPayload(D$.ids, D$.files) : {}),
+      );
   }
 
   // Readable path-condition rendering (ExpoSE _stringPC analogue; only the `pc`
