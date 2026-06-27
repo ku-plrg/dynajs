@@ -1,42 +1,13 @@
 #!/usr/bin/env node
 'use strict';
 
-// test262 extractor: dumps each test as a standalone .js file with its harness
-// helpers (assert.js / sta.js / propertyHelper.js / ...) inlined, ready to run
-// as `node <file>` in a single realm (no vm wrapper, so cross-realm
-// `instanceof` works under dynajs instrumentation).
-//
-// Assembly is done by test262-stream (the same parser test262-harness uses), so
-// includes, strict/default scenarios, the `raw` flag and async `doneprintHandle`
-// are handled faithfully. On top of that we conditionally prepend a tiny shim
-// (only when a test references it) for the two things test262-stream does NOT
-// provide for plain `node` execution: `print` and `$262`.
-//
-// Usage:
-//   node bench/test262/extract.cjs [--test262 <dir>] [--out <dir>] [--no-shim] <path...>
-//
-//   --test262 <dir>   test262 repo root      (default: $TEST262_DIR or ~/test262)
-//   --out <dir>       output directory       (default: ./bench/test262/extracted)
-//   --no-shim         emit raw test262-stream contents only (no print/$262 shim)
-//   --wrap            run each test via vm.runInThisContext so top-level `this`
-//                     is the global object (script semantics) instead of CJS
-//                     module.exports. Same realm, so instanceof still works.
-//                     Use this if tests that read top-level `this` as the global
-//                     misbehave under plain `node <file>`.
-//   <path...>         test paths relative to the test262 root, or absolute
-//                     (default: "test")
-//
-// Layout (mirrors the test tree, scenarios split):
-//   <out>/built-ins/Array/S15.4.5.2_A3_T3.js          (default scenario)
-//   <out>/built-ins/Array/S15.4.5.2_A3_T3.strict.js   (strict scenario)
-// A manifest.jsonl is written at <out>/manifest.jsonl mapping each emitted file
-// to { file, source, scenario, flags, negative } for downstream pass/fail.
-
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { createRequire } = require('node:module');
 const { execSync } = require('node:child_process');
+const yargs = require('yargs');
+const { hideBin } = require('yargs/helpers');
 
 function resolveDep(name) {
   try {
@@ -63,25 +34,50 @@ function resolveDep(name) {
 
 const Test262Stream = resolveDep('test262-stream');
 
-function parseArgs(argv) {
-  const opts = {
-    test262: process.env.TEST262_DIR || path.join(os.homedir(), 'test262'),
-    out: path.resolve(process.cwd(), 'bench/test262/extracted'),
-    shim: true,
-    paths: [],
+function parseArgs() {
+  const argv = yargs(hideBin(process.argv))
+    .scriptName('extract.cjs')
+    .usage(
+      'Usage: $0 [options] [paths...]\n\nExtract test262 tests as standalone helper-inlined .js files',
+    )
+    .option('test262', {
+      type: 'string',
+      describe: 'test262 repo root',
+      default: process.env.TEST262_DIR || path.join(os.homedir(), 'test262'),
+      defaultDescription: '$TEST262_DIR or ~/test262',
+    })
+    .option('out', {
+      type: 'string',
+      describe: 'output directory',
+      default: 'bench/test262/extracted',
+    })
+    .option('shim', {
+      type: 'boolean',
+      default: true,
+      describe:
+        'prepend print/$262 shim only when a test needs it (--no-shim for raw contents)',
+    })
+    .option('wrap', {
+      type: 'boolean',
+      default: false,
+      describe:
+        'run each test via vm.runInThisContext so top-level `this` is the global object (script semantics); same realm',
+    })
+    .epilogue(
+      'Positional [paths...] are test paths relative to the test262 root (default: "test").',
+    )
+    .help()
+    .alias('h', 'help')
+    .strictOptions()
+    .parse();
+
+  return {
+    test262: path.resolve(argv.test262),
+    out: path.resolve(argv.out),
+    shim: argv.shim,
+    wrap: argv.wrap,
+    paths: argv._.length ? argv._.map(String) : ['test'],
   };
-  for (let i = 0; i < argv.length; i++) {
-    const a = argv[i];
-    if (a === '--test262') opts.test262 = path.resolve(argv[++i]);
-    else if (a === '--out') opts.out = path.resolve(argv[++i]);
-    else if (a === '--no-shim') opts.shim = false;
-    else if (a === '--wrap') opts.wrap = true;
-    else if (a === '-h' || a === '--help') opts.help = true;
-    else opts.paths.push(a);
-  }
-  opts.test262 = path.resolve(opts.test262);
-  if (opts.paths.length === 0) opts.paths.push('test');
-  return opts;
 }
 
 const PRINT_SHIM = 'function print() { console.log.apply(console, arguments); }\n';
@@ -154,11 +150,7 @@ function outPathFor(test) {
 }
 
 function main() {
-  const opts = parseArgs(process.argv.slice(2));
-  if (opts.help) {
-    process.stdout.write(fs.readFileSync(__filename, 'utf8').split('\n').slice(2, 38).join('\n') + '\n');
-    return;
-  }
+  const opts = parseArgs();
 
   // test262-stream paths must be relative to the test262 root.
   const paths = opts.paths.map((p) => {

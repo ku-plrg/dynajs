@@ -1,63 +1,71 @@
 #!/usr/bin/env node
 'use strict';
 
-// Runs extracted test262 files (see extract.cjs) through a given runner command
-// and reports PASS / FAIL / TIMEOUT per file using a simple exit-code rule:
-//   exit 0        -> PASS
-//   exit != 0     -> FAIL
-//   over timeout  -> TIMEOUT (the process group is killed)
-//
-// Note: test262 NEGATIVE tests intentionally throw (exit != 0) and so show as
-// FAIL here. That is by design for this tool -- the exit-code rule is meant for
-// "did this file run clean?" and for spotting instrumentation regressions
-// (exit 0 under plain `node`, non-zero under djx). For spec-accurate verdicts,
-// consult <dir>/manifest.jsonl (negative / async / flags).
-//
-// Usage:
-//   node bench/test262/run.cjs [options] [path-prefix...]
-//
-//   --dir <dir>       extracted files directory (default: ./test262-extracted)
-//   --runner <cmd>    runner command prefix; the file path is appended, or
-//                     substituted for a `{}` / `{file}` placeholder.
-//                     (default: "node")
-//   --filter <regex>  JS regex matched against each file's relative posix path;
-//                     repeatable (OR). Positional args are path prefixes (OR).
-//   --timeout <ms>    per-file timeout; group-killed on exceed (default: 10000)
-//   --jobs <n>        parallel workers (default: number of CPUs)
-//   --quiet           print only FAIL / TIMEOUT lines (plus the summary)
-//
-// Examples:
-//   node bench/test262/run.cjs --runner "node" built-ins/Array
-//   node bench/test262/run.cjs --dir ./out \
-//     --runner "djx run -p noop --include $PWD/out -- node" --filter 'Array/.*length'
-
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
+const yargs = require('yargs');
+const { hideBin } = require('yargs/helpers');
 
-function parseArgs(argv) {
-  const opts = {
-    dir: path.resolve(process.cwd(), 'test262-extracted'),
-    runner: 'node',
-    filters: [],
-    prefixes: [],
-    timeout: 10000,
-    jobs: os.cpus().length || 4,
-    quiet: false,
+function parseArgs() {
+  const argv = yargs(hideBin(process.argv))
+    .scriptName('run.cjs')
+    .usage(
+      'Usage: $0 [options] [path-prefix...]\n\nRun extracted test262 files through a runner; PASS/FAIL/TIMEOUT by exit code',
+    )
+    .option('dir', {
+      type: 'string',
+      default: 'bench/test262/extracted',
+      describe: 'extracted files directory',
+    })
+    .option('runner', {
+      type: 'string',
+      default: 'node',
+      describe:
+        'runner command prefix; the file path is appended, or substituted for a `{}` / `{file}` placeholder',
+    })
+    .option('filter', {
+      type: 'string',
+      describe:
+        'JS regex matched against each file’s relative posix path (repeatable, OR)',
+    })
+    .option('timeout', {
+      type: 'number',
+      default: 10000,
+      describe: 'per-file timeout in ms; the process group is killed on exceed',
+    })
+    .option('jobs', {
+      type: 'number',
+      alias: 'j',
+      default: os.cpus().length || 4,
+      describe: 'parallel workers',
+    })
+    .option('quiet', {
+      type: 'boolean',
+      alias: 'q',
+      default: false,
+      describe: 'print only FAIL / TIMEOUT lines (plus the summary)',
+    })
+    .epilogue(
+      'Positional [path-prefix...] restrict to files whose relative path starts with one of them (OR).',
+    )
+    .help()
+    .alias('h', 'help')
+    .strictOptions()
+    .parse();
+
+  return {
+    dir: path.resolve(argv.dir),
+    runner: argv.runner,
+    filters: [].concat(argv.filter ?? []).map((s) => new RegExp(String(s))),
+    prefixes: argv._.map((a) =>
+      String(a).replace(/\\/g, '/').replace(/^\.?\//, ''),
+    ),
+    timeout: argv.timeout,
+    jobs: Math.max(1, argv.jobs),
+    quiet: argv.quiet,
   };
-  for (let i = 0; i < argv.length; i++) {
-    const a = argv[i];
-    if (a === '--dir') opts.dir = path.resolve(argv[++i]);
-    else if (a === '--runner') opts.runner = argv[++i];
-    else if (a === '--filter') opts.filters.push(new RegExp(argv[++i]));
-    else if (a === '--timeout') opts.timeout = Number(argv[++i]);
-    else if (a === '--jobs' || a === '-j') opts.jobs = Math.max(1, Number(argv[++i]));
-    else if (a === '--quiet' || a === '-q') opts.quiet = true;
-    else if (a === '-h' || a === '--help') opts.help = true;
-    else opts.prefixes.push(a.replace(/\\/g, '/').replace(/^\.?\//, ''));
-  }
-  return opts;
 }
 
 // Recursively collect *.js files (skip manifest.jsonl), returning posix-relative
@@ -151,13 +159,7 @@ function runOne(absFile, opts) {
 }
 
 async function main() {
-  const opts = parseArgs(process.argv.slice(2));
-  if (opts.help) {
-    process.stdout.write(
-      fs.readFileSync(__filename, 'utf8').split('\n').slice(2, 38).join('\n') + '\n',
-    );
-    return;
-  }
+  const opts = parseArgs();
 
   const all = collectFiles(opts.dir);
   const files = all.filter((rel) => matches(rel, opts));
