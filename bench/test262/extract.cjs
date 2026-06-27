@@ -16,7 +16,7 @@
 //   node bench/test262/extract.cjs [--test262 <dir>] [--out <dir>] [--no-shim] <path...>
 //
 //   --test262 <dir>   test262 repo root      (default: $TEST262_DIR or ~/test262)
-//   --out <dir>       output directory       (default: ./test262-extracted)
+//   --out <dir>       output directory       (default: ./bench/test262/extracted)
 //   --no-shim         emit raw test262-stream contents only (no print/$262 shim)
 //   --wrap            run each test via vm.runInThisContext so top-level `this`
 //                     is the global object (script semantics) instead of CJS
@@ -66,7 +66,7 @@ const Test262Stream = resolveDep('test262-stream');
 function parseArgs(argv) {
   const opts = {
     test262: process.env.TEST262_DIR || path.join(os.homedir(), 'test262'),
-    out: path.resolve(process.cwd(), 'test262-extracted'),
+    out: path.resolve(process.cwd(), 'bench/test262/extracted'),
     shim: true,
     paths: [],
   };
