@@ -36,7 +36,9 @@
     "test:concolic": "npm run build && node ./scripts/run-concolic-tests.mjs",
     "test262:extract": "npm run build && node ./bench/test262/extract.cjs",
     "test262:run": "npm run build && node ./bench/test262/run.cjs",
-    "test262:run-node": "npm run build && npm run test262:run"
+    "test262:run-node": "npm run build && npm run test262:run",
+    "test262:run-aran": "node ./bench/test262/run.cjs --runner \"node --import ./bench/test262/aran-setup.mjs\"",
+    "test262:run-linvail": "node ./bench/test262/run.cjs --runner \"node /home/choems/linvail/bin/linvail.mjs\""
   },
   "repository": {
     "type": "git",
