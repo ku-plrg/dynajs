@@ -1,7 +1,8 @@
-import type { SpecRuntime, Lifted, Unlifted, Primitive } from "../type.js";
+import type { SpecRuntime, Lifted, Primitive } from "../type.js";
 
 import { AO__ToString } from "./AO__ToString.js";
 import { AO__ToNumber } from "./AO__ToNumber.js";
+import { AO__ToPrimitive } from "./AO__ToPrimitive.js";
 
 function SYNTAX__add_primitive($: SpecRuntime, lPrim: Lifted<Primitive>, rPrim: Lifted<Primitive>): Lifted<string> | Lifted<number> {
   //   c. If lPrim is a String or rPrim is a String, then
@@ -37,14 +38,13 @@ function SYNTAX__add_primitive($: SpecRuntime, lPrim: Lifted<Primitive>, rPrim: 
 // ApplyStringOrNumericBinaryOperator (13.15.3), specialized to opText = `+`
 // (split out of the former Model.applyBinary, one file per operator).
 export function SYNTAX__add($: SpecRuntime, lVal: Lifted<unknown>, rVal: Lifted<unknown>): Lifted<string> | Lifted<number> {
-  if ($.value($.isType(lVal, 'object')) || $.value($.isType(rVal, 'object'))) {
-    const l: Unlifted<unknown> = $.value(lVal);
-    const r: Unlifted<unknown> = $.value(rVal);
-    // @ts-expect-error - it calls the plus
-    const v = l + r;
-    // over-approximate the result type as unknown, since it could be either string or number
-    return $.default(v, [lVal, rVal]);
-  } else {
-    return SYNTAX__add_primitive($, lVal as Lifted<Primitive>, rVal as Lifted<Primitive>);
-  }
+  // 1.a. Let lPrim be ? ToPrimitive(lval).
+  const lPrim = AO__ToPrimitive($, lVal);
+  // 1.b. Let rPrim be ? ToPrimitive(rval).
+  const rPrim = AO__ToPrimitive($, rVal);
+  // Coercing here (not via a native l + r on the raw objects) keeps a user
+  // valueOf/toString running in lifted-world; a native + on an object operand
+  // would re-enter the instrumented method and reject its lifted-primitive
+  // return ("Cannot convert object to primitive value").
+  return SYNTAX__add_primitive($, lPrim, rPrim);
 }

@@ -22,8 +22,19 @@ import * as lift from './internal/lift.js';
 // translate, which (for concolic) poisons the path condition.
 const NON_VALUE_BINARY_OPS = new Set(['instanceof', 'in']);
 
-type BinFrame = { ty: 'bin'; op: string; left: Lifted; right: Lifted };
-type UnFrame = { ty: 'un'; op: string; operand: Lifted };
+type BinFrame = {
+  ty: 'bin';
+  op: string;
+  left: Lifted;
+  right: Lifted;
+  escaped?: escape.EscapeRecord[]; // coercion-method shadows for native (non-`+`) ops
+};
+type UnFrame = {
+  ty: 'un';
+  op: string;
+  operand: Lifted;
+  escaped?: escape.EscapeRecord[]; // coercion-method shadows for native +/-/~
+};
 type GetFieldFrame = { ty: 'getField'; base: Lifted; prop: Lifted };
 
 type CallFrame = OpaqueCall | TransparentCall;
@@ -670,9 +681,10 @@ export abstract class FlowAnalysis<Info>
         // of the receiver/args first — otherwise a lifted-primitive proxy hits
         // a native protocol site it can't satisfy (ToBoolean reads truthy,
         // iteration throws, typeof is "object"; ToNumber/ToString now read
-        // through via Symbol.toPrimitive, see lift.ts), then restore. The
-        // symmetric "unlift the callback's RETURN" seam is deliberately not
-        // handled — see the note in invokeFunPre's opaque branch.
+        // through via Symbol.toPrimitive, see lift.ts), then restore. escape()
+        // also shadows the operands' coercion methods (valueOf/toString/
+        // @@toPrimitive) so a native ToPrimitive that calls them gets a raw
+        // return — see the note in invokeFunPre's opaque branch.
         const esc = this.escaper.escape(thisArg, argArr, entries);
         if (esc.crossed.length > 0)
           this.escapedInfo?.(
@@ -704,7 +716,13 @@ export abstract class FlowAnalysis<Info>
   binaryPre(_id: number, op: string, left: Lifted, right: Lifted) {
     const l = this.$.value(left);
     const r = this.$.value(right);
-    const frame: BinFrame = { ty: 'bin', op, left, right };
+    // `+` is authoritative (skip + SYNTAX__add, which ToPrimitives soundly).
+    // Other ops run natively on the peeked raws, so an object operand would have
+    // its instrumented valueOf/toString re-entered by native coercion — shadow
+    // those with unlifting wrappers first, restored in `binary`.
+    const escaped =
+      op === '+' ? undefined : this.escaper.wrapForOperator([l, r]);
+    const frame: BinFrame = { ty: 'bin', op, left, right, escaped };
     return { op, left: l, right: r, skip: op === '+', frame };
   }
 
@@ -721,6 +739,7 @@ export abstract class FlowAnalysis<Info>
     // user-code site, like NodeMedic stamps the source location on `binary`.
     this.siteResolver.reportId(_id);
     const f = frame as BinFrame;
+    if (f.escaped) this.escaper.restore(f.escaped); // unwrap operand coercion shadows
     if (f.op === '+') {
       return {
         result: SYNTAX__add(this.$, f.left, f.right) as Lifted<unknown>,
@@ -763,7 +782,14 @@ export abstract class FlowAnalysis<Info>
 
   unaryPre(_id: number, op: string, _prefix: boolean, operand: Lifted) {
     const e = this.$.value(operand);
-    const frame: UnFrame = { ty: 'un', op, operand: operand };
+    // +/-/~ coerce their operand natively (ToNumber/ToNumeric); shadow an object
+    // operand's instrumented coercion methods first, restored in `unary`. Other
+    // unary ops (!, typeof, void, delete) don't ToPrimitive an object.
+    const escaped =
+      op === '+' || op === '-' || op === '~'
+        ? this.escaper.wrapForOperator([e])
+        : undefined;
+    const frame: UnFrame = { ty: 'un', op, operand, escaped };
     return { op, operand: e, skip: false, frame };
   }
 
@@ -778,6 +804,7 @@ export abstract class FlowAnalysis<Info>
     required(frame !== undefined, 'unary hook missing frame');
     this.siteResolver.reportId(_id);
     const f = frame as UnFrame;
+    if (f.escaped) this.escaper.restore(f.escaped); // unwrap operand coercion shadows
     const transformed: Lifted<unknown> = this.lift(
       result,
       this.unaryInfo?.(f.op, this.valued(f.operand)) ??
@@ -984,11 +1011,8 @@ export abstract class FlowAnalysis<Info>
     const callee = this.$.value(_f as Lifted);
 
     if (kind === 'opaque') {
-      // RETURN-SIDE SEAM (the mirror of the arg escape below — deliberately NOT
-      // handled). The wrapper would be: replace any instrumented-function
-      // arg/receiver with `(...a) => this.unlift(orig.apply(this, a))`, so the
-      // value the callback RETURNS is unlifted before native (which invoked it)
-      // coerces it. We don't, because it cannot be made sound:
+      // RETURN-SIDE SEAM. A *blanket* unlift of every instrumented-function
+      // arg/receiver's return is unsound and stays unhandled:
       //  - The boundary can't tell whether native will COERCE the return (wants
       //    raw) or STORE it as data and hand it back to instrumented code (wants
       //    lifted). A blanket unlift breaks the store path — e.g. unmodeled
@@ -996,13 +1020,16 @@ export abstract class FlowAnalysis<Info>
       //  - Unlike escape (which strips THEN restores into a container we own), a
       //    return lands in native's container: no restore point, so the unlift
       //    is permanent loss.
-      //  - Number/string coercion of a returned lifted value is already lossless
-      //    via Symbol.toPrimitive read-through (lift.ts), so the only residual
-      //    case is native ToBoolean (e.g. unmodeled `every`) — intrinsically
-      //    unsound to unlift (a native bool site needs a raw boolean, which
-      //    carries no info; any object is truthy). That is closed by MODELING
-      //    the builtin instead: a wrapper is sound only when scoped to a known
-      //    callee, which is exactly what a model entry is.
+      //  - For native ToBoolean (e.g. unmodeled `every`) unlifting is anyway
+      //    pointless (a raw bool carries no info; any object is truthy) — closed
+      //    by MODELING the builtin, i.e. a wrapper scoped to a known callee.
+      // The ONE return-side case that IS sound to wrap is coercion: native
+      // OrdinaryToPrimitive calls the operand's valueOf/toString/@@toPrimitive
+      // and REJECTS an object return ("Cannot convert object to primitive
+      // value") — a lifted-primitive proxy is an object. Those three methods are
+      // always coerced (never stored) and live on an operand we own, so escape()
+      // shadows them with unlifting wrappers and restores after — see
+      // BoundaryEscape.wrapCoercion.
       const esc = this.escaper.escape(_base, argArr, entries);
       if (esc.crossed.length > 0)
         this.escapedInfo?.(

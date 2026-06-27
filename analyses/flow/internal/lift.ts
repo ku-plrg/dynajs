@@ -50,6 +50,7 @@ export abstract class LiftedDomain<Info> {
   protected escaper = new BoundaryEscape(
     this.isPrimitiveProxy.bind(this),
     this.unlift.bind(this),
+    this.lift.bind(this),
   );
 
   // ---- Info storage helpers ----

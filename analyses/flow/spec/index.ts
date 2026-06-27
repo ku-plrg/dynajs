@@ -31,6 +31,7 @@ export { AO__IsStringWellFormedUnicode } from "./AO__IsStringWellFormedUnicode.j
 export { AO__LengthOfArrayLike } from "./AO__LengthOfArrayLike.js";
 export { AO__MakeBasicObject } from "./AO__MakeBasicObject.js";
 export { AO__OrdinaryObjectCreate } from "./AO__OrdinaryObjectCreate.js";
+export { AO__OrdinaryToPrimitive } from "./AO__OrdinaryToPrimitive.js";
 export { AO__QuoteJSONString } from "./AO__QuoteJSONString.js";
 export { AO__RequireObjectCoercible } from "./AO__RequireObjectCoercible.js";
 export { AO__SameType } from "./AO__SameType.js";
