@@ -33,7 +33,9 @@
     "test": "",
     "test:watch": "",
     "test:taint": "npm run build && node ./scripts/run-taint-tests.mjs",
-    "test:concolic": "npm run build && node ./scripts/run-concolic-tests.mjs"
+    "test:concolic": "npm run build && node ./scripts/run-concolic-tests.mjs",
+    "test262:extract": "node ./bench/test262/extract.cjs",
+    "test262:run": "node ./bench/test262/run.cjs"
   },
   "repository": {
     "type": "git",
