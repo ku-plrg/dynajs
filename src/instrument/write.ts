@@ -699,6 +699,16 @@ export function logUnaryOp(state: State, expr: acorn.UnaryExpression): void {
 
 export function logBinaryOp(state: State, expr: acorn.BinaryExpression): void {
   const { left, right, operator } = expr;
+  // Ergonomic brand check `#priv in obj`: a private-name reference is only legal
+  // as the immediate LHS of `in`, so it cannot be lifted into a D$.B argument.
+  if (operator === 'in' && left.type === 'PrivateIdentifier') {
+    state.write('(');
+    state.walk(left);
+    state.write(' in ');
+    state.walk(right);
+    state.write(')');
+    return;
+  }
   const enabled = state.partial.B;
   if (!enabled) {
     state.write('(');

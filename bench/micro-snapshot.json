@@ -4063,8 +4063,18 @@
     "Syntax__Classes__class-fields-private__taint_class_fields_private": [
       {
         "expected": "detected",
-        "actual": "error",
-        "result": "FN"
+        "actual": "detected",
+        "result": "TP"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
+      },
+      {
+        "expected": "clean",
+        "actual": "clean",
+        "result": "TN"
       }
     ],
     "Syntax__Classes__class-fields-public__taint_class_fields_public": [
@@ -5859,8 +5869,8 @@
     "BuiltIns__Array__prototype__join__concolic_join_unsat": [
       {
         "expected": "unsat",
-        "actual": "error",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__Array__prototype__keys__concolic_keys_sat": [
@@ -5887,8 +5897,8 @@
     "BuiltIns__Array__prototype__lastIndexOf__concolic_lastIndexOf_unsat": [
       {
         "expected": "unsat",
-        "actual": "error",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__Array__prototype__map__concolic_map_sat": [
@@ -6454,15 +6464,15 @@
     "BuiltIns__Math__abs__concolic_abs_sat": [
       {
         "expected": "sat",
-        "actual": "error",
+        "actual": "unsat",
         "result": "FN"
       }
     ],
     "BuiltIns__Math__abs__concolic_abs_unsat": [
       {
         "expected": "unsat",
-        "actual": "error",
-        "result": "FP"
+        "actual": "unsat",
+        "result": "TN"
       }
     ],
     "BuiltIns__Math__acos__concolic_acos_sat": [
@@ -10227,7 +10237,7 @@
     "BuiltIns__String__prototype__symbol_iterator__concolic_symbol_iterator_unsat": [
       {
         "expected": "unsat",
-        "actual": "error",
+        "actual": "sat",
         "result": "FP"
       }
     ],

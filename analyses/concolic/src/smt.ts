@@ -68,6 +68,60 @@ const ARITH_OPS = new Set(['+', '-', '*', 'max', 'min']);
 const COMPARE_OPS = new Set(['<', '<=', '>', '>=']);
 const EQUALITY_OPS = new Set(['===', '==', '!==', '!=']);
 
+// A symbolic operand denotes a defined value of a fixed sort (a finite Real, a
+// string, a bool, an array) — never JS `undefined`/`null`, never `NaN`/`±∞`.
+// Those JS values have no z3 image and reach the IR only as constants from spec
+// models that classify a number (`is(n, -∞)`, the `k in O` hole check `s[k] ===
+// undefined`, ...). A comparison between such a constant and a symbolic operand
+// therefore has a statically-known truth value, so we resolve it to a Bool
+// literal instead of emitting an unrepresentable constant.
+function outOfDomain(v: unknown): boolean {
+  return (
+    v === undefined ||
+    v === null ||
+    (typeof v === 'number' && !Number.isFinite(v))
+  );
+}
+// Truth of `<symbolic> op <c>` with the finite/defined symbolic on the left and
+// the out-of-domain `c` on the right. Equality is always decided; ordering only
+// against ±∞ (NaN/undefined/null aren't ordered, so every ordering is false).
+function outOfDomainTruth(op: string, c: unknown): boolean | undefined {
+  if (op === '===' || op === '==') return false;
+  if (op === '!==' || op === '!=') return true;
+  if (typeof c === 'number' && !Number.isFinite(c)) {
+    if (Number.isNaN(c)) return false;
+    if (c === Infinity) return op === '<' || op === '<=';
+    return op === '>' || op === '>='; // c === -Infinity
+  }
+  return undefined; // ordering against undefined/null: leave to the normal path
+}
+const FLIP_COMPARE: Record<string, string> = {
+  '<': '>',
+  '<=': '>=',
+  '>': '<',
+  '>=': '<=',
+};
+// If exactly one operand is an out-of-domain constant and the op is a
+// comparison/equality, return its SMT Bool literal; otherwise undefined.
+function outOfDomainCompare(
+  op: string,
+  left: Sym,
+  right: Sym,
+): string | undefined {
+  if (!EQUALITY_OPS.has(op) && !COMPARE_OPS.has(op)) return undefined;
+  const lo = left.kind === 'const' && outOfDomain(left.value);
+  const ro = right.kind === 'const' && outOfDomain(right.value);
+  if (lo === ro) return undefined; // need exactly one
+  // Normalize to `<symbolic> op <const>`; flip the ordering op if the constant
+  // was on the left.
+  const constSym = (lo ? left : right) as Extract<Sym, { kind: 'const' }>;
+  const truth = outOfDomainTruth(
+    lo ? (FLIP_COMPARE[op] ?? op) : op,
+    constSym.value,
+  );
+  return truth === undefined ? undefined : truth ? 'true' : 'false';
+}
+
 // JS `%` can't reuse SMT-LIB `mod`: `mod` is Euclidean (result in [0,|b|)),
 // whereas JS `%` is truncated — the remainder takes the sign of the *dividend*
 // (-2 % 3 === -2, not 1). Over the integers we encode sign(a) * (|a| mod |b|);
@@ -191,6 +245,24 @@ function symToSmt(s: Sym, vars: Map<string, Sort>): string {
         if (s.op === 'ceil') return `(to_real (- (to_int (- ${r}))))`;
         return `(to_real (to_int (+ ${r} 0.5)))`;
       }
+      // `typeof <symbolic>`: the operand's sort fixes the JS type tag (a symbolic
+      // can't change runtime type), so resolve it to that constant string rather
+      // than carrying an opaque `typeof` z3 has no operator for.
+      if (s.op === 'typeof') {
+        const so = sortOf(s.operand);
+        const ty =
+          so === 'String'
+            ? 'string'
+            : isNumericSort(so)
+              ? 'number'
+              : so === 'Bool'
+                ? 'boolean'
+                : so !== undefined && isSeqSort(so)
+                  ? 'object'
+                  : undefined;
+        if (ty !== undefined) return smtString(ty);
+        throw new UnsupportedSym(`unsupported typeof operand sort: ${so}`);
+      }
       const x = symToSmt(s.operand, vars);
       if (s.op === '!') return `(not ${x})`;
       if (s.op === '-') return `(- ${x})`;
@@ -198,6 +270,10 @@ function symToSmt(s: Sym, vars: Map<string, Sort>): string {
       throw new UnsupportedSym(`unsupported unary op: ${s.op}`);
     }
     case 'binary': {
+      // A comparison against an out-of-domain constant (undefined/null/NaN/±∞)
+      // has a fixed truth value — resolve it before any sort coercion.
+      const ood = outOfDomainCompare(s.op, s.left, s.right);
+      if (ood !== undefined) return ood;
       const ls = sortOf(s.left);
       const rs = sortOf(s.right);
       if (s.op === '%') {
