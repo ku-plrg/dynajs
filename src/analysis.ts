@@ -26,6 +26,13 @@ let lastComputedValue: any = undefined;
 // store left side of a switch statement
 let switchLeft: any = undefined;
 let switchStack: any[] = [];
+// Sentinels so the *native* `switch` branches on the value-aware `===` result
+// (computed via B/C) rather than comparing lifted operands by proxy identity:
+// Swl returns MATCH as the discriminant, each case returns MATCH iff its
+// comparison held. Distinct per-statement matching is preserved (a switch only
+// compares its own discriminant to its own case values).
+const SWITCH_MATCH = Symbol('switch-match');
+const SWITCH_NOMATCH = Symbol('switch-nomatch');
 function pushSwitchLeft() {
   switchStack.push(switchLeft);
 }
@@ -902,14 +909,14 @@ function C(id: number, op: string, value: any): any {
 
 // hook for left side of a switch statement
 function Swl(id: number, value: any): any {
-  return (switchLeft = value);
+  switchLeft = value;
+  return SWITCH_MATCH;
 }
 
 // hook for right side of a switch case
 function Swr(id: number, caseValue: any): any {
-  const result = B(id, '===', switchLeft, caseValue);
-  C(id, 'switch', result);
-  return caseValue;
+  const matches = C(id, 'switch', B(id, '===', switchLeft, caseValue));
+  return matches ? SWITCH_MATCH : SWITCH_NOMATCH;
 }
 
 // hook for variable declarations
