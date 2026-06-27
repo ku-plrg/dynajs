@@ -1,6 +1,7 @@
 // @type taint
 // @target es5 Function.prototype.toString
 // @feature builtin toString
+// @done
 
 function __test_taint__(tainted) {
     // tainted is bound as arg but toString() returns source code, not data

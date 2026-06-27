@@ -5,7 +5,7 @@
 function __test_taint__(tainted) {
     var o = {p: tainted};
     var desc = Object.getOwnPropertyDescriptor(o, 'p');
-    // @witness __test_taint__('hello') => desc.value = 'hello' tainted
+    // @witness __test_taint__('x') => desc.value = 'x' tainted
     __assert_taint__(desc.value, true);
 
     var o2 = {p: 'clean'};

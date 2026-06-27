@@ -5,7 +5,7 @@
 function __test_taint__(tainted) {
     var proto = {p: tainted};
     var r = Object.create(proto);
-    // @witness __test_taint__('hello') => r.p = 'hello' tainted
+    // @witness __test_taint__('x') => r.p = 'x' tainted
     __assert_taint__(r.p, true);
 
     // @witness always r.p = 'c', clean

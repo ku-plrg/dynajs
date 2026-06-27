@@ -5,7 +5,7 @@
 function __test_taint__(tainted) {
     var r = tainted.valueOf();
 
-    // @witness __test_taint__(34) => r = 34 tainted
+    // @witness __test_taint__(42) => r = 42 tainted
     __assert_taint__(r, true);
 }
 

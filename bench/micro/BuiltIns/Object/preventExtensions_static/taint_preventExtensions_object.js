@@ -5,7 +5,7 @@
 function __test_taint__(tainted) {
     // preventExtensions returns the same object; tainted prop survives
     var r = Object.preventExtensions({ p: tainted });
-    // @witness __test_taint__("hello") => r.p = "hello" tainted
+    // @witness __test_taint__("x") => r.p = "x" tainted
     __assert_taint__(r.p, true);
 
     var r2 = Object.preventExtensions({ p: tainted, q: "clean" });

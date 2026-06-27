@@ -5,10 +5,10 @@
 function __test_taint__(tainted) {
     var o = {p: tainted};
     var r = o.valueOf();
-    // @witness __test_taint__('hello') => r.p = 'hello' tainted
+    // @witness __test_taint__('x') => r.p = 'x' tainted
     __assert_taint__(r.p, true);
 
-    // @witness __test_taint__('hello') => r = {p:'hello'} tainted
+    // @witness __test_taint__('x') => r = {p:'x'} tainted
     __assert_taint__(r, true);
 
     // mixed: one tainted, one clean => whole container false

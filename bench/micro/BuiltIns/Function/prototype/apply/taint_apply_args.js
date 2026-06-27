@@ -1,11 +1,12 @@
 // @type taint
 // @target es5 Function.prototype.apply
 // @feature builtin apply
+// @done
 
 function __test_taint__(tainted) {
     var id = function(x) { return x; };
 
-    // @witness __test_taint__('hello') => id.apply(null, [tainted]) = 'hello' tainted
+    // @witness __test_taint__('x') => id.apply(null, [tainted]) = 'x' tainted
     __assert_taint__(id.apply(null, [tainted]), true);
 
     // @witness clean literal arg 'c', not tainted

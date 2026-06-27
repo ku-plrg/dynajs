@@ -8,7 +8,7 @@ function __test_taint__(tainted) {
 
     var arr = Array.from(s.values());
 
-    // @witness __test_taint__('hello') => arr[0] = 'hello' tainted
+    // @witness __test_taint__('x') => arr[0] = 'x' tainted
     __assert_taint__(arr[0], true);
 
     var s2 = new Set();

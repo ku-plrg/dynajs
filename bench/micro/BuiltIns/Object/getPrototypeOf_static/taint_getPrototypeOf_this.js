@@ -6,7 +6,7 @@ function __test_taint__(tainted) {
     var proto = {p: tainted};
     var child = Object.create(proto);
     var got = Object.getPrototypeOf(child);
-    // @witness __test_taint__('hello') => got.p = 'hello' tainted
+    // @witness __test_taint__('x') => got.p = 'x' tainted
     __assert_taint__(got.p, true);
 
     var proto2 = {p: 'clean'};

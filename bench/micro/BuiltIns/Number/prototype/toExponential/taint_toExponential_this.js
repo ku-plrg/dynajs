@@ -6,13 +6,13 @@ function __test_taint__(tainted) {
     // seed 34, toExponential(1) => "3.4e+1"
     var r = tainted.toExponential(1);
 
-    // @witness __test_taint__(34) => r[0] = '3' tainted
+    // @witness __test_taint__(42) => r[0] = '4' tainted
     __assert_taint__(r[0], true);
 
     // @witness r[1] = '.' structural separator inserted by toExponential, clean
     __assert_taint__(r[1], false);
 
-    // @witness __test_taint__(34) => r[2] = '4' tainted
+    // @witness __test_taint__(42) => r[2] = '2' tainted
     __assert_taint__(r[2], true);
 
     // @witness r[3] = 'e' structural exponent marker, clean

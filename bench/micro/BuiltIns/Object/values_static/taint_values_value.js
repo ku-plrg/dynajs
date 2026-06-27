@@ -4,7 +4,7 @@
 
 function __test_taint__(tainted) {
     var r = Object.values({p: tainted});
-    // @witness __test_taint__('hello') => r[0] = 'hello' tainted
+    // @witness __test_taint__('x') => r[0] = 'x' tainted
     __assert_taint__(r[0], true);
 
     // @witness always r[0] = 'c', clean

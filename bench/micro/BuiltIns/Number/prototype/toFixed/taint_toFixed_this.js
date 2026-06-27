@@ -6,10 +6,10 @@ function __test_taint__(tainted) {
     var r = tainted.toFixed(1);
     // r = "12.0" for seed 12
 
-    // @witness __test_taint__(12) => r[0] = '1' tainted
+    // @witness __test_taint__(42) => r[0] = '4' tainted
     __assert_taint__(r[0], true);
 
-    // @witness __test_taint__(12) => r[1] = '2' tainted
+    // @witness __test_taint__(42) => r[1] = '2' tainted
     __assert_taint__(r[1], true);
 
     // @witness r[2] = '.' structural separator inserted by toFixed, clean

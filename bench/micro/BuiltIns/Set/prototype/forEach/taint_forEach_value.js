@@ -9,7 +9,7 @@ function __test_taint__(tainted) {
     var got;
     s.forEach(function(v) { got = v; });
 
-    // @witness __test_taint__('hello') => got = 'hello' tainted
+    // @witness __test_taint__('x') => got = 'x' tainted
     __assert_taint__(got, true);
 
     var s2 = new Set();

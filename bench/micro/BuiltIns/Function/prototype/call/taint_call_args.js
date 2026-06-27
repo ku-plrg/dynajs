@@ -1,11 +1,12 @@
 // @type taint
 // @target es5 Function.prototype.call
 // @feature builtin call
+// @done
 
 function __test_taint__(tainted) {
     var id = function(x) { return x; };
 
-    // @witness __test_taint__('hello') => id.call(null, tainted) = 'hello' tainted
+    // @witness __test_taint__('x') => id.call(null, tainted) = 'x' tainted
     __assert_taint__(id.call(null, tainted), true);
 
     // @witness clean literal arg 'c', not tainted

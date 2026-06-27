@@ -1,6 +1,7 @@
 // @type taint
 // @target es5 Function.prototype.call
 // @feature builtin call
+// @done
 
 function __test_taint__(tainted) {
     // Object.prototype.toString.call(tainted) => "[object String]" — structural, not data content
