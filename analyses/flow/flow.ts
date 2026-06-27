@@ -12,6 +12,9 @@ import * as site from './internal/site.js';
 import type * as escape from './internal/escape.js';
 import { AO__CanonicalNumericIndexString, SYNTAX__add } from './spec/index.js';
 import * as lift from './internal/lift.js';
+import { CAPTURED, concatList } from './utils.js';
+
+const { ReflectApply } = CAPTURED;
 
 // `instanceof` and `in` are type/membership predicates, not value-algebra
 // operators: the boolean they yield is decided by the prototype chain / property
@@ -342,7 +345,8 @@ export abstract class FlowAnalysis<Info>
         this.valued(string),
         concrete,
       );
-      const elems = concrete === null ? [] : Array.from(concrete);
+      const elems =
+        concrete === null ? [] : (concatList([], concrete) as string[]);
       return {
         // Whether it matched depends on the pattern AND the subject; the match
         // POSITION is structural (a number, not content) so it carries no taint
@@ -539,9 +543,15 @@ export abstract class FlowAnalysis<Info>
 
     // MathOps
     min: (...xs) =>
-      this.numOp(Math.min(...xs.map((x) => this.unlift(x) as number)), xs),
+      this.numOp(
+        ReflectApply(Math.min, undefined, xs.map((x) => this.unlift(x) as number)) as number,
+        xs,
+      ),
     max: (...xs) =>
-      this.numOp(Math.max(...xs.map((x) => this.unlift(x) as number)), xs),
+      this.numOp(
+        ReflectApply(Math.max, undefined, xs.map((x) => this.unlift(x) as number)) as number,
+        xs,
+      ),
     abs: (x) => this.numOp(Math.abs(this.unlift(x) as number), [x]),
     // floor/ceil/round route through unaryInfo (op-keyed, like $.isInteger) so an
     // analysis can model the rounding symbolically; without a hook they fall back
@@ -673,7 +683,7 @@ export abstract class FlowAnalysis<Info>
       // straddles it. See callKind/callModeled/opaqueResult.
       const fn = this.unlift(f as Lifted<Function>); // AO__Call ensured IsCallable
       const argArr = args as Lifted[];
-      const entries = [thisArg, ...argArr] as Lifted[];
+      const entries = concatList([thisArg], argArr) as Lifted[];
       const kind = this.callKind(fn, entries);
       if (kind === 'modeled') return this.callModeled(fn, thisArg, argArr);
       if (kind === 'opaque') {
@@ -691,12 +701,15 @@ export abstract class FlowAnalysis<Info>
             fn,
             esc.crossed.map((w) => this.valued(w)),
           );
-        const result = fn.call(esc.base, ...esc.args);
+        const result = ReflectApply(fn as Function, esc.base, esc.args);
         return this.opaqueResult(fn, entries, result, esc.log);
       }
       // transparent: instrumented callback — lifted values flow straight through
       // so the callee propagates info internally.
-      return this.carryOrDefault(fn.call(thisArg, ...argArr), entries);
+      return this.carryOrDefault(
+        ReflectApply(fn as Function, thisArg, argArr),
+        entries,
+      );
     },
   } satisfies SpecRuntime;
 
@@ -952,7 +965,7 @@ export abstract class FlowAnalysis<Info>
     const modelFn = Model.ofBuiltin(f);
     return this.siteResolver.withBuiltinSite(
       this.siteResolver.builtinName(f),
-      () => modelFn(this.$, base, ...args),
+      () => ReflectApply(modelFn as Function, undefined, concatList([this.$, base], args)),
     ) as Lifted<unknown>;
   }
 
@@ -989,7 +1002,9 @@ export abstract class FlowAnalysis<Info>
   ) {
     this.siteResolver.reportId(_id);
     const argArr = Array.from(args) as Lifted[]; // can we do this without `as`?
-    const entries: Lifted[] = _isMethod ? [_base as Lifted, ...argArr] : argArr;
+    const entries: Lifted[] = _isMethod
+      ? (concatList([_base], argArr) as Lifted[])
+      : argArr;
     const kind = this.callKind(_f, entries);
     if (kind === 'modeled') {
       // model takes lifted args and returns a lifted result; the engine skips

@@ -1,6 +1,5 @@
 import type { Lifted } from '../type.js';
-import { isInstrumentedFn } from '../utils.js';
-import { CAPTURED } from '../captured.js';
+import { isInstrumentedFn, CAPTURED } from '../utils.js';
 
 // Captured up front (user code can override the Object/Reflect globals).
 const {
