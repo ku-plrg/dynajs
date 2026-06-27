@@ -25,6 +25,7 @@ export const UPDATE_OP = DYNAJS_VAR + '.Up';
 export const CONDITION = DYNAJS_VAR + '.C';
 export const SWITCH_LEFT = DYNAJS_VAR + '.Swl';
 export const SWITCH_RIGHT = DYNAJS_VAR + '.Swr';
+export const CLASS_HERITAGE = DYNAJS_VAR + '.Hc';
 export const DECLARE = DYNAJS_VAR + '.D';
 export const READ = DYNAJS_VAR + '.R';
 export const WRITE = DYNAJS_VAR + '.W';

@@ -200,9 +200,11 @@ export function logClassDeclare(
   state.write('class ');
   if (id) state.write(id.name + ' ');
   if (superClass) {
-    state.write('extends ');
+    // Unlift the heritage so native `extends` sees a raw constructor/null, not a
+    // lifted-primitive proxy (e.g. `extends null`). See LOG.CLASS_HERITAGE / Hc.
+    state.write(`extends ${LOG.CLASS_HERITAGE}(${newId(superClass)}, `);
     state.walk(superClass);
-    state.write(' ');
+    state.write(') ');
   }
   // the stamp inside the class body covers bodiless classes (`class K {}`),
   // whose toString contains no method body to carry one

@@ -232,6 +232,13 @@ export abstract class FlowAnalysis<Info>
     return { result: raw };
   }
 
+  // Native `class … extends E` needs a raw constructor/null; hand it the
+  // unlifted heritage (a lifted-primitive proxy like `null` is otherwise an
+  // object → "not a constructor or null"). Object heritages unlift to themselves.
+  classHeritage(_id: number, value: unknown): { result: unknown } {
+    return { result: this.$.value(value as Lifted<unknown>) };
+  }
+
   $: SpecRuntime = {
     // StringOps
     length: (s) => {

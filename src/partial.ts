@@ -56,6 +56,7 @@ export const callbackHintFull: Record<keyof Unpartial<CallbacksOnly>, true> = {
   bitwiseBinaryPre: true,
   bitwiseBinary: true,
   condition: true,
+  classHeritage: true,
   ifCondition: true,
   whileCondition: true,
   forCondition: true,

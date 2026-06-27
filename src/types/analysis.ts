@@ -710,6 +710,13 @@ interface FullAnalysis {
    */
   condition: (id: number, op: string, value: any) => { result: any } | void;
 
+  /**
+   * Hook for a class heritage expression (`class … extends E`). `value` is the
+   * (possibly lifted) heritage; return `{ result }` to replace it with a value
+   * the native `class` machinery accepts (a raw constructor or null).
+   */
+  classHeritage?: (id: number, value: any) => { result: any } | void;
+
   // ---------------------------------------------------------------------------
   // Conditions — specific sub-callbacks
   // ---------------------------------------------------------------------------

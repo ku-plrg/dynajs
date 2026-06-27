@@ -907,6 +907,15 @@ function C(id: number, op: string, value: any): any {
   return value;
 }
 
+// hook for a class heritage (`class … extends E`): native class machinery needs
+// a raw constructor or null, so unlift E — a lifted primitive (e.g. `null`) would
+// otherwise be rejected as "not a constructor or null". A real (object) heritage
+// unlifts to itself, so non-primitive `extends` is unaffected.
+function Hc(id: number, value: any): any {
+  const post = D$.analysis.classHeritage?.(id, value);
+  return post ? post.result : value;
+}
+
 // hook for left side of a switch statement
 function Swl(id: number, value: any): any {
   switchLeft = value;
@@ -1263,6 +1272,7 @@ const BASE = {
   B,
   Up,
   C,
+  Hc,
   Swl,
   Swr,
   D,
