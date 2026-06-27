@@ -32,13 +32,24 @@ export const CAPTURED = Object.freeze({
   ReflectApply: Reflect.apply,
 });
 
-// Build `[...heads, ...tail]` without spread/iterator — user code can poison
-// `Array.prototype[Symbol.iterator]`, which would otherwise break (or silently
-// mis-fill) the framework's call-path arrays. Index reads/writes only.
+// Build `[...heads, ...tail]` without spread/iterator (user code can poison
+// `Array.prototype[Symbol.iterator]`). Elements are written with defineProperty
+// (CreateDataProperty), not `out[i] = v`: a plain assignment is a [[Set]] that
+// consults the prototype, so an index accessor on `Array.prototype` (e.g.
+// `Object.defineProperty(Array.prototype, "2", {get})`) would hijack or throw
+// ("…which has only a getter"). defineProperty defines an own data property
+// directly, exactly like the spread it replaces.
 export function concatList(heads: unknown[], tail: ArrayLike<unknown>): unknown[] {
   const out: unknown[] = [];
-  for (let i = 0; i < heads.length; i++) out[i] = heads[i];
-  const off = heads.length;
-  for (let i = 0; i < tail.length; i++) out[off + i] = tail[i];
+  let n = 0;
+  const put = (v: unknown) =>
+    CAPTURED.ObjectDefineProperty(out, n++, {
+      value: v,
+      writable: true,
+      enumerable: true,
+      configurable: true,
+    });
+  for (let i = 0; i < heads.length; i++) put(heads[i]);
+  for (let i = 0; i < tail.length; i++) put(tail[i]);
   return out;
 }

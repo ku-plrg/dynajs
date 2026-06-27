@@ -9,6 +9,20 @@ const {
   ObjectIs,
 } = CAPTURED;
 
+// Append without `Array.prototype.push` / `arr[i] = v`: both are [[Set]]s that
+// consult the prototype, so an index accessor on Array.prototype (e.g.
+// `defineProperty(Array.prototype, "2", {get})`) would hijack or throw. (.map/
+// .filter/.concat are fine — they CreateDataProperty.) defineProperty appends an
+// own data property directly.
+function append(arr: EscapeRecord[], v: EscapeRecord): void {
+  ObjectDefineProperty(arr, arr.length, {
+    value: v,
+    writable: true,
+    enumerable: true,
+    configurable: true,
+  });
+}
+
 export type EscapeRecord =
   // a lifted primitive stripped out of a container we own; restored in place
   | {
@@ -140,7 +154,13 @@ export class BoundaryEscape {
         desc.writable === true &&
         ObjectIs(desc.value, this.unlift(e.lifted))
       ) {
-        (e.container as Record<string | symbol, unknown>)[e.prop] = e.lifted;
+        // defineProperty, not [[Set]] — see escapeInto.
+        ObjectDefineProperty(e.container, e.prop, {
+          value: e.lifted,
+          writable: true,
+          enumerable: desc.enumerable,
+          configurable: desc.configurable,
+        });
       }
     }
   }
@@ -177,8 +197,17 @@ export class BoundaryEscape {
         continue;
       const child: unknown = desc.value;
       if (this.isPrimitiveProxy(child)) {
-        (obj as Record<string | symbol, unknown>)[key] = this.unlift(child);
-        log.push({ kind: 'prop', container: obj, prop: key, lifted: child });
+        // defineProperty, not `obj[key] = …`: a [[Set]] consults the prototype,
+        // so an index accessor on Array.prototype (e.g. `defineProperty(
+        // Array.prototype, "2", {get})`) would hijack it. The key is already an
+        // own writable data prop, so this just swaps in the unlifted value.
+        ObjectDefineProperty(obj, key, {
+          value: this.unlift(child),
+          writable: true,
+          enumerable: desc.enumerable,
+          configurable: desc.configurable,
+        });
+        append(log, { kind: 'prop', container: obj, prop: key, lifted: child });
       } else if (typeof child === 'object' && child !== null) {
         // A nested object native can reach may have its coercion methods called
         // (e.g. an array-like whose `length` is { valueOf }).
@@ -224,7 +253,7 @@ export class BoundaryEscape {
       } catch {
         continue; // non-extensible / non-configurable own: leave as-is
       }
-      log.push({ kind: 'method', obj, key, prev });
+      append(log, { kind: 'method', obj, key, prev });
     }
   }
 }
