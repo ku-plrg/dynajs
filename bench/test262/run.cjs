@@ -47,6 +47,13 @@ function parseArgs() {
       default: false,
       describe: 'print only FAIL / TIMEOUT lines (plus the summary)',
     })
+    .option('verbose', {
+      type: 'boolean',
+      alias: 'v',
+      default: true,
+      describe:
+        'on FAIL/TIMEOUT, also dump the full captured stderr (and stdout) indented, for debugging',
+    })
     .epilogue(
       'Positional [path-prefix...] restrict to files whose relative path starts with one of them (OR).',
     )
@@ -65,6 +72,7 @@ function parseArgs() {
     timeout: argv.timeout,
     jobs: Math.max(1, argv.jobs),
     quiet: argv.quiet,
+    verbose: argv.verbose,
   };
 }
 
@@ -83,7 +91,16 @@ function collectFiles(root) {
       const childAbs = path.join(abs, e.name);
       const childRel = rel ? `${rel}/${e.name}` : e.name;
       if (e.isDirectory()) walk(childAbs, childRel);
-      else if (e.isFile() && e.name.endsWith('.js')) out.push(childRel);
+      // Skip dynajs's in-place instrumented artifacts (`*__dynajs__.js`), which
+      // djx writes next to each source when the extracted dir is an --include
+      // root; they are not tests and crash under plain `node` (no D$ runtime).
+      else if (
+        e.isFile() &&
+        e.name.endsWith('.js') &&
+        !e.name.endsWith('__dynajs__.js')
+      ) {
+        out.push(childRel);
+      }
     }
   };
   walk(root, '');
@@ -114,18 +131,39 @@ function buildArgv(runner, file) {
   return argv;
 }
 
-// Run one file; resolve to 'PASS' | 'FAIL' | 'TIMEOUT' with details.
+const OUTPUT_CAP = 64 * 1024;
+
+// Pick the most informative line for the one-line FAIL detail: prefer a line
+// naming an error (RangeError / TypeError / Test262Error / ...), since the first
+// stderr line is usually just `file:line`. Fall back to the last non-empty line.
+function errorLine(text) {
+  const lines = text
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
+  if (!lines.length) return '';
+  const errIdx = lines.findIndex((l) => /\b[A-Za-z]*Error\b/.test(l));
+  return errIdx >= 0 ? lines[errIdx] : lines[lines.length - 1];
+}
+
+// Run one file; resolve to { verdict, detail, output } where verdict is
+// 'PASS' | 'FAIL' | 'TIMEOUT', detail is a one-line reason, and output is the
+// full captured stderr (+ stdout) for --verbose.
 function runOne(absFile, opts) {
   return new Promise((resolve) => {
     const argv = buildArgv(opts.runner, absFile);
     const child = spawn(argv[0], argv.slice(1), {
       detached: true, // own process group, so a timeout can kill children too
-      stdio: ['ignore', 'ignore', 'pipe'],
+      stdio: ['ignore', 'pipe', 'pipe'],
     });
 
+    let stdout = '';
     let stderr = '';
+    child.stdout.on('data', (d) => {
+      if (stdout.length < OUTPUT_CAP) stdout += d.toString();
+    });
     child.stderr.on('data', (d) => {
-      if (stderr.length < 2048) stderr += d.toString();
+      if (stderr.length < OUTPUT_CAP) stderr += d.toString();
     });
 
     let timedOut = false;
@@ -142,18 +180,35 @@ function runOne(absFile, opts) {
       }
     }, opts.timeout);
 
+    const fullOutput = () => {
+      const parts = [];
+      if (stderr.trim()) parts.push(stderr.replace(/\s+$/, ''));
+      if (stdout.trim()) parts.push('--- stdout ---\n' + stdout.replace(/\s+$/, ''));
+      return parts.join('\n');
+    };
+
     child.on('error', (err) => {
       clearTimeout(timer);
-      resolve({ verdict: 'FAIL', detail: `spawn error: ${err.message}` });
+      resolve({ verdict: 'FAIL', detail: `spawn error: ${err.message}`, output: '' });
     });
 
     child.on('close', (code, signal) => {
       clearTimeout(timer);
-      if (timedOut) return resolve({ verdict: 'TIMEOUT', detail: '' });
-      if (code === 0) return resolve({ verdict: 'PASS', detail: '' });
-      const first = stderr.split('\n').find((l) => l.trim());
+      if (timedOut) {
+        return resolve({
+          verdict: 'TIMEOUT',
+          detail: `killed after ${opts.timeout}ms`,
+          output: fullOutput(),
+        });
+      }
+      if (code === 0) return resolve({ verdict: 'PASS', detail: '', output: '' });
       const why = signal ? `signal ${signal}` : `exit ${code}`;
-      return resolve({ verdict: 'FAIL', detail: `${why}${first ? ' | ' + first.trim() : ''}` });
+      const line = errorLine(stderr) || errorLine(stdout);
+      return resolve({
+        verdict: 'FAIL',
+        detail: line ? `${why} | ${line}` : why,
+        output: fullOutput(),
+      });
     });
   });
 }
@@ -178,10 +233,13 @@ async function main() {
       const rel = files[next++];
       const res = await runOne(path.join(opts.dir, rel), opts);
       counts[res.verdict] += 1;
-      if (!opts.quiet || res.verdict !== 'PASS') {
-        const tail = res.detail ? ` (${res.detail})` : '';
-        process.stdout.write(`${res.verdict} ${rel}${tail}\n`);
+      if (opts.quiet && res.verdict === 'PASS') continue;
+      // Build the whole record as one string so parallel workers don't interleave.
+      let block = `${res.verdict} ${rel}${res.detail ? ` (${res.detail})` : ''}\n`;
+      if (opts.verbose && res.output) {
+        block += res.output.split('\n').map((l) => '    ' + l).join('\n') + '\n';
       }
+      process.stdout.write(block);
     }
   }
 
