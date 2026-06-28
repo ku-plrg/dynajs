@@ -1,5 +1,3 @@
-
-// THIS FILE IS AUTO-GENERATED, DO NOT EDIT
 import type { Lifted, SpecRuntime } from "../type.js";
 
 export function AO__SameValueNonNumber ($ : SpecRuntime, xW : Lifted<unknown>, yW : Lifted<unknown>): Lifted<boolean> {

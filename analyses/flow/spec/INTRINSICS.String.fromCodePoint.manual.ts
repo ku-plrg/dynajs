@@ -1,4 +1,3 @@
-// THIS FILE IS AUTO-GENERATED, DO NOT EDIT
 import type { Lifted, SpecRuntime } from "../type.js";
 
 import { AO__ToNumber } from "./AO__ToNumber.js";

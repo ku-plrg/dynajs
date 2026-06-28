@@ -1,5 +1,3 @@
-
-// THIS FILE IS AUTO-GENERATED, DO NOT EDIT
 import type { Lifted, SpecRuntime } from "../type.js";
 
 import { AO__SameType } from "./AO__SameType.js";

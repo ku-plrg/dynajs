@@ -1,5 +1,3 @@
-
-// THIS FILE IS AUTO-GENERATED, DO NOT EDIT
 import type { Lifted, SpecRuntime } from "../type.js";
 
 export function AO__DeletePropertyOrThrow ($ : SpecRuntime, O : Lifted<unknown>, P : Lifted<unknown>) {

@@ -27,8 +27,15 @@ class ProxiedPrimitive {
     return this.value; // this is more faithful?
   }
 
-  // this is to support [...str]
-  [Symbol.iterator]() {
+  get [Symbol.iterator]() {
+    if (typeof this.value === 'undefined' || this.value === null) {
+      return undefined;
+    } else {
+      return this.SymbolIterator.bind(this);
+    }
+  }
+  
+  SymbolIterator() {
     if (typeof this.value === 'string') {
       return this.value[Symbol.iterator]();
     }

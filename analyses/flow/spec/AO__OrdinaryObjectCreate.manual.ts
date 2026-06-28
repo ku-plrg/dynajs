@@ -1,4 +1,3 @@
-// THIS FILE IS AUTO-GENERATED, DO NOT EDIT
 import type { Lifted, SpecRuntime } from "../type.js";
 
 export function AO__OrdinaryObjectCreate ($ : SpecRuntime, proto : Lifted<unknown>, additionalInternalSlotsList : Lifted<unknown> = $.default(undefined, [])) {

@@ -1,4 +1,3 @@
-// THIS FILE IS AUTO-GENERATED, DO NOT EDIT
 import type { Lifted, SpecRuntime } from "../type.js";
 
 export function AO__IsArray ($ : SpecRuntime, argument : Lifted<unknown>) {
