@@ -171,10 +171,11 @@ export class BoundaryEscape {
     visited: Set<object>,
   ): unknown {
     if (this.isPrimitiveProxy(v)) return this.unlift(v);
-    if (typeof v === 'object' && v !== null) {
+    if (v !== null && (typeof v === 'object' || typeof v === 'function')) {
       // Top-level operand: native ToPrimitive (Number(v), v + x, v[k], …) calls
       // its coercion methods directly, and a native consumer may iterate it —
-      // always wrap (cheap), regardless of flags.
+      // always wrap (cheap), regardless of flags. Functions count: they can carry
+      // an instrumented valueOf/toString (e.g. `new String(fnWithToString)`).
       this.wrapCoercion(v, log);
       this.wrapIterable(v, log);
       if (this.containersMayHoldLifted || this.mayHaveInstrumentedCoercion) {

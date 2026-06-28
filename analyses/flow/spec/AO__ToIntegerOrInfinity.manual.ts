@@ -26,6 +26,6 @@ export function AO__ToIntegerOrInfinity($: SpecRuntime, argument: Lifted<unknown
   }
 
   // 5. Return truncate(ℝ(number)).
-  return $.truncate(argument as Lifted<number>);
+  return $.truncate(number);
 }
 

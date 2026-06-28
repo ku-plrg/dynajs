@@ -17,7 +17,10 @@ export function AO__SameValueNonNumber ($ : SpecRuntime, xW : Lifted<unknown>, y
   // 1. If _x_ is a String, then
   if (typeof x === "string") {
     // 1. If _x_ and _y_ have the same length and the same code units in the same positions, return *true*; otherwise, return *false*.
-    return $.default<boolean>(String(x) === String(y), []);
+    // `x === y` (both already raw): String(y) would re-coerce a non-string `y`
+    // natively (→ "Cannot convert object to primitive value") should y ever be a
+    // mismatched type here.
+    return $.default<boolean>(x === y, []);
   }
   // 1. If _x_ is a Boolean, then
   if (typeof x === "boolean") {
