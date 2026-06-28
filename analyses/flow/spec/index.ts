@@ -62,6 +62,7 @@ export { AO__TrimString } from "./AO__TrimString.js";
 export { AO__UTF16EncodeCodePoint } from "./AO__UTF16EncodeCodePoint.js";
 export { AO__UTF16SurrogatePairToCodePoint } from "./AO__UTF16SurrogatePairToCodePoint.js";
 export { AO__UnicodeEscape } from "./AO__UnicodeEscape.js";
+export { BigInt__equal } from "./BigInt__equal.js";
 export { INTRINSICS_Array_prototype_at } from "./INTRINSICS.Array.prototype.at.js";
 export { INTRINSICS_Array_prototype_concat } from "./INTRINSICS.Array.prototype.concat.js";
 export { INTRINSICS_Array_prototype_copyWithin } from "./INTRINSICS.Array.prototype.copyWithin.js";
@@ -152,4 +153,5 @@ export { INTRINSICS_String_prototype_trimStart } from "./INTRINSICS.String.proto
 export { INTRINSICS_String_prototype_valueOf } from "./INTRINSICS.String.prototype.valueOf.js";
 export { INTRINSICS_String_raw } from "./INTRINSICS.String.raw.js";
 export { Number__equal } from "./Number__equal.js";
+export { Number__sameValueZero } from "./Number__sameValueZero.js";
 export { SYNTAX__add } from "./SYNTAX__add.js";

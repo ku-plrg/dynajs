@@ -1,0 +1,14 @@
+// THIS FILE IS AUTO-GENERATED, DO NOT EDIT
+import type { Lifted, SpecRuntime } from "../type.js";
+
+export function BigInt__equal ($ : SpecRuntime, x : Lifted<unknown>, y : Lifted<unknown>) {
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 6, $.is(x, y))))
+  {
+    return $.default<boolean>(true, []);
+  }
+  else
+  {
+    return $.default<boolean>(false, []);
+  }
+
+}
