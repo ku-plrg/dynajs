@@ -173,8 +173,10 @@ export class BoundaryEscape {
     if (this.isPrimitiveProxy(v)) return this.unlift(v);
     if (typeof v === 'object' && v !== null) {
       // Top-level operand: native ToPrimitive (Number(v), v + x, v[k], …) calls
-      // its coercion methods directly — always wrap (cheap), regardless of flags.
+      // its coercion methods directly, and a native consumer may iterate it —
+      // always wrap (cheap), regardless of flags.
       this.wrapCoercion(v, log);
+      this.wrapIterable(v, log);
       if (this.containersMayHoldLifted || this.mayHaveInstrumentedCoercion) {
         this.escapeInto(v, log, visited);
       }
@@ -211,7 +213,10 @@ export class BoundaryEscape {
       } else if (typeof child === 'object' && child !== null) {
         // A nested object native can reach may have its coercion methods called
         // (e.g. an array-like whose `length` is { valueOf }).
-        if (this.mayHaveInstrumentedCoercion) this.wrapCoercion(child, log);
+        if (this.mayHaveInstrumentedCoercion) {
+          this.wrapCoercion(child, log);
+          this.wrapIterable(child, log);
+        }
         this.escapeInto(child, log, visited);
       }
     }
@@ -256,4 +261,102 @@ export class BoundaryEscape {
       append(log, { kind: 'method', obj, key, prev });
     }
   }
+
+  /** Temporarily make a native consumer that iterates `v` (Intl.ListFormat.
+   * format, `new Set(it)`, spread into a native, …) see raw yielded values, not
+   * lifted-primitive proxies ("Iterable yielded #<ProxiedPrimitive>…").
+   *  (A) instrumented custom @@iterator → shadow it to return a next-wrapped
+   *      iterator;
+   *  (B) `v` is itself an iterator (native @@iterator but owns/inherits `next`,
+   *      e.g. `arr[Symbol.iterator]()` over a lifted-element array) → wrap its
+   *      next/return in place.
+   * Each wrapped result has its `value` unlifted (no-op for already-raw values).
+   * Plain arrays/Map/Set keep their native @@iterator and are handled by the
+   * element strip in escapeInto / the Map-Set walk. */
+  private wrapIterable(v: unknown, log: EscapeRecord[]): void {
+    if (v === null || (typeof v !== 'object' && typeof v !== 'function')) return;
+    const obj = v as Record<string | symbol, any>;
+    let atIter: unknown;
+    try {
+      atIter = obj[Symbol.iterator];
+    } catch {
+      return; // exotic/throwing getter
+    }
+    if (typeof atIter !== 'function') return; // not iterable
+
+    const unlift = this.unlift;
+    // Unlift both fields: an instrumented `next` returns a lifted `done` too, and
+    // a lifted-primitive `false` is an object → truthy → native stops at once.
+    const unliftResult = (r: { value?: unknown; done?: unknown }) => {
+      if (r !== null && typeof r === 'object') {
+        r.value = unlift(r.value as Lifted<unknown>);
+        r.done = unlift(r.done as Lifted<unknown>);
+      }
+      return r;
+    };
+    // Shadow an iterator's own next/return so each result `value` is unlifted.
+    const wrapIteratorMethods = (it: Record<string | symbol, any>): void => {
+      for (let i = 0; i < ITER_METHOD_KEYS.length; i++) {
+        const key = ITER_METHOD_KEYS[i];
+        const orig = it[key];
+        if (typeof orig !== 'function') continue;
+        ObjectDefineProperty(it, key, {
+          value: (...a: unknown[]) => unliftResult(orig.apply(it, a)),
+          writable: true,
+          enumerable: false,
+          configurable: true,
+        });
+      }
+    };
+
+    // (A) custom instrumented @@iterator: shadow it to wrap the iterator it
+    // returns (fresh per call, so its method shadows need no restore).
+    if (isInstrumentedFn(atIter)) {
+      this.mayHaveInstrumentedCoercion = true; // backstop: arm the nested walk
+      const origIter = atIter as (...a: unknown[]) => Record<string | symbol, any>;
+      const wrapper = function (this: unknown, ...a: unknown[]): unknown {
+        const it = origIter.apply(this, a);
+        wrapIteratorMethods(it);
+        return it;
+      };
+      const prev = ObjectGetOwnPropertyDescriptor(obj, Symbol.iterator);
+      try {
+        ObjectDefineProperty(obj, Symbol.iterator, {
+          value: wrapper,
+          writable: true,
+          enumerable: prev?.enumerable ?? false,
+          configurable: true,
+        });
+      } catch {
+        return;
+      }
+      append(log, { kind: 'method', obj, key: Symbol.iterator, prev });
+      return;
+    }
+
+    // (B) `v` is itself an iterator (has `next`): wrap its next/return in place
+    // so a native consumer gets raw yields (the values may be lifted even though
+    // the iterator machinery is native).
+    if (typeof obj.next !== 'function') return; // iterable but not an iterator
+    this.mayHaveInstrumentedCoercion = true;
+    for (let i = 0; i < ITER_METHOD_KEYS.length; i++) {
+      const key = ITER_METHOD_KEYS[i];
+      const orig = obj[key];
+      if (typeof orig !== 'function') continue;
+      const prev = ObjectGetOwnPropertyDescriptor(obj, key);
+      try {
+        ObjectDefineProperty(obj, key, {
+          value: (...a: unknown[]) => unliftResult(orig.apply(obj, a)),
+          writable: true,
+          enumerable: prev?.enumerable ?? false,
+          configurable: true,
+        });
+      } catch {
+        continue;
+      }
+      append(log, { kind: 'method', obj, key, prev });
+    }
+  }
 }
+
+const ITER_METHOD_KEYS = ['next', 'return'] as const;
