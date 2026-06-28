@@ -54,6 +54,11 @@ function parseArgs() {
       describe:
         'on FAIL/TIMEOUT, also dump the full captured stderr (and stdout) indented, for debugging',
     })
+    .option('json', {
+      type: 'string',
+      describe:
+        'also write a machine-readable report here (meta + counts + per-file {file,verdict,detail}); one result per line, PASS included, regardless of --quiet',
+    })
     .epilogue(
       'Positional [path-prefix...] restrict to files whose relative path starts with one of them (OR).',
     )
@@ -73,6 +78,7 @@ function parseArgs() {
     jobs: Math.max(1, argv.jobs),
     quiet: argv.quiet,
     verbose: argv.verbose,
+    json: argv.json ? path.resolve(argv.json) : null,
   };
 }
 
@@ -226,13 +232,20 @@ async function main() {
   );
 
   const counts = { PASS: 0, FAIL: 0, TIMEOUT: 0 };
+  // When --json is set, hold one record per file at its sorted index so the
+  // report stays in stable order despite parallel workers finishing out of order.
+  const results = opts.json ? new Array(files.length) : null;
   let next = 0;
 
   async function worker() {
     while (next < files.length) {
-      const rel = files[next++];
+      const i = next++;
+      const rel = files[i];
       const res = await runOne(path.join(opts.dir, rel), opts);
       counts[res.verdict] += 1;
+      if (results) {
+        results[i] = { file: rel, verdict: res.verdict, detail: res.detail };
+      }
       if (opts.quiet && res.verdict === 'PASS') continue;
       // Build the whole record as one string so parallel workers don't interleave.
       let block = `${res.verdict} ${rel}${res.detail ? ` (${res.detail})` : ''}\n`;
@@ -253,6 +266,33 @@ async function main() {
   process.stdout.write(
     `total ${files.length} | PASS ${counts.PASS} | FAIL ${counts.FAIL} | TIMEOUT ${counts.TIMEOUT}\n`,
   );
+
+  if (opts.json) {
+    const meta = {
+      runner: opts.runner,
+      dir: opts.dir,
+      filters: opts.filters.map((re) => re.source),
+      prefixes: opts.prefixes,
+      timeout: opts.timeout,
+      jobs: opts.jobs,
+      start: started.toISOString(),
+      end: ended.toISOString(),
+      durationSec: Number(secs),
+      total: files.length,
+    };
+    // meta/counts on one line each, then one result per line: valid JSON that
+    // still greps and git-diffs cleanly across 100k+ rows.
+    const doc =
+      '{\n' +
+      `"meta": ${JSON.stringify(meta)},\n` +
+      `"counts": ${JSON.stringify(counts)},\n` +
+      '"results": [\n' +
+      results.map((r) => JSON.stringify(r)).join(',\n') +
+      '\n]\n}\n';
+    fs.mkdirSync(path.dirname(opts.json), { recursive: true });
+    fs.writeFileSync(opts.json, doc);
+    process.stdout.write(`json:  ${opts.json}\n`);
+  }
 
   process.exitCode = counts.FAIL || counts.TIMEOUT ? 1 : 0;
 }
