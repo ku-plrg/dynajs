@@ -261,4 +261,40 @@ console.log(
     `✓ Wrote barrel (${barrelBases.length} exports) → analyses/flow/spec/index.ts`,
   ),
 );
+
+// Report the emitted artifacts split by provenance (auto-extracted from esmeta
+// vs hand-authored *.manual.ts) and kind, so each run shows exactly what landed.
+const kindOf = (base) =>
+  base.startsWith('INTRINSICS.')
+    ? 'INTRINSICS'
+    : base.startsWith('AO__')
+      ? 'AO__'
+      : base.startsWith('SYNTAX__')
+        ? 'SYNTAX__'
+        : 'other';
+const tally = () => ({ INTRINSICS: 0, AO__: 0, SYNTAX__: 0, other: 0, total: 0 });
+const auto = tally();
+const manual = tally();
+let shimCount = 0;
+for (const base of manualBases.keys()) {
+  manual[kindOf(base)]++;
+  manual.total++;
+}
+for (const base of barrelBases) {
+  if (manualBases.has(base)) {
+    shimCount++; // re-export shim wrapping a manual impl — not an extracted artifact
+    continue;
+  }
+  auto[kindOf(base)]++;
+  auto.total++;
+}
+const fmt = (c) =>
+  `${String(c.total).padStart(3)}  (INTRINSICS ${c.INTRINSICS}, AO__ ${c.AO__}, SYNTAX__ ${c.SYNTAX__}, other ${c.other})`;
+console.log(chalk.cyan('\nArtifact summary (analyses/flow/spec/):'));
+console.log(chalk.cyan(`  auto-extracted (esmeta gen-poly): ${fmt(auto)}`));
+console.log(chalk.cyan(`  manual (*.manual.ts):             ${fmt(manual)}`));
+console.log(
+  chalk.gray(`  + ${shimCount} re-export shim(s), 1 barrel (index.ts)`),
+);
+
 if (missing.length > 0) process.exit(1);
