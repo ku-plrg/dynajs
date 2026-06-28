@@ -147,14 +147,15 @@ for (const entry of readdirSync(destDir)) {
   rmSync(join(destDir, entry));
 }
 
+const AUTO_GEN_WARNING = `// THIS FILE IS AUTO-GENERATED, DO NOT EDIT\n`;
+
 // Emit a thin re-export shim next to every manual file so the rest of the spec
 // can keep importing `./AO__Foo.js` without caring whether AO__Foo is generated
 // or hand-authored. The shim is regenerated each run; edit the .manual.ts file.
 for (const [base, file] of manualBases) {
   if (isExcluded(base)) continue;
   const shim =
-    `// THIS FILE IS AUTO-GENERATED, DO NOT EDIT\n` +
-    `// Re-exports the hand-authored implementation in ${file}.\n` +
+    AUTO_GEN_WARNING +
     `export * from "./${base}.manual.js";\n`;
   writeFileSync(join(destDir, `${base}.ts`), shim);
 }
@@ -245,10 +246,9 @@ const barrelBases = readdirSync(destDir)
   .map((f) => f.slice(0, -3))
   .sort();
 const exportLines = barrelBases.map((base) => {
-  const symbol = base.replace(/[^A-Za-z0-9]/g, '_');
-  return `export { ${symbol} } from "./${base}.js";`;
+  return `export * from "./${base}.js";`;
 });
-const barrel = `// THIS FILE IS AUTO-GENERATED, DO NOT EDIT\n${exportLines.join('\n')}\n`;
+const barrel = `${AUTO_GEN_WARNING}${exportLines.join('\n')}\n`;
 writeFileSync(join(destDir, 'index.ts'), barrel);
 
 console.log(

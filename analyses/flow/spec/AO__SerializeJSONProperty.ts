@@ -46,13 +46,13 @@ export function AO__SerializeJSONProperty ($ : SpecRuntime, state : Lifted<unkno
       {
         if (($.value(value) instanceof Boolean))
         {
-          value = $.default($.value(value).valueOf(), [value]);
+          value = $.default($.value(value as Lifted<Boolean>).valueOf(), [value]);
         }
         else
         {
           if (($.value(value) instanceof BigInt))
           {
-            value = $.default($.value(value).valueOf(), [value]);
+            value = $.default($.value(value as Lifted<BigInt>).valueOf(), [value]);
           }
 
         }

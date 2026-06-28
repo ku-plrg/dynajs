@@ -27,7 +27,7 @@ export function AO__SameType ($ : SpecRuntime, x : Lifted<unknown>, y : Lifted<u
     return $.default<boolean>(true, []);
   }
 
-  if (($.value($.condition(Number.MAX_SAFE_INTEGER - 712, $.isType(x, "record[symbol]")))) && ($.value($.condition(Number.MAX_SAFE_INTEGER - 713, $.isType(y, "record[symbol]")))))
+  if (($.value($.condition(Number.MAX_SAFE_INTEGER - 712, $.isType(x, "symbol")))) && ($.value($.condition(Number.MAX_SAFE_INTEGER - 713, $.isType(y, "symbol")))))
   {
     return $.default<boolean>(true, []);
   }
