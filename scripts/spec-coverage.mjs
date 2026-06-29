@@ -109,16 +109,23 @@ function bucketBy(entries, keyOf) {
   return map;
 }
 
+const COL_W = 10;
+
 function printTable(title, labelHead, rows, totalHead = 'total') {
   const labelW = Math.max(labelHead.length, ...rows.map((r) => r.label.length));
-  const cell = (s) => String(s).padStart(9);
+  const cell = (s) => String(s).padStart(COL_W);
+  // `supported` (= auto + manual, what dynajs models) is shown just left of the
+  // total/spec column when rows carry it.
+  const hasSupported = rows.some((r) => r.supported !== undefined);
+  const sup = (r) => (hasSupported ? cell(r) : '');
+  const cols = hasSupported ? 5 : 4;
   console.log(chalk.bold(`\n${title}`));
   console.log(
-    `${labelHead.padEnd(labelW)}${cell('auto')}${cell('manual')}${cell(totalHead)}${cell('auto%')}`,
+    `${labelHead.padEnd(labelW)}${cell('auto')}${cell('manual')}${sup('supported')}${cell(totalHead)}${cell('auto%')}`,
   );
-  console.log('-'.repeat(labelW + 36));
+  console.log('-'.repeat(labelW + COL_W * cols));
   for (const r of rows) {
-    const line = `${r.label.padEnd(labelW)}${cell(r.auto)}${cell(r.manual)}${cell(r.total)}${cell(r.pct)}`;
+    const line = `${r.label.padEnd(labelW)}${cell(r.auto)}${cell(r.manual)}${sup(r.supported)}${cell(r.total)}${cell(r.pct)}`;
     console.log(r.bold ? chalk.bold(line) : line);
   }
 }
@@ -162,6 +169,7 @@ function main() {
     label: r.category,
     auto: r.auto,
     manual: r.manual,
+    supported: r.modeled,
     total: r.spec,
     pct: pctOf(r.auto, r.spec),
   }));
@@ -169,6 +177,7 @@ function main() {
     label: 'TOTAL',
     auto: intr.total.auto,
     manual: intr.total.manual,
+    supported: intr.total.modeled,
     total: intr.total.spec,
     pct: pctOf(intr.total.auto, intr.total.spec),
     bold: true,
