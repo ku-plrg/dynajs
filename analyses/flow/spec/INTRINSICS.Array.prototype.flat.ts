@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Lifted, SpecRuntime } from "../type.js";
+import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
 
 import { AO__ArraySpeciesCreate } from "./AO__ArraySpeciesCreate.js";
 import { AO__FlattenIntoArray } from "./AO__FlattenIntoArray.js";
@@ -11,10 +11,10 @@ export function INTRINSICS_Array_prototype_flat ($ : SpecRuntime, $this : Lifted
   var O = AO__ToObject($, $this);
   var sourceLen = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
   var depthNum = $.default<number>(1, []);
-  if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 143, $.is(depth, $.default<undefined>(undefined, [])))))
+  if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 149, $.is(depth, $.default<undefined>(undefined, [])))))
   {
     depthNum = AO__ToIntegerOrInfinity($, (depth as Lifted<unknown>));
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 144, $.lessThan(depthNum, $.default<number>(0, [])))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 150, $.lessThan(depthNum, $.default<number>(0, [])))))
     {
       depthNum = $.default<number>(0, []);
     }

@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Lifted, SpecRuntime } from "../type.js";
+import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
 
 import { AO__RequireObjectCoercible } from "./AO__RequireObjectCoercible.js";
 import { AO__StringIndexOf } from "./AO__StringIndexOf.js";
@@ -14,7 +14,7 @@ export function INTRINSICS_String_prototype_indexOf ($ : SpecRuntime, $this : Li
   var len = $.length(S);
   var start = $.clamp(pos, $.default<number>(0, []), len);
   var result = AO__StringIndexOf($, (S as Lifted<string>), (searchStr as Lifted<string>), (start as Lifted<number>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 435, $.is(result, $.default<string>("not-found", [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 444, $.is(result, $.default<string>("not-found", [])))))
   {
     return $.default<number>(-1, []);
   }

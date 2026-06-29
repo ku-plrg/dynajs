@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Lifted, SpecRuntime } from "../type.js";
+import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
 
 import { AO__IsStringWellFormedUnicode } from "./AO__IsStringWellFormedUnicode.js";
 import { AO__RequireObjectCoercible } from "./AO__RequireObjectCoercible.js";

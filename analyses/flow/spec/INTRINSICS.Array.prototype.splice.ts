@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Lifted, SpecRuntime } from "../type.js";
+import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
 
 import { AO__ArraySpeciesCreate } from "./AO__ArraySpeciesCreate.js";
 import { AO__CreateDataPropertyOrThrow } from "./AO__CreateDataPropertyOrThrow.js";
@@ -18,13 +18,13 @@ export function INTRINSICS_Array_prototype_splice ($ : SpecRuntime, $this : Lift
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
   var relativeStart = AO__ToIntegerOrInfinity($, (start as Lifted<unknown>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 223, $.is(relativeStart, $.default<number>(-Infinity, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 229, $.is(relativeStart, $.default<number>(-Infinity, [])))))
   {
     var actualStart = $.default<number>(0, []);
   }
   else
   {
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 224, $.lessThan(relativeStart, $.default<number>(0, [])))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 230, $.lessThan(relativeStart, $.default<number>(0, [])))))
     {
       var actualStart = $.max($.add((len as Lifted<number>), (relativeStart as Lifted<number>)), $.default<number>(0, []));
     }
@@ -54,17 +54,17 @@ export function INTRINSICS_Array_prototype_splice ($ : SpecRuntime, $this : Lift
 
   }
 
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 225, $.greaterThan($.subtract(($.add((len as Lifted<number>), (itemCount as Lifted<number>)) as Lifted<number>), (actualDeleteCount as Lifted<number>)), $.subtract(($.exponentiate($.default<number>(2, []), $.default<number>(53, [])) as Lifted<number>), ($.default<number>(1, []) as Lifted<number>))))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 231, $.greaterThan($.subtract(($.add((len as Lifted<number>), (itemCount as Lifted<number>)) as Lifted<number>), (actualDeleteCount as Lifted<number>)), $.subtract(($.exponentiate($.default<number>(2, []), $.default<number>(53, [])) as Lifted<number>), ($.default<number>(1, []) as Lifted<number>))))))
   {
     throw new TypeError;
   }
 
   var A = AO__ArraySpeciesCreate($, (O as Lifted<unknown>), (actualDeleteCount as Lifted<number>));
   var k = $.default<number>(0, []);
-  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 226, $.lessThan(k, actualDeleteCount))))
+  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 232, $.lessThan(k, actualDeleteCount))))
   {
     var from = AO__ToString($, ($.add((actualStart as Lifted<number>), (k as Lifted<number>)) as Lifted<unknown>));
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 227, $.is(AO__HasProperty($, (O as Lifted<unknown>), (from as Lifted<unknown>)), $.default<boolean>(true, [])))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 233, $.is(AO__HasProperty($, (O as Lifted<unknown>), (from as Lifted<unknown>)), $.default<boolean>(true, [])))))
     {
       var fromValue = AO__Get($, (O as Lifted<unknown>), (from as Lifted<unknown>));
       AO__CreateDataPropertyOrThrow($, (A as Lifted<unknown>), (AO__ToString($, (k as Lifted<unknown>)) as Lifted<unknown>), (fromValue as Lifted<unknown>));
@@ -74,14 +74,14 @@ export function INTRINSICS_Array_prototype_splice ($ : SpecRuntime, $this : Lift
   }
 
   AO__Set($, (A as Lifted<unknown>), ($.default<string>("length", []) as Lifted<unknown>), (actualDeleteCount as Lifted<unknown>), ($.default<boolean>(true, []) as Lifted<boolean>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 228, $.lessThan(itemCount, actualDeleteCount))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 234, $.lessThan(itemCount, actualDeleteCount))))
   {
     k = actualStart;
-    while ($.value($.condition(Number.MAX_SAFE_INTEGER - 229, $.lessThan(k, $.subtract((len as Lifted<number>), (actualDeleteCount as Lifted<number>))))))
+    while ($.value($.condition(Number.MAX_SAFE_INTEGER - 235, $.lessThan(k, $.subtract((len as Lifted<number>), (actualDeleteCount as Lifted<number>))))))
     {
       var from = AO__ToString($, ($.add((k as Lifted<number>), (actualDeleteCount as Lifted<number>)) as Lifted<unknown>));
       var to = AO__ToString($, ($.add((k as Lifted<number>), (itemCount as Lifted<number>)) as Lifted<unknown>));
-      if ($.value($.condition(Number.MAX_SAFE_INTEGER - 230, $.is(AO__HasProperty($, (O as Lifted<unknown>), (from as Lifted<unknown>)), $.default<boolean>(true, [])))))
+      if ($.value($.condition(Number.MAX_SAFE_INTEGER - 236, $.is(AO__HasProperty($, (O as Lifted<unknown>), (from as Lifted<unknown>)), $.default<boolean>(true, [])))))
       {
         var fromValue = AO__Get($, (O as Lifted<unknown>), (from as Lifted<unknown>));
         AO__Set($, (O as Lifted<unknown>), (to as Lifted<unknown>), (fromValue as Lifted<unknown>), ($.default<boolean>(true, []) as Lifted<boolean>));
@@ -95,7 +95,7 @@ export function INTRINSICS_Array_prototype_splice ($ : SpecRuntime, $this : Lift
     }
 
     k = len;
-    while ($.value($.condition(Number.MAX_SAFE_INTEGER - 231, $.greaterThan(k, $.add(($.subtract((len as Lifted<number>), (actualDeleteCount as Lifted<number>)) as Lifted<number>), (itemCount as Lifted<number>))))))
+    while ($.value($.condition(Number.MAX_SAFE_INTEGER - 237, $.greaterThan(k, $.add(($.subtract((len as Lifted<number>), (actualDeleteCount as Lifted<number>)) as Lifted<number>), (itemCount as Lifted<number>))))))
     {
       AO__DeletePropertyOrThrow($, (O as Lifted<unknown>), (AO__ToString($, ($.subtract((k as Lifted<number>), ($.default<number>(1, []) as Lifted<number>)) as Lifted<unknown>)) as Lifted<unknown>));
       k = $.subtract((k as Lifted<number>), ($.default<number>(1, []) as Lifted<number>));
@@ -104,14 +104,14 @@ export function INTRINSICS_Array_prototype_splice ($ : SpecRuntime, $this : Lift
   }
   else
   {
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 232, $.greaterThan(itemCount, actualDeleteCount))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 238, $.greaterThan(itemCount, actualDeleteCount))))
     {
       k = $.subtract((len as Lifted<number>), (actualDeleteCount as Lifted<number>));
-      while ($.value($.condition(Number.MAX_SAFE_INTEGER - 233, $.greaterThan(k, actualStart))))
+      while ($.value($.condition(Number.MAX_SAFE_INTEGER - 239, $.greaterThan(k, actualStart))))
       {
         var from = AO__ToString($, ($.subtract(($.add((k as Lifted<number>), (actualDeleteCount as Lifted<number>)) as Lifted<number>), ($.default<number>(1, []) as Lifted<number>)) as Lifted<unknown>));
         var to = AO__ToString($, ($.subtract(($.add((k as Lifted<number>), (itemCount as Lifted<number>)) as Lifted<number>), ($.default<number>(1, []) as Lifted<number>)) as Lifted<unknown>));
-        if ($.value($.condition(Number.MAX_SAFE_INTEGER - 234, $.is(AO__HasProperty($, (O as Lifted<unknown>), (from as Lifted<unknown>)), $.default<boolean>(true, [])))))
+        if ($.value($.condition(Number.MAX_SAFE_INTEGER - 240, $.is(AO__HasProperty($, (O as Lifted<unknown>), (from as Lifted<unknown>)), $.default<boolean>(true, [])))))
         {
           var fromValue = AO__Get($, (O as Lifted<unknown>), (from as Lifted<unknown>));
           AO__Set($, (O as Lifted<unknown>), (to as Lifted<unknown>), (fromValue as Lifted<unknown>), ($.default<boolean>(true, []) as Lifted<boolean>));

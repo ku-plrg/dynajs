@@ -1,7 +1,7 @@
-import type { Lifted, SpecRuntime } from "../type.js";
+// THIS FILE IS AUTO-GENERATED, DO NOT EDIT
+import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
 
-export function AO__OrdinaryObjectCreate ($ : SpecRuntime, proto : Lifted<unknown>, additionalInternalSlotsList : Lifted<unknown> = $.default(undefined, [])) {
-  // TODO throw error if additionalInternalSlotsList is given - it is not capable of being handled by this implementation
-  // should `proto` be deeply unlifted?
-  return Object.create($.value(proto));
+export function AO__OrdinaryObjectCreate ($ : SpecRuntime, proto : Lifted<unknown>, additionalInternalSlotsList : Lifted<unknown> = $.default<undefined>(undefined, [])) {
+  /* ModelCapabilityError - additionalInternalSlotsList is not supported */
+  return $.default(Object.create($.value(proto)), [proto]);
 }

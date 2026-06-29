@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Lifted, SpecRuntime } from "../type.js";
+import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
 
 import { AO__ArraySpeciesCreate } from "./AO__ArraySpeciesCreate.js";
 import { AO__CreateDataPropertyOrThrow } from "./AO__CreateDataPropertyOrThrow.js";
@@ -19,20 +19,20 @@ export function INTRINSICS_Array_prototype_concat ($ : SpecRuntime, $this : Lift
   for (var E of items)
   {
     var spreadable = AO__IsConcatSpreadable($, (E as Lifted<unknown>));
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 113, $.is(spreadable, $.default<boolean>(true, [])))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 119, $.is(spreadable, $.default<boolean>(true, [])))))
     {
       var len = AO__LengthOfArrayLike($, (E as Lifted<unknown>));
-      if ($.value($.condition(Number.MAX_SAFE_INTEGER - 114, $.greaterThan($.add((n as Lifted<number>), (len as Lifted<number>)), $.subtract(($.exponentiate($.default<number>(2, []), $.default<number>(53, [])) as Lifted<number>), ($.default<number>(1, []) as Lifted<number>))))))
+      if ($.value($.condition(Number.MAX_SAFE_INTEGER - 120, $.greaterThan($.add((n as Lifted<number>), (len as Lifted<number>)), $.subtract(($.exponentiate($.default<number>(2, []), $.default<number>(53, [])) as Lifted<number>), ($.default<number>(1, []) as Lifted<number>))))))
       {
         throw new TypeError;
       }
 
       var k = $.default<number>(0, []);
-      while ($.value($.condition(Number.MAX_SAFE_INTEGER - 115, $.lessThan(k, len))))
+      while ($.value($.condition(Number.MAX_SAFE_INTEGER - 121, $.lessThan(k, len))))
       {
         var Pk = AO__ToString($, (k as Lifted<unknown>));
         var exists = AO__HasProperty($, (E as Lifted<unknown>), (Pk as Lifted<unknown>));
-        if ($.value($.condition(Number.MAX_SAFE_INTEGER - 116, $.is(exists, $.default<boolean>(true, [])))))
+        if ($.value($.condition(Number.MAX_SAFE_INTEGER - 122, $.is(exists, $.default<boolean>(true, [])))))
         {
           var subElement = AO__Get($, (E as Lifted<unknown>), (Pk as Lifted<unknown>));
           AO__CreateDataPropertyOrThrow($, (A as Lifted<unknown>), (AO__ToString($, (n as Lifted<unknown>)) as Lifted<unknown>), (subElement as Lifted<unknown>));
@@ -45,7 +45,7 @@ export function INTRINSICS_Array_prototype_concat ($ : SpecRuntime, $this : Lift
     }
     else
     {
-      if ($.value($.condition(Number.MAX_SAFE_INTEGER - 117, $.greaterThanEqual(n, $.subtract(($.exponentiate($.default<number>(2, []), $.default<number>(53, [])) as Lifted<number>), ($.default<number>(1, []) as Lifted<number>))))))
+      if ($.value($.condition(Number.MAX_SAFE_INTEGER - 123, $.greaterThanEqual(n, $.subtract(($.exponentiate($.default<number>(2, []), $.default<number>(53, [])) as Lifted<number>), ($.default<number>(1, []) as Lifted<number>))))))
       {
         throw new TypeError;
       }

@@ -6,8 +6,12 @@ export default class Model {
   static BUILTINS = new Map<Function, Function>(
     (
       [
+        [String, generated.INTRINSICS_String],
         [String.fromCharCode, generated.INTRINSICS_String_fromCharCode],
-        [String.fromCodePoint, generated.INTRINSICS_String_fromCodePoint],
+        [
+          String.fromCodePoint,
+          generated.INTRINSICS_String_fromCodePoint,
+        ],
         [String.raw, generated.INTRINSICS_String_raw],
         [String.prototype.at, generated.INTRINSICS_String_prototype_at],
         [String.prototype.charAt, generated.INTRINSICS_String_prototype_charAt],
@@ -39,10 +43,6 @@ export default class Model {
         [
           String.prototype.lastIndexOf,
           generated.INTRINSICS_String_prototype_lastIndexOf,
-        ],
-        [
-          String.prototype.localeCompare,
-          generated.INTRINSICS_String_prototype_localeCompare,
         ],
         [
           String.prototype.normalize,
@@ -127,17 +127,12 @@ export default class Model {
         [String.prototype.sub, generated.INTRINSICS_String_prototype_sub],
         [String.prototype.sup, generated.INTRINSICS_String_prototype_sup],
 
-        // Regex methods — substituted by the symbolic regex seam ($.regexOp). match
-        // and search are kept out of copy-polyfill's esmeta extraction (EXCLUDE), so
-        // these manual models are their only registration.
-        [RegExp.prototype.test, generated.INTRINSICS_RegExp_prototype_test],
-        [RegExp.prototype.exec, generated.INTRINSICS_RegExp_prototype_exec],
-        [String.prototype.match, generated.INTRINSICS_String_prototype_match],
-        [
-          String.prototype.matchAll,
-          generated.INTRINSICS_String_prototype_matchAll,
-        ],
-        [String.prototype.search, generated.INTRINSICS_String_prototype_search],
+        // RegExp.prototype.test/exec and String.prototype.match/matchAll/search are
+        // intentionally unregistered — handled by the symbolic regex seam ($.regexOp).
+
+        [Array.from, generated.INTRINSICS_Array_from],
+        [Array.isArray, generated.INTRINSICS_Array_isArray],
+        [Array.of, generated.INTRINSICS_Array_of],
 
         [Array.prototype.at, generated.INTRINSICS_Array_prototype_at],
         [Array.prototype.concat, generated.INTRINSICS_Array_prototype_concat],
@@ -168,6 +163,10 @@ export default class Model {
           Array.prototype.includes,
           generated.INTRINSICS_Array_prototype_includes,
         ],
+        [
+          Array.prototype.indexOf,
+          generated.INTRINSICS_Array_prototype_indexOf,
+        ],
         [Array.prototype.join, generated.INTRINSICS_Array_prototype_join],
         [
           Array.prototype.lastIndexOf,
@@ -185,32 +184,27 @@ export default class Model {
         [Array.prototype.shift, generated.INTRINSICS_Array_prototype_shift],
         [Array.prototype.slice, generated.INTRINSICS_Array_prototype_slice],
         [Array.prototype.some, generated.INTRINSICS_Array_prototype_some],
+        [Array.prototype.sort, generated.INTRINSICS_Array_prototype_sort],
         [Array.prototype.splice, generated.INTRINSICS_Array_prototype_splice],
         [
           Array.prototype.toReversed,
           generated.INTRINSICS_Array_prototype_toReversed,
         ],
         [
+          Array.prototype.toSorted,
+          generated.INTRINSICS_Array_prototype_toSorted,
+        ],
+        [
           Array.prototype.toSpliced,
           generated.INTRINSICS_Array_prototype_toSpliced,
         ],
+        [
+          Array.prototype.toString,
+          generated.INTRINSICS_Array_prototype_toString,
+        ],
         [Array.prototype.unshift, generated.INTRINSICS_Array_prototype_unshift],
+        [Array.prototype.with, generated.INTRINSICS_Array_prototype_with],
 
-        [Math.floor, generated.INTRINSICS_Math_floor],
-        [Math.ceil, generated.INTRINSICS_Math_ceil],
-        [Math.round, generated.INTRINSICS_Math_round],
-        [Math.abs, generated.INTRINSICS_Math_abs],
-        [Math.trunc, generated.INTRINSICS_Math_trunc],
-        [Math.sign, generated.INTRINSICS_Math_sign],
-        // Math.max/min polyfills are generated but left unregistered (concretized, as
-        // ExpoSE does — it has no max/min model either). Their spec fold seeds with
-        // ±Infinity ($.lit), which the concolic Real-SMT backend can't encode
-        // (`non-finite number: Infinity`, smt.ts) → registering errors on any
-        // symbolically-compared operand. Re-enable once smt.ts folds ±∞ comparisons.
-        // [Math.max, generated.INTRINSICS_Math_max],
-        // [Math.min, generated.INTRINSICS_Math_min],
-
-        [JSON.stringify, generated.INTRINSICS_JSON_stringify],
       ] as [Function | undefined, Function][]
     ).filter((entry): entry is [Function, Function] => entry[0] !== undefined),
   );

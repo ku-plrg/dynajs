@@ -25,6 +25,9 @@ export const CAPTURED = Object.freeze({
   ReflectOwnKeys: Reflect.ownKeys,
   ObjectGetOwnPropertyDescriptor: Object.getOwnPropertyDescriptor,
   ObjectDefineProperty: Object.defineProperty,
+  // [[DefineOwnProperty]] seam ($.defineOwnProperty): returns a boolean (false on
+  // failure) rather than throwing like Object.defineProperty does.
+  ReflectDefineProperty: Reflect.defineProperty,
   ObjectIs: Object.is,
   // Calls into native/user functions with an args *array* — CreateListFrom
   // ArrayLike (length+index), so unlike `fn.call(t, ...arr)` it never dispatches

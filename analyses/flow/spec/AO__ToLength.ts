@@ -1,11 +1,11 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Lifted, SpecRuntime } from "../type.js";
+import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
 
 import { AO__ToIntegerOrInfinity } from "./AO__ToIntegerOrInfinity.js";
 
 export function AO__ToLength ($ : SpecRuntime, argument : Lifted<unknown>) {
   var len = AO__ToIntegerOrInfinity($, (argument as Lifted<unknown>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 797, $.lessThanEqual(len, $.default<number>(0, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 807, $.lessThanEqual(len, $.default<number>(0, [])))))
   {
     return $.default<number>(0, []);
   }

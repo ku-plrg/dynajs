@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Lifted, SpecRuntime } from "../type.js";
+import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
 
 import { AO__Get } from "./AO__Get.js";
 import { AO__HasProperty } from "./AO__HasProperty.js";
@@ -13,7 +13,7 @@ export function INTRINSICS_Array_prototype_lastIndexOf ($ : SpecRuntime, $this :
   var fromIndexIsPresent = arguments.length > 3;
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 169, $.is(len, $.default<number>(0, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 175, $.is(len, $.default<number>(0, [])))))
   {
     return $.default<number>(-1, []);
   }
@@ -27,12 +27,12 @@ export function INTRINSICS_Array_prototype_lastIndexOf ($ : SpecRuntime, $this :
     var n = $.subtract((len as Lifted<number>), ($.default<number>(1, []) as Lifted<number>));
   }
 
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 170, $.is(n, $.default<number>(-Infinity, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 176, $.is(n, $.default<number>(-Infinity, [])))))
   {
     return $.default<number>(-1, []);
   }
 
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 171, $.greaterThanEqual(n, $.default<number>(0, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 177, $.greaterThanEqual(n, $.default<number>(0, [])))))
   {
     var k = $.min(n, $.subtract((len as Lifted<number>), ($.default<number>(1, []) as Lifted<number>)));
   }
@@ -41,14 +41,14 @@ export function INTRINSICS_Array_prototype_lastIndexOf ($ : SpecRuntime, $this :
     var k = $.add((len as Lifted<number>), (n as Lifted<number>));
   }
 
-  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 172, $.greaterThanEqual(k, $.default<number>(0, [])))))
+  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 178, $.greaterThanEqual(k, $.default<number>(0, [])))))
   {
     var Pk = AO__ToString($, (k as Lifted<unknown>));
     var kPresent = AO__HasProperty($, (O as Lifted<unknown>), (Pk as Lifted<unknown>));
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 173, $.is(kPresent, $.default<boolean>(true, [])))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 179, $.is(kPresent, $.default<boolean>(true, [])))))
     {
       var elementK = AO__Get($, (O as Lifted<unknown>), (Pk as Lifted<unknown>));
-      if ($.value($.condition(Number.MAX_SAFE_INTEGER - 174, $.is(AO__IsStrictlyEqual($, (searchElement as Lifted<unknown>), (elementK as Lifted<unknown>)), $.default<boolean>(true, [])))))
+      if ($.value($.condition(Number.MAX_SAFE_INTEGER - 180, $.is(AO__IsStrictlyEqual($, (searchElement as Lifted<unknown>), (elementK as Lifted<unknown>)), $.default<boolean>(true, [])))))
       {
         return k;
       }

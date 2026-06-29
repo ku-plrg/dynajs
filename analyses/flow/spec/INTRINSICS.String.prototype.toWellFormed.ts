@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Lifted, SpecRuntime } from "../type.js";
+import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
 
 import { AO__CodePointAt } from "./AO__CodePointAt.js";
 import { AO__RequireObjectCoercible } from "./AO__RequireObjectCoercible.js";
@@ -12,10 +12,10 @@ export function INTRINSICS_String_prototype_toWellFormed ($ : SpecRuntime, $this
   var strLen = $.length(S);
   var k = $.default<number>(0, []);
   var result = $.default<string>("", []);
-  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 498, $.lessThan(k, strLen))))
+  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 507, $.lessThan(k, strLen))))
   {
     var cp = AO__CodePointAt($, (S as Lifted<string>), (k as Lifted<number>));
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 499, $.is(cp["IsUnpairedSurrogate" /* TODO INTERNAL : internal access */], $.default<boolean>(true, [])))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 508, $.is(cp["IsUnpairedSurrogate" /* TODO INTERNAL : internal access */], $.default<boolean>(true, [])))))
     {
       result = $.concatenate(result, $.default<string>("�", []));
     }

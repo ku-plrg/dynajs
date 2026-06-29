@@ -123,10 +123,14 @@ interface BitwiseOps {
 }
 
 interface CompareOps {
-  lessThan: (l: Lifted<number>, r: Lifted<number>) => Lifted<boolean>;
-  lessThanEqual: (l: Lifted<number>, r: Lifted<number>) => Lifted<boolean>;
-  greaterThan: (l: Lifted<number>, r: Lifted<number>) => Lifted<boolean>;
-  greaterThanEqual: (l: Lifted<number>, r: Lifted<number>) => Lifted<boolean>;
+  lessThan(l: Lifted<number>, r: Lifted<number>): Lifted<boolean>;
+  lessThan(l: Lifted<bigint>, r: Lifted<bigint>): Lifted<boolean>;
+  lessThanEqual(l: Lifted<number>, r: Lifted<number>): Lifted<boolean>;
+  lessThanEqual(l: Lifted<bigint>, r: Lifted<bigint>): Lifted<boolean>;
+  greaterThan(l: Lifted<number>, r: Lifted<number>): Lifted<boolean>;
+  greaterThan(l: Lifted<bigint>, r: Lifted<bigint>): Lifted<boolean>;
+  greaterThanEqual(l: Lifted<number>, r: Lifted<number>): Lifted<boolean>;
+  greaterThanEqual(l: Lifted<bigint>, r: Lifted<bigint>): Lifted<boolean>;
   is: <L extends Lifted<unknown>, R extends Lifted<unknown>>(
     l: L,
     r: R,

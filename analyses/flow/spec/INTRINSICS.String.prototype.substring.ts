@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Lifted, SpecRuntime } from "../type.js";
+import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
 
 import { AO__RequireObjectCoercible } from "./AO__RequireObjectCoercible.js";
 import { AO__ToIntegerOrInfinity } from "./AO__ToIntegerOrInfinity.js";
@@ -10,7 +10,7 @@ export function INTRINSICS_String_prototype_substring ($ : SpecRuntime, $this : 
   var S = AO__ToString($, (O as Lifted<unknown>));
   var len = $.length(S);
   var intStart = AO__ToIntegerOrInfinity($, (start as Lifted<unknown>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 497, $.is(end, $.default<undefined>(undefined, [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 506, $.is(end, $.default<undefined>(undefined, [])))))
   {
     var intEnd = len;
   }

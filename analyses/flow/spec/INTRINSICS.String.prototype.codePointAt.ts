@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { Lifted, SpecRuntime } from "../type.js";
+import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
 
 import { AO__CodePointAt } from "./AO__CodePointAt.js";
 import { AO__RequireObjectCoercible } from "./AO__RequireObjectCoercible.js";
@@ -11,7 +11,7 @@ export function INTRINSICS_String_prototype_codePointAt ($ : SpecRuntime, $this 
   var S = AO__ToString($, (O as Lifted<unknown>));
   var position = AO__ToIntegerOrInfinity($, (pos as Lifted<unknown>));
   var size = $.length(S);
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 426, $.lessThan(position, $.default<number>(0, [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 427, $.greaterThanEqual(position, size))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 435, $.lessThan(position, $.default<number>(0, [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 436, $.greaterThanEqual(position, size))))
   {
     return $.default<undefined>(undefined, []);
   }
