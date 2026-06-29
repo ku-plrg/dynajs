@@ -1,6 +1,7 @@
 // @type taint
 // @target es6+ async-await
 // @feature syntax async-await
+// @done
 
 function __test_taint__(tainted) {
     (async function () {

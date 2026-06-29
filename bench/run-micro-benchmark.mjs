@@ -36,6 +36,9 @@
 //   --lint            check the concolic "exactly 1 assert fires per seeded
 //                     path" invariant; lists over/under-firing files, exits 1
 //                     on any violation; no build, no dynajs
+//   --coverage        census of @done progress: per path area (BuiltIns/Syntax)
+//                     and subarea, how many taint benches are `// @done` out of
+//                     total; concolic excluded; no runner, no build, no run
 //   --analysis NAME   analysis dynajs runs with (default: samples/EmptyAnalysis.js)
 //   --reps N          measured iterations per (runner, bench)   (default: 1)
 //   --warmup N        discarded warmup iterations               (default: 0)
@@ -682,6 +685,7 @@ function parseArgs(argv) {
     onlyDone: false, // run only benches marked `// @done` (eye-verified)
     count: false, // just report how many benches match (+ breakdown), then exit
     lint: false, // check the concolic "1 assert fires per seeded path" invariant
+    coverage: false, // census of @done taint benches by area (BuiltIns/Syntax), then exit
   };
   const need = (i, flag) => {
     if (i + 1 >= argv.length) die(`${flag} requires a value`);
@@ -704,12 +708,13 @@ function parseArgs(argv) {
       case "--done": opts.onlyDone = true; break;
       case "--count": opts.count = true; break;
       case "--lint": opts.lint = true; break;
+      case "--coverage": opts.coverage = true; break;
       case "--help":
         console.log(
           "Usage: node bench/run-micro-benchmark.mjs " +
             "[--runner NAME] [--bench NAME] [--dir SUB] [--analysis NAME] [--dynajs-flags STR] " +
             "[--reps N] [--warmup N] [--timeout SEC] [--output-dir DIR] " +
-            "[--done] [--count] [--lint] [--check | --update-snapshot]",
+            "[--done] [--count] [--lint] [--coverage] [--check | --update-snapshot]",
         );
         process.exit(0);
       default: die(`unknown option: ${a}`);
@@ -765,7 +770,11 @@ function main() {
       console.error(`skip ${rel} (no \`// @type\` header)`);
       continue;
     }
-    benches.push({ file, name: stripExt(rel).replace(/[\\/]/g, "__"), ...meta });
+    // `area`/`subarea` = the first / first-two path segments (e.g. `BuiltIns`,
+    // `BuiltIns/Array`), so --coverage can tally @done progress by feature area.
+    const segs = rel.split(/[\\/]/);
+    const subarea = segs.length > 1 ? `${segs[0]}/${segs[1]}` : segs[0];
+    benches.push({ file, name: stripExt(rel).replace(/[\\/]/g, "__"), area: segs[0], subarea, ...meta });
   }
   if (opts.benchFilters.length)
     benches = benches.filter((b) => matchesAny(path.basename(b.file), opts.benchFilters));
@@ -805,6 +814,42 @@ function main() {
         );
       }
     }
+    return;
+  }
+
+  // --coverage: a @done-progress census — for each path area (BuiltIns/Syntax)
+  // and subarea (BuiltIns/Array, …), how many TAINT benches are eye-verified
+  // (`// @done`) out of the total. Concolic is excluded (abandoned; the kept
+  // ones are all @done). Reads sources only — no runner, no build, no run.
+  if (opts.coverage) {
+    const taint = benches.filter((b) => b.type === "taint");
+    const pct = (d, t) => (t === 0 ? "  n/a" : `${Math.round((d / t) * 100)}%`);
+    const tally = (dim) => {
+      const m = new Map(); // key -> { done, total }
+      for (const b of taint) {
+        const e = m.get(b[dim]) ?? { done: 0, total: 0 };
+        e.total++;
+        if (b.done) e.done++;
+        m.set(b[dim], e);
+      }
+      return m;
+    };
+    const printGroup = (title, m) => {
+      console.log(`\nby ${title} (done / total):`);
+      for (const k of [...m.keys()].sort()) {
+        const { done, total } = m.get(k);
+        console.log(
+          `  ${k.padEnd(24)}${String(done).padStart(5)} / ${String(total).padEnd(5)}` +
+            pct(done, total).padStart(6),
+        );
+      }
+    };
+    const done = taint.filter((b) => b.done).length;
+    console.log(
+      `coverage — @done taint benches (concolic excluded): ${done} / ${taint.length}  ${pct(done, taint.length)}`,
+    );
+    printGroup("area", tally("area"));
+    printGroup("subarea", tally("subarea"));
     return;
   }
 

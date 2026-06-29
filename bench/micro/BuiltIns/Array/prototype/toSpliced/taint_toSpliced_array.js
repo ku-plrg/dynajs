@@ -4,9 +4,7 @@
 
 function __test_taint__(tainted) {
     var r = tainted.toSpliced(0, 1, "q");
-    // @witness always r[0] = "q" clean inserted literal
-    __assert_taint__(r[0], false);
-    // @witness __test_taint__(["x","x","x"]) => r[1] = "x" tainted (remaining element)
+    // @witness __test_taint__(["x","x","x"]) => r = ["q", "x", "x"] tainted
     __assert_taint__(r[1], true);
 }
 

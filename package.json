@@ -27,6 +27,7 @@
     "microbench:snapshot": "npm run build && node ./bench/run-micro-benchmark.mjs --update-snapshot",
     "microbench:count": "node ./bench/run-micro-benchmark.mjs --count",
     "microbench:count:done": "node ./bench/run-micro-benchmark.mjs --count --done",
+    "microbench:done:coverage": "node ./bench/run-micro-benchmark.mjs --coverage",
     "microbench:lint": "node ./bench/run-micro-benchmark.mjs --lint",
     "microbench:stat": "node ./bench/micro-composition.mjs",
     "format": "prettier --write . | grep -v '(unchanged)$'",
