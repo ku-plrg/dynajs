@@ -13,7 +13,9 @@
 //          @@DJX_VERDICT <detected|clean|error> <detected|clean>
 //      where the 2nd token is what that assert expected. A file may chain
 //      several asserts; each marker is one independently-scored case. A run that
-//      emits no marker at all (crash/timeout before any assert) is one `error`.
+//      emits no marker at all (crash/timeout before any assert) errored as a
+//      whole: it scores one `error` case per declared assert for taint benches
+//      (one for concolic), so the total still matches the assertion census.
 //   4. builds a confusion matrix per runner (counting cases, not files) and
 //      reports precision / recall / F1 / accuracy.
 //
@@ -72,7 +74,9 @@ const BENCH_DIR = path.join(REPO_ROOT, "bench/micro");
 // (a known FN that became TP). One key per dynajs runner; keep in sync with the
 // `dynajs-<short>` names TYPE_CONFIG generates.
 const SNAPSHOT_FILE = path.join(REPO_ROOT, "bench/micro-snapshot.json");
-const SNAPSHOT_RUNNERS = ["dynajs-ta", "dynajs-co"];
+// Concolic is abandoned, so the scored run is taint-only (see the bench-load
+// filter in main()); only the taint runner is snapshotted.
+const SNAPSHOT_RUNNERS = ["dynajs-ta"];
 
 // Preloaded by the `baseline` runner: stubs the taint prelude globals
 // (`__set_taint__`/`__assert_taint__`) to no-ops so a bench runs as plain
@@ -777,14 +781,17 @@ function main() {
   // assertsOf therefore counts asserts for taint benches only. Reads only sources
   // — no runner, no build, no execution — a fast, side-effect-free census.
   if (opts.count) {
+    // Concolic is abandoned, so `--count --done` (done:count) is taint-only;
+    // plain `--count` still reports concolic.
+    const counted = opts.onlyDone ? benches.filter((b) => b.type !== "concolic") : benches;
     const assertsOf = new Map(); // bench -> taint asserts (0 for non-taint)
-    for (const b of benches)
+    for (const b of counted)
       assertsOf.set(b, b.type === "taint" ? assertOracles(b.file).length : 0);
     const totalAsserts = [...assertsOf.values()].reduce((a, c) => a + c, 0);
-    console.log(`benchmarks: ${benches.length} files (taint asserts: ${totalAsserts})`);
+    console.log(`benchmarks: ${counted.length} files (taint asserts: ${totalAsserts})`);
     for (const [dim, label] of [["type", "@type"], ["target", "@target"], ["feature", "@feature"]]) {
       const files = new Map(), asserts = new Map();
-      for (const b of benches) {
+      for (const b of counted) {
         const k = b[dim] || "(none)";
         files.set(k, (files.get(k) ?? 0) + 1);
         asserts.set(k, (asserts.get(k) ?? 0) + assertsOf.get(b));
@@ -845,6 +852,12 @@ function main() {
   if (!benches.length)
     die(opts.onlyDone ? "no `// @done`-marked benchmarks matched" : "no benchmarks with a @type header matched");
 
+  // Concolic is abandoned: the scored run is taint-only, so drop `@type
+  // concolic` benches before scoring — they are neither executed nor printed.
+  // (`--count`/`--lint` return above, so those modes still see concolic.)
+  benches = benches.filter((b) => b.type !== "concolic");
+  if (!benches.length) die("no taint benchmarks matched");
+
   let runners = makeRunners(opts);
   if (opts.runnerFilters.length)
     runners = runners.filter((r) => matchesAny(r.name, opts.runnerFilters));
@@ -852,8 +865,18 @@ function main() {
 
   const active = [];
   for (const r of runners) {
-    if (r.available()) active.push(r);
-    else console.error(`skip runner ${r.name} (not available on PATH)`);
+    if (!r.available()) {
+      console.error(`skip runner ${r.name} (not available on PATH)`);
+      continue;
+    }
+    // Drop runners with no applicable bench — e.g. the concolic-only `dynajs-co`
+    // and `expose` once concolic benches are excluded — so the report has no
+    // dead all-zero rows.
+    if (r.applies && !benches.some((b) => r.applies(b))) {
+      console.error(`skip runner ${r.name} (no applicable benchmarks)`);
+      continue;
+    }
+    active.push(r);
   }
   if (!active.length) die("no runners available");
 
@@ -882,19 +905,25 @@ function main() {
   for (const r of active) records[r.name] = [];
 
   // Each marker is one assert case; a run with no marker (crash/timeout before
-  // any assert fires) collapses to a single `error` case so it isn't silently
-  // dropped — its expected is recovered from the bench's first declared oracle.
+  // any assert fires) errored as a whole. Don't collapse it to a single `error`
+  // case — that under-counts a multi-assert file and makes the run's total drift
+  // below the assertion census (--count). Instead synthesize one `error` case
+  // per scored unit: a taint file is scored per ASSERT, so emit one error case
+  // per declared assertion (each carrying its own oracle); a concolic file is
+  // scored per FILE (exactly one assert fires per seeded path), so emit one.
   const toCases = (raw, b) => {
     if (raw.length) return raw;
-    // No marker (crash/timeout before any assert): synthesize one error case,
-    // recovering the expected from the bench's first declared oracle. An IS_SAT
-    // bench reports it in the sat/unsat vocabulary; everything else detected/clean.
-    const first = assertOracles(b.file)[0];
+    // Recover each assert's expected from its declared oracle. An IS_SAT bench
+    // reports in the sat/unsat vocabulary; everything else detected/clean.
+    const oracles = assertOracles(b.file);
     const satVocab = /\b__IS_SAT__\s*\(/.test(readFileSync(b.file, "utf8"));
-    const expected = satVocab
-      ? first === false ? "unsat" : "sat"
-      : first === false ? "clean" : "detected";
-    return [{ actual: "error", expected }];
+    const toExpected = (o) =>
+      satVocab
+        ? o === false ? "unsat" : "sat"
+        : o === false ? "clean" : "detected";
+    if (b.type === "taint" && oracles.length)
+      return oracles.map((o) => ({ actual: "error", expected: toExpected(o) }));
+    return [{ actual: "error", expected: toExpected(oracles[0]) }];
   };
   const sig = (cs) => cs.map((c) => `${c.actual}/${c.expected}`).join(",");
 

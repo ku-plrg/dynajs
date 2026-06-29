@@ -14,7 +14,8 @@ function __test_taint__(tainted) {
     __assert_taint__(tnt.kind, true);
     // @witness __test_taint__("x")
     __assert_taint__(tnt.v, true);
-    tnt = TNT(tainted);
+    tnt = {};
+    TNT.call(tnt, tainted);   // plain call (no `new`) -> new.target is undefined
     // @witness always "clean"
     __assert_taint__(tnt.kind, false);
     // @witness __test_taint__("x")
