@@ -30,6 +30,8 @@
     "microbench:lint": "node ./bench/run-micro-benchmark.mjs --lint",
     "microbench:stat": "node ./bench/micro-composition.mjs",
     "format": "prettier --write . | grep -v '(unchanged)$'",
+    "loc": "node ./scripts/loc.mjs",
+    "spec-coverage": "node ./scripts/spec-coverage.mjs",
     "test": "",
     "test:watch": "",
     "test:taint": "npm run build && node ./scripts/run-taint-tests.mjs",

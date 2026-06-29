@@ -52,7 +52,7 @@
 import { spawnSync } from "node:child_process";
 import {
   existsSync, mkdirSync, readdirSync, readFileSync,
-  writeFileSync, appendFileSync, accessSync, constants,
+  writeFileSync, appendFileSync, accessSync, constants, rmSync,
 } from "node:fs";
 import path from "node:path";
 import { homedir, tmpdir } from "node:os";
@@ -169,24 +169,31 @@ function nodemedicCjsDir() {
 //
 // Per-assert verdict: assertSymbolic records one entry per call (violable when
 // `¬cond` is SAT under the seed PC, otherwise holds) into the only channel the
-// worker writes back -- its errors array -- which the Distributor prints as
-// `[!] Assertion violable|holds: <desc>`. violable -> the assert is breakable
+// worker writes back -- its result JSON's errors array -- as
+// `Assertion violable|holds: <desc>`. violable -> the assert is breakable
 // -> `clean`; holds -> provably valid on this path -> `detected` -- the same
 // polarity as dynajs concolic's `PC ∧ ¬assert` UNSAT -> detected. Because every
-// executed assert prints (not just violable ones), a multi-assert bench reports
-// one ordered line per assert it ran; we carry the assert's ground truth in
+// executed assert records (not just violable ones), a multi-assert bench reports
+// one ordered entry per assert it ran; we carry the assert's ground truth in
 // `desc` so the pairing survives branches that skip an assert this seed.
 //
-// ExpoSE must be invoked through its own `scripts/analyse` entry point (which
-// sources scripts/env and spawns Tester workers with the right NODE_PATH/cwd);
-// calling Distributor.js directly leaves workers unable to emit their result
-// JSON. So the run's cwd is EXPOSE_HOME and argv[0] is bash scripts/analyse.
+// We drive a SINGLE Analyser path directly via `expoSE replay`, NOT the
+// multi-path `scripts/analyse` (Distributor) entry. Both run exactly one path
+// here -- assertSymbolic self-activates single-run mode, so the Distributor
+// explores nothing further -- but the Distributor adds a worker-pool spawn +
+// scheduling per bench (~3x wall-clock), which makes the speed comparison
+// against dynajs concolic (also single-path) unfair. `replay` sources
+// scripts/env and runs jalangi+Analyser on the seed path in one process. The
+// worker never prints its verdicts (the Distributor used to, after reading the
+// worker's result JSON); it only writes them to its result JSON at
+// EXPOSE_OUT_PATH, so we point that at a per-bench file and read
+// `errors[].error` from it (see cases()).
 const EXPOSE_HOME = process.env.EXPOSE_HOME ?? path.join(homedir(), "ExpoSE");
-const EXPOSE_ANALYSE = path.join(EXPOSE_HOME, "scripts/analyse");
+const EXPOSE_BIN = path.join(EXPOSE_HOME, "expoSE");
 // Prepended to each bench copy: bridge the engine-neutral prelude names. The
 // assert bridges to our single-path Object._expose.assertSymbolic (defined once
 // ExpoSE's analysis initialises, before the bench body runs), passing the
-// assert's ground truth as `desc` so the printed verdict line is self-contained
+// assert's ground truth as `desc` so the recorded verdict is self-contained
 // (actual from violable/holds, expected from the `desc` token) -- the runner
 // pairs each in execution order without re-reading the source (see cases()).
 const EXPOSE_PRELUDE =
@@ -202,16 +209,14 @@ const EXPOSE_PRELUDE =
   "globalThis.__IS_SAT__ = function (cond, expected) {\n" +
   '  return Object._expose.assertSymbolic(!cond, expected ? "sat" : "unsat");\n' +
   "};\n";
-// ExpoSE prints this summary line once a target finishes; its presence means the
-// per-assert lines above it are complete (they print in the same done callback,
-// just before it), so cases() trusts the verdict stream only when it's seen.
-const EXPOSE_DONE_RE = /ExpoSE Finished\.\s+\d+ paths,\s+\d+ errors/;
-// One per-assert verdict line: `[!] Assertion violable|holds: <expected>`. The
-// expected token is detected|clean for validity asserts, sat|unsat for IS_SAT.
+// One recorded verdict, read from a result-JSON errors[].error string:
+// `Assertion violable|holds: <expected>`. The expected token is detected|clean
+// for validity asserts, sat|unsat for IS_SAT.
 const EXPOSE_ASSERT_RE =
-  /\[!\] Assertion (violable|holds): (detected|clean|sat|unsat)\b/g;
+  /Assertion (violable|holds): (detected|clean|sat|unsat)\b/g;
 
-// A scratch dir for the prelude-prepended bench copies ExpoSE analyses.
+// A scratch dir for the prelude-prepended bench copies ExpoSE analyses, plus the
+// per-bench result JSON each replay writes (EXPOSE_OUT_PATH).
 let exposeDir = null;
 function exposeScratchDir() {
   if (exposeDir) return exposeDir;
@@ -219,6 +224,11 @@ function exposeScratchDir() {
   mkdirSync(exposeDir, { recursive: true });
   writeFileSync(path.join(exposeDir, "package.json"), '{"type":"commonjs"}');
   return exposeDir;
+}
+// Where `expoSE replay` writes the worker result JSON for bench b (keyed on the
+// flattened b.name so nested same-basename benches don't collide).
+function exposeOutPath(b) {
+  return path.join(exposeScratchDir(), `${b.name}.out.json`);
 }
 
 // ---------------------------------------------------------------------------
@@ -586,38 +596,51 @@ function makeRunners(opts) {
     {
       // ExpoSE's dynamic symbolic execution engine, on the same concolic
       // benches via the __symbolic__/__symbolic_assert__ -> S$ bridge prelude.
-      // assertSymbolic prints one ordered `[!] Assertion violable|holds: <expected>`
-      // line per executed assert (see the EXPOSE_* config block), so this scores
-      // per assert and applies to every concolic bench, single- or multi-assert.
+      // assertSymbolic records one ordered `Assertion violable|holds: <expected>`
+      // entry per executed assert into the worker result JSON (see the EXPOSE_*
+      // config block), so this scores per assert and applies to every concolic
+      // bench, single- or multi-assert.
       name: "expose",
       applies: (b) => b.type === "concolic",
-      available: () => existsSync(EXPOSE_ANALYSE),
+      available: () => existsSync(EXPOSE_BIN),
       exec: (b, out, err, t) => {
         // Copy the bench with the S$ bridge prelude prepended. Key on b.name
         // (flattened relative path) so nested same-basename benches don't collide.
         const dest = path.join(exposeScratchDir(), `${b.name}.js`);
         writeFileSync(dest, EXPOSE_PRELUDE + readFileSync(b.file, "utf8"));
+        // Single-path: run jalangi+Analyser once via `expoSE replay <target>
+        // <seed>`. `{}` is the empty seed -> the bench's own __symbolic__ seeds
+        // pick the path. The worker writes its verdicts to EXPOSE_OUT_PATH; clear
+        // any stale file first so a crashed run can't be read as last run's JSON.
+        const outJson = exposeOutPath(b);
+        rmSync(outJson, { force: true });
         return timeRun(
-          ["bash", EXPOSE_ANALYSE, dest],
-          // Cap ExpoSE's own budget under our per-run timeout so it self-stops
-          // before the SIGKILL, leaving a parseable summary line.
-          { EXPOSE_MAX_TIME: String(Math.max(1000, t - 2000)) },
+          ["bash", EXPOSE_BIN, "replay", dest, "{}"],
+          { EXPOSE_OUT_PATH: outJson },
           out, err, t,
-          EXPOSE_HOME, // cwd: scripts/analyse sources ./scripts/env relatively
+          EXPOSE_HOME, // cwd: expoSE re-roots to its own dir + sources scripts/env
         );
       },
       cases: (run, b) => {
         // One case per executed assert, in order: violable -> `clean`, holds ->
-        // `detected`, paired with the `expected` token assertSymbolic echoed
-        // from `desc`. Only trusted once the run finished (the verdict lines are
-        // complete then); otherwise empty -> the caller records one `error` case.
+        // `detected`, paired with the `expected` token assertSymbolic echoed from
+        // `desc`. Read from the worker result JSON's errors[]; a timed-out or
+        // crashed run leaves it missing/partial -> empty -> the caller records one
+        // `error` case.
         if (run.timedOut) return [];
-        const text = `${run.stdout}\n${run.stderr}`;
-        if (!EXPOSE_DONE_RE.test(text)) return []; // crashed/never finished
+        let errors;
+        try {
+          errors = JSON.parse(readFileSync(exposeOutPath(b), "utf8")).errors;
+        } catch {
+          return []; // missing/partial JSON: crashed or never finished
+        }
+        if (!Array.isArray(errors)) return [];
         const cases = [];
         let m;
-        EXPOSE_ASSERT_RE.lastIndex = 0;
-        while ((m = EXPOSE_ASSERT_RE.exec(text))) {
+        for (const e of errors) {
+          EXPOSE_ASSERT_RE.lastIndex = 0;
+          m = EXPOSE_ASSERT_RE.exec(typeof e?.error === "string" ? e.error : "");
+          if (!m) continue; // non-assertion error (e.g. caught runtime exception)
           const expected = m[2];
           // IS_SAT asserts (sat/unsat oracle) pass `!cond`, so violable <=> sat;
           // validity asserts (detected/clean) keep violable <=> clean.
