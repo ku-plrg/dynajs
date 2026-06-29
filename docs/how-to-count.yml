@@ -1,0 +1,10 @@
+# how to count
+
+# AO, auto - $DYNAJS_HOME/scripts/loc.mjs $(find . -name 'AO*.ts' | grep -v '\.manual\.ts$')
+# AO, manual - $DYNAJS_HOME/scripts/loc.mjs $(find . -name 'AO*.ts' | grep '\.manual\.ts$')
+
+# INTRINSICS, auto - $DYNAJS_HOME/scripts/loc.mjs $(find . -name 'INTRINSICS*.ts' | grep -v '\.manual\.ts$')
+# INTRINSICS, manual - $DYNAJS_HOME/scripts/loc.mjs $(find . -name 'INTRINSICS*.ts' | grep '\.manual\.ts$')
+
+# String, auto - $DYNAJS_HOME/scripts/loc.mjs $(find . -name 'String*.ts' | grep -v '\.manual\.ts$')
+# String, manual - $DYNAJS_HOME/scripts/loc.mjs $(find . -name 'String*.ts' | grep '\.manual\.ts$')
