@@ -130,7 +130,7 @@ export default class Model {
         // RegExp.prototype.test/exec and String.prototype.match/matchAll/search are
         // intentionally unregistered — handled by the symbolic regex seam ($.regexOp).
 
-        [Array.from, generated.INTRINSICS_Array_from],
+        // [Array.from, generated.INTRINSICS_Array_from],
         [Array.isArray, generated.INTRINSICS_Array_isArray],
         [Array.of, generated.INTRINSICS_Array_of],
 
