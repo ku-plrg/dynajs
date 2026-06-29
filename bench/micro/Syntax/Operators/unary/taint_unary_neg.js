@@ -6,7 +6,7 @@
 // type string — concrete, value-independent results — so both are untainted.
 
 function __test_taint__(tainted) {
-    // @witness __test_taint__(5) => -tainted = -5 tainted
+    // @witness __test_taint__(-42) => -tainted = 42 tainted
     __assert_taint__(-tainted, true);
 }
 

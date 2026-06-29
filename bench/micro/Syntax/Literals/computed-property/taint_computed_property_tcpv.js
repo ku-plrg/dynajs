@@ -1,6 +1,7 @@
 // @type taint
 // @target es6+ computed-property
 // @feature syntax computed-property
+// @done
 
 function __test_taint__(tainted) {
     var tcp_key = "k";

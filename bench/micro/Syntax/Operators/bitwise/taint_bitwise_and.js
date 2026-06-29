@@ -3,7 +3,7 @@
 // @feature syntax bitwise
 
 function __test_taint__(tainted) {
-    // @witness __test_taint__(0xff) => tainted & 0x0f = 15 tainted
+    // @witness __test_taint__(1) => tainted & 0x0f = 1 tainted (mask 0x0f caps result < 16, 42 unreachable)
     __assert_taint__(tainted & 0x0f, true);
 }
 

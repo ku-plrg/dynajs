@@ -1,9 +1,10 @@
 // @type taint
 // @target es6+ bigint
 // @feature syntax bigint
+// @done
 
 function __test_taint__(tainted) {
-    // @witness __test_taint__(42n) => 42n + 1n = 43n tainted
+    // @witness __test_taint__(41n) => 41n + 1n = 42n tainted
     __assert_taint__(tainted + 1n, true);
 }
 
