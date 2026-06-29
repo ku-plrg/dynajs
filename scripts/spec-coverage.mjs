@@ -20,11 +20,11 @@ const SPEC_DIR = path.resolve(
 // modeled-subset. The TOTAL row uses the sum. A category left at 0 (or absent)
 // has no universe set yet and shows auto% as '-'.
 const TOTAL_BUILTINS = {
-  String: 57,
-  Array: 46,
-  Math: 36,
-  RegExp: 18,
-  JSON: 2,
+  String: 53,
+  Array: 42,
+  Math: NaN,
+  RegExp: NaN,
+  JSON: NaN,
 };
 
 // Which group a spec file belongs to (null = not a spec definition we count).

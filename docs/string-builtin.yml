@@ -1,0 +1,56 @@
+- String
+- String.fromCharCode
+- String.fromCodePoint
+- String.raw
+- String.prototype.at
+- String.prototype.charAt
+- String.prototype.charCodeAt
+- String.prototype.codePointAt
+- String.prototype.concat
+- String.prototype.endsWith
+- String.prototype.includes
+- String.prototype.indexOf
+- String.prototype.isWellFormed
+- String.prototype.lastIndexOf
+- String.prototype.localeCompare
+- String.prototype.match
+- String.prototype.matchAll
+- String.prototype.normalize
+- String.prototype.padEnd
+- String.prototype.padStart
+- String.prototype.repeat
+- String.prototype.replace
+- String.prototype.replaceAll
+- String.prototype.search
+- String.prototype.slice
+- String.prototype.split
+- String.prototype.startsWith
+- String.prototype.substring
+- String.prototype.toLocaleLowerCase
+- String.prototype.toLocaleUpperCase
+- String.prototype.toLowerCase
+- String.prototype.toString
+- String.prototype.toUpperCase
+- String.prototype.toWellFormed
+- String.prototype.trim
+- String.prototype.trimEnd
+- String.prototype.trimStart
+- String.prototype.valueOf
+- String.prototype [ %Symbol.iterator% ]
+- String.prototype.substr
+- String.prototype.anchor
+- String.prototype.big
+- String.prototype.blink
+- String.prototype.bold
+- String.prototype.fixed
+- String.prototype.fontcolor
+- String.prototype.fontsize
+- String.prototype.italics
+- String.prototype.link
+- String.prototype.small
+- String.prototype.strike
+- String.prototype.sub
+- String.prototype.sup
+
+# - String.prototype.trimLeft # same with trimStart
+# - String.prototype.trimRight # same with trimEnd

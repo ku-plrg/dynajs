@@ -14,24 +14,24 @@ import chalk from 'chalk';
 // To use with different ESMETA_HOME: ESMETA_HOME=~/path/to/esmeta npm run copy
 const INCLUDE = [
   // Bulk-select with a RegExp, then carve out exceptions in EXCLUDE below, e.g.:
-  // /^INTRINSICS\.Array\./,
+  /^INTRINSICS\.Array(\..*)/,
   /^INTRINSICS\.Array\.prototype\./,
 
   // /^INTRINSICS\.Boolean\./,
   // /^INTRINSICS\.Function\./,
   // "INTRINSICS.JSON.stringify",
   // /^INTRINSICS\.Map\./,
-  /^INTRINSICS\.Math\.(floor|ceil|round|abs|trunc|max|min|sign)/,
+  // /^INTRINSICS\.Math\.(floor|ceil|round|abs|trunc|max|min|sign)/,
   // /^INTRINSICS\.Number\./,
   // /^INTRINSICS\.Object\./,
   // /^INTRINSICS\.RegExp\./,
   // /^INTRINSICS\.Set\./,
-  /^INTRINSICS\.String\./,
+  /^INTRINSICS\.String/,
   /^INTRINSICS\.String\.prototype\./,
   // "RegExpExec",
-  /^INTRINSICS\.RegExp\.prototype\.(exec|test)/,
+  // /^INTRINSICS\.RegExp\.prototype\.(exec|test)/,
   'AO__CanonicalNumericIndexString',
-  'INTRINSICS.JSON.stringify',
+  // 'INTRINSICS.JSON.stringify',
 ];
 
 const EXCLUDE = [
@@ -40,38 +40,53 @@ const EXCLUDE = [
   // (INTRINSICS.*.manual.ts -> $.regexOp); keep them out of esmeta extraction
   // (the generated versions delegate to the spec matcher) but DO let their
   // manual shims be barreled, so they are not excluded here.
+
+  // iterator - smelly,
+  'INTRINSICS.Array.from',
+
+  /* array iterator */
   'INTRINSICS.Array.prototype.entries',
-  'INTRINSICS.Array.prototype.indexOf',
   'INTRINSICS.Array.prototype.keys',
-  'INTRINSICS.Array.prototype.sort',
-  'INTRINSICS.Array.prototype.toLocaleString',
-  'INTRINSICS.Array.prototype.toSorted',
-  'INTRINSICS.Array.prototype.toString',
   'INTRINSICS.Array.prototype.values',
-  'INTRINSICS.Array.prototype.with',
-  'INTRINSICS.String.prototypeLeftBracketPercentSymbol.iteratorPercentRightBracket',
+  'INTRINSICS.String.prototype__Symbol.iterator__',
+  
+  /* implementation defined - host environment dependent */
+  'INTRINSICS.Array.prototype.toLocaleString', // esmeta not supported
+  'INTRINSICS.String.prototype.toLocaleLowerCase', // esmeta not supported
+  'INTRINSICS.String.prototype.toLocaleUpperCase', // esmeta not supported
+  'INTRINSICS.String.prototype.localeCompare',
+
+  /* regex */
+  'INTRINSICS.String.prototype.match',
+  'INTRINSICS.String.prototype.matchAll',
+  'INTRINSICS.String.prototype.search',
+
+  /* getter */
+  'INTRINSICS.Array.prototype__Symbol.unscopables__',
+  'INTRINSICS.String.prototype__Symbol.unscopables__',
 ];
 
 const NO_CHECK = [
+  'AO__IsLessThan', // ok - number and bigint mix
+  'AO__ToNumeric', // ok - "number" as string as unknown
+  'INTRINSICS.String',
+  'INTRINSICS.String.fromCharCode',
+  'INTRINSICS.String.fromCodePoint',
+  'INTRINSICS.Array.prototype.toSorted',
+  'INTRINSICS.Array.prototype.toString',
+  'INTRINSICS.String.prototype.fromCharCode',
+  'INTRINSICS.String.prototype.fromCodePoint',
+  'AO__IteratorClose',
+  'AO__IteratorNext',
+  'AO__IteratorStep',
+  'AO__IteratorStepValue',
+  'INTRINSICS.Array.of',
+  'INTRINSICS.Array.prototype.sort',  
   'INTRINSICS.Array.prototype.reduce',
   'INTRINSICS.Array.prototype.reduceRight',
   'INTRINSICS.Array.prototype.reverse',
   'AO__FlattenIntoArray',
   'AO__GetSubstitution',
-  // JSON serialization: esmeta gen-poly emits sound runtime code but with type
-  // noise it can't yet resolve — the State Record (a non-escaping scratch object)
-  // is typed Lifted<unknown> with internal-slot-style field access, plus never[]
-  // list inits and a gap redeclaration. @ts-nocheck accepts these until gen-poly
-  // emits a typed Record. NOT a substitute for AO__EnumerableOwnProperties, which
-  // reads object internal methods → hand-authored manual shim (a runtime crash,
-  // not a type error; @ts-nocheck can't help). The [[BooleanData]]/[[BigIntData]]
-  // boxed-slot reads are now generated correctly (PolyfillGenerator emits a
-  // peek().valueOf() approximation), so they are no longer a silenced bug.
-  'INTRINSICS.JSON.stringify',
-  'AO__SerializeJSONProperty',
-  'AO__SerializeJSONObject',
-  'AO__SerializeJSONArray',
-  'AO__UnicodeEscape',
 ];
 
 const ESMETA_HOME = process.env.ESMETA_HOME;
@@ -296,5 +311,70 @@ console.log(chalk.cyan(`  manual (*.manual.ts):             ${fmt(manual)}`));
 console.log(
   chalk.gray(`  + ${shimCount} re-export shim(s), 1 barrel (index.ts)`),
 );
+
+// Warn about dead *.manual.ts files. The main walk seeds EVERY manual base
+// unconditionally, so a manual file nothing depends on is still shimmed and
+// barreled without complaint. Recompute reachability WITHOUT that blanket seed:
+// a manual file earns its keep only if it is an INCLUDE root, a transitive AO
+// dependency of one, or referenced by name from framework source outside spec/
+// (e.g. flow.ts imports SYNTAX__add, which no INCLUDE root reaches).
+function contentForDeps(base) {
+  const manualFile = manualBases.get(base);
+  if (manualFile !== undefined)
+    return readFileSync(join(destDir, manualFile), 'utf8');
+  const from = join(srcDir, `${base}.ts`);
+  return existsSync(from) ? readFileSync(from, 'utf8') : null;
+}
+function reachableFrom(start) {
+  const seen = new Set();
+  const work = [...start];
+  while (work.length > 0) {
+    const base = work.shift();
+    if (seen.has(base)) continue;
+    seen.add(base);
+    if (isExcluded(base)) continue;
+    const content = contentForDeps(base);
+    if (content === null) continue;
+    for (const dep of depsOf(content)) if (!seen.has(dep)) work.push(dep);
+  }
+  return seen;
+}
+
+// Identifiers used in framework source (the barrel's consumers: anything under
+// analyses/flow/ except spec/ itself). A base whose mangled export name
+// (dots → underscores) appears there is treated as a reachability root.
+function collectFrameworkSource(dir) {
+  let text = '';
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name === 'spec') continue; // the barrel re-exports everything
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) text += collectFrameworkSource(full);
+    else if (entry.name.endsWith('.ts'))
+      text += `${readFileSync(full, 'utf8')}\n`;
+  }
+  return text;
+}
+const frameworkIdents = new Set(
+  collectFrameworkSource(resolve(destDir, '..')).match(
+    /[A-Za-z_$][A-Za-z0-9_$]*/g,
+  ) ?? [],
+);
+const frameworkRoots = new Set();
+for (const base of universe)
+  if (frameworkIdents.has(base.replaceAll('.', '_'))) frameworkRoots.add(base);
+
+const reachable = reachableFrom(new Set([...roots, ...frameworkRoots]));
+const unusedManual = [...manualBases.keys()]
+  .filter((base) => !isExcluded(base) && !reachable.has(base))
+  .sort();
+if (unusedManual.length > 0) {
+  console.warn(
+    chalk.yellow(
+      `\n⚠ ${unusedManual.length} unused *.manual.ts (barreled but not reachable from any INCLUDE root or framework import):`,
+    ),
+  );
+  for (const base of unusedManual)
+    console.warn(chalk.yellow(`    ${base}.manual.ts`));
+}
 
 if (missing.length > 0) process.exit(1);
