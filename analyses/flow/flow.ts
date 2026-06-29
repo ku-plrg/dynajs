@@ -78,6 +78,12 @@ export abstract class FlowAnalysis<Info>
   }
 
   protected transparentCalls: ReadonlySet<unknown> = new Set();
+
+  /** Route supported builtin calls through the spec polyfill model. An analysis
+   *  can set this false to run every builtin natively (the opaque path) — a
+   *  baseline with no spec models. See analyses/noop-nobuiltin. */
+  protected modelBuiltins = true;
+
   policy: CallPolicy = {
     isOpaque: (f) =>
       typeof f === 'function' &&
@@ -952,6 +958,7 @@ export abstract class FlowAnalysis<Info>
     entries: Lifted[],
   ): 'modeled' | 'opaque' | 'transparent' {
     if (
+      this.modelBuiltins &&
       Model.support(f as Function) &&
       !entries.every(
         (e) =>
