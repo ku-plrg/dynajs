@@ -18,6 +18,7 @@ const BUILT_PRESETS: Record<string, string> = {
   taint: 'analyses/dist/Taint.mjs',
   concolic: 'analyses/dist/Concolic.mjs',
   noop: 'analyses/dist/Noop.mjs',
+  'noop-nobuiltin': 'analyses/dist/NoopNoBuiltin.mjs',
 };
 
 function sampleMap(): Record<string, string> {
