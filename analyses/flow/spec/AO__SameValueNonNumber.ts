@@ -17,12 +17,12 @@ export function AO__SameValueNonNumber ($ : SpecRuntime, x : Lifted<unknown>, y 
 
   if (($.value($.condition(Number.MAX_SAFE_INTEGER - 723, $.isType(x, "string")))))
   {
-    throw new Error("YET: If _x_ and _y_ have the same length and the same code units in the same positions, return *true*; otherwise, return *false*.")
+    return $.is(x, y);
   }
 
   if (($.value($.condition(Number.MAX_SAFE_INTEGER - 724, $.isType(x, "boolean")))))
   {
-    throw new Error("YET: If _x_ and _y_ are both *true* or both *false*, return *true*; otherwise, return *false*.")
+    return $.is(x, y);
   }
 
   if ($.value($.condition(Number.MAX_SAFE_INTEGER - 725, $.is(x, y))))
