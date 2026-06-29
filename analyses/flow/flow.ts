@@ -8,6 +8,7 @@ import type {
   Valued,
 } from './type.js';
 import Model from './internal/model.js';
+import { isConstructable } from './internal/constructable.js';
 import * as site from './internal/site.js';
 import type * as escape from './internal/escape.js';
 import { AO__CanonicalNumericIndexString, SYNTAX__add } from './spec/index.js';
@@ -16,13 +17,6 @@ import { CAPTURED, concatList } from './utils.js';
 
 const { ReflectApply } = CAPTURED;
 
-// `instanceof` and `in` are type/membership predicates, not value-algebra
-// operators: the boolean they yield is decided by the prototype chain / property
-// table, never by a modelable function of the operands' values. The op-aware
-// `binaryInfo` hook is for value ops, so the framework does not route these to it
-// — their result carries only operand provenance (baseInfo). Without this an
-// op-aware analysis would forge a `{binary, instanceof, …}` symbol no solver can
-// translate, which (for concolic) poisons the path condition.
 const NON_VALUE_BINARY_OPS = new Set(['instanceof', 'in']);
 
 type BinFrame = {
@@ -225,24 +219,6 @@ export abstract class FlowAnalysis<Info>
       this.binaryInfo?.(op, this.valued(l), this.valued(r)) ??
         this.defaultInfo(v, [this.valued(l), this.valued(r)]),
     );
-  }
-
-  condition(id: number, _op: string, value: unknown): { result: unknown } {
-    if (_op !== 'model') this.siteResolver.reportId(id);
-    // is this correct...
-    const cond = this.$.condition(
-      id,
-      value as Lifted<unknown> as Lifted<boolean>,
-    );
-    const raw = this.$.value(cond);
-    return { result: raw };
-  }
-
-  // Native `class … extends E` needs a raw constructor/null; hand it the
-  // unlifted heritage (a lifted-primitive proxy like `null` is otherwise an
-  // object → "not a constructor or null"). Object heritages unlift to themselves.
-  classHeritage(_id: number, value: unknown): { result: unknown } {
-    return { result: this.$.value(value as Lifted<unknown>) };
   }
 
   $: SpecRuntime = {
@@ -726,6 +702,21 @@ export abstract class FlowAnalysis<Info>
     },
   } satisfies SpecRuntime;
 
+  condition(id: number, _op: string, value: unknown): { result: unknown } {
+  if (_op !== 'model') this.siteResolver.reportId(id);
+  // is this correct...
+  const cond = this.$.condition(
+    id,
+    value as Lifted<unknown> as Lifted<boolean>,
+  );
+  const raw = this.$.value(cond);
+  return { result: raw };
+}
+
+  classHeritage(_id: number, value: unknown): { result: unknown } {
+    return { result: this.$.value(value as Lifted<unknown>) };
+  }
+
   literal(_id: number, value: unknown) {
     this.siteResolver.reportId(_id);
     this.escaper.markEscapableLiteral(value);
@@ -932,10 +923,10 @@ export abstract class FlowAnalysis<Info>
     };
   }
 
-  // Class field initializers store natively, like a putField.
-  fieldInit(_id: number, _obj: any, _key: any, _isStatic: boolean, value: any) {
-    this.escaper.markEscapable(value);
-  }
+  // // Class field initializers store natively, like a putField.
+  // fieldInit(_id: number, _obj: any, _key: any, _isStatic: boolean, value: any) {
+  //   this.escaper.markEscapable(value);
+  // }
 
   // the native instrumenter needs a raw string
   instrumentCodePre(_id: number, code: any, _isDirect: boolean) {
@@ -1021,6 +1012,14 @@ export abstract class FlowAnalysis<Info>
       : argArr;
     const kind = this.callKind(_f, entries);
     if (kind === 'modeled') {
+      // A modeled builtin has no [[Construct]] unless esmeta stamped CONSTRUCTABLE
+      // on its polyfill, so `new <method>()` throws like the native would. Without
+      // this the model runs and returns a value, silently passing not-a-constructor.
+      if (_isConstructor && !isConstructable(Model.ofBuiltin(_f))) {
+        throw new TypeError(
+          `${this.siteResolver.builtinName(_f)} is not a constructor`,
+        );
+      }
       // model takes lifted args and returns a lifted result; the engine skips
       // the native call (skip:true) and invokeFun runs the model.
       return {

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
 import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
 
