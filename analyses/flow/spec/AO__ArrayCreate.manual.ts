@@ -1,6 +1,6 @@
 import type { SpecRuntime, Lifted, Unlifted, Primitive } from "../type.js";
 
-export function AO__ArrayCreate($ : SpecRuntime, length : Lifted<number>, proto?: Lifted<unknown> = $.default(undefined, [])): Lifted<unknown> {
+export function AO__ArrayCreate($ : SpecRuntime, length : Lifted<number>, proto: Lifted<unknown> = $.default(undefined, [])): Lifted<unknown> {
   const len = $.value(length);
   // 1. If length > 2**32 - 1, throw a RangeError exception.
   if (len > 2 ** 32 - 1) {
