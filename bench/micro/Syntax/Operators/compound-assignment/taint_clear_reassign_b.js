@@ -5,8 +5,10 @@
 // value, so the variable's taint is cleared.
 
 function __test_taint__(tainted) {
+    // @witness __test_taint__('x') => tainted = 'x' tainted
     __assert_taint__(tainted, true);
     tainted = "Test";
+    // @witness tainted reassigned to clean literal before read => clean
     __assert_taint__(tainted, false);
 }
 

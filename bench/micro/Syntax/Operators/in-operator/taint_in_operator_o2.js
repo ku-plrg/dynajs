@@ -4,6 +4,7 @@
 
 function __test_taint__(tainted) {
     var in_o2 = {};
+    // @witness boolean result, clean
     __assert_taint__("k" in in_o2, false);
 }
 

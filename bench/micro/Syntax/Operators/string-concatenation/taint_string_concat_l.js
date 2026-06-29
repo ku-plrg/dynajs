@@ -8,10 +8,15 @@
 
 function __test_taint__(tainted) {
     var tsc_lr = tainted + "World!";
+    // @witness __test_taint__('x') => r[0..6] all tainted (from tainted left operand)
     __assert_taint__(tsc_lr, true);
+    // @witness __test_taint__('x') => r[0] = 'x' tainted
     __assert_taint__(tsc_lr[0], true);
+    // @witness __test_taint__('x') => r[6] = 'x' tainted
     __assert_taint__(tsc_lr[6], true);
+    // @witness r[7] = 'W' clean literal
     __assert_taint__(tsc_lr[7], false);
+    // @witness r[12] = '!' clean literal
     __assert_taint__(tsc_lr[12], false);
 }
 

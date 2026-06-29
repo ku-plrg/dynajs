@@ -10,6 +10,7 @@ function __test_taint__(tainted) {
     } catch {
       toc_r = tainted;
     }
+    // @witness __test_taint__('x') => toc_r = 'x' tainted (catch body assigns tainted)
     __assert_taint__(toc_r, true);
     var toc_clean = "clean";
     try {
@@ -17,6 +18,7 @@ function __test_taint__(tainted) {
     } catch {
       toc_clean = tainted;
     }
+    // @witness no exception thrown => catch skipped, toc_clean stays clean literal
     __assert_taint__(toc_clean, false);
 }
 

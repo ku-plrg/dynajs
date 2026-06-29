@@ -4,6 +4,7 @@
 
 function __test_taint__(tainted) {
     tainted++;
+    // @witness __test_taint__(5) => tainted++ => tainted = 6 tainted
     __assert_taint__(tainted, true);
 }
 

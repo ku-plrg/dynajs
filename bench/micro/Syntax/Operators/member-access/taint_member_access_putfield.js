@@ -6,9 +6,9 @@ function __test_taint__(tainted) {
     // tainted = a whole-tainted object; chained assignment shares the reference
     var tm_b = {};
     var tm_a = (tm_b.styles = tainted);
-    // @witness __test_taint__({}) => tm_b.styles = {} tainted
+    // @witness whole-tainted object assigned => tm_b.styles tainted
     __assert_taint__(tm_b.styles, true);
-    // @witness __test_taint__({}) => tm_a = {} tainted (chained assignment)
+    // @witness chained assignment shares the tainted reference => tm_a tainted
     __assert_taint__(tm_a, true);
 }
 

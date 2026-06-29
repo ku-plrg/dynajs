@@ -5,6 +5,7 @@
 // operand's. `!x` collapses to a boolean (a concrete value), so it is untainted.
 
 function __test_taint__(tainted) {
+    // @witness boolean result, clean
     __assert_taint__(!tainted, false);
 }
 

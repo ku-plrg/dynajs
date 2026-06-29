@@ -36,9 +36,12 @@
 //   --lint            check the concolic "exactly 1 assert fires per seeded
 //                     path" invariant; lists over/under-firing files, exits 1
 //                     on any violation; no build, no dynajs
-//   --coverage        census of @done progress: per path area (BuiltIns/Syntax)
-//                     and subarea, how many taint benches are `// @done` out of
-//                     total; concolic excluded; no runner, no build, no run
+//   --coverage        census of @done progress per area (BuiltIns/Syntax) and
+//                     subarea: covered units / universe. BuiltIns universe =
+//                     ECMAScript spec members (SPEC_BUILTIN_TOTAL); Syntax =
+//                     test262 language feature dirs (SYNTAX_T262_TOTAL), with
+//                     grouped members weighted (T262_MEMBER_WEIGHT). `*` = no
+//                     universe -> vs benched members. Taint only; no run/build
 //   --analysis NAME   analysis dynajs runs with (default: samples/EmptyAnalysis.js)
 //   --reps N          measured iterations per (runner, bench)   (default: 1)
 //   --warmup N        discarded warmup iterations               (default: 0)
@@ -108,6 +111,64 @@ const VERDICT_RE =
 const TYPE_CONFIG = {
   taint: { short: "ta", analysis: "analyses/dist/Taint.mjs", flags: "--partial --pos persist" },
   concolic: { short: "co", analysis: "analyses/dist/Concolic.mjs", flags: "--partial" },
+};
+
+// Spec member universe per BuiltIn, hand-set (cf. scripts/spec-coverage.mjs's
+// TOTAL_BUILTINS). --coverage divides @done methods by this so the denominator
+// is the whole ECMAScript surface for that BuiltIn — static + prototype members
+// incl. accessors/symbols, counted once from Node's runtime — not just the
+// method folders that exist. Tune freely; a subarea absent here (global, all
+// Syntax) falls back to its benched-member count in the report (marked `*`).
+const SPEC_BUILTIN_TOTAL = {
+  "BuiltIns/Array": 45,
+  "BuiltIns/String": 55,
+  "BuiltIns/RegExp": 39,
+  "BuiltIns/JSON": 3,
+  "BuiltIns/Object": 33,
+  "BuiltIns/Number": 20,
+  "BuiltIns/Map": 13,
+  "BuiltIns/Set": 12,
+  "BuiltIns/Function": 9,
+  "BuiltIns/Math": 44,
+};
+
+// Syntax universe = test262 `test/language` feature-directory count per category
+// (statements/ 29 + expressions/ 68 + literals/ 6, filtered to the constructs
+// these benches target). --coverage divides by this for Syntax subareas. Hand-
+// set from the tc39/test262 tree; tune freely. A subarea absent here (e.g. no
+// taint benches yet) falls back to its benched-member count, marked `*`.
+const SYNTAX_T262_TOTAL = {
+  "Syntax/Operators": 44,
+  "Syntax/ControlFlow": 11,
+  "Syntax/Functions": 16,
+  "Syntax/Variables": 9,
+  "Syntax/Literals": 12,
+  "Syntax/Classes": 12,
+  "Syntax/Objects": 6,
+  "Syntax/Exceptions": 4,
+  "Syntax/RegExp": 8,
+};
+
+// How many test262 feature dirs a repo member represents. Most members are 1:1
+// (default 1), but some Syntax members group several test262 dirs into one
+// folder — e.g. Operators/arithmetic covers addition/subtraction/.../modulus.
+// --coverage credits a @done member with its full weight, so the numerator is
+// in the same test262-dir unit as the SYNTAX_T262_TOTAL denominator. Keyed by
+// member dir relative to bench/micro.
+const T262_MEMBER_WEIGHT = {
+  "Syntax/Operators/arithmetic": 5,          // addition, subtraction, multiplication, division, modulus
+  "Syntax/Operators/bitwise": 7,             // and, or, xor, not, <<, >>, >>>
+  "Syntax/Operators/equality": 4,            // ==, !=, ===, !==
+  "Syntax/Operators/relational": 4,          // <, >, <=, >=
+  "Syntax/Operators/logical": 3,             // &&, ||, !
+  "Syntax/Operators/increment-decrement": 4, // prefix/postfix ++/--
+  "Syntax/Operators/member-access": 2,       // member-expression, property-accessors
+  "Syntax/Operators/unary": 2,               // unary-minus, unary-plus
+  "Syntax/ControlFlow/break-continue": 2,    // break, continue
+  "Syntax/Functions/async-await": 4,         // async-function (stmt/expr), async-arrow, await
+  "Syntax/Functions/generators": 3,          // generators (stmt/expr), yield
+  "Syntax/Functions/rest-spread": 2,         // rest-parameters, spread
+  "Syntax/Variables/let-const": 2,           // let, const
 };
 
 // --- NodeMedic (Jalangi instrumentation mode) -------------------------------
@@ -817,39 +878,70 @@ function main() {
     return;
   }
 
-  // --coverage: a @done-progress census — for each path area (BuiltIns/Syntax)
-  // and subarea (BuiltIns/Array, …), how many TAINT benches are eye-verified
-  // (`// @done`) out of the total. Concolic is excluded (abandoned; the kept
-  // ones are all @done). Reads sources only — no runner, no build, no run.
+  // --coverage: a @done-progress census against the ECMAScript spec surface.
+  // Counts METHODS — a "member" is the directory holding one method's benches
+  // (e.g. BuiltIns/Set/prototype/add), done when every taint bench in it is
+  // @done — and divides by the spec member universe (SPEC_BUILTIN_TOTAL) so the
+  // denominator is the whole BuiltIn, not just the method folders that exist.
+  // A subarea with no universe set (global, all Syntax) falls back to its
+  // benched-member count, marked `*`. Concolic excluded. Sources only — no run.
   if (opts.coverage) {
     const taint = benches.filter((b) => b.type === "taint");
     const pct = (d, t) => (t === 0 ? "  n/a" : `${Math.round((d / t) * 100)}%`);
-    const tally = (dim) => {
-      const m = new Map(); // key -> { done, total }
-      for (const b of taint) {
-        const e = m.get(b[dim]) ?? { done: 0, total: 0 };
-        e.total++;
-        if (b.done) e.done++;
-        m.set(b[dim], e);
-      }
-      return m;
-    };
-    const printGroup = (title, m) => {
-      console.log(`\nby ${title} (done / total):`);
-      for (const k of [...m.keys()].sort()) {
-        const { done, total } = m.get(k);
-        console.log(
-          `  ${k.padEnd(24)}${String(done).padStart(5)} / ${String(total).padEnd(5)}` +
-            pct(done, total).padStart(6),
-        );
-      }
-    };
-    const done = taint.filter((b) => b.done).length;
-    console.log(
-      `coverage — @done taint benches (concolic excluded): ${done} / ${taint.length}  ${pct(done, taint.length)}`,
-    );
-    printGroup("area", tally("area"));
-    printGroup("subarea", tally("subarea"));
+    // member dir -> { subarea, total benches, @done benches, weight }. weight =
+    // how many spec/test262 units the member represents: BuiltIns members are
+    // 1:1 with a spec member (weight 1); some Syntax members group several
+    // test262 dirs into one folder (T262_MEMBER_WEIGHT), e.g. Operators/
+    // arithmetic = +,-,*,/,% (weight 5). A member is "done" when all its taint
+    // benches are @done, and is then credited its full weight.
+    const members = new Map();
+    for (const b of taint) {
+      const dir = path.dirname(path.relative(BENCH_DIR, b.file));
+      const e = members.get(dir) ?? {
+        subarea: b.subarea, total: 0, done: 0, weight: T262_MEMBER_WEIGHT[dir] ?? 1,
+      };
+      e.total++;
+      if (b.done) e.done++;
+      members.set(dir, e);
+    }
+    // roll up to subarea: units covered by fully-@done members vs benched members
+    const sub = new Map();
+    for (const m of members.values()) {
+      const e = sub.get(m.subarea) ?? { covered: 0, benched: 0 };
+      e.benched++;
+      if (m.done === m.total) e.covered += m.weight;
+      sub.set(m.subarea, e);
+    }
+    // universe: BuiltIns -> ECMAScript spec members; Syntax -> test262 feature
+    // dirs; neither set (e.g. global) -> fall back to benched members, marked `*`.
+    const universeOf = (k) => SPEC_BUILTIN_TOTAL[k] ?? SYNTAX_T262_TOTAL[k];
+    const rows = [...sub.keys()].sort().map((k) => {
+      const { covered, benched } = sub.get(k);
+      const u = universeOf(k);
+      return { k, done: covered, denom: u ?? benched, fallback: u == null };
+    });
+    const line = (label, done, denom, fallback) =>
+      `  ${label.padEnd(26)}${String(done).padStart(4)} / ${(denom + (fallback ? "*" : "")).padEnd(5)}${pct(done, denom).padStart(6)}`;
+    console.log("coverage — @done coverage of the spec/test262 universe (taint only;");
+    console.log("           BuiltIns vs ECMAScript spec members, Syntax vs test262 language");
+    console.log("           feature dirs; * = no universe set -> denominator = benched members)\n");
+    console.log("by subarea (covered / universe):");
+    for (const r of rows) console.log(line(r.k, r.done, r.denom, r.fallback));
+    // area totals (BuiltIns / Syntax); `*` if any subarea fell back
+    const areas = new Map();
+    for (const r of rows) {
+      const a = r.k.split("/")[0];
+      const e = areas.get(a) ?? { done: 0, denom: 0, fallback: false };
+      e.done += r.done;
+      e.denom += r.denom;
+      e.fallback = e.fallback || r.fallback;
+      areas.set(a, e);
+    }
+    console.log("\nby area (covered / universe):");
+    for (const a of [...areas.keys()].sort()) {
+      const { done, denom, fallback } = areas.get(a);
+      console.log(line(a, done, denom, fallback));
+    }
     return;
   }
 

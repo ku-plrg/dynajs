@@ -6,6 +6,7 @@
 // type string — concrete, value-independent results — so both are untainted.
 
 function __test_taint__(tainted) {
+    // @witness boolean result, clean
     __assert_taint__(!tainted, false);
 }
 

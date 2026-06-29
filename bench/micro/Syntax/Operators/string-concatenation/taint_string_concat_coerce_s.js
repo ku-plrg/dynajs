@@ -10,9 +10,13 @@
 function __test_taint__(tainted) {
     var tscc_obj = { a: "test" };
     var tscc_lr = tainted + tscc_obj;
+    // @witness __test_taint__('x') => r[0..4] all tainted (from tainted left operand)
     __assert_taint__(tscc_lr, true);
+    // @witness __test_taint__('x') => r[0] = 'x' tainted
     __assert_taint__(tscc_lr[0], true);
+    // @witness __test_taint__('x') => r[4] = 'x' tainted
     __assert_taint__(tscc_lr[4], true);
+    // @witness r[5] = '[' coerced from clean object via toString() => char is clean
     __assert_taint__(tscc_lr[5], false);
 }
 

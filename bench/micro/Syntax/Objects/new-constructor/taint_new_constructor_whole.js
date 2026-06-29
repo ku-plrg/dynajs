@@ -4,10 +4,10 @@
 // @done
 
 function __test_taint__(tainted) {
-    // tainted = {a:1}; the whole object is the taint source (prop 'a' present at taint time)
-    // @witness __test_taint__({a: 1}) => tainted = {a:1} tainted
+    // the whole object is the taint source (its property present at taint time)
+    // @witness __test_taint__({p1: 42}) => tainted = {p1:42} tainted
     __assert_taint__(tainted, true);
-    // @witness __test_taint__({a: 1}) => tainted.a = 1 tainted
+    // @witness __test_taint__({p1: 42}) => tainted.a = 42 tainted
     __assert_taint__(tainted.a, true);
 
     // copying the tainted field into a clean object taints only that field
@@ -15,7 +15,7 @@ function __test_taint__(tainted) {
     tnc_r.a = tainted.a;
     // @witness mixed (tainted + clean) => not all-tainted, clean
     __assert_taint__(tnc_r, false);
-    // @witness __test_taint__({a: 1}) => tnc_r.a = 1 tainted
+    // @witness __test_taint__({p1: 42}) => tnc_r.a = 42 tainted
     __assert_taint__(tnc_r.a, true);
 }
 

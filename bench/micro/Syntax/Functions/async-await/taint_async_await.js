@@ -6,8 +6,10 @@
 function __test_taint__(tainted) {
     (async function () {
       var r = await tainted;
+      // @witness __test_taint__('x') => await tainted = 'x' tainted
       __assert_taint__(r, true);
       var clean = await "clean";
+      // @witness await of a clean literal, clean
       __assert_taint__(clean, false);
     })();
 }

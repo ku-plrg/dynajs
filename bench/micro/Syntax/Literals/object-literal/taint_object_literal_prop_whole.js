@@ -3,10 +3,10 @@
 // @feature syntax object-prop-taint
 
 function __test_taint__(tainted) {
-    // tainted = {test:"Hello"}; the whole object is the source
-    // @witness __test_taint__({test: "Hello"}) => tainted = {test:"Hello"} tainted
+    // the whole object is the source
+    // @witness __test_taint__({p1: 'x1'}) => tainted = {p1:'x1'} tainted
     __assert_taint__(tainted, true);
-    // @witness __test_taint__({test: "Hello"}) => tainted.test = "Hello" tainted
+    // @witness __test_taint__({p1: 'x1'}) => tainted.test = 'x1' tainted
     __assert_taint__(tainted.test, true);
 }
 

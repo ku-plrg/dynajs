@@ -9,7 +9,7 @@ function TNC_Box(v) {
 
 function __test_taint__(tainted) {
     var tnc_b = new TNC_Box(tainted);
-    // @witness __test_taint__('x') -> tnc_b.v = 'x' tainted
+    // @witness __test_taint__('x') => tnc_b.v = 'x' tainted
     __assert_taint__(tnc_b.v, true);
 }
 

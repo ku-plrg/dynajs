@@ -7,9 +7,13 @@
 
 function __test_taint__(tainted) {
     var tsp_b = "H" + tainted + "llo";
+    // @witness __test_taint__('x') => r[1] tainted from tainted operand
     __assert_taint__(tsp_b, true);
+    // @witness r[0] = 'H' clean literal
     __assert_taint__(tsp_b[0], false);
+    // @witness __test_taint__('x') => r[1] = 'x' tainted
     __assert_taint__(tsp_b[1], true);
+    // @witness r[2] = 'l' clean literal
     __assert_taint__(tsp_b[2], false);
 }
 

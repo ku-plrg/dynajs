@@ -4,9 +4,9 @@
 
 function __test_taint__(tainted) {
     // tainted is a tainted-CONTAINER object (the whole object is the source)
-    // @witness __test_taint__({}) => tainted = {} tainted
+    // @witness whole-tainted object source => tainted (taint bit set)
     __assert_taint__(tainted, true);
-    // @witness __test_taint__({}) => tainted.valueOf() = {} tainted
+    // @witness valueOf() returns the same tainted object => tainted
     __assert_taint__(tainted.valueOf(), true);
     tainted.p = 'clean';
     // @witness tainted.p = 'clean', assigned clean property, clean

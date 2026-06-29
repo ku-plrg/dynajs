@@ -8,7 +8,7 @@ function __test_taint__(tainted) {
     var tnc_q = {};
     tnc_q.a = tnc_z;
 
-    // @witness __test_taint__("Hello") => tnc_q.a[0] = 'H' tainted
+    // @witness __test_taint__('x') => tnc_q.a[0] = 'x' tainted
     __assert_taint__(tnc_q.a[0], true);
     // @witness tnc_q.a[tnc_z.length-1] = '!' clean
     __assert_taint__(tnc_q.a[tnc_z.length-1], false);

@@ -7,6 +7,7 @@
 
 function __test_taint__(tainted) {
     var tsp_x = tainted;
+    // @witness __test_taint__('x') => r[0] = 'x' tainted
     __assert_taint__(tsp_x[0], true);
 }
 

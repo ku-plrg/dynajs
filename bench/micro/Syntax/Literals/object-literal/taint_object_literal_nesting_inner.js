@@ -3,13 +3,13 @@
 // @feature syntax object-nesting
 
 function __test_taint__(tainted) {
-    // tainted = {c:1}; only the inner object is the source (taint flows down, not up)
+    // tainted is the inner object; taint flows down, not up
     var tol_a = {b: tainted, d: 0};
     // @witness mixed (tainted + clean) => not all-tainted, clean
     __assert_taint__(tol_a, false);
-    // @witness __test_taint__({c: 1}) => tol_a.b = {c:1} tainted
+    // @witness __test_taint__({p1: 42}) => tol_a.b = {p1:42} tainted
     __assert_taint__(tol_a.b, true);
-    // @witness __test_taint__({c: 1}) => tol_a.b.c = 1 tainted
+    // @witness __test_taint__({p1: 42}) => tol_a.b.c = 42 tainted
     __assert_taint__(tol_a.b.c, true);
 }
 

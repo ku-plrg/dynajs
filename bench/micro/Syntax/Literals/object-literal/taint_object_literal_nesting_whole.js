@@ -3,12 +3,12 @@
 // @feature syntax object-nesting
 
 function __test_taint__(tainted) {
-    // tainted = {b:{c:1}}; the whole nested object is the source
-    // @witness __test_taint__({b: {c: 1}}) => tainted = {b:{c:1}} tainted
+    // the whole nested object is the source
+    // @witness __test_taint__({p1: {p2: 42}}) => tainted = {p1:{p2:42}} tainted
     __assert_taint__(tainted, true);
-    // @witness __test_taint__({b: {c: 1}}) => tainted.b = {c:1} tainted
+    // @witness __test_taint__({p1: {p2: 42}}) => tainted.b = {p2:42} tainted
     __assert_taint__(tainted.b, true);
-    // @witness __test_taint__({b: {c: 1}}) => tainted.b.c = 1 tainted
+    // @witness __test_taint__({p1: {p2: 42}}) => tainted.b.c = 42 tainted
     __assert_taint__(tainted.b.c, true);
 }
 

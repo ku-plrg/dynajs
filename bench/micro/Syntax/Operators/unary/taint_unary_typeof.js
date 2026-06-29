@@ -6,6 +6,7 @@
 // type string — concrete, value-independent results — so both are untainted.
 
 function __test_taint__(tainted) {
+    // @witness typeof yields a fixed type-name string, not the tainted value => clean
     __assert_taint__(typeof tainted, false);
 }
 

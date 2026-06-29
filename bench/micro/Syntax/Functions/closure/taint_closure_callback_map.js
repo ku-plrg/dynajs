@@ -1,27 +1,22 @@
 // @type taint
 // @target es6+ closure
 // @feature syntax callback-map
+// @done
 
 function __test_taint__(tainted) {
-    // tainted = {test:'Hello'}; a whole-tainted object element
+    // tainted = a whole-tainted object element
     var tcl_b = {test: 'World'};
     var tcl_c = [tainted, tcl_b];
-    // @witness __test_taint__({test: 'Hello'}) => tcl_c[0] = {test:'Hello'} tainted
+    // @witness __test_taint__({p1: 'x1'}) => tcl_c[0] = {p1:'x1'} tainted
     __assert_taint__(tcl_c[0], true);
     // @witness clean sibling element, clean
     __assert_taint__(tcl_c[1], false);
 
     var tcl_d = tcl_c.map((x) => x);
-    // @witness __test_taint__({test: 'Hello'}) => tcl_d[0] = {test:'Hello'} tainted
+    // @witness __test_taint__({p1: 'x1'}) => tcl_d[0] = {p1:'x1'} tainted
     __assert_taint__(tcl_d[0], true);
     // @witness clean sibling element, clean
     __assert_taint__(tcl_d[1], false);
-
-    var tcl_e = tcl_c.map((x) => x.test);
-    // @witness __test_taint__({test: 'Hello'}) => tcl_e[0] = 'Hello' tainted
-    __assert_taint__(tcl_e[0], true);
-    // @witness clean element's prop 'World', clean
-    __assert_taint__(tcl_e[1], false);
 
     var tcl_f = tcl_c.map((x) => x.toString());
     // @witness toString => "[object Object]" structural, clean

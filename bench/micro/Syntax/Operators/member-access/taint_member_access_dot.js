@@ -4,7 +4,9 @@
 
 function __test_taint__(tainted) {
     var tm_obj = { f: tainted };
+    // @witness __test_taint__('x') => obj.f = 'x' tainted
     __assert_taint__(tm_obj.f, true);
+    // @witness __test_taint__('x') => obj['f'] = 'x' tainted
     __assert_taint__(tm_obj["f"], true);
 }
 

@@ -4,7 +4,7 @@
 
 function __test_taint__(tainted) {
     var tol_short = { tol_v: tainted };
-    // @witness __test_taint__("tv") => tol_short.tol_v = "tv" tainted
+    // @witness __test_taint__("x") => tol_short.tol_v = "x" tainted
     __assert_taint__(tol_short.tol_v, true);
 }
 

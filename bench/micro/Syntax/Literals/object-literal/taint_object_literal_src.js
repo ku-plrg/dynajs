@@ -4,7 +4,7 @@
 
 function __test_taint__(tainted) {
     var tol_obj = { a: tainted, b: "clean" };
-    // @witness __test_taint__("tv") => tol_obj.a = "tv" tainted
+    // @witness __test_taint__("x") => tol_obj.a = "x" tainted
     __assert_taint__(tol_obj.a, true);
     // @witness clean literal prop, clean
     __assert_taint__(tol_obj.b, false);

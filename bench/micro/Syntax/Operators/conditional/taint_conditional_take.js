@@ -4,6 +4,7 @@
 
 function __test_taint__(tainted) {
     var tt_take_r = true ? tainted : "x";
+    // @witness __test_taint__('x') => tt_take_r = 'x' tainted (true branch taken)
     __assert_taint__(tt_take_r, true);
 }
 

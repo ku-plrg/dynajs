@@ -7,8 +7,10 @@
 function I_Ctor() {}
 
 function __test_taint__(tainted) {
+    // @witness boolean result, clean
     __assert_taint__(tainted instanceof I_Ctor, false);
     var io_clean = new I_Ctor();
+    // @witness boolean result, clean
     __assert_taint__(io_clean instanceof I_Ctor, false);
 }
 

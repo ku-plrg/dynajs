@@ -10,8 +10,11 @@
 function __test_taint__(tainted) {
     var tscc_s2 = "Hello";
     var tscc_rr = tscc_s2 + tainted;
+    // @witness tainted object coerces via toString() => all chars are clean; left side is clean literal too
     __assert_taint__(tscc_rr, false);
+    // @witness r[0] = 'H' clean literal
     __assert_taint__(tscc_rr[0], false);
+    // @witness r[7] = 'b' coerced from tainted object via toString() => char is clean
     __assert_taint__(tscc_rr[7], false);
 }
 

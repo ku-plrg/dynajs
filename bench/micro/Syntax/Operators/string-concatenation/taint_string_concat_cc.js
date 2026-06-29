@@ -8,7 +8,9 @@
 
 function __test_taint__(tainted) {
     var tsc_cc = "ab" + "cd";
+    // @witness both operands are clean literals => entire result clean
     __assert_taint__(tsc_cc, false);
+    // @witness r[0] = 'a' clean literal
     __assert_taint__(tsc_cc[0], false);
 }
 

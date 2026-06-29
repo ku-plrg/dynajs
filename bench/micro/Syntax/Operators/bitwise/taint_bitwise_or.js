@@ -3,6 +3,7 @@
 // @feature syntax bitwise
 
 function __test_taint__(tainted) {
+    // @witness __test_taint__(40) => tainted | 2 = 42 tainted
     __assert_taint__(tainted | 2, true);
 }
 
