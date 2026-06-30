@@ -119,6 +119,8 @@ export function sortOf(s: Sym): Sort | undefined {
       return 'Real'; // ToIntegerOrInfinity yields a (Real) number
     case 'strlen':
       return 'Int';
+    case 'strIndexOf':
+      return 'Int';
     case 'select':
       return s.elemSort;
     case 'store':
@@ -202,6 +204,12 @@ export type Sym =
   // `sub`? The boolean a String "contains" condition (e.g. replaceAll's
   // global-flag check) forks on.
   | { kind: 'contains'; str: Sym; sub: Sym }
+  // String.prototype.indexOf's irreducible matcher (z3 String theory
+  // `str.indexof`): the least index >= `from` at which `sub` occurs in `src`, or
+  // -1 if it does not occur (or `from` exceeds the length). A concrete-path scan
+  // can only return the single index it walked to — never the not-found (-1) arm —
+  // so indexOf needs this one flippable Int term for an `=== -1` query to be SAT.
+  | { kind: 'strIndexOf'; src: Sym; sub: Sym; from: Sym }
   // if-then-else over Syms (`(ite c t e)`); both arms share a sort. Used by
   // `search` (match index, else -1) and the min/max encodings.
   | { kind: 'ite'; cond: Sym; then: Sym; else: Sym };
@@ -250,6 +258,8 @@ export function symToString(s: Sym): string {
       return `${symToString(s.str)} ∈ /${reToString(s.re)}/`;
     case 'contains':
       return `contains(${symToString(s.str)}, ${symToString(s.sub)})`;
+    case 'strIndexOf':
+      return `indexOf(${symToString(s.src)}, ${symToString(s.sub)}, ${symToString(s.from)})`;
     case 'ite':
       return `(${symToString(s.cond)} ? ${symToString(s.then)} : ${symToString(s.else)})`;
   }

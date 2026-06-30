@@ -15,7 +15,8 @@ import {
 //
 // Scope: integer arithmetic, comparisons, boolean logic, a slice of the z3
 // String theory — string equality, concatenation (`str.++`), fixed-window
-// substring/char-access (`str.substr`), and length (`str.len`) — and the z3
+// substring/char-access (`str.substr`), length (`str.len`), substring search
+// (`str.indexof`), and containment (`str.contains`) — and the z3
 // Sequence theory for symbolic arrays (`seq.nth`/`seq.len`/`seq.++`/`seq.unit`/
 // `seq.extract`/`seq.indexof`/`seq.contains`) — enough for the concolic
 // microbenches. Operators outside this set (bitwise, **, string ordering
@@ -408,6 +409,11 @@ function symToSmt(s: Sym, vars: Map<string, Sort>): string {
       return `(str.in_re ${symToSmt(s.str, vars)} ${reToSmt(s.re)})`;
     case 'contains':
       return `(str.contains ${symToSmt(s.str, vars)} ${symToSmt(s.sub, vars)})`;
+    case 'strIndexOf':
+      // z3 `str.indexof` returns -1 when `sub` is absent at/after `from`, the same
+      // sentinel JS indexOf uses, so the result needs no further mapping. The
+      // offset coerces to Int (it can arrive Real via ToIntegerOrInfinity/clamp).
+      return `(str.indexof ${symToSmt(s.src, vars)} ${symToSmt(s.sub, vars)} ${operand(s.from, vars, 'Int')})`;
     case 'ite':
       return `(ite ${symToSmt(s.cond, vars)} ${symToSmt(s.then, vars)} ${symToSmt(s.else, vars)})`;
   }

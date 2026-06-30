@@ -176,6 +176,18 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     return { kind: 'contains', str, sub: needle };
   }
 
+  protected stringIndexOfInfo(
+    src: Valued<Sym>,
+    searchValue: Valued<Sym>,
+    fromIndex: Valued<Sym, number>,
+  ): Sym | undefined {
+    const s = this.symOf(src);
+    const sub = this.symOf(searchValue);
+    if (s.kind === 'const' && sub.kind === 'const') return undefined;
+    if (sortOf(s) !== 'String' || sortOf(sub) !== 'String') return undefined;
+    return { kind: 'strIndexOf', src: s, sub, from: this.symOf(fromIndex) };
+  }
+
   protected getFieldInfo(
     base: Valued<Sym>,
     prop: Valued<Sym>,
@@ -326,9 +338,36 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   protected conditionInfo(id: number, cond: Valued<Sym>, taken: boolean): void {
     const sym = this.symOf(cond);
     if (sym.kind === 'const') return;
+    if (this.isSpecSentinelReMap(id, sym)) return;
     const bool = this.toBool(sym);
     if (bool !== undefined)
       this.pathConstraints.push({ id, constraint: bool, taken });
+  }
+
+  // Spec-model branch ids are `Number.MAX_SAFE_INTEGER - N` (esmeta); user-code
+  // branch ids are minted from 0 by ±1, so they never reach this floor.
+  private static readonly SPEC_BRANCH_FLOOR = Number.MAX_SAFE_INTEGER - 1_000_000;
+
+  // A spec model repackaging a pure matcher's not-found sentinel — StringIndexOf's
+  // intrinsic does `if (result === -1) return -1` — is a modeling artifact, not
+  // program control flow. Recording it would pin the concrete-found path with
+  // `strIndexOf != -1`, making an `indexOf(...) === -1` query unsat under it.
+  // indexOf is surfaced as the pure z3 `str.indexof` term (see $.stringIndexOf),
+  // so drop such a spec-internal (high-id) `(matcher op -1)` discrimination; user
+  // branches (small ids) and every non-matcher condition still constrain.
+  // (Note: the concrete branch still runs, so a *concrete-not-found* seed whose
+  // intrinsic arm returns a fresh -1 still loses the symbolic result — that arm,
+  // not the recorded constraint, is the limit.)
+  private isSpecSentinelReMap(id: number, sym: Sym): boolean {
+    if (id < ConcolicAnalysis.SPEC_BRANCH_FLOOR) return false;
+    if (sym.kind !== 'binary' || !ConcolicAnalysis.EQUALITY_OPS.has(sym.op))
+      return false;
+    const isMatcher = (s: Sym) => s.kind === 'strIndexOf';
+    const isNotFound = (s: Sym) => s.kind === 'const' && s.value === -1;
+    return (
+      (isMatcher(sym.left) && isNotFound(sym.right)) ||
+      (isMatcher(sym.right) && isNotFound(sym.left))
+    );
   }
 
   private toBool(sym: Sym): Sym | undefined {

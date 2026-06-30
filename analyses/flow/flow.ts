@@ -92,6 +92,11 @@ export abstract class FlowAnalysis<Info>
     _s: Valued<Info, string>,
     _sub: Valued<Info, string>,
   ): Info;
+  protected stringIndexOfInfo?(
+    _src: Valued<Info, string>,
+    _searchValue: Valued<Info, string>,
+    _fromIndex: Valued<Info, number>,
+  ): Info;
   protected containsListInfo?(_list: Valued<Info>, _x: Valued<Info>): Info;
   /* case folding (`$.toLower`/`$.toUpper`): no z3 string operator maps case, so an
    * analysis cannot encode the per-character mapping — return a model under which
@@ -309,6 +314,27 @@ export abstract class FlowAnalysis<Info>
         v,
         this.containsStrInfo?.(this.valued(s), this.valued(sub)) ??
           this.defaultInfo(v, [this.valued(s), this.valued(sub)]),
+      );
+    },
+    // All operands unlifted — a lifted proxy reaching native
+    // String.prototype.indexOf coerces to "[object Object]".
+    stringIndexOf: (s, searchValue, fromIndex) => {
+      const v = (this.unlift(s) as string).indexOf(
+        this.unlift(searchValue) as string,
+        this.unlift(fromIndex) as number,
+      );
+      return this.lift(
+        v,
+        this.stringIndexOfInfo?.(
+          this.valued(s),
+          this.valued(searchValue),
+          this.valued(fromIndex),
+        ) ??
+          this.defaultInfo(v, [
+            this.valued(s),
+            this.valued(searchValue),
+            this.valued(fromIndex),
+          ]),
       );
     },
 

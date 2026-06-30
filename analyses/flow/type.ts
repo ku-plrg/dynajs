@@ -91,6 +91,14 @@ interface StringOps {
   toUpper: (s: Lifted<string>) => Lifted<string>;
   /** only exists for String.prototype.replaceAll - worth it? */
   containsStr: (s: Lifted<string>, sub: Lifted<string>) => Lifted<boolean>;
+  /** The irreducible substring matcher: least index of `searchValue` in `s` at or
+   * after `fromIndex`, or -1 if absent. One flippable term (cf. `$.regexExec`) — a
+   * concrete-path loop could only ever return the index it walked to, never -1. */
+  stringIndexOf: (
+    s: Lifted<string>,
+    searchValue: Lifted<string>,
+    fromIndex: Lifted<number>,
+  ) => Lifted<number>;
 }
 
 interface ArithmeticOps {
