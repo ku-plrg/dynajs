@@ -62,8 +62,13 @@ interface DynamicOps {
 interface ObjectOps {
   /** .[[Get]] */
   get: (base: Lifted<unknown>, prop: Lifted<unknown>) => Lifted<unknown>;
-  /** .[[Set]] */
-  // set :
+  /** .[[Set]] — native write on the receiver + a setFieldInfo notification so an
+   * analysis can model the write (e.g. a symbolic array's length/elements). Returns V. */
+  set: (
+    base: Lifted<unknown>,
+    prop: Lifted<unknown>,
+    value: Lifted<unknown>,
+  ) => Lifted<unknown>;
 
   /** [[Call]] */
   apply: (

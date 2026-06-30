@@ -1,18 +1,13 @@
-import type { SpecRuntime, Lifted, Unlifted, Primitive } from "../type.js";
+import type { SpecRuntime, Lifted } from "../type.js";
 
 export function AO__Set ($ : SpecRuntime, O : Lifted<unknown>, P : Lifted<unknown>, V : Lifted<unknown>, Throw : Lifted<boolean>) {
   "use strict";
 
-  const Ou = $.value(O);
-  const Pu: unknown = $.value(P);
-
-  // in some cases engine coerces the value
-  const storeRaw = ArrayBuffer.isView(Ou) || Pu === "length";
-
-  // 1. Let success be ? O.[[Set]](P, V, O).
+  // 1. Let success be ? O.[[Set]](P, V, O). `$.set` performs the native write
+  //    (engine-coercing the length / TypedArray slots) and notifies the analysis
+  //    via setFieldInfo, so a symbolic array's length tracks the write.
   try {
-    // @ts-ignore coerce as property key
-    Ou[Pu] = storeRaw ? $.value(V) : V;
+    $.set(O, P, V);
   } catch (error) {
     // 2. If success is false and Throw is true, throw a TypeError exception.
     if (Throw) throw error;

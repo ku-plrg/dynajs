@@ -118,17 +118,20 @@ export abstract class FlowAnalysis<Info>
   protected minInfo?(_operands: Valued<Info, number>[]): Info;
   protected maxInfo?(_operands: Valued<Info, number>[]): Info;
 
-  /* one index of an integer range `lo..hi`; called per element so the analysis can
-   * tie each index to the (possibly symbolic) bounds. `bid` keys the loop-bound branch. */
+  /* the integer range `lo..hi` as a whole, materialized eagerly. Called once with the
+   * concrete index list (ascending) so the analysis can both tie each index to the
+   * (possibly symbolic) bounds AND see the loop bounds to record the trip-count guard
+   * keyed by `bid`. Returns one Info per index, aligned to `indices`; a missing entry
+   * (or undefined return) falls back to a bound-derived baseInfo for that index. */
   protected rangeInfo?(
-    _index: number,
+    _indices: number[],
     _lo: Valued<Info, number>,
     _loInclusive: boolean,
     _hi: Valued<Info, number>,
     _hiInclusive: boolean,
     _ascending: boolean,
     _bid: number,
-  ): Info;
+  ): (Info | undefined)[] | undefined;
 
   /* property read from object property or array element */
   protected getFieldInfo?(
@@ -136,6 +139,14 @@ export abstract class FlowAnalysis<Info>
     _prop: Valued<Info>,
     _result: Valued<Info>,
   ): Info;
+
+  /* property write to object property or array element (`$.set`); side-effecting
+   * (mutates the analysis's model of `base`), so it returns nothing. */
+  protected setFieldInfo?(
+    _base: Valued<Info>,
+    _prop: Valued<Info>,
+    _value: Valued<Info>,
+  ): void;
 
   protected conditionInfo?(
     _id: number,
@@ -530,28 +541,28 @@ export abstract class FlowAnalysis<Info>
     ): Lifted<number>[] => {
       // The interval is the SET {x : lo ≤/< x ≤/< hi}; `ascending` only picks the
       // order. Materialized eagerly as an array (driven by a native `for...of` in
-      // generated code), so each index is a `lift`ed value: a user analysis observes
-      // the loop through `rangeInfo` (which gets the possibly-symbolic bounds + bid),
-      // and without that hook each index falls back to deriving from the bounds.
+      // generated code). The whole index list goes to `rangeInfo` once — so the
+      // analysis sees the bounds (and can record the trip-count guard via `bid`) and
+      // returns one Info per index; without the hook each index derives from the bounds.
       const start = (this.unlift(lo) as number) + (loInclusive ? 0 : 1);
       const end = (this.unlift(hi) as number) - (hiInclusive ? 0 : 1);
-      const out: Lifted<number>[] = [];
-      for (let i = start; i <= end; i++) {
-        out.push(
-          this.lift(
-            i,
-            this.rangeInfo?.(
-              i,
-              this.valued(lo),
-              loInclusive,
-              this.valued(hi),
-              hiInclusive,
-              ascending,
-              bid,
-            ) ?? this.defaultInfo(i, [this.valued(lo), this.valued(hi)]),
-          ),
-        );
-      }
+      const indices: number[] = [];
+      for (let i = start; i <= end; i++) indices.push(i);
+      const infos = this.rangeInfo?.(
+        indices,
+        this.valued(lo),
+        loInclusive,
+        this.valued(hi),
+        hiInclusive,
+        ascending,
+        bid,
+      );
+      const out = indices.map((i, k) =>
+        this.lift(
+          i,
+          infos?.[k] ?? this.defaultInfo(i, [this.valued(lo), this.valued(hi)]),
+        ),
+      );
       if (!ascending) out.reverse();
       return out;
     },
@@ -583,6 +594,21 @@ export abstract class FlowAnalysis<Info>
           this.valued(result),
         ) ?? this.defaultInfo(result, [this.valued(base), this.valued(prop)]),
       );
+    },
+    set: (base, prop, value) => {
+      const b = this.$.value(base);
+      const p: unknown = this.$.value(prop);
+
+      const storeRaw = ArrayBuffer.isView(b) || p === 'length';
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (b as any)[p as any] = storeRaw ? this.$.value(value) : value;
+      this.setFieldInfo?.(
+        this.valued(base),
+        this.valued(prop),
+        this.valued(value),
+      );
+      return value;
     },
     apply: (f, thisArg, args) => {
       // A function reached through a spec AO (AO__Call → a regex's @@replace, an
