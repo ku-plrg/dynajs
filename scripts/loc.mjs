@@ -50,8 +50,12 @@ function stripComments(source, file) {
   return printer.printFile(sourceFile);
 }
 
+// Resolve the project-local prettier so the script works when run directly
+// (node scripts/loc.mjs ...), not only via npm where node_modules/.bin is on PATH.
+const PRETTIER_BIN = path.join(import.meta.dirname, '..', 'node_modules', '.bin', 'prettier');
+
 function prettierFormat(code, file) {
-  const res = spawnSync('prettier', ['--stdin-filepath', file], {
+  const res = spawnSync(PRETTIER_BIN, ['--stdin-filepath', file], {
     input: code,
     encoding: 'utf8',
     maxBuffer: 128 * 1024 * 1024,
