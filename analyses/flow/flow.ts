@@ -131,7 +131,7 @@ export abstract class FlowAnalysis<Info>
     _hiInclusive: boolean,
     _ascending: boolean,
     _bid: number,
-  ): (Info | undefined)[] | undefined;
+  ): Info[];
 
   /* property read from object property or array element */
   protected getFieldInfo?(
