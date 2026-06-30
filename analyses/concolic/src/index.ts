@@ -68,13 +68,6 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     resultLength: number,
   ): Sym | undefined {
     if (src.info === undefined) return undefined;
-    // The window is [start, end), so its length is end - start. When either
-    // bound is symbolic — an open-ended slice/substring whose end is the symbolic
-    // string length (slice(1), substring(1)), an end clamped to len
-    // (substring(0, 100)), or a char access at a computed index — carry the
-    // bounds (and hence the length) symbolically. Pinning length to the seed's
-    // concrete result length would make any query needing a different-length
-    // subject (slice(1) === 'bcd') unsatisfiable.
     if (start.info === undefined && end.info === undefined) {
       return {
         kind: 'substr',
@@ -263,9 +256,6 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     const hi = this.symOf(upper);
     if (xs.kind === 'const' && lo.kind === 'const' && hi.kind === 'const')
       return undefined;
-    // clamp(±∞, lo, hi) is exactly hi or lo — the spec uses +∞ for an absent
-    // lastIndexOf position. minMax folds the non-finite away so the bound has an
-    // SMT image (a raw ±∞ const throws UnsupportedSym in smt.ts).
     return this.minMax('max', lo, this.minMax('min', xs, hi));
   }
 
@@ -310,6 +300,25 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     );
   }
 
+  protected minInfo(operands: Valued<Sym, number>[]): Sym | undefined {
+    return this.extremum('min', operands);
+  }
+
+  protected maxInfo(operands: Valued<Sym, number>[]): Sym | undefined {
+    return this.extremum('max', operands);
+  }
+
+
+  protected conditionInfo(id: number, cond: Valued<Sym>, taken: boolean): void {
+    this.cov?.decision(id, taken);
+    const sym = this.symOf(cond);
+    if (sym.kind === 'const') return;
+    const bool = this.toBool(sym);
+    if (bool !== undefined)
+      this.pathConstraints.push({ id, constraint: bool, taken });
+  }
+
+
   private recordRangeGuards(
     indices: number[],
     start: number,
@@ -334,17 +343,6 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     }
   }
 
-  protected minInfo(operands: Valued<Sym, number>[]): Sym | undefined {
-    return this.extremum('min', operands);
-  }
-
-  protected maxInfo(operands: Valued<Sym, number>[]): Sym | undefined {
-    return this.extremum('max', operands);
-  }
-
-  // min/max fold to nested `(ite (<= a b) a b)` binaries (smt.ts SMT_BINARY). All
-  // bounds concrete -> undefined (concretize); the spec's `from`/`to` window
-  // computations stay symbolic so an open-ended substring carries its length.
   private extremum(
     op: 'min' | 'max',
     operands: Valued<Sym, number>[],
@@ -354,14 +352,6 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     return syms.reduce((left, right) => this.minMax(op, left, right));
   }
 
-  protected conditionInfo(id: number, cond: Valued<Sym>, taken: boolean): void {
-    this.cov?.decision(id, taken);
-    const sym = this.symOf(cond);
-    if (sym.kind === 'const') return;
-    const bool = this.toBool(sym);
-    if (bool !== undefined)
-      this.pathConstraints.push({ id, constraint: bool, taken });
-  }
 
   // Spec-model branch ids are `Number.MAX_SAFE_INTEGER - N` (esmeta); user-code
   // branch ids are minted from 0 by ±1, so they never reach this floor.
