@@ -60,7 +60,7 @@ export function INTRINSICS_String_prototype_split ($ : SpecRuntime, $this : Lift
   var substrings = [] as Lifted<never>[];
   var i = $.default<number>(0, []);
   var j = AO__StringIndexOf($, (S as Lifted<string>), (R as Lifted<string>), ($.default<number>(0, []) as Lifted<number>));
-  while (!$.value($.condition(Number.MAX_SAFE_INTEGER - 496, $.is(j, $.default<string>("not-found", [])))))
+  while (!$.value($.condition(Number.MAX_SAFE_INTEGER - 496, $.is(j, $.default<number>(-1, [])))))
   {
     var T = $.substring(S, (i as Lifted<number>), (j as Lifted<number>));
     $.append(substrings, T)

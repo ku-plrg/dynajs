@@ -81,7 +81,7 @@ export function AO__GetSubstitution ($ : SpecRuntime, matched : Lifted<string>, 
               if ($.value($.condition(Number.MAX_SAFE_INTEGER - 86, $.is($.substring(templateRemainder, $.default(0, []), $.default(2, [])), $.default("$<", [])))))
               {
                 var gtPos = AO__StringIndexOf($, (templateRemainder as Lifted<string>), ($.default<string>(">", []) as Lifted<string>), ($.default<number>(0, []) as Lifted<number>));
-                if ($.value($.condition(Number.MAX_SAFE_INTEGER - 87, $.is(gtPos, $.default<string>("not-found", [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 88, $.is(namedCaptures, $.default<undefined>(undefined, [])))))
+                if ($.value($.condition(Number.MAX_SAFE_INTEGER - 87, $.is(gtPos, $.default<number>(-1, [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 88, $.is(namedCaptures, $.default<undefined>(undefined, [])))))
                 {
                   var ref = $.default<string>("$<", []);
                   var refReplacement = ref;

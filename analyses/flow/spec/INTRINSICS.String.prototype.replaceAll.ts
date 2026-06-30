@@ -47,7 +47,7 @@ export function INTRINSICS_String_prototype_replaceAll ($ : SpecRuntime, $this :
   var advanceBy = $.max($.default<number>(1, []), searchLength);
   var matchPositions = [] as Lifted<never>[];
   var position = AO__StringIndexOf($, (string as Lifted<string>), (searchString as Lifted<string>), ($.default<number>(0, []) as Lifted<number>));
-  while (!$.value($.condition(Number.MAX_SAFE_INTEGER - 476, $.is(position, $.default<string>("not-found", [])))))
+  while (!$.value($.condition(Number.MAX_SAFE_INTEGER - 476, $.is(position, $.default<number>(-1, [])))))
   {
     $.append(matchPositions, position)
     position = AO__StringIndexOf($, (string as Lifted<string>), (searchString as Lifted<string>), ($.add((position as Lifted<number>), (advanceBy as Lifted<number>)) as Lifted<number>));

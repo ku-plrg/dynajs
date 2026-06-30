@@ -30,7 +30,7 @@ export function INTRINSICS_String_prototype_lastIndexOf ($ : SpecRuntime, $this 
 
   var start = $.clamp(pos, $.default<number>(0, []), $.subtract((len as Lifted<number>), (searchLen as Lifted<number>)));
   var result = AO__StringLastIndexOf($, (S as Lifted<string>), (searchStr as Lifted<string>), (start as Lifted<number>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 447, $.is(result, $.default<string>("not-found", [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 447, $.is(result, $.default<number>(-1, [])))))
   {
     return $.default<number>(-1, []);
   }

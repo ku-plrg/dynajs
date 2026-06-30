@@ -14,5 +14,5 @@ export function AO__StringLastIndexOf ($ : SpecRuntime, string : Lifted<string>,
 
   }
 
-  return $.default<string>("not-found", []);
+  return $.default<number>(-1, []);
 }

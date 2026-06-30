@@ -31,7 +31,7 @@ export function INTRINSICS_String_prototype_replace ($ : SpecRuntime, $this : Li
 
   var searchLength = $.length(searchString);
   var position = AO__StringIndexOf($, (string as Lifted<string>), (searchString as Lifted<string>), ($.default<number>(0, []) as Lifted<number>));
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 468, $.is(position, $.default<string>("not-found", [])))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 468, $.is(position, $.default<number>(-1, [])))))
   {
     return string;
   }
