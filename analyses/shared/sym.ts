@@ -113,6 +113,7 @@ export function sortOf(s: Sym): Sort | undefined {
       return arithSort(sortOf(s.left), sortOf(s.right));
     case 'concat':
     case 'substr':
+    case 'trim':
       return 'String';
     case 'truncate':
       return 'Real'; // ToIntegerOrInfinity yields a (Real) number
@@ -165,6 +166,12 @@ export type Sym =
   | { kind: 'concat'; left: Sym; right: Sym }
   | { kind: 'substr'; src: Sym; start: number; length: number }
   | { kind: 'strlen'; src: Sym }
+  // String.prototype.trim/trimStart/trimEnd (`$.trim`): `src` with leading
+  // and/or trailing whitespace stripped. No single z3 string operator trims, so
+  // smt.ts unfolds it through the recursive `str.whiteLeft`/`str.whiteRight`
+  // helpers (ExpoSE's StringModels) into a substring over the whitespace-run
+  // bounds.
+  | { kind: 'trim'; src: Sym; leading: boolean; trailing: boolean }
   // ToIntegerOrInfinity's truncate-toward-zero (ℝ -> integer-valued Real),
   // encoded over the Real domain as sign(x) * floor(|x|) (ite + to_int/to_real).
   | { kind: 'truncate'; src: Sym }
@@ -217,6 +224,8 @@ export function symToString(s: Sym): string {
       return `${symToString(s.src)}[${s.start}..${s.start + s.length}]`;
     case 'strlen':
       return `len(${symToString(s.src)})`;
+    case 'trim':
+      return `trim${s.leading ? 'L' : ''}${s.trailing ? 'R' : ''}(${symToString(s.src)})`;
     case 'truncate':
       return `trunc(${symToString(s.src)})`;
     case 'select':

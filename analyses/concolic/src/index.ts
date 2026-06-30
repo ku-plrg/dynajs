@@ -109,6 +109,16 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     return this.caseFoldIdentity(s, '^[^a-z]+$');
   }
 
+  protected trimInfo(
+    src: Valued<Sym>,
+    leading: boolean,
+    trailing: boolean,
+  ): Sym | undefined {
+    const s = this.symOf(src);
+    if (s.kind === 'const' || sortOf(s) !== 'String') return undefined;
+    return { kind: 'trim', src: s, leading, trailing };
+  }
+
   private caseFoldIdentity(
     s: Valued<Sym>,
     singleCasePattern: string,
@@ -259,217 +269,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     const arr = this.getInfo(base);
     if (arr === undefined) return undefined;
 
-    if (f === Array.prototype.push) {
-      const arg = this.valued(entries[1]);
-      // A type-mismatched push wipes the symbolic array (ExpoSE bug28): from here
-      // on the array is concrete, so drop both its sequence Info and its meta.
-      if (typeof arg.value !== this.elemTypeof(meta.elemSort)) {
-        this.setInfo(base, undefined);
-        this.arrayMeta.delete(base);
-        return undefined;
-      }
-      // a' = (store a oldLen v); length' = oldLen + 1 (ExpoSE setField/setLength).
-      const oldLen = meta.lenSym;
-      this.setInfo(base, {
-        kind: 'store',
-        arr,
-        index: oldLen,
-        value: this.symOf(arg),
-      });
-      const newLen: Sym = {
-        kind: 'binary',
-        op: '+',
-        left: oldLen,
-        right: { kind: 'const', value: 1 },
-      };
-      meta.lenSym = newLen;
-      return newLen; // push returns the new length
-    }
-
-    if (f === Array.prototype.pop) {
-      // The z3 array content is unchanged; pop only shrinks the tracked length
-      // (ExpoSE setLength(len-1)), logically dropping the last element.
-      const lastIndex: Sym = {
-        kind: 'binary',
-        op: '-',
-        left: meta.lenSym,
-        right: { kind: 'const', value: 1 },
-      };
-      const result: Sym = {
-        kind: 'select',
-        arr,
-        index: lastIndex,
-        elemSort: seqElementSort(meta.elemSort) ?? 'Int',
-      };
-      meta.lenSym = lastIndex;
-      return result; // the removed last element
-    }
-
-    // indexOf/includes are quantifier formulas over the Array, ported from
-    // ExpoSE's ArrayModels (mkForAll/mkExists). The target is the element value
-    // directly (no seqUnit wrapper — Array theory selects scalars).
-    if (f === Array.prototype.indexOf) {
-      const target = this.symOf(this.valued(entries[1]));
-      const elemSort = seqElementSort(meta.elemSort) ?? 'Int';
-      const len = meta.lenSym;
-      const minusOne: Sym = { kind: 'const', value: -1 };
-      // result is a fresh Int, the path-concrete indexOf value; the constraints
-      // describe it symbolically (ExpoSE): -1 <= result < length, result is -1 or
-      // points at a matching element, and if found nothing earlier matches.
-      const result: Sym = {
-        kind: 'var',
-        name: `arrIndexOf$${this.arrayOpCounter++}`,
-        sort: 'Int',
-      };
-      const at = (index: Sym): Sym => ({
-        kind: 'select',
-        arr,
-        index,
-        elemSort,
-      });
-      this.pushConstraint(
-        { kind: 'binary', op: '>=', left: result, right: minusOne },
-        true,
-      );
-      this.pushConstraint(
-        { kind: 'binary', op: '<', left: result, right: len },
-        true,
-      );
-      this.pushConstraint(
-        {
-          kind: 'binary',
-          op: '||',
-          left: { kind: 'binary', op: '===', left: result, right: minusOne },
-          right: { kind: 'binary', op: '===', left: at(result), right: target },
-        },
-        true,
-      );
-      const i: Sym = { kind: 'bvar', name: 'i$idx', sort: 'Int' };
-      this.pushConstraint(
-        {
-          kind: 'binary',
-          op: '=>',
-          left: { kind: 'binary', op: '>', left: result, right: minusOne },
-          right: {
-            kind: 'forall',
-            bound: 'i$idx',
-            boundSort: 'Int',
-            pattern: at(i),
-            body: {
-              kind: 'binary',
-              op: '=>',
-              left: {
-                kind: 'binary',
-                op: '&&',
-                left: {
-                  kind: 'binary',
-                  op: '>=',
-                  left: i,
-                  right: { kind: 'const', value: 0 },
-                },
-                right: { kind: 'binary', op: '<', left: i, right: result },
-              },
-              right: {
-                kind: 'unary',
-                op: '!',
-                operand: {
-                  kind: 'binary',
-                  op: '===',
-                  left: at(i),
-                  right: target,
-                },
-              },
-            },
-          },
-        },
-        true,
-      );
-      return result;
-    }
-
-    if (f === Array.prototype.includes) {
-      const target = this.symOf(this.valued(entries[1]));
-      const elemSort = seqElementSort(meta.elemSort) ?? 'Int';
-      const i: Sym = { kind: 'bvar', name: 'i$inc', sort: 'Int' };
-      const selI: Sym = { kind: 'select', arr, index: i, elemSort };
-      // ∃ i. 0 <= i < length ∧ a[i] === target
-      return {
-        kind: 'exists',
-        bound: 'i$inc',
-        boundSort: 'Int',
-        pattern: selI,
-        body: {
-          kind: 'binary',
-          op: '&&',
-          left: {
-            kind: 'binary',
-            op: '&&',
-            left: {
-              kind: 'binary',
-              op: '>=',
-              left: i,
-              right: { kind: 'const', value: 0 },
-            },
-            right: { kind: 'binary', op: '<', left: i, right: meta.lenSym },
-          },
-          right: { kind: 'binary', op: '===', left: selI, right: target },
-        },
-      };
-    }
-
-    if (f === Array.prototype.join)
-      return this.joinSym(base, arr, entries[1], meta);
-
     return undefined;
-  }
-
-  // The symbolic projection of a regex match (`$.regexExec`), ported from
-  // ExpoSE RegexModels onto the Sym IR. `matched` is `str.in_re` over the
-  // encoded pattern; `index` the match start; `captures[i]` the i-th group as a
-  // fresh String var (capture[0] = whole match), pinned by EnableCaptures. The
-  // spec models build test/exec/search/match from these; the `in_re` BRANCH is
-  // recorded wherever a model (or user code) branches on `matched`, so we only
-  // push the capture binders here.
-  protected regexExecInfo(
-    regex: Valued<Sym>,
-    string: Valued<Sym, string>,
-    _result: unknown,
-  ): { matched: Sym; index: Sym; captures: Sym[] } | undefined {
-    const strSym = this.symOf(string);
-    const re = regex.value;
-    // ExpoSE shouldBeSymbolic: only model a symbolic string against a real RegExp.
-    if (strSym.kind === 'const' || !(re instanceof RegExp)) return undefined;
-
-    let enc: EncodedRegex;
-    try {
-      enc = encodeRegex(re.source, () => this.mintRegexVar());
-    } catch (e) {
-      console.error(`[concolic] regex unmodeled: ${String(e)}`);
-      return undefined; // -> baseInfo concretizes (bottom -> const); the verdict falls back to concrete
-    }
-
-    this.enableCaptures(enc, strSym);
-    return {
-      matched: { kind: 'inRe', str: strSym, re: enc.ast },
-      index: enc.startIndex,
-      captures: enc.captures,
-    };
-  }
-
-  // ExpoSE EnableCaptures: the capture vars are pinned by the regex's own
-  // assertions, and equal the regex's `implier` (anchors ++ captures) whenever
-  // the string matches. Both enter as binder constraints (never flipped).
-  private enableCaptures(enc: EncodedRegex, strSym: Sym): void {
-    for (const a of enc.assertions) this.pushConstraint(a, true);
-    this.pushConstraint(
-      {
-        kind: 'binary',
-        op: '=>',
-        left: { kind: 'inRe', str: strSym, re: enc.ast },
-        right: { kind: 'binary', op: '===', left: strSym, right: enc.implier },
-      },
-      true,
-    );
   }
 
   // A fresh String var for the regex encoder's fillers/anchors/captures. The

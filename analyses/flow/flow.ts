@@ -48,20 +48,6 @@ export type CallPolicy = {
   isOpaque: (f: unknown) => boolean;
 };
 
-// `regex.exec(s)` whose result carries per-capture spans (`match.indices`): the
-// `d`/hasIndices flag (ES2022) is what produces them, so add it when absent —
-// on a temporary copy, since re-adding `d` is a SyntaxError — while preserving
-// lastIndex so /g//y iteration is unaffected. Spans let captures be recovered as
-// substrings of the subject (offset-precise provenance).
-function execWithIndices(regex: RegExp, s: string): RegExpExecArray | null {
-  if (regex.hasIndices) return regex.exec(s);
-  const withIndices = new RegExp(regex.source, regex.flags + 'd');
-  withIndices.lastIndex = regex.lastIndex;
-  const match = withIndices.exec(s);
-  regex.lastIndex = withIndices.lastIndex;
-  return match;
-}
-
 export abstract class FlowAnalysis<Info>
   extends lift.LiftedDomain<Info>
   implements Analysis
@@ -113,6 +99,15 @@ export abstract class FlowAnalysis<Info>
    * to fall through to baseInfo. */
   protected toLowerInfo?(_src: Valued<Info, string>): Info;
   protected toUpperInfo?(_src: Valued<Info, string>): Info;
+  /* trim (`$.trim`): `src` with leading and/or trailing whitespace stripped
+   * (TrimString's start / end / start+end). Return a model of the trimmed
+   * string, or undefined to fall through to baseInfo — the result is a substring
+   * of `src`, so provenance still flows from the source either way. */
+  protected trimInfo?(
+    _src: Valued<Info, string>,
+    _leading: boolean,
+    _trailing: boolean,
+  ): Info;
 
   protected binaryInfo?(
     _op: string,
@@ -161,16 +156,6 @@ export abstract class FlowAnalysis<Info>
     _entries: unknown[],
     _result: unknown,
   ): Info;
-
-  /* regex match (via the `$.regexExec` primitive): the symbolic projection of
-   * matching `regex` against `string`. `result` is the native exec result
-   * (array | null); return the per-field Info (matched / start index / per-
-   * capture), or undefined to fall through to baseInfo. */
-  protected regexExecInfo?(
-    _regex: Valued<Info, RegExp>,
-    _string: Valued<Info, string>,
-    _result: unknown,
-  ): { matched: Info; index: Info; captures: Info[] } | undefined;
 
   /** internal(flow.ts) */
   private numOp(v: number, parents: Lifted<unknown>[]): Lifted<number> {
@@ -287,9 +272,13 @@ export abstract class FlowAnalysis<Info>
       if (leading && trailing) r = r.trim();
       else if (leading) r = r.trimStart();
       else if (trailing) r = r.trimEnd();
-      // Result is a substring of `s`; propagate via baseInfo so taint/symbolic
-      // provenance flows from the source string.
-      return this.lift(r, this.defaultInfo(r, [this.valued(s)]));
+      // Result is a substring of `s`: an analysis can model the trim through
+      // trimInfo, else baseInfo propagates provenance from the source string.
+      return this.lift(
+        r,
+        this.trimInfo?.(this.valued(s), leading, trailing) ??
+          this.defaultInfo(r, [this.valued(s)]),
+      );
     },
     toLower: (s) => {
       const r = (this.unlift(s) as string).toLowerCase();
@@ -316,61 +305,6 @@ export abstract class FlowAnalysis<Info>
         this.containsStrInfo?.(this.valued(s), this.valued(sub)) ??
           this.defaultInfo(v, [this.valued(s), this.valued(sub)]),
       );
-    },
-
-    // RegexOps
-    regexExec: (regex, string) => {
-      // Run `regex.exec(string)` concretely on the raw values (no lifted
-      // primitive leaks into the engine), then let the analysis supply the
-      // symbolic match facts. The spec models assemble the observable result.
-      const rawRegex = this.unlift(regex as Lifted<RegExp>);
-      const rawString = this.unlift(string);
-      // exec carrying capture spans, so the fallback can recover each capture as
-      // a substring of the subject (see execWithIndices).
-      const concrete = execWithIndices(rawRegex, rawString);
-      const matched = concrete !== null;
-      const info = this.regexExecInfo?.(
-        this.valued(regex as Lifted<RegExp>) as Valued<Info, RegExp>,
-        this.valued(string),
-        concrete,
-      );
-      const elems =
-        concrete === null ? [] : (concatList([], concrete) as string[]);
-      return {
-        // Whether it matched depends on the pattern AND the subject; the match
-        // POSITION is structural (a number, not content) so it carries no taint
-        // by default; concolic supplies the symbolic start via regexExecInfo.
-        matched: this.lift(
-          matched,
-          info?.matched ??
-            this.defaultInfo(matched, [
-              this.valued(regex),
-              this.valued(string),
-            ]),
-        ),
-        index: this.lift(
-          concrete === null ? -1 : concrete.index,
-          info?.index ?? this.defaultInfo(-1, []),
-        ),
-        captures: elems.map((c, i) => {
-          const v = c ?? '';
-          if (info?.captures?.[i] !== undefined)
-            return this.lift(v, info.captures[i]);
-          // No per-capture Info (e.g. taint): a capture's CONTENT is a substring
-          // of the subject, so recover it through `$.substring` at its span —
-          // offset-precise provenance flows (a tainted region of the subject
-          // taints only the captures that overlap it).
-          const span = concrete?.indices?.[i];
-          if (span)
-            return this.$.substring(
-              string,
-              this.$.default(span[0], []),
-              this.$.default(span[1], []),
-            );
-          return this.lift(v, this.defaultInfo(v, [this.valued(string)]));
-        }),
-        input: string,
-      };
     },
 
     // ArithmeticOps

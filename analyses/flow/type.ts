@@ -38,8 +38,7 @@ interface SpecOps
     CompareOps,
     MathOps,
     ListOps,
-    RangeOps,
-    RegexOps {
+    RangeOps {
   /** an injection (`unlifted -> lifted`). inverse of `$.value`. default information transformation */
   default: <T extends Unlifted | Primitive>(
     v: T,
@@ -92,18 +91,6 @@ interface StringOps {
   toUpper: (s: Lifted<string>) => Lifted<string>;
   /** only exists for String.prototype.replaceAll - worth it? */
   containsStr: (s: Lifted<string>, sub: Lifted<string>) => Lifted<boolean>;
-}
-
-export interface RegexMatch {
-  matched: Lifted<boolean>; // did the subject match (str.in_re)
-  index: Lifted<number>; // the match's start index
-  captures: Lifted<string>[]; // [0] = whole match, [i] = capture group i
-  input: Lifted<string>; // the subject string
-}
-
-interface RegexOps {
-  /* abstraction over RegexExec */
-  regexExec: (regex: Lifted<unknown>, string: Lifted<string>) => RegexMatch;
 }
 
 interface ArithmeticOps {

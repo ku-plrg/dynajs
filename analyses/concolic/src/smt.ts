@@ -138,6 +138,73 @@ function realMod(a: string, b: string): string {
   return `(- ${a} (* ${b} ${realTrunc(`(/ ${a} ${b})`)}))`;
 }
 
+// The ECMAScript trim whitespace set: WhiteSpace (Tab, LF, VT, FF, CR, SP, NBSP,
+// the Unicode space separators, ZWNBSP) + LineTerminator (LS, PS) — exactly the
+// set String.prototype.trim strips. (ExpoSE handles only the space char, per its
+// own "TODO: Only handles" note in SymbolicState; covering the full set keeps the
+// symbolic trim consistent with the concrete one.)
+const TRIM_WS = [
+  '\u0009', // Tab
+  '\u000a', // LF
+  '\u000b', // VT
+  '\u000c', // FF
+  '\u000d', // CR
+  '\u0020', // SP
+  '\u00a0', // NBSP
+  '\u1680', // Ogham space mark
+  '\u2000',
+  '\u2001',
+  '\u2002',
+  '\u2003',
+  '\u2004',
+  '\u2005',
+  '\u2006',
+  '\u2007',
+  '\u2008',
+  '\u2009',
+  '\u200a', // en quad..hair space
+  '\u2028', // Line separator
+  '\u2029', // Paragraph separator
+  '\u202f', // Narrow NBSP
+  '\u205f', // Medium mathematical space
+  '\u3000', // Ideographic space
+  '\ufeff', // ZWNBSP / BOM
+];
+
+// z3 recursive-function definitions backing the `trim` Sym (ExpoSE's
+// SymbolicState._setupSmtFunctions), injected once when a trim term is present.
+// whiteLeft(s,i) walks right over leading whitespace from i (returning the first
+// non-whitespace index = leading-whitespace count); whiteRight(s,i) walks left
+// over trailing whitespace from i (returning the last non-whitespace index). An
+// out-of-bounds `str.at` is "" (not whitespace), so both bottom out at the ends.
+const TRIM_PRELUDE =
+  `(define-fun str.isWhite ((c String)) Bool (or ${TRIM_WS.map(
+    (w) => `(= c ${smtString(w)})`,
+  ).join(' ')}))\n` +
+  '(define-fun-rec str.whiteLeft ((s String) (i Int)) Int (ite (str.isWhite (str.at s i)) (str.whiteLeft s (+ i 1)) i))\n' +
+  '(define-fun-rec str.whiteRight ((s String) (i Int)) Int (ite (str.isWhite (str.at s i)) (str.whiteRight s (- i 1)) i))';
+
+// String.prototype.trim, modeled as in ExpoSE's StringModels. trimStart keeps the
+// window [WL, len) where WL = whiteLeft(t, 0); trimEnd keeps [0, WR + 1] where
+// WR = whiteRight(t, len - 1); full trim composes the two (whiteRight applied to
+// the already-left-trimmed term). (ExpoSE's trimRight passes `len`, not `len - 1`
+// — an off-by-one that makes its trimEnd a no-op; we pass `len - 1` so trimEnd
+// matches the concrete String.prototype.trimEnd this analysis re-executes.)
+function trimLeftSmt(t: string): string {
+  const wl = `(str.whiteLeft ${t} 0)`;
+  return `(str.substr ${t} ${wl} (- (str.len ${t}) ${wl}))`;
+}
+function trimRightSmt(t: string): string {
+  const wr = `(str.whiteRight ${t} (- (str.len ${t}) 1))`;
+  return `(str.substr ${t} 0 (+ ${wr} 1))`;
+}
+function trimToSmt(t: string, leading: boolean, trailing: boolean): string {
+  let out = t;
+  if (leading) out = trimLeftSmt(out);
+  if (trailing) out = trimRightSmt(out);
+  return out;
+}
+
 // Wrap an already-rendered term so it reads as `to`. Only Int<->Real bridges; a
 // matching or non-numeric `from` passes through. (Numeric *literals* never reach
 // here — `operand` skips `const`, since z3 promotes them in either context.)
@@ -302,6 +369,8 @@ function symToSmt(s: Sym, vars: Map<string, Sort>): string {
       return `(str.++ ${symToSmt(s.left, vars)} ${symToSmt(s.right, vars)})`;
     case 'substr':
       return `(str.substr ${symToSmt(s.src, vars)} ${s.start} ${s.length})`;
+    case 'trim':
+      return trimToSmt(symToSmt(s.src, vars), s.leading, s.trailing);
     case 'strlen':
       return `(str.len ${symToSmt(s.src, vars)})`;
     case 'truncate':
@@ -355,15 +424,21 @@ function buildSmt(
   const needsLogic = [...vars.values()].some(
     (s) => s === 'String' || s === 'Real' || isSeqSort(s),
   );
+  const body = assertions.join('\n') + '\n' + tail;
+  // A `trim` Sym renders calls to `str.whiteLeft`/`str.whiteRight`; emit their
+  // recursive definitions (TRIM_PRELUDE) once, only when such a call is present.
+  // The distinctive `str.`-namespaced names make the substring scan reliable, and
+  // an unused emission would be harmless valid SMT anyway. needsLogic is always
+  // true here (a trim's source is a String var).
+  const needsTrim = body.includes('str.whiteLeft');
   return (
     (needsLogic ? '(set-logic ALL)\n' : '') +
+    (needsTrim ? TRIM_PRELUDE + '\n' : '') +
     [...vars]
       .map(([v, sort]) => `(declare-const ${v} ${SORT_SMT[sort]})`)
       .join('\n') +
     '\n' +
-    assertions.join('\n') +
-    '\n' +
-    tail +
+    body +
     '\n'
   );
 }

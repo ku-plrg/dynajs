@@ -128,7 +128,7 @@ export default class Model {
         [String.prototype.sup, generated.INTRINSICS_String_prototype_sup],
 
         // RegExp.prototype.test/exec and String.prototype.match/matchAll/search are
-        // intentionally unregistered — handled by the symbolic regex seam ($.regexOp).
+        // unregistered: regex is not modeled, so they run opaquely (concretized).
 
         // [Array.from, generated.INTRINSICS_Array_from],
         [Array.isArray, generated.INTRINSICS_Array_isArray],
