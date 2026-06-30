@@ -92,22 +92,7 @@ export abstract class FlowAnalysis<Info>
     _s: Valued<Info, string>,
     _sub: Valued<Info, string>,
   ): Info;
-  protected stringIndexOfInfo?(
-    _src: Valued<Info, string>,
-    _searchValue: Valued<Info, string>,
-    _fromIndex: Valued<Info, number>,
-  ): Info;
   protected containsListInfo?(_list: Valued<Info>, _x: Valued<Info>): Info;
-  /* case folding (`$.toLower`/`$.toUpper`): no z3 string operator maps case, so an
-   * analysis cannot encode the per-character mapping — return a model under which
-   * the fold is observable (concolic: identity on a single-case path), or undefined
-   * to fall through to baseInfo. */
-  protected toLowerInfo?(_src: Valued<Info, string>): Info;
-  protected toUpperInfo?(_src: Valued<Info, string>): Info;
-  /* trim (`$.trim`): `src` with leading and/or trailing whitespace stripped
-   * (TrimString's start / end / start+end). Return a model of the trimmed
-   * string, or undefined to fall through to baseInfo — the result is a substring
-   * of `src`, so provenance still flows from the source either way. */
   protected trimInfo?(
     _src: Valued<Info, string>,
     _leading: boolean,
@@ -290,22 +275,6 @@ export abstract class FlowAnalysis<Info>
           this.defaultInfo(r, [this.valued(s)]),
       );
     },
-    toLower: (s) => {
-      const r = (this.unlift(s) as string).toLowerCase();
-      return this.lift(
-        r,
-        this.toLowerInfo?.(this.valued(s)) ??
-          this.defaultInfo(r, [this.valued(s)]),
-      );
-    },
-    toUpper: (s) => {
-      const r = (this.unlift(s) as string).toUpperCase();
-      return this.lift(
-        r,
-        this.toUpperInfo?.(this.valued(s)) ??
-          this.defaultInfo(r, [this.valued(s)]),
-      );
-    },
     // Both operands unlifted — a lifted proxy reaching native
     // String.prototype.includes coerces to "[object Object]".
     containsStr: (s, sub) => {
@@ -314,27 +283,6 @@ export abstract class FlowAnalysis<Info>
         v,
         this.containsStrInfo?.(this.valued(s), this.valued(sub)) ??
           this.defaultInfo(v, [this.valued(s), this.valued(sub)]),
-      );
-    },
-    // All operands unlifted — a lifted proxy reaching native
-    // String.prototype.indexOf coerces to "[object Object]".
-    stringIndexOf: (s, searchValue, fromIndex) => {
-      const v = (this.unlift(s) as string).indexOf(
-        this.unlift(searchValue) as string,
-        this.unlift(fromIndex) as number,
-      );
-      return this.lift(
-        v,
-        this.stringIndexOfInfo?.(
-          this.valued(s),
-          this.valued(searchValue),
-          this.valued(fromIndex),
-        ) ??
-          this.defaultInfo(v, [
-            this.valued(s),
-            this.valued(searchValue),
-            this.valued(fromIndex),
-          ]),
       );
     },
 

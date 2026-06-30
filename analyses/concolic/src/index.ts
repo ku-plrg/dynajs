@@ -9,7 +9,6 @@ import {
   isNumericSort,
   symToString,
 } from './sym.js';
-import { encodeRegex, type EncodedRegex } from './regex.js';
 import { solveValidity, solveModel, solveSat } from './smt.js';
 import { installPrelude } from './prelude.js';
 import { Coverage } from './coverage.js';
@@ -100,14 +99,6 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     return { kind: 'concat', left: l, right: r };
   }
 
-  protected toLowerInfo(s: Valued<Sym>): Sym | undefined {
-    return this.caseFoldIdentity(s, '^[^A-Z]+$');
-  }
-
-  protected toUpperInfo(s: Valued<Sym>): Sym | undefined {
-    return this.caseFoldIdentity(s, '^[^a-z]+$');
-  }
-
   protected trimInfo(
     src: Valued<Sym>,
     leading: boolean,
@@ -116,24 +107,6 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     const s = this.symOf(src);
     if (s.kind === 'const' || sortOf(s) !== 'String') return undefined;
     return { kind: 'trim', src: s, leading, trailing };
-  }
-
-  private caseFoldIdentity(
-    s: Valued<Sym>,
-    singleCasePattern: string,
-  ): Sym | undefined {
-    const src = this.symOf(s);
-    if (src.kind === 'const') return undefined;
-    let enc: EncodedRegex;
-    try {
-      enc = encodeRegex(singleCasePattern, () => this.mintRegexVar());
-    } catch (e) {
-      console.error(`[concolic] case-fold regex unmodeled: ${String(e)}`);
-      return undefined; // -> baseInfo concretizes (bottom -> const); the verdict falls back to concrete
-    }
-    for (const a of enc.assertions) this.pushConstraint(a, true);
-    this.pushConstraint({ kind: 'inRe', str: src, re: enc.ast }, true);
-    return src;
   }
 
   private static readonly EQUALITY_OPS = new Set(['===', '==', '!==', '!=']);
