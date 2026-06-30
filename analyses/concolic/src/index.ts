@@ -36,9 +36,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   private pathConstraints: PathConstraint[] = [];
   private errors: { error: string; stack?: string }[] = [];
 
-  // Statement coverage for the ExpoSE drop-in only (gated on the env the
-  // Distributor's Spawn.js sets); the single-path microbench leaves it undefined
-  // so its hot hooks below stay no-ops.
+  /* NOTE: coverage is underestimated without all syntactic callback covered */
   private cov = process.env.EXPOSE_COVERAGE_PATH ? new Coverage() : undefined;
 
   private arrayMeta = new WeakMap<object, ArrayMeta>();
@@ -48,7 +46,6 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   private arrayVars = new Map<string, Sort>();
   private objectMeta = new WeakMap<object, ObjectMeta>();
   private regexVarCounter = 0;
-  private arrayOpCounter = 0;
 
   protected transparentCalls = GHOSTS;
 
@@ -261,25 +258,10 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
 
   protected opaqueCallInfo(
     f: unknown,
-    entries: unknown[],
+    _entries: unknown[],
     _result: unknown,
   ): Sym | undefined {
-    const base = entries[0];
-    if (base === null || typeof base !== 'object') return undefined;
-    const meta = this.arrayMeta.get(base);
-    if (meta === undefined) return undefined;
-    const arr = this.getInfo(base);
-    if (arr === undefined) return undefined;
-
     return undefined;
-  }
-
-  private mintRegexVar(): Sym {
-    return {
-      kind: 'var',
-      name: `re$${this.regexVarCounter++}`,
-      sort: 'String',
-    };
   }
 
   protected truncateInfo(x: Valued<Sym>): Sym | undefined {
