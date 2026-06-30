@@ -112,17 +112,9 @@ export abstract class FlowAnalysis<Info>
     _lower: Valued<Info, number>,
     _upper: Valued<Info, number>,
   ): Info;
-  /* min/max over a list of numbers (`$.min`/`$.max`, e.g. the spec's `from`/`to`
-   * substring-window computations). Variadic to match the ops; without a hook the
-   * result falls back to baseInfo (derived from the operands), as before. */
   protected minInfo?(_operands: Valued<Info, number>[]): Info;
   protected maxInfo?(_operands: Valued<Info, number>[]): Info;
 
-  /* the integer range `lo..hi` as a whole, materialized eagerly. Called once with the
-   * concrete index list (ascending) so the analysis can both tie each index to the
-   * (possibly symbolic) bounds AND see the loop bounds to record the trip-count guard
-   * keyed by `bid`. Returns one Info per index, aligned to `indices`; a missing entry
-   * (or undefined return) falls back to a bound-derived baseInfo for that index. */
   protected rangeInfo?(
     _indices: number[],
     _lo: Valued<Info, number>,
