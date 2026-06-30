@@ -74,14 +74,6 @@ export default class Model {
           generated.INTRINSICS_String_prototype_substring,
         ],
         [
-          String.prototype.toUpperCase,
-          generated.INTRINSICS_String_prototype_toUpperCase,
-        ],
-        [
-          String.prototype.toLowerCase,
-          generated.INTRINSICS_String_prototype_toLowerCase,
-        ],
-        [
           String.prototype.toString,
           generated.INTRINSICS_String_prototype_toString,
         ],

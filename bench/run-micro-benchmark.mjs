@@ -68,6 +68,11 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BENCH_DIR = path.join(REPO_ROOT, "bench/micro");
+// Second bench root: the multi-path "reach" corpus. These files `require("S$")`
+// (so the dir is CommonJS-scoped via its own package.json) and guard a `throw`
+// behind a branch the seed does NOT take, scored by the *-replay runners under
+// ExpoSE's Distributor. Optional — skipped if absent.
+const CONCOLIC_BENCH_DIR = path.join(REPO_ROOT, "bench/concolic");
 
 // Committed correctness baseline (--update-snapshot writes it, --check compares
 // against it). Only the runners listed here are snapshotted: the `dynajs-*`
@@ -324,6 +329,42 @@ function nodemedicCjsDir() {
 // `errors[].error` from it (see cases()).
 const EXPOSE_HOME = process.env.EXPOSE_HOME ?? path.join(homedir(), "ExpoSE");
 const EXPOSE_BIN = path.join(EXPOSE_HOME, "expoSE");
+// Multi-path entry: ExpoSE's Distributor (scripts/analyse). dynajs-co-replay
+// selects the dynajs concolic drop-in via EXPOSE_PLAY_SCRIPT=scripts/dynajs-play;
+// expose-replay leaves it unset so the Distributor uses its own scripts/play.
+const EXPOSE_ANALYSE = path.join(EXPOSE_HOME, "scripts/analyse");
+const EXPOSE_DYNAJS_PLAY = path.join(EXPOSE_HOME, "scripts/dynajs-play");
+// The guarded throw a reach bench expects the search to penetrate. The
+// Distributor prints each uncaught throw as a `[!] <value>` finding; a finding
+// with this value means the branch was reached.
+const REACH_SENTINEL = "Reachable";
+// ExpoSE's global per-bench search budget (EXPOSE_MAX_TIME). The replay runners
+// cap it so a path-exploding bench (e.g. Array.join over a symbolic-length
+// array, whose alternatives keep proposing longer arrays) SELF-terminates and
+// reaps its worker pool — instead of running until the spawnSync timeout
+// SIGKILLs `bash scripts/analyse`, which orphans the detached Distributor
+// workers. Keep the spawnSync backstop (below) strictly longer so ExpoSE always
+// shuts down first. Microbench paths reach in well under this; the cap only
+// bites the explosions (where a bounded budget still finds the reach, then stops).
+const EXPOSE_MAX_SECONDS = Number(process.env.EXPOSE_MAX_SECONDS ?? 10);
+// Env injected into every replay run. Besides the budget, EXPOSE_STOP_ON_ERROR
+// halts the Distributor at the first path whose uncaught throw contains the reach
+// sentinel ("Reachable"): a reach bench's verdict is decided the moment the
+// guarded throw is hit (reached = sat), so exploring further paths only wastes
+// time — for a path-exploder this turns a full-budget run into a sub-second one.
+// It matches the throw VALUE, so an infrastructure error never stops it early,
+// and the reach/not verdict is unchanged (a not_reached bench has no matching
+// throw, so it still explores to exhaustion/budget). Set EXPOSE_STOP_ON_ERROR=""
+// to explore every path regardless (e.g. for coverage numbers).
+const EXPOSE_REPLAY_ENV = {
+  EXPOSE_MAX_TIME: `${EXPOSE_MAX_SECONDS}s`,
+  EXPOSE_TEST_TIMEOUT: `${EXPOSE_MAX_SECONDS}s`,
+  EXPOSE_STOP_ON_ERROR: process.env.EXPOSE_STOP_ON_ERROR ?? REACH_SENTINEL,
+};
+// spawnSync timeout for the replay runners: never shorter than ExpoSE's own
+// budget + a 5s graceful-shutdown window (else the SIGKILL races ahead of the
+// clean self-termination and re-introduces orphans).
+const exposeBackstopMs = (t) => Math.max(t, (EXPOSE_MAX_SECONDS + 5) * 1000);
 // Prepended to each bench copy: bridge the engine-neutral prelude names. The
 // assert bridges to our single-path Object._expose.assertSymbolic (defined once
 // ExpoSE's analysis initialises, before the bench body runs), passing the
@@ -404,10 +445,15 @@ function parseMeta(file) {
   if (!t) return null;
   const tg = head.match(/@target\s+([A-Za-z0-9_+.-]+)/i);
   const ft = head.match(/@feature\s+([A-Za-z0-9_-]+)/i);
+  // Reach oracle for @type concolic-replay: `@reach true` = the guarded throw
+  // SHOULD be reachable by the search (sat), `false` = it should NOT (unsat).
+  // null for benches without it (the single-path corpus uses per-assert oracles).
+  const rc = head.match(/@reach\s+(true|false)/i);
   return {
     type: t[1],
     target: tg ? tg[1].toLowerCase() : "", // first token only; rest are notes
     feature: ft ? ft[1].toLowerCase() : "", // first token only; rest are notes
+    reach: rc ? rc[1].toLowerCase() === "true" : null,
     // eye-verified marker: a `// @done` header line. `--done` restricts the run to only these.
     done: /^\/\/\s*@done\b/m.test(head),
   };
@@ -476,6 +522,23 @@ function defaultCases(run) {
   VERDICT_RE.lastIndex = 0;
   while ((m = VERDICT_RE.exec(text))) cases.push({ actual: m[1], expected: m[2] });
   return cases;
+}
+
+// Reach-corpus case parser (the *-replay runners). One case per file: the search
+// either penetrated the guarded branch (a `[!] <REACH_SENTINEL>` finding in the
+// Distributor output -> `sat`) or it did not (`unsat`). `@reach` is the ground
+// truth (sat = should be reachable), so classify() scores TP/FN/FP/TN over the
+// same sat/unsat vocabulary as the IS_SAT benches. A timeout, or a run that never
+// printed `ExpoSE Finished` (the Distributor itself crashed), is `error` rather
+// than a misleading `unsat`. The witness input varies run to run, but this
+// reached/not verdict is deterministic.
+function reachCases(run, b) {
+  const expected = b.reach === false ? "unsat" : "sat";
+  if (run.timedOut) return [{ actual: "error", expected }];
+  const text = `${run.stdout}\n${run.stderr}`;
+  if (!/ExpoSE Finished\./.test(text)) return [{ actual: "error", expected }];
+  const reached = new RegExp(`\\[!\\]\\s+${REACH_SENTINEL}\\b`).test(text);
+  return [{ actual: reached ? "sat" : "unsat", expected }];
 }
 
 // expected (positive/negative) x actual -> TP|FP|FN|TN. Positive = detected (a
@@ -811,6 +874,47 @@ function makeRunners(opts) {
         return cases;
       },
     },
+    // --- multi-path replay (ExpoSE Distributor over the reach corpus) -------
+    {
+      // dynajs concolic AS ExpoSE's analyseScript (the restored drop-in).
+      // ExpoSE's Distributor drives multi-path search: it spawns dynajs-play per
+      // path, reads the alternatives() child inputs the analysis emits, and
+      // re-queues them. A reach bench guards `throw "<REACH_SENTINEL>"` behind a
+      // branch the seed does NOT take, so reaching it requires the search to
+      // solve+replay an alternative input. Oracle (sat/unsat) from `@reach`.
+      name: "dynajs-co-replay",
+      group: "replay",
+      applies: (b) => b.type === "concolic-replay",
+      available: () =>
+        existsSync(EXPOSE_ANALYSE) &&
+        existsSync(EXPOSE_DYNAJS_PLAY) &&
+        existsSync(path.join(REPO_ROOT, "dynajs")),
+      exec: (b, out, err, t) =>
+        timeRun(
+          ["bash", EXPOSE_ANALYSE, b.file],
+          {
+            EXPOSE_PLAY_SCRIPT: "scripts/dynajs-play",
+            DYNAJS_HOME: process.env.DYNAJS_HOME ?? REPO_ROOT,
+            ...EXPOSE_REPLAY_ENV,
+          },
+          out, err, exposeBackstopMs(t),
+          EXPOSE_HOME, // analyse sources scripts/env relative to its own root
+        ),
+      cases: reachCases,
+    },
+    {
+      // Stock ExpoSE (its own Analyser + lib/S$) on the SAME reach corpus, for a
+      // like-for-like multi-path comparison against dynajs-co-replay. No
+      // EXPOSE_PLAY_SCRIPT -> the Distributor falls back to its own scripts/play.
+      name: "expose-replay",
+      group: "replay",
+      applies: (b) => b.type === "concolic-replay",
+      available: () => existsSync(EXPOSE_ANALYSE),
+      exec: (b, out, err, t) =>
+        timeRun(["bash", EXPOSE_ANALYSE, b.file], { ...EXPOSE_REPLAY_ENV },
+          out, err, exposeBackstopMs(t), EXPOSE_HOME),
+      cases: reachCases,
+    },
     // -----------------------------------------------------------------------
   ];
 }
@@ -825,7 +929,7 @@ function parseArgs(argv) {
     dynajsFlags: null, // override; default flags come from each bench's @type
     reps: 1, // verdict-only default (verdicts are deterministic); pass --reps N for timing
     warmup: 0, // each rep is a fresh process, so warmup doesn't warm anything measured
-    timeoutSec: 30,
+    timeoutSec: 60,
     outputDir: null,
     runnerFilters: [],
     benchFilters: [],
@@ -906,26 +1010,38 @@ function main() {
   // bench name, so nested benches sharing a basename don't collide in the log
   // and temp-copy filenames keyed off it.
   let benches = [];
-  // `--dir SUB` keeps only benches whose path (relative to bench/micro) is under
-  // SUB, so a whole subtree runs without listing every basename (and without the
-  // cross-folder collisions a basename `--bench` filter would pull in).
+  // `--dir SUB` keeps only benches whose path (relative to its bench root) is
+  // under SUB, so a whole subtree runs without listing every basename (and
+  // without the cross-folder collisions a basename `--bench` filter would pull
+  // in). Applied within each root below.
   const dirPrefixes = opts.dirFilters.map((d) => d.replace(/[\\/]+$/, "").split(/[\\/]/).join(path.sep) + path.sep);
-  const benchFiles = readdirSync(BENCH_DIR, { recursive: true })
-    .filter((f) => f.endsWith(".js") && !f.endsWith("__dynajs__.js"))
-    .filter((f) => !dirPrefixes.length || dirPrefixes.some((p) => f.startsWith(p)))
-    .sort();
-  for (const rel of benchFiles) {
-    const file = path.join(BENCH_DIR, rel);
-    const meta = parseMeta(file);
-    if (!meta) {
-      console.error(`skip ${rel} (no \`// @type\` header)`);
-      continue;
+  // Walk each bench root (bench/micro always; bench/concolic if present) and
+  // collect files with a `@type` header. The path relative to its root
+  // (separators flattened to `__`) becomes the bench name, so nested benches
+  // sharing a basename don't collide in the log and temp-copy filenames keyed
+  // off it. The reach corpus uses distinct `_reach_` basenames, so names stay
+  // unique across roots.
+  for (const root of [BENCH_DIR, CONCOLIC_BENCH_DIR].filter(existsSync)) {
+    const rootFiles = readdirSync(root, { recursive: true })
+      // skip instrumentation artifacts: dynajs's `*__dynajs__.js` and ExpoSE's
+      // Jalangi `*_jalangi_*.js` copies (both are emitted next to a bench when
+      // the replay runners instrument it; neither is a bench).
+      .filter((f) => f.endsWith(".js") && !f.endsWith("__dynajs__.js") && !f.includes("_jalangi_"))
+      .filter((f) => !dirPrefixes.length || dirPrefixes.some((p) => f.startsWith(p)))
+      .sort();
+    for (const rel of rootFiles) {
+      const file = path.join(root, rel);
+      const meta = parseMeta(file);
+      if (!meta) {
+        console.error(`skip ${rel} (no \`// @type\` header)`);
+        continue;
+      }
+      // `area`/`subarea` = the first / first-two path segments (e.g. `BuiltIns`,
+      // `BuiltIns/Array`), so --coverage can tally @done progress by feature area.
+      const segs = rel.split(/[\\/]/);
+      const subarea = segs.length > 1 ? `${segs[0]}/${segs[1]}` : segs[0];
+      benches.push({ file, name: stripExt(rel).replace(/[\\/]/g, "__"), area: segs[0], subarea, ...meta });
     }
-    // `area`/`subarea` = the first / first-two path segments (e.g. `BuiltIns`,
-    // `BuiltIns/Array`), so --coverage can tally @done progress by feature area.
-    const segs = rel.split(/[\\/]/);
-    const subarea = segs.length > 1 ? `${segs[0]}/${segs[1]}` : segs[0];
-    benches.push({ file, name: stripExt(rel).replace(/[\\/]/g, "__"), area: segs[0], subarea, ...meta });
   }
   if (opts.benchFilters.length)
     benches = benches.filter((b) => matchesAny(path.basename(b.file), opts.benchFilters));
