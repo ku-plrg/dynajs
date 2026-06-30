@@ -5,8 +5,8 @@
 
 function __test_symbolic__(symbolic) {
     symbolic.push(42);
-    // @witness __test_symbolic__([5])
-    __IS_SAT__(symbolic[0] === 5, true);
+    // @witness __test_symbolic__([7, 8, 42])
+    __IS_SAT__(symbolic[2] === 42, true);
 }
 
 __test_symbolic__(__symbolic__('s', [7]));
