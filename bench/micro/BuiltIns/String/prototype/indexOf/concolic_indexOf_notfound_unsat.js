@@ -6,9 +6,9 @@
 
 function __test_symbolic__(symbolic) {
 
-  if (symbolic.indexOf('z') === -1) {
-    // @witness the indexOf('z')===-1 guard means 'z' is absent everywhere
-    __IS_SAT__(symbolic[0] === 'z', false);
+  if (symbolic.indexOf('a') !== -1) {
+    // @witness the indexOf('a')!==-1 guard means 'a' is present somewhere
+    __IS_SAT__(!symbolic.includes('a'), false);
   } else {
     __IS_SAT__(true, false);
   }

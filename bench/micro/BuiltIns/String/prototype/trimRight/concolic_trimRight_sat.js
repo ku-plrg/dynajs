@@ -7,8 +7,8 @@
 function __test_symbolic__(symbolic) {
 
   // @witness __test_symbolic__("xyz")
-  __IS_SAT__(symbolic.trimRight() !== 'abc', true);
+  __IS_SAT__(symbolic.trimRight() === "  xyz  ", true);
 
 }
 
-__test_symbolic__(__symbolic__('s', "abc  "));
+__test_symbolic__(__symbolic__('s', "  abc  "));

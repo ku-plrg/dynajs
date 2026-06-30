@@ -7,10 +7,10 @@
 function __test_symbolic__(symbolic) {
 
 
-  if (symbolic.repeat(5) == "HHHHH") {
+  if (symbolic.repeat(2) == "abcabc") {
 
-    // @witness the repeat(5)=="HHHHH" guard pins symbolic to "H"
-    __IS_SAT__(symbolic !== "H", false);
+    // @witness the repeat(2)=="abcabc" guard pins symbolic to "abc"
+    __IS_SAT__(symbolic.repeat(3) !== "abcabcabc", false);
   } else {
     __IS_SAT__(true, false);
   }

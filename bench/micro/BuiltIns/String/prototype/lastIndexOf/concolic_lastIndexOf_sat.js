@@ -6,8 +6,13 @@
 
 function __test_symbolic__(symbolic) {
 
-    // @witness __test_symbolic__("baa")
-  __IS_SAT__(symbolic.lastIndexOf('b') !== 2, true);
+  if (symbolic.lastIndexOf('b') === 2) {
+    // @witness __test_symbolic__("bbb")
+    __IS_SAT__(symbolic.indexOf('b') === 0, true);
+  } else {
+    __IS_SAT__(false, true);
+  }
+
 
 }
 
