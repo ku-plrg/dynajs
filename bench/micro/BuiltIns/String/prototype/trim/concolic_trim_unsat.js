@@ -15,4 +15,4 @@ function __test_symbolic__(symbolic) {
 
 }
 
-__test_symbolic__(__symbolic__('s', "     abc      "));
+__test_symbolic__(__symbolic__('s', "   abc  "));

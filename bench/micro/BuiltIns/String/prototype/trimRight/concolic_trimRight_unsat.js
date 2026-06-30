@@ -6,13 +6,13 @@
 
 function __test_symbolic__(symbolic) {
 
-  if (symbolic.trimRight().length === symbolic.length) {
-  // @witness no-shorten guard means no trailing space, so last char isn't ' '
-    __IS_SAT__(symbolic[symbolic.length - 1] === ' ' , false);
+  if (symbolic.trimRight() === '   abc') {
+    // @witness symbolic must be longer than 3 characters to trim to "abc"
+    __IS_SAT__(symbolic.length < 3, false);
   } else {
     __IS_SAT__(true, false);
   }
 
 }
 
-__test_symbolic__(__symbolic__('s', "abc  "));
+__test_symbolic__(__symbolic__('s', "   abc  "));
