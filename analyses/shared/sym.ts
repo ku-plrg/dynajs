@@ -162,9 +162,12 @@ export type Sym =
   | { kind: 'unary'; op: string; operand: Sym }
   | { kind: 'binary'; op: string; left: Sym; right: Sym }
   // string structure (z3 String theory): concatenation, fixed-window
-  // substring/char-access, and length.
+  // substring/char-access, and length. `start` is normally the concrete window
+  // offset, but stays symbolic for a char-access at a computed index (e.g.
+  // `r[r.length - 1]`), where pinning it to the seed's offset would drop the
+  // dependence on the subject's symbolic length.
   | { kind: 'concat'; left: Sym; right: Sym }
-  | { kind: 'substr'; src: Sym; start: number; length: number }
+  | { kind: 'substr'; src: Sym; start: number | Sym; length: number }
   | { kind: 'strlen'; src: Sym }
   // String.prototype.trim/trimStart/trimEnd (`$.trim`): `src` with leading
   // and/or trailing whitespace stripped. No single z3 string operator trims, so
@@ -220,8 +223,11 @@ export function symToString(s: Sym): string {
       return `(${symToString(s.left)} ${s.op} ${symToString(s.right)})`;
     case 'concat':
       return `(${symToString(s.left)} ++ ${symToString(s.right)})`;
-    case 'substr':
-      return `${symToString(s.src)}[${s.start}..${s.start + s.length}]`;
+    case 'substr': {
+      const start =
+        typeof s.start === 'number' ? String(s.start) : symToString(s.start);
+      return `${symToString(s.src)}[${start}..+${s.length}]`;
+    }
     case 'strlen':
       return `len(${symToString(s.src)})`;
     case 'trim':

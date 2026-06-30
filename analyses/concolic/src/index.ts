@@ -73,10 +73,16 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     resultLength: number,
   ): Sym | undefined {
     if (src.info === undefined) return undefined;
+    // A char-access (`length === 1`, e.g. `s[i]`/charAt) at a computed index
+    // keeps the index symbolic, so `r[r.length - 1]` stays tied to the subject's
+    // symbolic length instead of the seed's concrete offset. Wider windows pin
+    // the concrete offset (their length is concrete, so a symbolic start would
+    // desync from it).
+    const symStart = resultLength === 1 ? start.info : undefined;
     return {
       kind: 'substr',
       src: src.info,
-      start: start.value,
+      start: symStart ?? start.value,
       length: resultLength,
     };
   }

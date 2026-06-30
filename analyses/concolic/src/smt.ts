@@ -367,8 +367,13 @@ function symToSmt(s: Sym, vars: Map<string, Sort>): string {
     }
     case 'concat':
       return `(str.++ ${symToSmt(s.left, vars)} ${symToSmt(s.right, vars)})`;
-    case 'substr':
-      return `(str.substr ${symToSmt(s.src, vars)} ${s.start} ${s.length})`;
+    case 'substr': {
+      const start =
+        typeof s.start === 'number'
+          ? String(s.start)
+          : operand(s.start, vars, 'Int');
+      return `(str.substr ${symToSmt(s.src, vars)} ${start} ${s.length})`;
+    }
     case 'trim':
       return trimToSmt(symToSmt(s.src, vars), s.leading, s.trailing);
     case 'strlen':

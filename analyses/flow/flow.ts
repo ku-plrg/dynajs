@@ -800,9 +800,18 @@ export abstract class FlowAnalysis<Info>
           ),
         );
         if (i !== undefined) {
+          // A numeric index already carries `i` as its value, so pass it through
+          // to keep any (possibly symbolic) index info — e.g. `r[r.length - 1]`
+          // stays tied to the subject's symbolic length instead of collapsing to
+          // the seed's concrete offset. A string key ("3") has no such info, so
+          // route it through the canonical index `i`.
+          const start =
+            typeof p === 'number'
+              ? (f.prop as Lifted<number>)
+              : this.$.default(i, [f.prop]);
           return this.$.substring(
             f.base as Lifted<string>,
-            this.$.default(i, [f.prop]),
+            start,
             this.$.default(i + 1, [f.prop]),
           );
         }
