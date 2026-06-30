@@ -60,7 +60,7 @@
 import { spawnSync } from "node:child_process";
 import {
   existsSync, mkdirSync, readdirSync, readFileSync,
-  writeFileSync, appendFileSync, accessSync, constants, rmSync,
+  writeFileSync, appendFileSync, accessSync, constants, rmSync, realpathSync,
 } from "node:fs";
 import path from "node:path";
 import { homedir, tmpdir } from "node:os";
@@ -92,6 +92,72 @@ const SNAPSHOT_RUNNERS = ["dynajs-ta"];
 const BASELINE_IMPORT = pathToFileURL(
   path.join(REPO_ROOT, "bench/microbench-import-helper.mjs"),
 ).href;
+
+// `@@DJX_EXEC_MS <ms>` — in-process execution time of the bench BODY, printed by
+// the timing TAIL appended to each bench copy. NaN if the run never reached the
+// tail (timeout, or an uncaught throw before the last line).
+const EXEC_MS_RE = /@@DJX_EXEC_MS\s+([\d.]+)/;
+function execMs(run) {
+  const m = `${run.stdout}\n${run.stderr}`.match(EXEC_MS_RE);
+  return m ? Number(m[1]) : NaN;
+}
+
+// Uniform in-process exec timer for EVERY runner, measuring t0(FIRST executed
+// line) -> t1(LAST executed line) of the bench body, in-process. We wrap a COPY
+// of the bench: HEAD stamps t0, TAIL stamps t1 and prints @@DJX_EXEC_MS. Because
+// the bench is instrumented at LOAD (before t0) and the engine boots before that,
+// this window excludes BOTH bootstrap and instrumentation — it is execution only,
+// the same boundary for baseline/dynajs/nodemedic, so exec_ms is directly
+// comparable (vs the spawnSync wall-clock mean_ms, ~98% bootstrap here).
+//   NB t1 is the LAST LINE, NOT process 'exit': timing to the exit event folds in
+//   node's teardown window, which differs by runtime and was large enough to
+//   INVERT the comparison (dynajs read faster than plain node — impossible). The
+//   tail line is the fix. It is a single in-process, COLD (no warmup) measurement;
+//   loop the body for warm steady-state. Uses `globalThis.performance` (a node
+//   global) so one string works in ESM (baseline/dynajs .mjs) and CJS (nodemedic).
+// Two subtle traps make the timing window leak ~1ms of stream lazy-init if you
+// aren't careful — they were why exec_ms once inverted (instrumented dynajs read
+// *faster* than plain node):
+//   1. A stream's FIRST write lazily initializes it (~1ms). dynajs's verdict
+//      `console.log` hits stdout and our marker hits stderr — so HEAD pre-warms
+//      BOTH streams (before t0) to push that one-time init out of the window.
+//   2. `process.stderr.write(EXPR)` evaluates the `process.stderr` getter (which
+//      can trigger that init) BEFORE its argument, so reading now() *inside* the
+//      argument captures it AFTER the init. TAIL therefore stamps t1 into a var
+//      on its own line FIRST, then writes the marker.
+const TIMING_HEAD =
+  'process.stdout.write("");process.stderr.write("");' +
+  "globalThis.__djx_t0=globalThis.performance.now();\n";
+const TIMING_TAIL =
+  "\nglobalThis.__djx_t1=globalThis.performance.now();\n" +
+  'process.stderr.write("@@DJX_EXEC_MS "+' +
+  '(globalThis.__djx_t1-globalThis.__djx_t0).toFixed(3)+"\\n");\n';
+const withTiming = (src) => TIMING_HEAD + src + TIMING_TAIL;
+
+// Scratch dir for the prelude-prepended copies baseline/dynajs run (nodemedic/
+// expose keep their own analyzer-scoped copy dirs). dynajs only instruments
+// files under an include root (cwd is the sole default), so the dynajs runner
+// passes this dir via `--include`. Copies are .mjs to match the bench/micro tree
+// (dynajs package.json is "type":"module") so the timer's `globalThis` works.
+let benchCopyDirCache = null;
+function benchCopyDir() {
+  if (benchCopyDirCache) return benchCopyDirCache;
+  const dir = path.join(tmpdir(), "dynajs-bench-exec-copies");
+  mkdirSync(dir, { recursive: true });
+  // Resolve symlinks (macOS /var -> /private/var): node resolves the bench
+  // module to its realpath, so dynajs's --include root must be the realpath too,
+  // else isInstrumentTarget's isUnder() check fails and the copy would run
+  // UNINSTRUMENTED (taint never propagates -> every positive scores FN).
+  benchCopyDirCache = realpathSync(dir);
+  return benchCopyDirCache;
+}
+// Write the timing-wrapped bench to a .mjs copy keyed on b.name (flattened
+// relative path, so nested same-basename benches don't collide); return its path.
+function timedBenchCopy(b) {
+  const dest = path.join(benchCopyDir(), `${b.name}.mjs`);
+  writeFileSync(dest, withTiming(readFileSync(b.file, "utf8")));
+  return dest;
+}
 
 // Per-assert marker: `@@DJX_VERDICT <actual> <expected>`. The 1st token is the
 // outcome the analyzer computed; the 2nd is the assert's declared ground truth.
@@ -143,9 +209,9 @@ const SYNTAX_T262_TOTAL = {
   "Syntax/Functions": 16,
   "Syntax/Variables": 9,
   "Syntax/Literals": 12,
-  "Syntax/Classes": 12,
+  "Syntax/Classes": 11,
   "Syntax/Objects": 6,
-  "Syntax/Exceptions": 4,
+  "Syntax/Exceptions": 3,
   "Syntax/RegExp": 8,
 };
 
@@ -413,9 +479,10 @@ function defaultCases(run) {
 }
 
 // expected (positive/negative) x actual -> TP|FP|FN|TN. Positive = detected (a
-// taint finding) or sat (a satisfying witness); negative = clean or unsat. `error`
-// is never positive, so it scores FN against a positive oracle, FP against a
-// negative one.
+// taint finding) or sat (a satisfying witness); negative = clean or unsat.
+// Neither `error` (a crash/timeout) nor `none` (a noVerdict runner's structural
+// no-marker, e.g. baseline) is ever positive or a clean/unsat negative, so both
+// score FN against a positive oracle and FP against a negative one.
 function classify(expected, actual) {
   const pos = (x) => x === "detected" || x === "sat";
   if (pos(expected)) return pos(actual) ? "TP" : "FN"; // clean|unsat|error -> FN
@@ -440,7 +507,10 @@ const colorResult = (result, text) =>
 // run regardless of how many asserts it fired). Used for the overall table and
 // each grouped slice.
 function buildMatrix(recs) {
-  const m = { TP: 0, FP: 0, FN: 0, TN: 0, err: 0, timeout: 0, meanSum: 0, files: 0 };
+  const m = {
+    TP: 0, FP: 0, FN: 0, TN: 0, err: 0, timeout: 0,
+    meanSum: 0, files: 0, execSum: 0, execFiles: 0,
+  };
   for (const rec of recs) {
     for (const c of rec.cases) {
       m[c.result]++;
@@ -449,6 +519,9 @@ function buildMatrix(recs) {
     if (rec.anyTimeout) m.timeout++;
     m.meanSum += rec.mean;
     m.files++;
+    // exec_ms is in-process body time; skip files whose run never printed the
+    // marker (timeout/throw before the timing tail) so the mean isn't NaN.
+    if (Number.isFinite(rec.execMin)) { m.execSum += rec.execMin; m.execFiles++; }
   }
   return m;
 }
@@ -472,7 +545,8 @@ function matrixRow(label, m) {
     [m.err, m.timeout].map((x) => String(x).padStart(5)).join("") +
     fmtRatio(precision).padStart(11) + fmtRatio(recall).padStart(9) +
     fmtRatio(f1).padStart(8) + fmtRatio(accuracy).padStart(10) +
-    (m.files ? (m.meanSum / m.files).toFixed(1) : "0").padStart(10)
+    (m.files ? (m.meanSum / m.files).toFixed(1) : "0").padStart(10) +
+    (m.execFiles ? (m.execSum / m.execFiles).toFixed(2) : "n/a").padStart(10)
   );
 }
 
@@ -482,7 +556,7 @@ const matrixHeader = (lead) =>
   red("FN".padStart(5)) + green("TN".padStart(5)) +
   ["err", "t/o"].map((h) => h.padStart(5)).join("") +
   "precision".padStart(11) + "recall".padStart(9) + "F1".padStart(8) +
-  "accuracy".padStart(10) + "mean_ms".padStart(10);
+  "accuracy".padStart(10) + "mean_ms".padStart(10) + "exec_ms".padStart(10);
 
 // The rows the report prints, in order: one per active runner, then one per
 // `group` that has >1 active runner — a combined slice pooling all that group's
@@ -595,12 +669,23 @@ function makeRunners(opts) {
       // plain Node, no instrumentation: a pure-execution-time reference. The
       // taint prelude globals are stubbed to no-ops via BASELINE_IMPORT so the
       // bench runs as plain JS instead of crashing on the first `__set_taint__`
-      // call. It never emits a verdict marker, so every bench lands in a single
-      // `error` case -> a useful sanity floor; only its mean_ms is meaningful.
+      // call. It never emits a verdict marker by design (it's not a detector),
+      // so it can't score TP/TN — every assert lands in FP/FN. `noVerdict`
+      // marks that: the missing marker on a CLEAN exit is structural, not a
+      // crash, so it's relabeled `none` (still FP/FN via classify, but NOT
+      // tallied in the `err` column). A genuine baseline crash (nonzero exit /
+      // timeout) still reads as `error`. Only its mean_ms is otherwise meaningful.
       name: "baseline",
+      noVerdict: true,
       available: () => onPath("node"),
+      // Run a prelude-timed copy under stock node, so exec_ms is measured at the
+      // same execute-only boundary as the other runners. The baseline import
+      // still stubs the taint prelude to no-ops.
       exec: (b, out, err, t) =>
-        timeRun(["node", "--import", BASELINE_IMPORT, b.file], {}, out, err, t),
+        timeRun(
+          ["node", "--import", BASELINE_IMPORT, timedBenchCopy(b)],
+          {}, out, err, t,
+        ),
     },
     // this project's analyzer, split one runner per `@type`: `dynajs-ta` scores
     // only taint benches, `dynajs-co` only concolic ones (the `short` from
@@ -617,11 +702,16 @@ function makeRunners(opts) {
       applies: (b) => b.type === type && resolveDynajs(b, opts) != null,
       exec: (b, out, err, t) => {
         const { analysis, flags } = resolveDynajs(b, opts);
+        // Run a prelude-timed copy. It lives outside the repo, so add its dir as
+        // an include root (cwd is the only default) -> dynajs instruments it; the
+        // prepended timer then measures execute-only (t0 at the bench body, after
+        // instrumentation), matching the other runners' boundary.
         return timeRun(
-          [path.join(REPO_ROOT, "dynajs"), "node", b.file],
+          [path.join(REPO_ROOT, "dynajs"), "node", timedBenchCopy(b)],
           {
             DYNAJS_HOME: process.env.DYNAJS_HOME ?? REPO_ROOT,
-            DYNAJS_OPTIONS: `--analysis=${analysis}${flags ? " " + flags : ""}`,
+            DYNAJS_OPTIONS:
+              `--analysis=${analysis}${flags ? " " + flags : ""} --include ${benchCopyDir()}`,
           },
           out, err, t,
         );
@@ -646,7 +736,7 @@ function makeRunners(opts) {
         // Key the copy on b.name (flattened relative path) so nested benches
         // sharing a basename don't clobber each other.
         const dest = path.join(nodemedicCjsDir(), `${b.name}.js`);
-        writeFileSync(dest, readFileSync(b.file));
+        writeFileSync(dest, withTiming(readFileSync(b.file, "utf8")));
         return timeRun(
           [
             "node",
@@ -989,11 +1079,10 @@ function main() {
   if (!benches.length)
     die(opts.onlyDone ? "no `// @done`-marked benchmarks matched" : "no benchmarks with a @type header matched");
 
-  // Concolic is abandoned: the scored run is taint-only, so drop `@type
-  // concolic` benches before scoring — they are neither executed nor printed.
-  // (`--count`/`--lint` return above, so those modes still see concolic.)
-  benches = benches.filter((b) => b.type !== "concolic");
-  if (!benches.length) die("no taint benchmarks matched");
+  // Both `@type taint` and `@type concolic` benches are scored: taint runs under
+  // dynajs-ta (+ nodemedic), concolic under dynajs-co (+ expose). Runners with no
+  // applicable bench are dropped below, so a taint-only or concolic-only filter
+  // still produces a clean report.
 
   let runners = makeRunners(opts);
   if (opts.runnerFilters.length)
@@ -1022,7 +1111,7 @@ function main() {
   const logsDir = path.join(outputDir, "logs");
   mkdirSync(logsDir, { recursive: true });
   const csvFile = path.join(outputDir, "results.csv");
-  writeFileSync(csvFile, "runner,benchmark,type,target,feature,rep,case,expected,actual,result,exit_code,timed_out,elapsed_ms\n");
+  writeFileSync(csvFile, "runner,benchmark,type,target,feature,rep,case,expected,actual,result,exit_code,timed_out,elapsed_ms,exec_ms\n");
 
   console.log(`Output directory: ${outputDir}`);
   console.log(`Runners: ${active.map((r) => r.name).join(", ")}`);
@@ -1032,7 +1121,8 @@ function main() {
   );
   console.log(
     "runner".padEnd(12) + "benchmark".padEnd(24) + "expected".padEnd(10) +
-      "actual".padEnd(10) + "result".padStart(7) + "mean_ms".padStart(10),
+      "actual".padEnd(10) + "result".padStart(7) + "mean_ms".padStart(10) +
+      "exec_ms".padStart(10),
   );
 
   // Per-bench outcomes, kept so the report can slice them any number of ways
@@ -1074,6 +1164,7 @@ function main() {
       for (let w = 0; w < opts.warmup; w++) r.exec(b, null, null, timeoutMs);
 
       const samples = [];
+      const execSamples = [];
       const sigs = [];
       let anyTimeout = false;
       let firstCases = null;
@@ -1086,14 +1177,23 @@ function main() {
           timeoutMs,
         );
         const cases = toCases(casesOf(run, b), b);
+        // A `noVerdict` runner (baseline) is not a detector: its missing marker
+        // is structural, not a crash. On a clean exit, relabel the synthesized
+        // `error` to `none` so it still scores FP/FN (classify treats any
+        // non-clean/non-detected actual that way) but isn't counted in the
+        // `err` column as if it had crashed. A real crash keeps `error`.
+        if (r.noVerdict && run.code === 0 && !run.timedOut)
+          for (const c of cases) if (c.actual === "error") c.actual = "none";
         samples.push(run.ms);
+        const exec = execMs(run);
+        if (Number.isFinite(exec)) execSamples.push(exec);
         sigs.push(sig(cases));
         if (run.timedOut) anyTimeout = true;
         if (rep === 1) firstCases = cases;
         cases.forEach((c, i) =>
           appendFileSync(
             csvFile,
-            `${r.name},${b.name},${b.type},${b.target},${b.feature},${rep},${i},${c.expected},${c.actual},${classify(c.expected, c.actual)},${run.code},${run.timedOut},${run.ms.toFixed(1)}\n`,
+            `${r.name},${b.name},${b.type},${b.target},${b.feature},${rep},${i},${c.expected},${c.actual},${classify(c.expected, c.actual)},${run.code},${run.timedOut},${run.ms.toFixed(1)},${Number.isFinite(exec) ? exec.toFixed(3) : ""}\n`,
           ),
         );
       }
@@ -1104,14 +1204,20 @@ function main() {
 
       const cases = firstCases.map((c) => ({ ...c, result: classify(c.expected, c.actual) }));
       const mean = samples.reduce((a, c) => a + c, 0) / samples.length;
-      records[r.name].push({ bench: b, cases, anyTimeout, mean });
+      // in-process body execution time, bootstrap+instrument excluded. Take the
+      // MIN across reps: timing noise (scheduling, GC) is one-sided positive, so
+      // the fastest rep is closest to the true cost. NaN if no rep reached the
+      // timing tail (timeout / uncaught throw before the last line).
+      const execMin = execSamples.length ? Math.min(...execSamples) : NaN;
+      records[r.name].push({ bench: b, cases, anyTimeout, mean, execMin });
 
       cases.forEach((c, i) => {
         const tag = cases.length > 1 ? `${b.name}[${i}]` : b.name;
         console.log(
           r.name.padEnd(12) + tag.padEnd(24) + c.expected.padEnd(10) +
             c.actual.padEnd(10) + colorResult(c.result, c.result.padStart(7)) +
-            (i === 0 ? mean.toFixed(1).padStart(10) : ""),
+            (i === 0 ? mean.toFixed(1).padStart(10) : "") +
+            (i === 0 ? (Number.isFinite(execMin) ? execMin.toFixed(2) : "n/a").padStart(10) : ""),
         );
       });
     }
