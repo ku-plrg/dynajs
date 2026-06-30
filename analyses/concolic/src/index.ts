@@ -9,7 +9,12 @@ import {
   isNumericSort,
   symToString,
 } from './sym.js';
-import { solveValidity, solveModel, solveSat } from './smt.js';
+import {
+  solveValidity,
+  solveModel,
+  solveSat,
+  ARRAY_READBACK_BOUND,
+} from './smt.js';
 import { installPrelude } from './prelude.js';
 import { Coverage } from './coverage.js';
 
@@ -37,6 +42,10 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   private cov = process.env.EXPOSE_COVERAGE_PATH ? new Coverage() : undefined;
 
   private arrayMeta = new WeakMap<object, ArrayMeta>();
+  // Array var name -> its element seq sort, for re-seeding (see materializeArrayInputs).
+  // Keyed by name (not the concrete object) because alternatives() works from a solved
+  // model's variable names, after the seed object is gone.
+  private arrayVars = new Map<string, Sort>();
   private objectMeta = new WeakMap<object, ObjectMeta>();
   private regexVarCounter = 0;
   private arrayOpCounter = 0;
@@ -226,6 +235,30 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     return undefined;
   }
 
+  // Symmetric to getFieldInfo: a `$.set` write updates the analysis's model of the
+  // receiver. For a symbolic array, a "length" write rebinds its length var (so a
+  // later `.length` read reflects e.g. push's len+argCount, instead of the stale
+  // seed length); for a symbolic object, the field's var is rebound. Element-index
+  // writes are left to the read-side `select` (unchanged). Side-effecting -> void.
+  protected setFieldInfo(
+    base: Valued<Sym>,
+    prop: Valued<Sym>,
+    value: Valued<Sym>,
+  ): void {
+    const container = base.value;
+    if (container === null || typeof container !== 'object') return;
+
+    const obj = this.objectMeta.get(container);
+    if (obj !== undefined) {
+      obj.fields.set(String(prop.value), this.symOf(value));
+      return;
+    }
+
+    const meta = this.arrayMeta.get(container);
+    if (meta !== undefined && prop.value === 'length')
+      meta.lenSym = this.symOf(value);
+  }
+
   protected opaqueCallInfo(
     f: unknown,
     entries: unknown[],
@@ -265,33 +298,84 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     const hi = this.symOf(upper);
     if (xs.kind === 'const' && lo.kind === 'const' && hi.kind === 'const')
       return undefined;
-    return {
-      kind: 'binary',
-      op: 'max',
-      left: lo,
-      right: { kind: 'binary', op: 'min', left: xs, right: hi },
-    };
+    // clamp(±∞, lo, hi) is exactly hi or lo — the spec uses +∞ for an absent
+    // lastIndexOf position. minMax folds the non-finite away so the bound has an
+    // SMT image (a raw ±∞ const throws UnsupportedSym in smt.ts).
+    return this.minMax('max', lo, this.minMax('min', xs, hi));
+  }
+
+  // min/max with the ∞-absorbing operand folded out: min(+∞,x)=x, max(-∞,x)=x; the
+  // other direction (min(-∞,_)=-∞, max(+∞,_)=+∞) keeps the ∞ since that IS the value,
+  // but the clamp/range bounds we build never hit it (lo/hi are finite or symbolic).
+  private minMax(op: 'min' | 'max', a: Sym, b: Sym): Sym {
+    const nonFinite = (s: Sym): number | undefined =>
+      s.kind === 'const' &&
+      typeof s.value === 'number' &&
+      !Number.isFinite(s.value)
+        ? s.value
+        : undefined;
+    const av = nonFinite(a);
+    if (av !== undefined)
+      return (op === 'min') === (av === Infinity) ? b : a;
+    const bv = nonFinite(b);
+    if (bv !== undefined)
+      return (op === 'min') === (bv === Infinity) ? a : b;
+    return { kind: 'binary', op, left: a, right: b };
   }
 
   protected rangeInfo(
-    index: number,
+    indices: number[],
     lo: Valued<Sym, number>,
-    _loInclusive: boolean,
-    _hi: Valued<Sym, number>,
-    _hiInclusive: boolean,
+    loInclusive: boolean,
+    hi: Valued<Sym, number>,
+    hiInclusive: boolean,
     _ascending: boolean,
     _bid: number,
-  ): Sym | undefined {
+  ): (Sym | undefined)[] {
+    // Record the loop-bound guards so the trip count is a flippable symbolic fact,
+    // not a concrete artifact of the seed's length. The spec scans (StringIndexOf,
+    // StringLastIndexOf, ...) loop `i` over `lo..hi` where the symbolic length lives
+    // in `hi`; without a recorded guard the loop count is fixed by the seed, so the
+    // search can never reach a position past the seed's length and length-changing
+    // flips diverge on replay.
+    const start = lo.value + (loInclusive ? 0 : 1);
+    this.recordRangeGuards(indices, start, hi, hiInclusive);
     const loSym = this.symOf(lo);
-    if (loSym.kind === 'const') return undefined; // concrete bounds -> concrete index
-    const offset = index - lo.value;
-    if (offset === 0) return loSym;
-    return {
+    if (loSym.kind === 'const') return indices.map(() => undefined); // concrete lo -> concrete index
+    return indices.map((index) =>
+      index === lo.value
+        ? loSym
+        : {
+            kind: 'binary',
+            op: '+',
+            left: loSym,
+            right: { kind: 'const', value: index - lo.value },
+          },
+    );
+  }
+
+  private recordRangeGuards(
+    indices: number[],
+    start: number,
+    hi: Valued<Sym, number>,
+    hiInclusive: boolean,
+  ): void {
+    const hiSym = this.symOf(hi);
+    if (hiSym.kind === 'const') return;
+    const op = hiInclusive ? '<=' : '<';
+    const guard = (i: number): Sym => ({
       kind: 'binary',
-      op: '+',
-      left: loSym,
-      right: { kind: 'const', value: offset },
-    };
+      op,
+      left: { kind: 'const', value: i },
+      right: hiSym,
+    });
+    if (indices.length) {
+      const last = indices[indices.length - 1];
+      this.pushConstraint(guard(last), true); 
+      this.pushBranch(guard(last + 1), false);
+    } else {
+      this.pushBranch(guard(start), false);
+    }
   }
 
   protected minInfo(operands: Valued<Sym, number>[]): Sym | undefined {
@@ -311,7 +395,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   ): Sym | undefined {
     const syms = operands.map((o) => this.symOf(o));
     if (syms.every((s) => s.kind === 'const')) return undefined;
-    return syms.reduce((left, right) => ({ kind: 'binary', op, left, right }));
+    return syms.reduce((left, right) => this.minMax(op, left, right));
   }
 
   protected conditionInfo(id: number, cond: Valued<Sym>, taken: boolean): void {
@@ -534,6 +618,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
       const arrSym: Sym = { kind: 'var', name: varName, sort };
       const lenSym: Sym = { kind: 'var', name: `${varName}_len`, sort: 'Int' };
       this.arrayMeta.set(concrete, { elemSort: sort, lenSym });
+      this.arrayVars.set(varName, sort);
       this.pushConstraint(
         {
           kind: 'binary',
@@ -729,9 +814,37 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
       if (!model) continue; // negated branch infeasible under the prefix
       const input: Record<string, unknown> = Object.fromEntries(model);
       input._bound = i + 1;
+      this.materializeArrayInputs(input);
       out.push({ input, pc: this.pcToString(branches), forkIid: pcs[i].id });
     }
     return out;
+  }
+
+  private materializeArrayInputs(input: Record<string, unknown>): void {
+    for (const [name, sort] of this.arrayVars) {
+      if (name in input) continue; // element-constrained: already a concrete array
+      const lenKey = `${name}_len`;
+      if (!(lenKey in input)) continue; // length not constrained either
+      const raw = Number(input[lenKey]);
+      const len = Math.max(
+        0,
+        Math.min(Number.isFinite(raw) ? raw : 0, ARRAY_READBACK_BOUND),
+      );
+      input[name] = Array.from({ length: len }, () =>
+        this.defaultArrayElem(sort),
+      );
+    }
+  }
+
+  private defaultArrayElem(seqSort: Sort): unknown {
+    switch (seqSort) {
+      case 'StringSeq':
+        return '';
+      case 'BoolSeq':
+        return false;
+      default:
+        return 0; // IntSeq / numeric element
+    }
   }
 
   // The seed input the Distributor replayed (last argv entry — the ExpoSE

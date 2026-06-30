@@ -540,7 +540,7 @@ export function solveSat(
 // How many elements we read back per symbolic array. z3 `(Array Int T)` has no
 // length, so we materialise a bounded prefix (ExpoSE bounds arrays too); pure
 // symbols seed length-1 arrays, so this is generous.
-const ARRAY_READBACK_BOUND = 64;
+export const ARRAY_READBACK_BOUND = 64;
 
 export function solveModel(pc: readonly Polarized[]): Solution | null {
   const vars = new Map<string, Sort>();

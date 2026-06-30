@@ -96,18 +96,18 @@ export class TaintAnalysis extends FlowAnalysis<TaintInfo> {
   }
 
   protected rangeInfo(
-    _index: number,
+    indices: number[],
     _lo: Valued<TaintInfo, number>,
     _loInclusive: boolean,
     _hi: Valued<TaintInfo, number>,
     _hiInclusive: boolean,
     _ascending: boolean,
     _bid: number,
-  ): TaintInfo {
-    // A range index is a pure loop counter, so return it untainted no matter how the
+  ): TaintInfo[] {
+    // A range index is a pure loop counter, so return each untainted no matter how the
     // bounds are tainted — deliberately dropping the control/bound taint a default
     // bound-derived `baseInfo` would carry.
-    return { bit: false };
+    return indices.map(() => ({ bit: false }));
   }
 
   protected stringIndexOfInfo(
