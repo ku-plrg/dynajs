@@ -167,7 +167,7 @@ export type Sym =
   // `r[r.length - 1]`), where pinning it to the seed's offset would drop the
   // dependence on the subject's symbolic length.
   | { kind: 'concat'; left: Sym; right: Sym }
-  | { kind: 'substr'; src: Sym; start: number | Sym; length: number }
+  | { kind: 'substr'; src: Sym; start: number | Sym; length: number | Sym }
   | { kind: 'strlen'; src: Sym }
   // String.prototype.trim/trimStart/trimEnd (`$.trim`): `src` with leading
   // and/or trailing whitespace stripped. No single z3 string operator trims, so
@@ -226,7 +226,9 @@ export function symToString(s: Sym): string {
     case 'substr': {
       const start =
         typeof s.start === 'number' ? String(s.start) : symToString(s.start);
-      return `${symToString(s.src)}[${start}..+${s.length}]`;
+      const length =
+        typeof s.length === 'number' ? String(s.length) : symToString(s.length);
+      return `${symToString(s.src)}[${start}..+${length}]`;
     }
     case 'strlen':
       return `len(${symToString(s.src)})`;

@@ -19,5 +19,5 @@ export function INTRINSICS_String_prototype_repeat ($ : SpecRuntime, $this : Lif
     return $.default<string>("", []);
   }
 
-  return $.default($.value(S).repeat($.value(n)), [S, n]);
+  return (Array($.value(n)).fill(S) as Lifted<string>[]).reduce((a, b) => $.concatenate(a, b));
 }

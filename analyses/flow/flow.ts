@@ -122,6 +122,11 @@ export abstract class FlowAnalysis<Info>
     _lower: Valued<Info, number>,
     _upper: Valued<Info, number>,
   ): Info;
+  /* min/max over a list of numbers (`$.min`/`$.max`, e.g. the spec's `from`/`to`
+   * substring-window computations). Variadic to match the ops; without a hook the
+   * result falls back to baseInfo (derived from the operands), as before. */
+  protected minInfo?(_operands: Valued<Info, number>[]): Info;
+  protected maxInfo?(_operands: Valued<Info, number>[]): Info;
 
   /* one index of an integer range `lo..hi`; called per element so the analysis can
    * tie each index to the (possibly symbolic) bounds. `bid` keys the loop-bound branch. */
@@ -465,16 +470,22 @@ export abstract class FlowAnalysis<Info>
     },
 
     // MathOps
-    min: (...xs) =>
-      this.numOp(
-        ReflectApply(Math.min, undefined, xs.map((x) => this.unlift(x) as number)) as number,
-        xs,
-      ),
-    max: (...xs) =>
-      this.numOp(
-        ReflectApply(Math.max, undefined, xs.map((x) => this.unlift(x) as number)) as number,
-        xs,
-      ),
+    min: (...xs) => {
+      const v = ReflectApply(Math.min, undefined, xs.map((x) => this.unlift(x) as number)) as number;
+      return this.lift(
+        v,
+        this.minInfo?.(xs.map((x) => this.valued(x))) ??
+          this.defaultInfo(v, xs.map((x) => this.valued(x))),
+      );
+    },
+    max: (...xs) => {
+      const v = ReflectApply(Math.max, undefined, xs.map((x) => this.unlift(x) as number)) as number;
+      return this.lift(
+        v,
+        this.maxInfo?.(xs.map((x) => this.valued(x))) ??
+          this.defaultInfo(v, xs.map((x) => this.valued(x))),
+      );
+    },
     abs: (x) => this.numOp(Math.abs(this.unlift(x) as number), [x]),
     // floor/ceil/round route through unaryInfo (op-keyed, like $.isInteger) so an
     // analysis can model the rounding symbolically; without a hook they fall back

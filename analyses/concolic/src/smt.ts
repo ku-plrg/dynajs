@@ -372,7 +372,11 @@ function symToSmt(s: Sym, vars: Map<string, Sort>): string {
         typeof s.start === 'number'
           ? String(s.start)
           : operand(s.start, vars, 'Int');
-      return `(str.substr ${symToSmt(s.src, vars)} ${start} ${s.length})`;
+      const length =
+        typeof s.length === 'number'
+          ? String(s.length)
+          : operand(s.length, vars, 'Int');
+      return `(str.substr ${symToSmt(s.src, vars)} ${start} ${length})`;
     }
     case 'trim':
       return trimToSmt(symToSmt(s.src, vars), s.leading, s.trailing);

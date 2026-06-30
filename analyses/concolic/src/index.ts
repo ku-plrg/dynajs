@@ -53,16 +53,32 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   protected substringInfo(
     src: Valued<Sym>,
     start: Valued<Sym, number>,
-    _end: Valued<Sym, number>,
+    end: Valued<Sym, number>,
     resultLength: number,
   ): Sym | undefined {
     if (src.info === undefined) return undefined;
-    const symStart = resultLength === 1 ? start.info : undefined;
+    // The window is [start, end), so its length is end - start. When either
+    // bound is symbolic — an open-ended slice/substring whose end is the symbolic
+    // string length (slice(1), substring(1)), an end clamped to len
+    // (substring(0, 100)), or a char access at a computed index — carry the
+    // bounds (and hence the length) symbolically. Pinning length to the seed's
+    // concrete result length would make any query needing a different-length
+    // subject (slice(1) === 'bcd') unsatisfiable.
+    if (start.info === undefined && end.info === undefined) {
+      return {
+        kind: 'substr',
+        src: src.info,
+        start: start.value,
+        length: resultLength,
+      };
+    }
+    const startSym: Sym = start.info ?? { kind: 'const', value: start.value };
+    const endSym: Sym = end.info ?? { kind: 'const', value: end.value };
     return {
       kind: 'substr',
       src: src.info,
-      start: symStart ?? start.value,
-      length: resultLength,
+      start: startSym,
+      length: { kind: 'binary', op: '-', left: endSym, right: startSym },
     };
   }
 
@@ -264,6 +280,47 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
       left: lo,
       right: { kind: 'binary', op: 'min', left: xs, right: hi },
     };
+  }
+
+  protected rangeInfo(
+    index: number,
+    lo: Valued<Sym, number>,
+    _loInclusive: boolean,
+    _hi: Valued<Sym, number>,
+    _hiInclusive: boolean,
+    _ascending: boolean,
+    _bid: number,
+  ): Sym | undefined {
+    const loSym = this.symOf(lo);
+    if (loSym.kind === 'const') return undefined; // concrete bounds -> concrete index
+    const offset = index - lo.value;
+    if (offset === 0) return loSym;
+    return {
+      kind: 'binary',
+      op: '+',
+      left: loSym,
+      right: { kind: 'const', value: offset },
+    };
+  }
+
+  protected minInfo(operands: Valued<Sym, number>[]): Sym | undefined {
+    return this.extremum('min', operands);
+  }
+
+  protected maxInfo(operands: Valued<Sym, number>[]): Sym | undefined {
+    return this.extremum('max', operands);
+  }
+
+  // min/max fold to nested `(ite (<= a b) a b)` binaries (smt.ts SMT_BINARY). All
+  // bounds concrete -> undefined (concretize); the spec's `from`/`to` window
+  // computations stay symbolic so an open-ended substring carries its length.
+  private extremum(
+    op: 'min' | 'max',
+    operands: Valued<Sym, number>[],
+  ): Sym | undefined {
+    const syms = operands.map((o) => this.symOf(o));
+    if (syms.every((s) => s.kind === 'const')) return undefined;
+    return syms.reduce((left, right) => ({ kind: 'binary', op, left, right }));
   }
 
   protected conditionInfo(id: number, cond: Valued<Sym>, taken: boolean): void {
