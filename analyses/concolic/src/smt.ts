@@ -435,7 +435,7 @@ function buildSmt(
   // The distinctive `str.`-namespaced names make the substring scan reliable, and
   // an unused emission would be harmless valid SMT anyway. needsLogic is always
   // true here (a trim's source is a String var).
-  const needsTrim = body.includes('str.whiteLeft');
+  const needsTrim = body.includes('str.white');
   return (
     (needsLogic ? '(set-logic ALL)\n' : '') +
     (needsTrim ? TRIM_PRELUDE + '\n' : '') +
