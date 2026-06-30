@@ -6,9 +6,9 @@
 
 function __test_symbolic__(symbolic) {
 
-  // @witness __test_symbolic__("abc")
-  __IS_SAT__(symbolic.substring(0, 2) === 'ab', true);
+  // @witness __test_symbolic__("abcd")
+  __IS_SAT__(symbolic.substring(1, 3) === 'bc', true);
 
 }
 
-__test_symbolic__(__symbolic__('s', "xyz"));
+__test_symbolic__(__symbolic__('s', "axyz"));

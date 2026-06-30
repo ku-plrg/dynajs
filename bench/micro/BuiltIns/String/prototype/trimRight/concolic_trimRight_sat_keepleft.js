@@ -6,9 +6,9 @@
 
 function __test_symbolic__(symbolic) {
 
-  // @witness __test_symbolic__("  abc  ")
-  __IS_SAT__(symbolic.trimRight() === '  abc', true);
+  // @witness __test_symbolic__(" a ")
+  __IS_SAT__(symbolic.trimRight() === ' a', true);
 
 }
 
-__test_symbolic__(__symbolic__('s', "abc"));
+__test_symbolic__(__symbolic__('s', "a"));
