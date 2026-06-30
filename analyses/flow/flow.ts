@@ -146,7 +146,8 @@ export abstract class FlowAnalysis<Info>
     _taken: boolean,
   ): void {}
 
-  protected escapedInfo?(_f: unknown, _escaped: Valued<Info>[]): void {}
+  // opaqueCallInfo is enough for now
+  // protected escapedInfo?(_f: unknown, _escaped: Valued<Info>[]): void {}
 
   /* opaque call the analysis wants to model */
   protected opaqueCallInfo?(
@@ -622,11 +623,11 @@ export abstract class FlowAnalysis<Info>
         // @@toPrimitive) so a native ToPrimitive that calls them gets a raw
         // return — see the note in invokeFunPre's opaque branch.
         const esc = this.escaper.escape(thisArg, argArr, entries);
-        if (esc.crossed.length > 0)
-          this.escapedInfo?.(
-            fn,
-            esc.crossed.map((w) => this.valued(w)),
-          );
+        // if (esc.crossed.length > 0)
+        //   this.escapedInfo?.(
+        //     fn,
+        //     esc.crossed.map((w) => this.valued(w)),
+        //   );
         const result = ReflectApply(fn as Function, esc.base, esc.args);
         return this.opaqueResult(fn, entries, result, esc.log);
       }
@@ -1005,11 +1006,11 @@ export abstract class FlowAnalysis<Info>
       // shadows them with unlifting wrappers and restores after — see
       // BoundaryEscape.wrapCoercion.
       const esc = this.escaper.escape(_base, argArr, entries);
-      if (esc.crossed.length > 0)
-        this.escapedInfo?.(
-          _f,
-          esc.crossed.map((w) => this.valued(w)),
-        );
+      // if (esc.crossed.length > 0)
+      //   this.escapedInfo?.(
+      //     _f,
+      //     esc.crossed.map((w) => this.valued(w)),
+      //   );
       return {
         skip: false,
         f: callee,

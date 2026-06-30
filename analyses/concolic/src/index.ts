@@ -161,18 +161,6 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     return { kind: 'contains', str, sub: needle };
   }
 
-  protected stringIndexOfInfo(
-    src: Valued<Sym>,
-    searchValue: Valued<Sym>,
-    fromIndex: Valued<Sym, number>,
-  ): Sym | undefined {
-    const s = this.symOf(src);
-    const sub = this.symOf(searchValue);
-    if (s.kind === 'const' && sub.kind === 'const') return undefined;
-    if (sortOf(s) !== 'String' || sortOf(sub) !== 'String') return undefined;
-    return { kind: 'strIndexOf', src: s, sub, from: this.symOf(fromIndex) };
-  }
-
   protected getFieldInfo(
     base: Valued<Sym>,
     prop: Valued<Sym>,
@@ -232,11 +220,6 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     return undefined;
   }
 
-  // Symmetric to getFieldInfo: a `$.set` write updates the analysis's model of the
-  // receiver. For a symbolic array, a "length" write rebinds its length var (so a
-  // later `.length` read reflects e.g. push's len+argCount, instead of the stale
-  // seed length); for a symbolic object, the field's var is rebound. Element-index
-  // writes are left to the read-side `select` (unchanged). Side-effecting -> void.
   protected setFieldInfo(
     base: Valued<Sym>,
     prop: Valued<Sym>,
@@ -286,9 +269,6 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     return this.minMax('max', lo, this.minMax('min', xs, hi));
   }
 
-  // min/max with the ∞-absorbing operand folded out: min(+∞,x)=x, max(-∞,x)=x; the
-  // other direction (min(-∞,_)=-∞, max(+∞,_)=+∞) keeps the ∞ since that IS the value,
-  // but the clamp/range bounds we build never hit it (lo/hi are finite or symbolic).
   private minMax(op: 'min' | 'max', a: Sym, b: Sym): Sym {
     const nonFinite = (s: Sym): number | undefined =>
       s.kind === 'const' &&
@@ -314,12 +294,6 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     _ascending: boolean,
     _bid: number,
   ): (Sym | undefined)[] {
-    // Record the loop-bound guards so the trip count is a flippable symbolic fact,
-    // not a concrete artifact of the seed's length. The spec scans (StringIndexOf,
-    // StringLastIndexOf, ...) loop `i` over `lo..hi` where the symbolic length lives
-    // in `hi`; without a recorded guard the loop count is fixed by the seed, so the
-    // search can never reach a position past the seed's length and length-changing
-    // flips diverge on replay.
     const start = lo.value + (loInclusive ? 0 : 1);
     this.recordRangeGuards(indices, start, hi, hiInclusive);
     const loSym = this.symOf(lo);
@@ -384,7 +358,6 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     this.cov?.decision(id, taken);
     const sym = this.symOf(cond);
     if (sym.kind === 'const') return;
-    if (this.isSpecSentinelReMap(id, sym)) return;
     const bool = this.toBool(sym);
     if (bool !== undefined)
       this.pathConstraints.push({ id, constraint: bool, taken });
@@ -394,58 +367,28 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
   // branch ids are minted from 0 by ±1, so they never reach this floor.
   private static readonly SPEC_BRANCH_FLOOR = Number.MAX_SAFE_INTEGER - 1_000_000;
 
-  // A spec model repackaging a pure matcher's not-found sentinel — StringIndexOf's
-  // intrinsic does `if (result === -1) return -1` — is a modeling artifact, not
-  // program control flow. Recording it would pin the concrete-found path with
-  // `strIndexOf != -1`, making an `indexOf(...) === -1` query unsat under it.
-  // indexOf is surfaced as the pure z3 `str.indexof` term (see $.stringIndexOf),
-  // so drop such a spec-internal (high-id) `(matcher op -1)` discrimination; user
-  // branches (small ids) and every non-matcher condition still constrain.
-  // (Note: the concrete branch still runs, so a *concrete-not-found* seed whose
-  // intrinsic arm returns a fresh -1 still loses the symbolic result — that arm,
-  // not the recorded constraint, is the limit.)
-  private isSpecSentinelReMap(id: number, sym: Sym): boolean {
-    if (id < ConcolicAnalysis.SPEC_BRANCH_FLOOR) return false;
-    if (sym.kind !== 'binary' || !ConcolicAnalysis.EQUALITY_OPS.has(sym.op))
-      return false;
-    const isMatcher = (s: Sym) => s.kind === 'strIndexOf';
-    const isNotFound = (s: Sym) => s.kind === 'const' && s.value === -1;
-    return (
-      (isMatcher(sym.left) && isNotFound(sym.right)) ||
-      (isMatcher(sym.right) && isNotFound(sym.left))
-    );
-  }
-
-  // Statement-coverage observers. FlowAnalysis sets currentId for only the seven
-  // op kinds it models (binary/unary/literal/get·putField/condition/call), so on
-  // their own those miss whole lines — bare `return x`, `var x = y`, a function's
-  // signature line. These are the core hooks flow leaves unimplemented, so adding
-  // them here is purely additive: core dispatches, flow skipped them, and a void
-  // return is a no-op (read/write/_return/_throw treat undefined as "unchanged").
-  // Every executed line carries at least one of these or a flow op, so collapsed
-  // to lines the union is complete statement coverage. Cost is one guarded touch
-  // per op, and only in coverage mode (this.cov set); the microbench pays nothing.
-  read(id: number): void {
-    this.cov?.touch(id);
-  }
-  write(id: number): void {
-    this.cov?.touch(id);
-  }
-  declare(id: number): void {
-    this.cov?.touch(id);
-  }
-  _return(id: number): void {
-    this.cov?.touch(id);
-  }
-  _throw(id: number): void {
-    this.cov?.touch(id);
-  }
-  functionEnter(id: number): void {
-    this.cov?.touch(id);
-  }
-  scriptEnter(id: number): void {
-    this.cov?.touch(id);
-  }
+  // Statement-coverage observers - not neccessary for just running
+  // read(id: number): void {
+  //   this.cov?.touch(id);
+  // }
+  // write(id: number): void {
+  //   this.cov?.touch(id);
+  // }
+  // declare(id: number): void {
+  //   this.cov?.touch(id);
+  // }
+  // _return(id: number): void {
+  //   this.cov?.touch(id);
+  // }
+  // _throw(id: number): void {
+  //   this.cov?.touch(id);
+  // }
+  // functionEnter(id: number): void {
+  //   this.cov?.touch(id);
+  // }
+  // scriptEnter(id: number): void {
+  //   this.cov?.touch(id);
+  // }
 
   private toBool(sym: Sym): Sym | undefined {
     const sort = sortOf(sym);
@@ -708,14 +651,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     this.writeExpoSEResult();
   }
 
-  // ExpoSE drop-in: run as ExpoSE's analyseScript, the Distributor spawns us with
-  // a seed input on argv and reads two result files on exit (Spawn.js + the
-  // SymbolicExecution exitFn). We honour that contract: EXPOSE_OUT_PATH gets
-  // { pc, input, errors, alternatives, stats }, EXPOSE_COVERAGE_PATH the coverage
-  // map (this.cov; see coverage.ts). `alternatives` are the negated-branch child
-  // inputs the Distributor re-queues to drive multi-path search (M2). Without the
-  // env vars (e.g. the microbench) this is a no-op; the @@DJX_VERDICT path is
-  // untouched.
+  /* ExpoSE drop-in */
   private writeExpoSEResult(): void {
     const outPath = process.env.EXPOSE_OUT_PATH;
     if (!outPath) return;
@@ -749,13 +685,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
       .join(', ');
   }
 
-  // Child inputs for the unexplored side of each branch (ExpoSE
-  // SymbolicState.alternatives/_buildPC). From `_bound` onward, negate branch i
-  // while holding branches [0..i-1] at their taken polarity, solve for a model,
-  // and emit it as a child input tagged `_bound = i+1` (a re-run then fixes the
-  // prefix and explores past i). The Distributor re-queues these
-  // (Center._expandAlternatives) — that is how multi-path search proceeds. A
-  // branch we can't translate or that is infeasible is skipped, not fatal.
+  // Child inputs for the unexplored side of each branch
   private alternatives(): {
     input: Record<string, unknown>;
     pc: string;
@@ -766,13 +696,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
         ? (this.seedInput()._bound as number)
         : 0;
     const pcs = this.pathConstraints;
-    // Replay divergence (ExpoSE SymbolicState.js:299): the seed pinned `_bound`
-    // branches, but this run reached fewer — the child input failed to steer
-    // execution onto the intended path (a modeling gap, e.g. an op we don't
-    // translate so a branch went concrete). ExpoSE throws here and writes no
-    // result; we mirror that — writeExpoSEResult evaluates us before the file
-    // write, so divergence leaves no out file and the Distributor sees a failed
-    // path rather than a silently-wrong one.
+    // Replay divergence, ExpoSE throws here and writes no result; we mirror that
     if (bound > pcs.length) {
       throw `Bound ${bound} > ${pcs.length}, divergence has occured`;
     }
@@ -851,10 +775,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
 const analysis = new ConcolicAnalysis();
 D$.analysis = analysis;
 
-// ExpoSE drop-in only: route uncaught program throws into errors[] (the corpus
-// oracle counts them; see recordUncaught). Mirrors ExpoSE's process-level
-// handler. Gated on EXPOSE_OUT_PATH so the microbench keeps Node's default
-// crash-on-throw behaviour.
+/* ExpoSE drop-in only */
 if (process.env.EXPOSE_OUT_PATH) {
   process.on('uncaughtException', (e) => analysis.recordUncaught(e));
 }
