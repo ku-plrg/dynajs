@@ -8,6 +8,7 @@
     "djx": "./djx"
   },
   "scripts": {
+    "checkenv": "node ./scripts/check-env.mjs",
     "copy": "node ./scripts/copy-polyfill.mjs",
     "clean": "npm-run-all clean:analyses clean:dynajs",
     "clean:analyses": "rimraf ./analyses/dist",
