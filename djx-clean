@@ -16,7 +16,7 @@ fi
 
 # NOTE - `dynajs-stats-json` files are not generated anymore, but we keep this for backward compatibility.
 find "$target_dir" -type f \
-  \( -name '*__dynajs__.js' -o -name '*__dynajs__.dynajs-stats-json' -o -name '*_jalangi_babel_.js' -o -name '.dynajs-vm-*.js' -o -name '*_jalangi_.js' \) \
+  \( -name '*__dynajs__.js' -o -name '*__dynajs__.dynajs-stats-json' -o -name '*_jalangi_babel_.js' -o -name '.dynajs-vm-*.js' -o -name '*_jalangi_.js' -o -name '*_jalangi_.json' \) \
   -exec rm -f {} +
 
 rm -rf "$target_dir/.dynajs"

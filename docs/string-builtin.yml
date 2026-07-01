@@ -51,6 +51,7 @@
 - String.prototype.strike
 - String.prototype.sub
 - String.prototype.sup
+- String.prototype.trimLeft
+- String.prototype.trimRight
 
-# - String.prototype.trimLeft # same with trimStart
-# - String.prototype.trimRight # same with trimEnd
+# - String.prototype.constructor

@@ -36,6 +36,11 @@
 //   --lint            check the concolic "exactly 1 assert fires per seeded
 //                     path" invariant; lists over/under-firing files, exits 1
 //                     on any violation; no build, no dynajs
+//   --replay          run ONLY the multi-path *-replay runners (dynajs-co-replay,
+//                     expose-replay) over the bench/concolic reach corpus. The
+//                     default run EXCLUDES them; this flag is their separate run.
+//                     Reports a `runs` column: program executions to reach the
+//                     guarded throw (from ExpoSE's `N paths` tally)
 //   --coverage        census of @done progress per area (BuiltIns/Syntax) and
 //                     subarea: covered units / universe. BuiltIns universe =
 //                     ECMAScript spec members (SPEC_BUILTIN_TOTAL); Syntax =
@@ -104,6 +109,21 @@ const BASELINE_IMPORT = pathToFileURL(
 const EXEC_MS_RE = /@@DJX_EXEC_MS\s+([\d.]+)/;
 function execMs(run) {
   const m = `${run.stdout}\n${run.stderr}`.match(EXEC_MS_RE);
+  return m ? Number(m[1]) : NaN;
+}
+
+// `ExpoSE Finished. N paths, M errors` — the Distributor's tally of how many
+// program executions (paths) the multi-path search ran. This is the "runs"
+// metric for the *-replay runners: because EXPOSE_STOP_ON_ERROR=Reachable halts
+// the search the moment the guarded throw is hit, N is the number of program
+// runs it took to REACH the target (the reaching run included). Concurrency
+// (the worker pool) means a few extra paths may already be in flight when the
+// reach lands, so N is an upper bound on the minimal reach depth, not exact.
+// NaN when the line is absent (a crash/timeout before the Distributor finished,
+// or a non-replay runner that never drives ExpoSE).
+const PATHS_RE = /ExpoSE Finished\.\s+(\d+)\s+paths/;
+function pathRuns(run) {
+  const m = `${run.stdout}\n${run.stderr}`.match(PATHS_RE);
   return m ? Number(m[1]) : NaN;
 }
 
@@ -572,7 +592,7 @@ const colorResult = (result, text) =>
 function buildMatrix(recs) {
   const m = {
     TP: 0, FP: 0, FN: 0, TN: 0, err: 0, timeout: 0,
-    meanSum: 0, files: 0, execSum: 0, execFiles: 0,
+    meanSum: 0, files: 0, execSum: 0, execFiles: 0, runsSum: 0, runsFiles: 0,
   };
   for (const rec of recs) {
     for (const c of rec.cases) {
@@ -585,6 +605,9 @@ function buildMatrix(recs) {
     // exec_ms is in-process body time; skip files whose run never printed the
     // marker (timeout/throw before the timing tail) so the mean isn't NaN.
     if (Number.isFinite(rec.execMin)) { m.execSum += rec.execMin; m.execFiles++; }
+    // runs = program executions to reach (the *-replay runners); NaN for other
+    // runners and for a replay run that never printed the Finished tally.
+    if (Number.isFinite(rec.runsMin)) { m.runsSum += rec.runsMin; m.runsFiles++; }
   }
   return m;
 }
@@ -609,7 +632,8 @@ function matrixRow(label, m) {
     fmtRatio(precision).padStart(11) + fmtRatio(recall).padStart(9) +
     fmtRatio(f1).padStart(8) + fmtRatio(accuracy).padStart(10) +
     (m.files ? (m.meanSum / m.files).toFixed(1) : "0").padStart(10) +
-    (m.execFiles ? (m.execSum / m.execFiles).toFixed(2) : "n/a").padStart(10)
+    (m.execFiles ? (m.execSum / m.execFiles).toFixed(2) : "n/a").padStart(10) +
+    (m.runsFiles ? (m.runsSum / m.runsFiles).toFixed(1) : "n/a").padStart(9)
   );
 }
 
@@ -619,7 +643,8 @@ const matrixHeader = (lead) =>
   red("FN".padStart(5)) + green("TN".padStart(5)) +
   ["err", "t/o"].map((h) => h.padStart(5)).join("") +
   "precision".padStart(11) + "recall".padStart(9) + "F1".padStart(8) +
-  "accuracy".padStart(10) + "mean_ms".padStart(10) + "exec_ms".padStart(10);
+  "accuracy".padStart(10) + "mean_ms".padStart(10) + "exec_ms".padStart(10) +
+  "runs".padStart(9);
 
 // The rows the report prints, in order: one per active runner, then one per
 // `group` that has >1 active runner — a combined slice pooling all that group's
@@ -941,6 +966,7 @@ function parseArgs(argv) {
     count: false, // just report how many benches match (+ breakdown), then exit
     lint: false, // check the concolic "1 assert fires per seeded path" invariant
     coverage: false, // census of @done taint benches by area (BuiltIns/Syntax), then exit
+    replay: false, // run ONLY the multi-path *-replay runners (reach corpus); default excludes them
   };
   const need = (i, flag) => {
     if (i + 1 >= argv.length) die(`${flag} requires a value`);
@@ -964,12 +990,13 @@ function parseArgs(argv) {
       case "--count": opts.count = true; break;
       case "--lint": opts.lint = true; break;
       case "--coverage": opts.coverage = true; break;
+      case "--replay": opts.replay = true; break;
       case "--help":
         console.log(
           "Usage: node bench/run-micro-benchmark.mjs " +
             "[--runner NAME] [--bench NAME] [--dir SUB] [--analysis NAME] [--dynajs-flags STR] " +
             "[--reps N] [--warmup N] [--timeout SEC] [--output-dir DIR] " +
-            "[--done] [--count] [--lint] [--coverage] [--check | --update-snapshot]",
+            "[--done] [--count] [--lint] [--coverage] [--replay] [--check | --update-snapshot]",
         );
         process.exit(0);
       default: die(`unknown option: ${a}`);
@@ -1201,6 +1228,13 @@ function main() {
   // still produces a clean report.
 
   let runners = makeRunners(opts);
+  // Separate the multi-path *-replay runners (the ExpoSE Distributor over the
+  // bench/concolic reach corpus) from the default micro run: `--replay` selects
+  // ONLY that group, the default excludes it. An explicit `--runner NAME`
+  // bypasses this so any runner can still be named directly (e.g.
+  // `--runner expose-replay` with no `--replay`).
+  if (!opts.runnerFilters.length)
+    runners = runners.filter((r) => (opts.replay ? r.group === "replay" : r.group !== "replay"));
   if (opts.runnerFilters.length)
     runners = runners.filter((r) => matchesAny(r.name, opts.runnerFilters));
   if (!runners.length) die("no runners matched the requested filters");
@@ -1227,7 +1261,7 @@ function main() {
   const logsDir = path.join(outputDir, "logs");
   mkdirSync(logsDir, { recursive: true });
   const csvFile = path.join(outputDir, "results.csv");
-  writeFileSync(csvFile, "runner,benchmark,type,target,feature,rep,case,expected,actual,result,exit_code,timed_out,elapsed_ms,exec_ms\n");
+  writeFileSync(csvFile, "runner,benchmark,type,target,feature,rep,case,expected,actual,result,exit_code,timed_out,elapsed_ms,exec_ms,runs\n");
 
   console.log(`Output directory: ${outputDir}`);
   console.log(`Runners: ${active.map((r) => r.name).join(", ")}`);
@@ -1238,7 +1272,7 @@ function main() {
   console.log(
     "runner".padEnd(12) + "benchmark".padEnd(24) + "expected".padEnd(10) +
       "actual".padEnd(10) + "result".padStart(7) + "mean_ms".padStart(10) +
-      "exec_ms".padStart(10),
+      "exec_ms".padStart(10) + "runs".padStart(9),
   );
 
   // Per-bench outcomes, kept so the report can slice them any number of ways
@@ -1281,6 +1315,7 @@ function main() {
 
       const samples = [];
       const execSamples = [];
+      const runsSamples = [];
       const sigs = [];
       let anyTimeout = false;
       let firstCases = null;
@@ -1303,13 +1338,15 @@ function main() {
         samples.push(run.ms);
         const exec = execMs(run);
         if (Number.isFinite(exec)) execSamples.push(exec);
+        const runs = pathRuns(run);
+        if (Number.isFinite(runs)) runsSamples.push(runs);
         sigs.push(sig(cases));
         if (run.timedOut) anyTimeout = true;
         if (rep === 1) firstCases = cases;
         cases.forEach((c, i) =>
           appendFileSync(
             csvFile,
-            `${r.name},${b.name},${b.type},${b.target},${b.feature},${rep},${i},${c.expected},${c.actual},${classify(c.expected, c.actual)},${run.code},${run.timedOut},${run.ms.toFixed(1)},${Number.isFinite(exec) ? exec.toFixed(3) : ""}\n`,
+            `${r.name},${b.name},${b.type},${b.target},${b.feature},${rep},${i},${c.expected},${c.actual},${classify(c.expected, c.actual)},${run.code},${run.timedOut},${run.ms.toFixed(1)},${Number.isFinite(exec) ? exec.toFixed(3) : ""},${Number.isFinite(runs) ? runs : ""}\n`,
           ),
         );
       }
@@ -1325,7 +1362,12 @@ function main() {
       // the fastest rep is closest to the true cost. NaN if no rep reached the
       // timing tail (timeout / uncaught throw before the last line).
       const execMin = execSamples.length ? Math.min(...execSamples) : NaN;
-      records[r.name].push({ bench: b, cases, anyTimeout, mean, execMin });
+      // program executions to reach (the *-replay runners). MIN across reps: the
+      // concurrent worker pool overshoots by a few paths before the reach halts
+      // it, so the fewest observed is closest to the true reach depth. NaN for
+      // non-replay runners (they never print the `N paths` tally).
+      const runsMin = runsSamples.length ? Math.min(...runsSamples) : NaN;
+      records[r.name].push({ bench: b, cases, anyTimeout, mean, execMin, runsMin });
 
       cases.forEach((c, i) => {
         const tag = cases.length > 1 ? `${b.name}[${i}]` : b.name;
@@ -1333,7 +1375,8 @@ function main() {
           r.name.padEnd(12) + tag.padEnd(24) + c.expected.padEnd(10) +
             c.actual.padEnd(10) + colorResult(c.result, c.result.padStart(7)) +
             (i === 0 ? mean.toFixed(1).padStart(10) : "") +
-            (i === 0 ? (Number.isFinite(execMin) ? execMin.toFixed(2) : "n/a").padStart(10) : ""),
+            (i === 0 ? (Number.isFinite(execMin) ? execMin.toFixed(2) : "n/a").padStart(10) : "") +
+            (i === 0 ? (Number.isFinite(runsMin) ? String(runsMin) : "n/a").padStart(9) : ""),
         );
       });
     }

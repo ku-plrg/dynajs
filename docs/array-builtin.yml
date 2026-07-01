@@ -40,6 +40,7 @@
 - Array.prototype.values
 - Array.prototype.with
 - Array.prototype [ %Symbol.iterator% ] ( )
+# Array[%Symbol.species%] - accessor property... accessor function so builtin..?
 
-# Array[%Symbol.species%] - accessor property.
-# Array.prototype [ %Symbol.unscopables% ] not a function
+# Array.prototype.constructor
+# Array.prototype [ %Symbol.unscopables% ] - data property.

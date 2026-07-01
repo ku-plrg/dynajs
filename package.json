@@ -23,6 +23,7 @@
     "build:watch": "tsc -b -w",
     "sunspider": "npm run build && ./bench/run-sunspider-benchmark.sh",
     "microbench": "npm run build && node ./bench/run-micro-benchmark.mjs",
+    "microbench:replay": "npm run build && node ./bench/run-micro-benchmark.mjs --replay",
     "microbench:done": "npm run build && node ./bench/run-micro-benchmark.mjs --done",
     "microbench:check": "npm run build && node ./bench/run-micro-benchmark.mjs --check",
     "microbench:snapshot": "npm run build && node ./bench/run-micro-benchmark.mjs --update-snapshot",
