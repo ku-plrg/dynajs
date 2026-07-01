@@ -14,16 +14,16 @@
 //      where the 2nd token is what that assert expected. A file may chain
 //      several asserts; each marker is one independently-scored case. A run that
 //      emits no marker at all (crash/timeout before any assert) errored as a
-//      whole: it scores one `error` case per declared assert for taint benches
-//      (one for concolic), so the total still matches the assertion census.
+//      whole: it scores one `error` case per declared assert, so the total still
+//      matches the assertion census.
 //   4. builds a confusion matrix per runner (counting cases, not files) and
-//      reports precision / recall / F1 / accuracy.
+//      reports precision / recall / F1 / accuracy. The `@type concolic-replay`
+//      reach corpus is scored separately in a PASS/FAIL/paths/time table.
 //
 // Scoring (per case, from its marker's expected token):
 //   expected=detected (positive): detected -> TP    clean|error -> FN
 //   expected=clean    (negative): clean    -> TN    detected|error -> FP
-// A concolic assert z3 can't solve prints `error`, classified FN/FP by expected;
-// the raw error/timeout counts are also surfaced separately.
+// The raw error/timeout counts are also surfaced separately.
 //
 // Usage:
 //   node bench/run-micro-benchmark.mjs [options]
@@ -31,11 +31,8 @@
 //   --bench NAME      run only benchmarks matching NAME or NAME.js (repeatable)
 //   --dir SUB         run only benches under bench/micro/SUB (repeatable)
 //   --count           print how many benches match (taint counted by assert,
-//                     concolic by file), with a @type/@target/@feature
+//                     concolic-replay by file), with a @type/@target/@feature
 //                     breakdown, and exit; no runner, no build, no execution
-//   --lint            check the concolic "exactly 1 assert fires per seeded
-//                     path" invariant; lists over/under-firing files, exits 1
-//                     on any violation; no build, no dynajs
 //   --replay          run ONLY the multi-path *-replay runners (dynajs-co-replay,
 //                     expose-replay) over the bench/concolic reach corpus. The
 //                     default run EXCLUDES them; this flag is their separate run.
@@ -65,7 +62,7 @@
 import { spawnSync } from "node:child_process";
 import {
   existsSync, mkdirSync, readdirSync, readFileSync,
-  writeFileSync, appendFileSync, accessSync, constants, rmSync, realpathSync,
+  writeFileSync, appendFileSync, accessSync, constants, realpathSync,
 } from "node:fs";
 import path from "node:path";
 import { homedir, tmpdir } from "node:os";
@@ -201,7 +198,6 @@ const VERDICT_RE =
 // group (the confusion matrix prints them apart and combined).
 const TYPE_CONFIG = {
   taint: { short: "ta", analysis: "analyses/dist/Taint.mjs", flags: "--partial --pos persist" },
-  concolic: { short: "co", analysis: "analyses/dist/Concolic.mjs", flags: "--partial" },
 };
 
 // Spec member universe per BuiltIn, hand-set (cf. scripts/spec-coverage.mjs's
@@ -307,48 +303,16 @@ function nodemedicCjsDir() {
   return nmCjsDir;
 }
 
-// --- ExpoSE (dynamic symbolic execution) -----------------------------------
-// The `expose` runner drives ExpoSE's symbolic execution engine on the SAME
-// concolic bench files. ExpoSE exposes its symbolic API as `S$.symbol(name,
-// seed)` / `S$.assert(cond)` (require("S$")), whereas the benches call the
-// engine-neutral prelude names `__symbolic__` / `__symbolic_assert__`. We
-// bridge by prepending a small prelude that requires S$ and registers those
-// two names as globals -- mirroring how `nodemedic-jalangi` reuses the taint
-// prelude names as ghost functions. No bench rewriting needed.
-//
-// Single-path comparison: `__symbolic_assert__` does NOT route to ExpoSE's
-// concrete `S$.assert` (which only throws on the running path, leaving
-// detection to the multi-path Distributor). It calls our added
-// `Object._expose.assertSymbolic` (ExpoSE Analyser/src/SymbolicState.js), which
-// solves `PC_seed ∧ ¬cond` ONCE and self-activates single-run mode (no
-// branch-flipping) -- the exact single-path validity check dynajs concolic
-// does. So this measures the two engines' modeling/solving on the same path,
-// not their search. `__symbolic__` still uses S$.symbol (it handles symbol
-// renaming and seeding through Object._expose.makeSymbolic).
-//
-// Per-assert verdict: assertSymbolic records one entry per call (violable when
-// `¬cond` is SAT under the seed PC, otherwise holds) into the only channel the
-// worker writes back -- its result JSON's errors array -- as
-// `Assertion violable|holds: <desc>`. violable -> the assert is breakable
-// -> `clean`; holds -> provably valid on this path -> `detected` -- the same
-// polarity as dynajs concolic's `PC ∧ ¬assert` UNSAT -> detected. Because every
-// executed assert records (not just violable ones), a multi-assert bench reports
-// one ordered entry per assert it ran; we carry the assert's ground truth in
-// `desc` so the pairing survives branches that skip an assert this seed.
-//
-// We drive a SINGLE Analyser path directly via `expoSE replay`, NOT the
-// multi-path `scripts/analyse` (Distributor) entry. Both run exactly one path
-// here -- assertSymbolic self-activates single-run mode, so the Distributor
-// explores nothing further -- but the Distributor adds a worker-pool spawn +
-// scheduling per bench (~3x wall-clock), which makes the speed comparison
-// against dynajs concolic (also single-path) unfair. `replay` sources
-// scripts/env and runs jalangi+Analyser on the seed path in one process. The
-// worker never prints its verdicts (the Distributor used to, after reading the
-// worker's result JSON); it only writes them to its result JSON at
-// EXPOSE_OUT_PATH, so we point that at a per-bench file and read
-// `errors[].error` from it (see cases()).
+// --- ExpoSE (multi-path reach search) --------------------------------------
+// The `*-replay` runners drive ExpoSE's Distributor (multi-path symbolic
+// search) over the bench/concolic reach corpus. Each reach bench guards
+// `throw "<REACH_SENTINEL>"` behind a branch the seed does NOT take, so
+// reaching it requires the search to solve+replay an alternative input. The
+// verdict is reached/not (sat/unsat), read from the Distributor's `[!] <value>`
+// findings — see reachCases(). dynajs-co-replay runs the dynajs concolic
+// drop-in as the play script; expose-replay runs stock ExpoSE, for a
+// like-for-like comparison of the two engines' search on the same corpus.
 const EXPOSE_HOME = process.env.EXPOSE_HOME ?? path.join(homedir(), "ExpoSE");
-const EXPOSE_BIN = path.join(EXPOSE_HOME, "expoSE");
 // Multi-path entry: ExpoSE's Distributor (scripts/analyse). dynajs-co-replay
 // selects the dynajs concolic drop-in via EXPOSE_PLAY_SCRIPT=scripts/dynajs-play;
 // expose-replay leaves it unset so the Distributor uses its own scripts/play.
@@ -385,46 +349,6 @@ const EXPOSE_REPLAY_ENV = {
 // budget + a 5s graceful-shutdown window (else the SIGKILL races ahead of the
 // clean self-termination and re-introduces orphans).
 const exposeBackstopMs = (t) => Math.max(t, (EXPOSE_MAX_SECONDS + 5) * 1000);
-// Prepended to each bench copy: bridge the engine-neutral prelude names. The
-// assert bridges to our single-path Object._expose.assertSymbolic (defined once
-// ExpoSE's analysis initialises, before the bench body runs), passing the
-// assert's ground truth as `desc` so the recorded verdict is self-contained
-// (actual from violable/holds, expected from the `desc` token) -- the runner
-// pairs each in execution order without re-reading the source (see cases()).
-const EXPOSE_PRELUDE =
-  'var S$ = require("S$");\n' +
-  "globalThis.__symbolic__ = function (name, seed) { return S$.symbol(name, seed); };\n" +
-  "globalThis.__symbolic_assert__ = function (cond, expected) {\n" +
-  '  return Object._expose.assertSymbolic(cond, expected ? "detected" : "clean");\n' +
-  "};\n" +
-  // `__IS_SAT__(cond, exp)` asks whether `cond` is SAT under the seed PC. ExpoSE's
-  // assertSymbolic solves `PC ∧ ¬arg` (violable when SAT), so pass `!cond`:
-  // violable <=> PC ∧ cond SAT <=> sat; holds <=> unsat. desc carries the sat/unsat
-  // ground truth so cases() pairs each line without re-reading the source.
-  "globalThis.__IS_SAT__ = function (cond, expected) {\n" +
-  '  return Object._expose.assertSymbolic(!cond, expected ? "sat" : "unsat");\n' +
-  "};\n";
-// One recorded verdict, read from a result-JSON errors[].error string:
-// `Assertion violable|holds: <expected>`. The expected token is detected|clean
-// for validity asserts, sat|unsat for IS_SAT.
-const EXPOSE_ASSERT_RE =
-  /Assertion (violable|holds): (detected|clean|sat|unsat)\b/g;
-
-// A scratch dir for the prelude-prepended bench copies ExpoSE analyses, plus the
-// per-bench result JSON each replay writes (EXPOSE_OUT_PATH).
-let exposeDir = null;
-function exposeScratchDir() {
-  if (exposeDir) return exposeDir;
-  exposeDir = path.join(tmpdir(), "dynajs-expose");
-  mkdirSync(exposeDir, { recursive: true });
-  writeFileSync(path.join(exposeDir, "package.json"), '{"type":"commonjs"}');
-  return exposeDir;
-}
-// Where `expoSE replay` writes the worker result JSON for bench b (keyed on the
-// flattened b.name so nested same-basename benches don't collide).
-function exposeOutPath(b) {
-  return path.join(exposeScratchDir(), `${b.name}.out.json`);
-}
 
 // ---------------------------------------------------------------------------
 // helpers
@@ -646,6 +570,27 @@ const matrixHeader = (lead) =>
   "accuracy".padStart(10) + "mean_ms".padStart(10) + "exec_ms".padStart(10) +
   "runs".padStart(9);
 
+// Reach table for the concolic-replay runners. Multi-path search either reached
+// the guarded throw or not, so precision/recall is meaningless — what matters is
+// how many reach probes it got right (PASS = TP+TN, FAIL = FP+FN, with a crash/
+// timeout counting as FAIL via classify), the mean program executions to reach
+// (Paths = the `runs` tally), and wall-clock (Time). Reuses buildMatrix's counts.
+const reachHeader = (lead) =>
+  lead.padEnd(24) +
+  green("PASS".padStart(6)) + red("FAIL".padStart(6)) +
+  "accuracy".padStart(10) + "paths".padStart(9) + "time_ms".padStart(10);
+function reachRow(label, m) {
+  const pass = m.TP + m.TN;
+  const fail = m.FP + m.FN;
+  return (
+    label.padEnd(24) +
+    green(String(pass).padStart(6)) + red(String(fail).padStart(6)) +
+    fmtRatio(ratio(pass, pass + fail)).padStart(10) +
+    (m.runsFiles ? (m.runsSum / m.runsFiles).toFixed(1) : "n/a").padStart(9) +
+    (m.files ? (m.meanSum / m.files).toFixed(1) : "0").padStart(10)
+  );
+}
+
 // The rows the report prints, in order: one per active runner, then one per
 // `group` that has >1 active runner — a combined slice pooling all that group's
 // records (e.g. dynajs-ta + dynajs-co -> `dynajs (all)`). Each is { label, recs }
@@ -775,10 +720,10 @@ function makeRunners(opts) {
           {}, out, err, t,
         ),
     },
-    // this project's analyzer, split one runner per `@type`: `dynajs-ta` scores
-    // only taint benches, `dynajs-co` only concolic ones (the `short` from
-    // TYPE_CONFIG names each). They share the `dynajs` group, so the confusion
-    // matrix reports them apart AND combined. Analysis + flags come from the
+    // this project's analyzer, one runner per `@type` in TYPE_CONFIG (currently
+    // just `dynajs-ta`, scoring taint benches; the `short` names it). Shares the
+    // `dynajs` group so the confusion matrix can report per-runner AND combined
+    // if more types are added. Analysis + flags come from the
     // bench's `@type` (see TYPE_CONFIG) unless overridden by
     // --analysis/--dynajs-flags. The chosen analysis must print
     // `@@DJX_VERDICT <actual> <expected>` per assert (e.g. the taint prelude's
@@ -837,66 +782,6 @@ function makeRunners(opts) {
           {}, out, err, t,
           NODEMEDIC_HOME, // cwd: resolve NodeMedic's own node_modules
         );
-      },
-    },
-    {
-      // ExpoSE's dynamic symbolic execution engine, on the same concolic
-      // benches via the __symbolic__/__symbolic_assert__ -> S$ bridge prelude.
-      // assertSymbolic records one ordered `Assertion violable|holds: <expected>`
-      // entry per executed assert into the worker result JSON (see the EXPOSE_*
-      // config block), so this scores per assert and applies to every concolic
-      // bench, single- or multi-assert.
-      name: "expose",
-      applies: (b) => b.type === "concolic",
-      available: () => existsSync(EXPOSE_BIN),
-      exec: (b, out, err, t) => {
-        // Copy the bench with the S$ bridge prelude prepended. Key on b.name
-        // (flattened relative path) so nested same-basename benches don't collide.
-        const dest = path.join(exposeScratchDir(), `${b.name}.js`);
-        writeFileSync(dest, EXPOSE_PRELUDE + readFileSync(b.file, "utf8"));
-        // Single-path: run jalangi+Analyser once via `expoSE replay <target>
-        // <seed>`. `{}` is the empty seed -> the bench's own __symbolic__ seeds
-        // pick the path. The worker writes its verdicts to EXPOSE_OUT_PATH; clear
-        // any stale file first so a crashed run can't be read as last run's JSON.
-        const outJson = exposeOutPath(b);
-        rmSync(outJson, { force: true });
-        return timeRun(
-          ["bash", EXPOSE_BIN, "replay", dest, "{}"],
-          { EXPOSE_OUT_PATH: outJson },
-          out, err, t,
-          EXPOSE_HOME, // cwd: expoSE re-roots to its own dir + sources scripts/env
-        );
-      },
-      cases: (run, b) => {
-        // One case per executed assert, in order: violable -> `clean`, holds ->
-        // `detected`, paired with the `expected` token assertSymbolic echoed from
-        // `desc`. Read from the worker result JSON's errors[]; a timed-out or
-        // crashed run leaves it missing/partial -> empty -> the caller records one
-        // `error` case.
-        if (run.timedOut) return [];
-        let errors;
-        try {
-          errors = JSON.parse(readFileSync(exposeOutPath(b), "utf8")).errors;
-        } catch {
-          return []; // missing/partial JSON: crashed or never finished
-        }
-        if (!Array.isArray(errors)) return [];
-        const cases = [];
-        let m;
-        for (const e of errors) {
-          EXPOSE_ASSERT_RE.lastIndex = 0;
-          m = EXPOSE_ASSERT_RE.exec(typeof e?.error === "string" ? e.error : "");
-          if (!m) continue; // non-assertion error (e.g. caught runtime exception)
-          const expected = m[2];
-          // IS_SAT asserts (sat/unsat oracle) pass `!cond`, so violable <=> sat;
-          // validity asserts (detected/clean) keep violable <=> clean.
-          const satVocab = expected === "sat" || expected === "unsat";
-          const actual = satVocab
-            ? m[1] === "violable" ? "sat" : "unsat"
-            : m[1] === "violable" ? "clean" : "detected";
-          cases.push({ actual, expected });
-        }
-        return cases;
       },
     },
     // --- multi-path replay (ExpoSE Distributor over the reach corpus) -------
@@ -964,7 +849,6 @@ function parseArgs(argv) {
     repsSet: false, // whether --reps was passed (snapshot modes default reps to 1)
     onlyDone: false, // run only benches marked `// @done` (eye-verified)
     count: false, // just report how many benches match (+ breakdown), then exit
-    lint: false, // check the concolic "1 assert fires per seeded path" invariant
     coverage: false, // census of @done taint benches by area (BuiltIns/Syntax), then exit
     replay: false, // run ONLY the multi-path *-replay runners (reach corpus); default excludes them
   };
@@ -988,7 +872,6 @@ function parseArgs(argv) {
       case "--update-snapshot": opts.updateSnapshot = true; break;
       case "--done": opts.onlyDone = true; break;
       case "--count": opts.count = true; break;
-      case "--lint": opts.lint = true; break;
       case "--coverage": opts.coverage = true; break;
       case "--replay": opts.replay = true; break;
       case "--help":
@@ -996,7 +879,7 @@ function parseArgs(argv) {
           "Usage: node bench/run-micro-benchmark.mjs " +
             "[--runner NAME] [--bench NAME] [--dir SUB] [--analysis NAME] [--dynajs-flags STR] " +
             "[--reps N] [--warmup N] [--timeout SEC] [--output-dir DIR] " +
-            "[--done] [--count] [--lint] [--coverage] [--replay] [--check | --update-snapshot]",
+            "[--done] [--count] [--coverage] [--replay] [--check | --update-snapshot]",
         );
         process.exit(0);
       default: die(`unknown option: ${a}`);
@@ -1078,15 +961,12 @@ function main() {
   // --count: report how many benches match (honoring --dir/--bench/--done) with a
   // breakdown by @type/@target/@feature, then exit. The counting unit differs by
   // @type: a taint file chains several asserts, each an independently-scored case
-  // (see VERDICT_RE/toCases), so taint is measured in ASSERTS; a concolic file is
-  // a single path with exactly one assert, so concolic is measured in FILES (its
-  // assert count is redundant — and is exactly what the invariant scan checks).
-  // assertsOf therefore counts asserts for taint benches only. Reads only sources
-  // — no runner, no build, no execution — a fast, side-effect-free census.
+  // (see VERDICT_RE/toCases), so taint is measured in ASSERTS; a concolic-replay
+  // file is one reach probe, so it is measured in FILES only. assertsOf therefore
+  // counts asserts for taint benches only. Reads only sources — no runner, no
+  // build, no execution — a fast, side-effect-free census.
   if (opts.count) {
-    // Concolic is abandoned, so `--count --done` (done:count) is taint-only;
-    // plain `--count` still reports concolic.
-    const counted = opts.onlyDone ? benches.filter((b) => b.type !== "concolic") : benches;
+    const counted = benches;
     const assertsOf = new Map(); // bench -> taint asserts (0 for non-taint)
     for (const b of counted)
       assertsOf.set(b, b.type === "taint" ? assertOracles(b.file).length : 0);
@@ -1101,7 +981,7 @@ function main() {
       }
       console.log(`\nby ${label}:`);
       for (const k of [...files.keys()].sort()) {
-        const a = asserts.get(k); // taint asserts; concolic-only groups show none
+        const a = asserts.get(k); // taint asserts; non-taint groups show none
         console.log(
           `  ${k.padEnd(16)}${String(files.get(k)).padStart(6)} files` +
             (a ? `${String(a).padStart(7)} asserts` : ""),
@@ -1178,54 +1058,14 @@ function main() {
     return;
   }
 
-  // --lint: check the concolic invariant "exactly one assert fires per seeded
-  // path". Runs each concolic bench under bench/concolic-lint-helper.mjs (which
-  // makes __symbolic__ return its seed and tallies the asserts reached on that
-  // concrete path), then flags files where 0 fire (seed never reaches the assert
-  // — re-seed it) or >1 fire (several asserts on one path — split into one file
-  // per assert). Needs no build (it never invokes dynajs) and exits non-zero on
-  // any violation, so either session can gate on it. Honors --dir/--bench/--done.
-  if (opts.lint) {
-    const helperImport = pathToFileURL(
-      path.join(REPO_ROOT, "bench/concolic-lint-helper.mjs"),
-    ).href;
-    const concolic = benches.filter((b) => b.type === "concolic");
-    const over = [], under = [], errs = [];
-    for (const b of concolic) {
-      const run = timeRun(["node", "--import", helperImport, b.file], {}, null, null, timeoutMs);
-      const m = `${run.stdout}\n${run.stderr}`.match(/@@FIRED\s+(\d+)/);
-      if (run.timedOut || !m) { errs.push(b.name); continue; }
-      const n = Number(m[1]);
-      if (n > 1) over.push({ name: b.name, n });
-      else if (n === 0) under.push(b.name);
-    }
-    const bad = over.length + under.length + errs.length;
-    console.log("concolic lint — exactly 1 assert must fire per seeded path");
-    console.log(
-      `  checked ${concolic.length}   ok ${concolic.length - bad}   ` +
-        `over ${over.length}   under ${under.length}   error ${errs.length}`,
-    );
-    const section = (title, lines) => {
-      if (!lines.length) return;
-      console.log(`\n${title}:`);
-      for (const l of lines) console.log(`  ${l}`);
-    };
-    section(
-      "OVER-firing (>1 assert on the path — split into one file per assert)",
-      over.sort((a, b) => b.n - a.n || a.name.localeCompare(b.name)).map((o) => `[${o.n}] ${o.name}`),
-    );
-    section("UNDER-firing (0 asserts fire — re-seed so the guard is reachable)", under.sort());
-    section("errored / timed out", errs.sort());
-    process.exit(bad ? 1 : 0);
-  }
-
   if (!benches.length)
     die(opts.onlyDone ? "no `// @done`-marked benchmarks matched" : "no benchmarks with a @type header matched");
 
-  // Both `@type taint` and `@type concolic` benches are scored: taint runs under
-  // dynajs-ta (+ nodemedic), concolic under dynajs-co (+ expose). Runners with no
-  // applicable bench are dropped below, so a taint-only or concolic-only filter
-  // still produces a clean report.
+  // Two scored corpora, reported in two different tables (see below):
+  //   `@type taint`          -> dynajs-ta (+ nodemedic), confusion matrix
+  //   `@type concolic-replay` -> dynajs-co-replay / expose-replay, reach table
+  // Runners with no applicable bench are dropped below, so a filter that selects
+  // only one corpus still produces a clean report.
 
   let runners = makeRunners(opts);
   // Separate the multi-path *-replay runners (the ExpoSE Distributor over the
@@ -1245,9 +1085,8 @@ function main() {
       console.error(`skip runner ${r.name} (not available on PATH)`);
       continue;
     }
-    // Drop runners with no applicable bench — e.g. the concolic-only `dynajs-co`
-    // and `expose` once concolic benches are excluded — so the report has no
-    // dead all-zero rows.
+    // Drop runners with no applicable bench — e.g. the replay runners when the
+    // filter selects only taint benches — so the report has no dead all-zero rows.
     if (r.applies && !benches.some((b) => r.applies(b))) {
       console.error(`skip runner ${r.name} (no applicable benchmarks)`);
       continue;
@@ -1285,20 +1124,14 @@ function main() {
   // any assert fires) errored as a whole. Don't collapse it to a single `error`
   // case — that under-counts a multi-assert file and makes the run's total drift
   // below the assertion census (--count). Instead synthesize one `error` case
-  // per scored unit: a taint file is scored per ASSERT, so emit one error case
-  // per declared assertion (each carrying its own oracle); a concolic file is
-  // scored per FILE (exactly one assert fires per seeded path), so emit one.
+  // per declared assertion, each carrying its own oracle (detected/clean), so a
+  // taint file's total still matches its assert count. (The reach runners never
+  // reach this fallback — reachCases always returns exactly one case.)
   const toCases = (raw, b) => {
     if (raw.length) return raw;
-    // Recover each assert's expected from its declared oracle. An IS_SAT bench
-    // reports in the sat/unsat vocabulary; everything else detected/clean.
     const oracles = assertOracles(b.file);
-    const satVocab = /\b__IS_SAT__\s*\(/.test(readFileSync(b.file, "utf8"));
-    const toExpected = (o) =>
-      satVocab
-        ? o === false ? "unsat" : "sat"
-        : o === false ? "clean" : "detected";
-    if (b.type === "taint" && oracles.length)
+    const toExpected = (o) => (o === false ? "clean" : "detected");
+    if (oracles.length)
       return oracles.map((o) => ({ actual: "error", expected: toExpected(o) }));
     return [{ actual: "error", expected: toExpected(oracles[0]) }];
   };
@@ -1418,29 +1251,51 @@ function main() {
     return;
   }
 
-  // Sources = each runner plus the combined `dynajs (all)` group row; the
-  // overall table and every breakdown below iterate the same list.
-  const sources = matrixSources(active, records);
-
-  console.log("\nConfusion matrix & precision/recall (errors counted as FN/FP):");
-  console.log(matrixHeader("runner"));
-  for (const s of sources) console.log(matrixRow(s.label, buildMatrix(s.recs)));
-
-  // Same matrix sliced by classification dimension. For each source we group
-  // its records by @target (then @feature, then @type) and print a sub-row per
-  // value, so you can read off detection quality on, e.g., es5 vs es6+ benches.
-  for (const [dim, label] of [["target", "@target"], ["feature", "@feature"], ["type", "@type"]]) {
-    console.log(`\nBy ${label}:`);
-    console.log(matrixHeader("runner / " + label));
-    for (const s of sources) {
-      const groups = new Map();
-      for (const rec of s.recs) {
-        const key = rec.bench[dim] || "(none)";
-        (groups.get(key) ?? groups.set(key, []).get(key)).push(rec);
+  // One report block: an overall row per source (each runner plus its combined
+  // `... (all)` group row), then the same sliced by classification dimension —
+  // for each source, group its records by @target/@feature/@type and print a
+  // sub-row per value. Shared by both corpora; they differ only in the
+  // header/row formatter (confusion matrix vs reach table).
+  const report = (sources, dims, headerFn, rowFn) => {
+    console.log(headerFn("runner"));
+    for (const s of sources) console.log(rowFn(s.label, buildMatrix(s.recs)));
+    for (const [dim, label] of dims) {
+      console.log(`\nBy ${label}:`);
+      console.log(headerFn("runner / " + label));
+      for (const s of sources) {
+        const groups = new Map();
+        for (const rec of s.recs) {
+          const key = rec.bench[dim] || "(none)";
+          (groups.get(key) ?? groups.set(key, []).get(key)).push(rec);
+        }
+        for (const key of [...groups.keys()].sort())
+          console.log(rowFn(`  ${s.label} / ${key}`, buildMatrix(groups.get(key))));
       }
-      for (const key of [...groups.keys()].sort())
-        console.log(matrixRow(`  ${s.label} / ${key}`, buildMatrix(groups.get(key))));
     }
+  };
+
+  // Split runners by report style: taint -> confusion matrix (precision/recall);
+  // concolic-replay -> reach table (PASS/FAIL/accuracy/paths/time). Each corpus
+  // is reported only when it has active runners, so a single-corpus filter still
+  // prints just the one table.
+  const taintActive = active.filter((r) => r.group !== "replay");
+  const replayActive = active.filter((r) => r.group === "replay");
+
+  if (taintActive.length) {
+    console.log("\nConfusion matrix & precision/recall (errors counted as FN/FP):");
+    report(
+      matrixSources(taintActive, records),
+      [["target", "@target"], ["feature", "@feature"], ["type", "@type"]],
+      matrixHeader, matrixRow,
+    );
+  }
+  if (replayActive.length) {
+    console.log("\nReach search — multi-path (PASS = reached correctly; errors count as FAIL):");
+    report(
+      matrixSources(replayActive, records),
+      [["target", "@target"], ["feature", "@feature"]],
+      reachHeader, reachRow,
+    );
   }
 
   console.log(`\nCSV: ${csvFile}`);
