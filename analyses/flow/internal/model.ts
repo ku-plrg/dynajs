@@ -83,10 +83,12 @@ export default class Model {
         ],
         [String.prototype.trim, generated.INTRINSICS_String_prototype_trim],
         [
+          // since String.prototype.trimRight === String.prototype.trimEnd (identically equivalent), trimRight is also supported.
           String.prototype.trimEnd,
           generated.INTRINSICS_String_prototype_trimEnd,
         ],
         [
+          // since String.prototype.trimLeft === String.prototype.trimStart (identically equivalent), trimLeft is also supported.
           String.prototype.trimStart,
           generated.INTRINSICS_String_prototype_trimStart,
         ],
