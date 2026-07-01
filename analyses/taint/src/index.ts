@@ -110,17 +110,6 @@ export class TaintAnalysis extends FlowAnalysis<TaintInfo> {
     return indices.map(() => ({ bit: false }));
   }
 
-  protected stringIndexOfInfo(
-    _src: Valued<TaintInfo, string>,
-    _searchValue: Valued<TaintInfo, string>,
-    _fromIndex: Valued<TaintInfo, number>,
-  ): TaintInfo {
-    // indexOf returns a position number (or the -1 sentinel), not content, so it is
-    // untainted however the subject/search/fromIndex are tainted — the same policy
-    // `rangeInfo` applies to the loop counter the spec scan used to return.
-    return { bit: false };
-  }
-
   isTainted(value: unknown): boolean {
     return infoTainted(this.getInfo(value));
   }
