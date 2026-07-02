@@ -1,13 +1,13 @@
 // @ts-nocheck
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
 
 import { AO__Get } from "./AO__Get.js";
 import { AO__StringIndexOf } from "./AO__StringIndexOf.js";
 import { AO__StringToNumber } from "./AO__StringToNumber.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function AO__GetSubstitution ($ : SpecRuntime, matched : Lifted<string>, str : Lifted<string>, position : Lifted<number>, captures : Lifted<string | undefined>[], namedCaptures : Lifted<unknown>, replacementTemplate : Lifted<string>) {
+export function AO__GetSubstitution ($ : LiftedTransfer, matched : Lifted<string>, str : Lifted<string>, position : Lifted<number>, captures : Lifted<string | undefined>[], namedCaptures : Lifted<unknown>, replacementTemplate : Lifted<string>) {
   var stringLength = $.length(str);
   var result = $.default<string>("", []);
   var templateRemainder = replacementTemplate;

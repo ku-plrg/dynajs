@@ -1,7 +1,7 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
 
-export function Number__lessThan ($ : SpecRuntime, x : Lifted<number>, y : Lifted<number>) {
+export function Number__lessThan ($ : LiftedTransfer, x : Lifted<number>, y : Lifted<number>) {
   if ($.value($.condition(Number.MAX_SAFE_INTEGER - 640, $.isNaN(x as Lifted<number>))))
   {
     return $.default<undefined>(undefined, []);

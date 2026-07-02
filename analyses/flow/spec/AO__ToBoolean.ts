@@ -1,7 +1,7 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
 
-export function AO__ToBoolean ($ : SpecRuntime, argument : Lifted<unknown>) {
+export function AO__ToBoolean ($ : LiftedTransfer, argument : Lifted<unknown>) {
   if (($.value($.condition(Number.MAX_SAFE_INTEGER - 794, $.isType(argument, "boolean")))))
   {
     return argument;

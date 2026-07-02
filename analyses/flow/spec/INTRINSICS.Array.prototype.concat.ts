@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
 
 import { AO__ArraySpeciesCreate } from "./AO__ArraySpeciesCreate.js";
 import { AO__CreateDataPropertyOrThrow } from "./AO__CreateDataPropertyOrThrow.js";
@@ -11,7 +11,7 @@ import { AO__Set } from "./AO__Set.js";
 import { AO__ToObject } from "./AO__ToObject.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_Array_prototype_concat ($ : SpecRuntime, $this : Lifted<unknown>, ...items : Lifted<unknown>[]) {
+export function INTRINSICS_Array_prototype_concat ($ : LiftedTransfer, $this : Lifted<unknown>, ...items : Lifted<unknown>[]) {
   var O = AO__ToObject($, $this);
   var A = AO__ArraySpeciesCreate($, (O as Lifted<unknown>), ($.default<number>(0, []) as Lifted<number>));
   var n = $.default<number>(0, []);

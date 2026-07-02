@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
 
 import { AO__Get } from "./AO__Get.js";
 import { AO__HasProperty } from "./AO__HasProperty.js";
@@ -9,7 +9,7 @@ import { AO__ToIntegerOrInfinity } from "./AO__ToIntegerOrInfinity.js";
 import { AO__ToObject } from "./AO__ToObject.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_Array_prototype_lastIndexOf ($ : SpecRuntime, $this : Lifted<unknown>, searchElement : Lifted<unknown>, fromIndex : Lifted<unknown> = $.default<undefined>(undefined, [])) {
+export function INTRINSICS_Array_prototype_lastIndexOf ($ : LiftedTransfer, $this : Lifted<unknown>, searchElement : Lifted<unknown>, fromIndex : Lifted<unknown> = $.default<undefined>(undefined, [])) {
   var fromIndexIsPresent = arguments.length > 3;
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));

@@ -1,7 +1,7 @@
 import { isInstrumentedFn, required } from './utils.js';
 import type { Analysis } from '../../src/index.js';
 import type {
-  SpecRuntime,
+  LiftedTransfer,
   Lifted,
   Unlifted,
   Primitive,
@@ -48,7 +48,7 @@ export type CallPolicy = {
   isOpaque: (f: unknown) => boolean;
 };
 
-export abstract class FlowAnalysis<Info>
+export abstract class ShadowExecution<Info>
   extends lift.LiftedDomain<Info>
   implements Analysis
 {
@@ -205,7 +205,7 @@ export abstract class FlowAnalysis<Info>
     );
   }
 
-  $: SpecRuntime = {
+  $: LiftedTransfer = {
     // StringOps
     length: (s) => {
       const v = (this.$.value(s) as string).length;
@@ -652,7 +652,7 @@ export abstract class FlowAnalysis<Info>
         entries,
       );
     },
-  } satisfies SpecRuntime;
+  } satisfies LiftedTransfer;
 
   condition(id: number, _op: string, value: unknown): { result: unknown } {
     if (_op !== 'model') this.siteResolver.reportId(id);

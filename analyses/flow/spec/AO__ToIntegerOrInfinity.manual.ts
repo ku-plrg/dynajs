@@ -1,8 +1,8 @@
-import type { SpecRuntime, Lifted, Unlifted, Primitive } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted, Primitive } from "../type.js";
 
 import { AO__ToNumber } from './AO__ToNumber.js'
 
-export function AO__ToIntegerOrInfinity($: SpecRuntime, argument: Lifted<unknown>): Lifted<number> {
+export function AO__ToIntegerOrInfinity($: LiftedTransfer, argument: Lifted<unknown>): Lifted<number> {
   "use strict";
 
   // 1. Let number be ? ToNumber(argument).

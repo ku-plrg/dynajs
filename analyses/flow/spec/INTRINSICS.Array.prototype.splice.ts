@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
 
 import { AO__ArraySpeciesCreate } from "./AO__ArraySpeciesCreate.js";
 import { AO__CreateDataPropertyOrThrow } from "./AO__CreateDataPropertyOrThrow.js";
@@ -12,7 +12,7 @@ import { AO__ToIntegerOrInfinity } from "./AO__ToIntegerOrInfinity.js";
 import { AO__ToObject } from "./AO__ToObject.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_Array_prototype_splice ($ : SpecRuntime, $this : Lifted<unknown>, start : Lifted<unknown>, deleteCount : Lifted<unknown>, ...items : Lifted<unknown>[]) {
+export function INTRINSICS_Array_prototype_splice ($ : LiftedTransfer, $this : Lifted<unknown>, start : Lifted<unknown>, deleteCount : Lifted<unknown>, ...items : Lifted<unknown>[]) {
   var startIsPresent = arguments.length > 2;
   var deleteCountIsPresent = arguments.length > 3;
   var O = AO__ToObject($, $this);

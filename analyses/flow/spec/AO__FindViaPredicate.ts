@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
 
 import { AO__Call } from "./AO__Call.js";
 import { AO__Get } from "./AO__Get.js";
@@ -7,7 +7,7 @@ import { AO__IsCallable } from "./AO__IsCallable.js";
 import { AO__ToBoolean } from "./AO__ToBoolean.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function AO__FindViaPredicate ($ : SpecRuntime, O : Lifted<unknown>, len : Lifted<number>, direction : Lifted<unknown>, predicate : Lifted<unknown>, thisArg : Lifted<unknown>) {
+export function AO__FindViaPredicate ($ : LiftedTransfer, O : Lifted<unknown>, len : Lifted<number>, direction : Lifted<unknown>, predicate : Lifted<unknown>, thisArg : Lifted<unknown>) {
   if ($.value($.condition(Number.MAX_SAFE_INTEGER - 50, $.is(AO__IsCallable($, (predicate as Lifted<unknown>)), $.default<boolean>(false, [])))))
   {
     throw new TypeError;

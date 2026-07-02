@@ -1,6 +1,6 @@
 // @ts-nocheck
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
 
 import { AO__DeletePropertyOrThrow } from "./AO__DeletePropertyOrThrow.js";
 import { AO__Get } from "./AO__Get.js";
@@ -10,7 +10,7 @@ import { AO__Set } from "./AO__Set.js";
 import { AO__ToObject } from "./AO__ToObject.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_Array_prototype_reverse ($ : SpecRuntime, $this : Lifted<unknown>) {
+export function INTRINSICS_Array_prototype_reverse ($ : LiftedTransfer, $this : Lifted<unknown>) {
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
   var middle = $.floor($.divide((len as Lifted<number>), ($.default<number>(2, []) as Lifted<number>)));

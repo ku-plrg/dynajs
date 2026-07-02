@@ -1,7 +1,7 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
 
-export function AO__SameType ($ : SpecRuntime, x : Lifted<unknown>, y : Lifted<unknown>) {
+export function AO__SameType ($ : LiftedTransfer, x : Lifted<unknown>, y : Lifted<unknown>) {
   if ($.value($.condition(Number.MAX_SAFE_INTEGER - 711, $.is(x, $.default<undefined>(undefined, [])))) && $.value($.condition(Number.MAX_SAFE_INTEGER - 712, $.is(y, $.default<undefined>(undefined, [])))))
   {
     return $.default<boolean>(true, []);

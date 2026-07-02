@@ -1,11 +1,11 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
 
 import { AO__Get } from "./AO__Get.js";
 import { AO__HasProperty } from "./AO__HasProperty.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function AO__SortIndexedProperties ($ : SpecRuntime, obj : Lifted<unknown>, len : Lifted<number>, SortCompare : Lifted<unknown>, holes : Lifted<unknown>) {
+export function AO__SortIndexedProperties ($ : LiftedTransfer, obj : Lifted<unknown>, len : Lifted<number>, SortCompare : Lifted<unknown>, holes : Lifted<unknown>) {
   var items = [] as Lifted<never>[];
   var k = $.default<number>(0, []);
   while ($.value($.condition(Number.MAX_SAFE_INTEGER - 771, $.lessThan(k, len))))

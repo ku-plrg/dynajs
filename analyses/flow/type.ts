@@ -25,7 +25,17 @@ export type Primitive =
   | null
   | undefined;
 
-export interface SpecRuntime extends SpecOps {}
+export interface LiftedTransfer extends SpecOps {
+  /** an injection (`unlifted -> lifted`). inverse of `$.value`. default information transformation */
+  default: <T extends Unlifted | Primitive>(
+    v: T,
+    parent: Lifted[],
+  ) => Lifted<T>;
+  /** a projection (`lifted -> unlifted`). inverse of `$.base`. lost of information happens due to concretization */
+  value: <T>(lifted: Lifted<T>) => Unlifted<T>;
+  /** a projection (`lifted -> info`). exists conceptually, but is not used in practice */
+  info: <T extends Unlifted | Primitive>(lifted: Lifted<T>) => unknown;
+}
 
 interface SpecOps
   extends CondOps,
@@ -38,15 +48,6 @@ interface SpecOps
     MathOps,
     ListOps,
     RangeOps {
-  /** an injection (`unlifted -> lifted`). inverse of `$.value`. default information transformation */
-  default: <T extends Unlifted | Primitive>(
-    v: T,
-    parent: Lifted[],
-  ) => Lifted<T>;
-  /** a projection (`lifted -> unlifted`). inverse of `$.base`. lost of information happens due to concretization */
-  value: <T>(lifted: Lifted<T>) => Unlifted<T>;
-  /** a projection (`lifted -> info`). exists conceptually, but is not used in practice */
-  info: <T extends Unlifted | Primitive>(lifted: Lifted<T>) => unknown;
 }
 
 interface CondOps {

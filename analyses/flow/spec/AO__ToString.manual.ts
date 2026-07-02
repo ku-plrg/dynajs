@@ -1,8 +1,8 @@
-import type { Lifted, SpecRuntime } from "../type.js";
+import type { Lifted, LiftedTransfer } from "../type.js";
 
 import { AO__ToPrimitive } from "./AO__ToPrimitive.js";
 
-export function AO__ToString($: SpecRuntime, argument: Lifted<unknown>): Lifted<string> {
+export function AO__ToString($: LiftedTransfer, argument: Lifted<unknown>): Lifted<string> {
   "use strict";
 
   let unlifted = $.value(argument);

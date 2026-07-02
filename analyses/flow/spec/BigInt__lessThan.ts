@@ -1,7 +1,7 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
 
-export function BigInt__lessThan ($ : SpecRuntime, x : Lifted<bigint>, y : Lifted<bigint>) {
+export function BigInt__lessThan ($ : LiftedTransfer, x : Lifted<bigint>, y : Lifted<bigint>) {
   if ($.value($.condition(Number.MAX_SAFE_INTEGER - 7, $.lessThan(x, y))))
   {
     return $.default<boolean>(true, []);

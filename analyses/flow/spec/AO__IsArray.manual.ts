@@ -1,6 +1,6 @@
-import type { Lifted, SpecRuntime } from "../type.js";
+import type { Lifted, LiftedTransfer } from "../type.js";
 
-export function AO__IsArray ($ : SpecRuntime, argument : Lifted<unknown>) {
+export function AO__IsArray ($ : LiftedTransfer, argument : Lifted<unknown>) {
   if (!($.value($.isType(argument, "object"))))
   {
     return $.default<boolean>(false, []);

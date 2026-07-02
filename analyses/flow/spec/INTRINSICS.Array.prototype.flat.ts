@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
 
 import { AO__ArraySpeciesCreate } from "./AO__ArraySpeciesCreate.js";
 import { AO__FlattenIntoArray } from "./AO__FlattenIntoArray.js";
@@ -7,7 +7,7 @@ import { AO__LengthOfArrayLike } from "./AO__LengthOfArrayLike.js";
 import { AO__ToIntegerOrInfinity } from "./AO__ToIntegerOrInfinity.js";
 import { AO__ToObject } from "./AO__ToObject.js";
 
-export function INTRINSICS_Array_prototype_flat ($ : SpecRuntime, $this : Lifted<unknown>, depth : Lifted<unknown> = $.default<undefined>(undefined, [])) {
+export function INTRINSICS_Array_prototype_flat ($ : LiftedTransfer, $this : Lifted<unknown>, depth : Lifted<unknown> = $.default<undefined>(undefined, [])) {
   var O = AO__ToObject($, $this);
   var sourceLen = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
   var depthNum = $.default<number>(1, []);

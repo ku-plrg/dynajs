@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
 
 import { AO__ArrayCreate } from "./AO__ArrayCreate.js";
 import { AO__CreateDataPropertyOrThrow } from "./AO__CreateDataPropertyOrThrow.js";
@@ -9,7 +9,7 @@ import { AO__ToIntegerOrInfinity } from "./AO__ToIntegerOrInfinity.js";
 import { AO__ToObject } from "./AO__ToObject.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_Array_prototype_toSpliced ($ : SpecRuntime, $this : Lifted<unknown>, start : Lifted<unknown>, skipCount : Lifted<unknown>, ...items : Lifted<unknown>[]) {
+export function INTRINSICS_Array_prototype_toSpliced ($ : LiftedTransfer, $this : Lifted<unknown>, start : Lifted<unknown>, skipCount : Lifted<unknown>, ...items : Lifted<unknown>[]) {
   var startIsPresent = arguments.length > 2;
   var skipCountIsPresent = arguments.length > 3;
   var O = AO__ToObject($, $this);

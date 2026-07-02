@@ -1,6 +1,6 @@
 // @ts-nocheck
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
 
 import { AO__CompareArrayElements } from "./AO__CompareArrayElements.js";
 import { AO__DeletePropertyOrThrow } from "./AO__DeletePropertyOrThrow.js";
@@ -11,7 +11,7 @@ import { AO__SortIndexedProperties } from "./AO__SortIndexedProperties.js";
 import { AO__ToObject } from "./AO__ToObject.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_Array_prototype_sort ($ : SpecRuntime, $this : Lifted<unknown>, comparator : Lifted<unknown>) {
+export function INTRINSICS_Array_prototype_sort ($ : LiftedTransfer, $this : Lifted<unknown>, comparator : Lifted<unknown>) {
   if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 225, $.is(comparator, $.default<undefined>(undefined, [])))) && $.value($.condition(Number.MAX_SAFE_INTEGER - 226, $.is(AO__IsCallable($, (comparator as Lifted<unknown>)), $.default<boolean>(false, [])))))
   {
     throw new TypeError;

@@ -1,6 +1,6 @@
-import type { SpecRuntime, Lifted } from "../type.js";
+import type { LiftedTransfer, Lifted } from "../type.js";
 
-export function AO__RequireObjectCoercible($: SpecRuntime, argument: Lifted<unknown>): Lifted<unknown> {
+export function AO__RequireObjectCoercible($: LiftedTransfer, argument: Lifted<unknown>): Lifted<unknown> {
   "use strict";
 
   const v = $.value(argument);

@@ -1,7 +1,7 @@
-import type { SpecRuntime, Lifted, Unlifted, Primitive } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted, Primitive } from "../type.js";
 
 export function AO__UTF16SurrogatePairToCodePoint(
-  $: SpecRuntime,
+  $: LiftedTransfer,
   lead: Lifted<string>,
   trail: Lifted<string>,
 ): Lifted<number> {

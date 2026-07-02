@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
 
 import { AO__ArraySpeciesCreate } from "./AO__ArraySpeciesCreate.js";
 import { AO__Call } from "./AO__Call.js";
@@ -11,7 +11,7 @@ import { AO__LengthOfArrayLike } from "./AO__LengthOfArrayLike.js";
 import { AO__ToObject } from "./AO__ToObject.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_Array_prototype_map ($ : SpecRuntime, $this : Lifted<unknown>, callback : Lifted<unknown>, thisArg : Lifted<unknown> = $.default<undefined>(undefined, [])) {
+export function INTRINSICS_Array_prototype_map ($ : LiftedTransfer, $this : Lifted<unknown>, callback : Lifted<unknown>, thisArg : Lifted<unknown> = $.default<undefined>(undefined, [])) {
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
   if ($.value($.condition(Number.MAX_SAFE_INTEGER - 181, $.is(AO__IsCallable($, (callback as Lifted<unknown>)), $.default<boolean>(false, [])))))

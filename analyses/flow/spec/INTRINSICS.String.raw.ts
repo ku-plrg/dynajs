@@ -1,12 +1,12 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
 
 import { AO__Get } from "./AO__Get.js";
 import { AO__LengthOfArrayLike } from "./AO__LengthOfArrayLike.js";
 import { AO__ToObject } from "./AO__ToObject.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_String_raw ($ : SpecRuntime, $this : Lifted<unknown>, template : Lifted<unknown>, ...substitutions : Lifted<unknown>[]) {
+export function INTRINSICS_String_raw ($ : LiftedTransfer, $this : Lifted<unknown>, template : Lifted<unknown>, ...substitutions : Lifted<unknown>[]) {
   var substitutionCount = $.default<number>(substitutions.length, []);
   var cooked = AO__ToObject($, template);
   var literals = AO__ToObject($, AO__Get($, (cooked as Lifted<unknown>), ($.default<string>("raw", []) as Lifted<unknown>)));

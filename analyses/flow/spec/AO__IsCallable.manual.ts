@@ -1,6 +1,6 @@
-import type { SpecRuntime, Lifted, Unlifted, Primitive } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted, Primitive } from "../type.js";
 
-export function AO__IsCallable($: SpecRuntime, argument : Lifted<unknown>) : Lifted<boolean> {
+export function AO__IsCallable($: LiftedTransfer, argument : Lifted<unknown>) : Lifted<boolean> {
   "use strict";
 
   const arg = $.value(argument);

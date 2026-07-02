@@ -1,10 +1,10 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
 
 import { AO__SameType } from "./AO__SameType.js";
 import { BigInt__equal } from "./BigInt__equal.js";
 
-export function AO__SameValueNonNumber ($ : SpecRuntime, x : Lifted<unknown>, y : Lifted<unknown>) {
+export function AO__SameValueNonNumber ($ : LiftedTransfer, x : Lifted<unknown>, y : Lifted<unknown>) {
   if (($.value($.condition(Number.MAX_SAFE_INTEGER - 729, $.is(x, $.default<null>(null, [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 730, $.is(x, $.default<undefined>(undefined, []))))))
   {
     return $.default<boolean>(true, []);

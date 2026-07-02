@@ -1,6 +1,6 @@
-import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
 
-export function AO__SymbolDescriptiveString ($ : SpecRuntime, sym : Lifted<symbol>) {
+export function AO__SymbolDescriptiveString ($ : LiftedTransfer, sym : Lifted<symbol>) {
   var desc = $.default<string | undefined>($.value(sym).description, []);
   if ($.value($.is(desc, $.default<undefined>(undefined, []))))
   {

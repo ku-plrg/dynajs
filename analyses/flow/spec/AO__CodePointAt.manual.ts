@@ -5,12 +5,12 @@
 // with `charCodeAt` and test the surrogate ranges directly. The surrogate-range
 // branches are intentionally concrete (native `if`) — UTF-16 decoding is not a
 // path constraint we track symbolically — while the values stay Lifted.
-import type { SpecRuntime, Lifted, Unlifted, Primitive } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted, Primitive } from "../type.js";
 
 import { AO__UTF16SurrogatePairToCodePoint } from "./AO__UTF16SurrogatePairToCodePoint.js";
 
 export function AO__CodePointAt(
-  $: SpecRuntime,
+  $: LiftedTransfer,
   string: Lifted<string>,
   position: Lifted<number>,
 ) {

@@ -1,6 +1,6 @@
 // @ts-nocheck
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
 
 import { AO__SameType } from "./AO__SameType.js";
 import { AO__StringToBigInt } from "./AO__StringToBigInt.js";
@@ -9,7 +9,7 @@ import { AO__ToPrimitive } from "./AO__ToPrimitive.js";
 import { BigInt__lessThan } from "./BigInt__lessThan.js";
 import { Number__lessThan } from "./Number__lessThan.js";
 
-export function AO__IsLessThan ($ : SpecRuntime, x : Lifted<unknown>, y : Lifted<unknown>, LeftFirst : Lifted<boolean>) {
+export function AO__IsLessThan ($ : LiftedTransfer, x : Lifted<unknown>, y : Lifted<unknown>, LeftFirst : Lifted<boolean>) {
   if ($.value($.condition(Number.MAX_SAFE_INTEGER - 571, $.is(LeftFirst, $.default<boolean>(true, [])))))
   {
     var px = AO__ToPrimitive($, (x as Lifted<unknown>), ($.default<string>("number", []) as Lifted<unknown>));

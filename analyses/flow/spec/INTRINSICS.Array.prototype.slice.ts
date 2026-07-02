@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
 
 import { AO__ArraySpeciesCreate } from "./AO__ArraySpeciesCreate.js";
 import { AO__CreateDataPropertyOrThrow } from "./AO__CreateDataPropertyOrThrow.js";
@@ -11,7 +11,7 @@ import { AO__ToIntegerOrInfinity } from "./AO__ToIntegerOrInfinity.js";
 import { AO__ToObject } from "./AO__ToObject.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_Array_prototype_slice ($ : SpecRuntime, $this : Lifted<unknown>, start : Lifted<unknown>, end : Lifted<unknown>) {
+export function INTRINSICS_Array_prototype_slice ($ : LiftedTransfer, $this : Lifted<unknown>, start : Lifted<unknown>, end : Lifted<unknown>) {
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
   var relativeStart = AO__ToIntegerOrInfinity($, (start as Lifted<unknown>));

@@ -1,9 +1,9 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
 
 import { AO__CodePointAt } from "./AO__CodePointAt.js";
 
-export function AO__IsStringWellFormedUnicode ($ : SpecRuntime, string : Lifted<string>) {
+export function AO__IsStringWellFormedUnicode ($ : LiftedTransfer, string : Lifted<string>) {
   var len = $.length(string);
   var k = $.default<number>(0, []);
   while ($.value($.condition(Number.MAX_SAFE_INTEGER - 598, $.lessThan(k, len))))

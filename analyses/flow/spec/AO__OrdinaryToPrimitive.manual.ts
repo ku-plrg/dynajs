@@ -1,4 +1,4 @@
-import type { SpecRuntime, Lifted, Primitive } from "../type.js";
+import type { LiftedTransfer, Lifted, Primitive } from "../type.js";
 
 import { AO__Get } from "./AO__Get.js";
 import { AO__Call } from "./AO__Call.js";
@@ -10,7 +10,7 @@ import { AO__IsCallable } from "./AO__IsCallable.js";
 // object (which would re-enter the instrumented method and reject its lifted
 // return with "Cannot convert object to primitive value").
 export function AO__OrdinaryToPrimitive(
-  $: SpecRuntime,
+  $: LiftedTransfer,
   O: Lifted<unknown>,
   hint: 'string' | 'number',
 ): Lifted<Primitive> {

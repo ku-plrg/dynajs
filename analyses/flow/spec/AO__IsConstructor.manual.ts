@@ -1,7 +1,7 @@
 import { CAPTURED } from '../utils.js';
-import type { Lifted, SpecRuntime } from "../type.js";
+import type { Lifted, LiftedTransfer } from "../type.js";
 
-export function AO__IsConstructor ($ : SpecRuntime, argument : Lifted<unknown>) {
+export function AO__IsConstructor ($ : LiftedTransfer, argument : Lifted<unknown>) {
   // this is incorrect because side-effect happens?
   const f = $.value(argument);
   if (typeof f !== 'function') {

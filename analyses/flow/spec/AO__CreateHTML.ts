@@ -1,10 +1,10 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
 
 import { AO__RequireObjectCoercible } from "./AO__RequireObjectCoercible.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function AO__CreateHTML ($ : SpecRuntime, string : Lifted<unknown>, tag : Lifted<string>, attribute : Lifted<string>, value : Lifted<unknown>) {
+export function AO__CreateHTML ($ : LiftedTransfer, string : Lifted<unknown>, tag : Lifted<string>, attribute : Lifted<string>, value : Lifted<unknown>) {
   var str = AO__RequireObjectCoercible($, string);
   var S = AO__ToString($, (str as Lifted<unknown>));
   var p1 = $.concatenate($.default<string>("<", []), tag);
