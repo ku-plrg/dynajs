@@ -1,4 +1,5 @@
 import * as LOG from './constant.js';
+import { type Arg, emitCall, emitCallStmt } from './emit.js';
 import * as write from './write.js';
 import type * as acorn from 'acorn';
 import type { RecursiveVisitors } from 'acorn-walk';
@@ -183,7 +184,7 @@ export const visitors: RecursiveVisitors<State> = {
           state.withLHS(() => state.walk(param));
           state.write(') {');
           state.wrap(() => {
-            state.writeln(`${LOG.CATCH_ENTER}();`);
+            emitCallStmt(state, LOG.CATCH_ENTER);
             write.logDeclare(state, node);
             state.writeln('');
             state.walk(body);
@@ -278,8 +279,15 @@ export const visitors: RecursiveVisitors<State> = {
       state.scope?.isLexicalScope() &&
       node.id != null
     ) {
-      state.writeln(
-        `${LOG.DECLARE}(${write.newId(node)}, "${node.id.name}", ${VarKind.Func}, false, false, undefined);`,
+      emitCallStmt(
+        state,
+        LOG.DECLARE,
+        String(write.newId(node)),
+        `"${node.id.name}"`,
+        String(VarKind.Func),
+        'false',
+        'false',
+        'undefined',
       );
     }
     write.logFuncDeclare(state, node, false);
@@ -449,9 +457,13 @@ export const visitors: RecursiveVisitors<State> = {
     // TODO fix optional chain issue
     state.write(optional && !state.partial.F ? '?.(' : '(');
     if (isDirectEval && state.partial.Ev && args.length >= 1) {
-      state.write(`${LOG.EVAL_CODE}(${write.newId(node)}, `);
-      state.walk(args[0]);
-      state.write(', true)');
+      emitCall(
+        state,
+        LOG.EVAL_CODE,
+        String(write.newId(node)),
+        () => state.walk(args[0]),
+        'true',
+      );
       if (args.length > 1) {
         state.write(', ');
         state.walkArray(args.slice(1));
@@ -484,9 +496,9 @@ export const visitors: RecursiveVisitors<State> = {
   SpreadElement: (node, state) => {
     state.write('...');
     if (state.partial.Sp) {
-      state.write(`${LOG.SPREAD}(${write.newId(node)}, `);
-      state.walk(node.argument);
-      state.write(')');
+      emitCall(state, LOG.SPREAD, String(write.newId(node)), () =>
+        state.walk(node.argument),
+      );
     } else {
       state.walk(node.argument);
     }
@@ -513,26 +525,37 @@ export const visitors: RecursiveVisitors<State> = {
       return;
     }
 
-    // open outer-to-inner `D$.TL(id, ` wrappers; IDs are allocated outermost-first
-    for (let i = 0; i < length; i++) {
-      state.write(`${LOG.TEMPLATE_LITERAL}(${write.newId(node)}, `);
-    }
-    write.writeQuasiLiteral(
-      state,
-      node,
-      quasis[0].value.cooked ?? quasis[0].value.raw,
-    );
-    for (let i = 0; i < length; i++) {
-      state.write(', ');
-      state.walk(expressions[i]);
-      state.write(', ');
-      write.writeQuasiLiteral(
+    // emit nested `D$.TL(id, base, expr, quasi)` outer-to-inner; IDs are allocated
+    // outermost-first (matching the recursion order). The innermost base is the
+    // first quasi; each level wraps the next-deeper TL.
+    const emitLevel = (depth: number): void => {
+      const id = String(write.newId(node));
+      emitCall(
         state,
-        node,
-        quasis[i + 1].value.cooked ?? quasis[i + 1].value.raw,
+        LOG.TEMPLATE_LITERAL,
+        id,
+        () => {
+          if (depth === length - 1) {
+            write.writeQuasiLiteral(
+              state,
+              node,
+              quasis[0].value.cooked ?? quasis[0].value.raw,
+            );
+          } else {
+            emitLevel(depth + 1);
+          }
+        },
+        () => state.walk(expressions[length - 1 - depth]),
+        () =>
+          write.writeQuasiLiteral(
+            state,
+            node,
+            quasis[length - depth].value.cooked ??
+              quasis[length - depth].value.raw,
+          ),
       );
-      state.write(')');
-    }
+    };
+    emitLevel(0);
   },
   TaggedTemplateExpression: (node, state) => {
     write.logTaggedCall(state, node.tag);
@@ -710,9 +733,7 @@ export const visitors: RecursiveVisitors<State> = {
       state.walk(node.expression);
       return;
     }
-    state.write(`${LOG.CHAIN}(`);
-    state.walk(node.expression);
-    state.write(')');
+    emitCall(state, LOG.CHAIN, () => state.walk(node.expression));
   },
   ImportExpression: (node, state) => {
     state.write('import(');
@@ -753,21 +774,28 @@ export const visitors: RecursiveVisitors<State> = {
     }
 
     const id = write.newId(node);
-    state.write(` = ${LOG.FIELD_INIT}(${id}, this, `);
+    state.write(' = ');
+    let keyArg: Arg = '';
     if (computed) {
-      state.walk(key);
+      keyArg = () => state.walk(key);
     } else if (key.type === 'PrivateIdentifier') {
-      state.write(`"#${(key as any).name}"`);
+      keyArg = `"#${(key as any).name}"`;
     } else {
-      state.write(`"${(key as acorn.Identifier).name}"`);
+      keyArg = `"${(key as acorn.Identifier).name}"`;
     }
-    state.write(`, ${_static}, `);
-    if (value) {
-      state.walk(value);
-    } else {
-      state.write('undefined');
-    }
-    state.write(');');
+    emitCall(
+      state,
+      LOG.FIELD_INIT,
+      String(id),
+      'this',
+      keyArg,
+      String(_static),
+      () => {
+        if (value) state.walk(value);
+        else state.write('undefined');
+      },
+    );
+    state.write(';');
   },
   PrivateIdentifier: (node, state) => {
     state.write('#' + node.name);
@@ -945,33 +973,37 @@ function writeModuleWrappedExpression(
   const awaitExpression = isAwait
     ? (expression as acorn.AwaitExpression)
     : null;
+  const emitIife = () => {
+    state.write('(');
+    if (isAwait) state.write('async');
+    state.write('() => {');
+    state.wrap(() => {
+      state.writeln('try {');
+      state.wrap(() => {
+        state.writeln('return ');
+        write.logExpression(
+          state,
+          isAwait ? awaitExpression!.argument : expression,
+        );
+        state.write(';');
+      });
+      state.writeln(`} catch (${EXCEPTION_VAR}) {`);
+      state.wrap(() => {
+        write.logException(state, program);
+        state.writeln(`throw ${EXCEPTION_VAR};`);
+      });
+      state.writeln('}');
+    });
+    state.writeln('})()');
+  };
   if (isAwait) {
-    state.write(
-      `${LOG.AWAIT_RESULT}(${write.newId(expression)}, await ${LOG.AWAIT}(${write.newId(expression)}, `,
-    );
+    emitCall(state, LOG.AWAIT_RESULT, String(write.newId(expression)), () => {
+      state.write('await ');
+      emitCall(state, LOG.AWAIT, String(write.newId(expression)), emitIife);
+    });
+  } else {
+    emitIife();
   }
-  state.write('(');
-  if (isAwait) state.write('async');
-  state.write('() => {');
-  state.wrap(() => {
-    state.writeln('try {');
-    state.wrap(() => {
-      state.writeln('return ');
-      write.logExpression(
-        state,
-        isAwait ? awaitExpression!.argument : expression,
-      );
-      state.write(';');
-    });
-    state.writeln(`} catch (${EXCEPTION_VAR}) {`);
-    state.wrap(() => {
-      write.logException(state, program);
-      state.writeln(`throw ${EXCEPTION_VAR};`);
-    });
-    state.writeln('}');
-  });
-  state.writeln('})()');
-  if (isAwait) state.write('))');
 }
 
 /**
@@ -1039,9 +1071,10 @@ const visitorHelper = {
             // Track every top-level ExpressionStatement through Lcs so the
             // script's completion value survives through the trailing Sx/Lcv
             // statements, matching the value `eval(userCode)` would return.
-            state.write(`${LOG.LCV_SET}(`);
-            write.logExpression(state, statement.expression);
-            state.write(');');
+            emitCall(state, LOG.LCV_SET, () =>
+              write.logExpression(state, statement.expression),
+            );
+            state.write(';');
           } else {
             state.walk(statement);
           }
@@ -1058,7 +1091,6 @@ const visitorHelper = {
     write.logScriptExit(state, node);
     // Final statement: evaluates to `lastComputedValue`, giving callers of
     // `eval(...)` / `new Function(...)` the user's completion value.
-    state.writeln('');
-    state.write(`${LOG.LCV_GET}();`);
+    emitCallStmt(state, LOG.LCV_GET);
   },
 };

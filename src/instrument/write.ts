@@ -10,7 +10,7 @@ import {
 import { getLocFromNode, VarKind, warn } from '../utils.js';
 import { collectIdentifiers, getLocStr } from './aux.js';
 import * as LOG from './constant.js';
-import { type Arg, emitCall } from './emit.js';
+import { type Arg, emitCall, emitCallStmt } from './emit.js';
 import type { State } from './state.js';
 
 export function hasUseStrictDirective(body: readonly acorn.AnyNode[]): boolean {
@@ -30,12 +30,18 @@ export function hasUseStrictDirective(body: readonly acorn.AnyNode[]): boolean {
 export function logScriptEnter(state: State, program: acorn.Node): void {
   if (!state.partial.scriptEnter) return;
   const { instrumentedPath: i, originalPath: o } = state;
-  state.writeln(`${LOG.SCRIPT_ENTER}(${newId(program)}, "${i}", "${o}");`);
+  emitCallStmt(
+    state,
+    LOG.SCRIPT_ENTER,
+    String(newId(program)),
+    `"${i}"`,
+    `"${o}"`,
+  );
 }
 
 export function logScriptExit(state: State, program: acorn.Node): void {
   if (!state.partial.scriptExit) return;
-  state.writeln(`${LOG.SCRIPT_EXIT}(${newId(program)});`);
+  emitCallStmt(state, LOG.SCRIPT_EXIT, String(newId(program)));
 }
 
 export function logCall(
@@ -68,25 +74,33 @@ export function logCall(
       callee as acorn.MemberExpression;
     if (object.type === 'Super') {
       if (state.partial.Sm) {
-        state.write(`${LOG.SUPER_METHOD_CALL}(${newId(callee)}, this, `);
+        let propArg: Arg = '';
+        let getterArg: Arg = '';
         if (computed) {
-          state.write(`${LOG.TEMP_VAR} = (`);
-          state.walk(property);
-          state.write(')');
+          propArg = () => {
+            state.write(`${LOG.TEMP_VAR} = (`);
+            state.walk(property);
+            state.write(')');
+          };
+          getterArg = `() => super[${LOG.TEMP_VAR}]`;
         } else if (property.type === 'Identifier') {
-          state.write(`"${property.name}"`);
+          propArg = `"${property.name}"`;
+          getterArg = `() => super.${property.name}`;
         } else if (property.type === 'PrivateIdentifier') {
-          state.write(`"#${(property as any).name}"`);
+          propArg = `"#${(property as any).name}"`;
+          getterArg = `() => super.#${(property as any).name}`;
         }
-        state.write(`, ${isConstructor}, ${optional}, ${callOptional}, `);
-        if (computed) {
-          state.write(`() => super[${LOG.TEMP_VAR}]`);
-        } else if (property.type === 'Identifier') {
-          state.write(`() => super.${property.name}`);
-        } else if (property.type === 'PrivateIdentifier') {
-          state.write(`() => super.#${(property as any).name}`);
-        }
-        state.write(')');
+        emitCall(
+          state,
+          LOG.SUPER_METHOD_CALL,
+          String(newId(callee)),
+          'this',
+          propArg,
+          String(isConstructor),
+          String(optional),
+          String(callOptional),
+          getterArg,
+        );
       } else {
         if (isConstructor) state.write('new ');
         state.write('super');
@@ -103,39 +117,58 @@ export function logCall(
       return;
     }
     if (property.type === 'PrivateIdentifier') {
-      state.write(`${LOG.PRIVATE_METHOD_CALL}(${newId(callee)}, `);
-      state.walk(object);
-      state.write(
-        `, "${getPrivateName(property)}", ${isConstructor}, ${optional}, ${callOptional}, `,
+      emitCall(
+        state,
+        LOG.PRIVATE_METHOD_CALL,
+        String(newId(callee)),
+        () => state.walk(object),
+        `"${getPrivateName(property)}"`,
+        String(isConstructor),
+        String(optional),
+        String(callOptional),
+        () => writePrivateGetter(state, property),
       );
-      writePrivateGetter(state, property);
-      state.write(')');
       return;
     }
-    state.write(`${LOG.METHOD_CALL}(${newId(callee)}, `);
-    state.walk(object);
-    state.write(', ');
+    let propArg: Arg = '';
     if (computed) {
-      state.walk(property);
+      propArg = () => state.walk(property);
     } else if (property.type === 'Identifier') {
-      state.write(`"${property.name}"`);
+      propArg = `"${property.name}"`;
     } else {
       warn(`MemberExpression: unexpected property type${getLocStr(callee)}`);
     }
-    state.write(`, ${isConstructor}, ${optional}, ${callOptional})`);
+    emitCall(
+      state,
+      LOG.METHOD_CALL,
+      String(newId(callee)),
+      () => state.walk(object),
+      propArg,
+      String(isConstructor),
+      String(optional),
+      String(callOptional),
+    );
   } else if (callee.type === 'Super') {
     if (state.partial.Su) {
       const argsVar = `${TEMP_PARAM_VAR}a`;
-      state.write(
-        `${LOG.SUPER_CALL}(${newId(callee)}, (...${argsVar}) => super(...${argsVar}))`,
+      emitCall(
+        state,
+        LOG.SUPER_CALL,
+        String(newId(callee)),
+        `(...${argsVar}) => super(...${argsVar})`,
       );
     } else {
       state.write('super');
     }
   } else {
-    state.write(`${LOG.FUNCTION_CALL}(${newId(callee)}, `);
-    state.walk(callee);
-    state.write(`, ${isConstructor}, ${callOptional})`);
+    emitCall(
+      state,
+      LOG.FUNCTION_CALL,
+      String(newId(callee)),
+      () => state.walk(callee),
+      String(isConstructor),
+      String(callOptional),
+    );
   }
 }
 
@@ -162,33 +195,43 @@ export function logTaggedCall(state: State, tag: acorn.Node): void {
       return;
     }
     if (property.type === 'PrivateIdentifier') {
-      state.write(`${LOG.PRIVATE_TAGGED_METHOD}(${newId(tag)}, `);
-      state.walk(object);
-      state.write(`, "${getPrivateName(property)}", `);
-      writePrivateGetter(state, property);
-      state.write(')');
+      emitCall(
+        state,
+        LOG.PRIVATE_TAGGED_METHOD,
+        String(newId(tag)),
+        () => state.walk(object),
+        `"${getPrivateName(property)}"`,
+        () => writePrivateGetter(state, property),
+      );
       return;
     }
-    state.write(`${LOG.TAGGED_METHOD}(${newId(tag)}, `);
-    state.walk(object);
-    state.write(', ');
+    let propArg: Arg = '';
     if (computed) {
-      state.walk(property);
+      propArg = () => state.walk(property);
     } else if (property.type === 'Identifier') {
-      state.write(`"${property.name}"`);
+      propArg = `"${property.name}"`;
     } else {
       warn(
         `TaggedTemplate MemberExpression: unexpected property type${getLocStr(tag)}`,
       );
     }
-    state.write(')');
+    emitCall(
+      state,
+      LOG.TAGGED_METHOD,
+      String(newId(tag)),
+      () => state.walk(object),
+      propArg,
+    );
   } else if (tag.type === 'Super') {
     // TODO: super hooking
     state.write('super');
   } else {
-    state.write(`${LOG.TAGGED_FUNC}(${newId(tag)}, `);
-    state.walk(tag);
-    state.write(')');
+    emitCall(
+      state,
+      LOG.TAGGED_FUNC,
+      String(newId(tag)),
+      () => state.walk(tag),
+    );
   }
 }
 
@@ -203,9 +246,14 @@ export function logClassDeclare(
   if (superClass) {
     // Unlift the heritage so native `extends` sees a raw constructor/null, not a
     // lifted-primitive proxy (e.g. `extends null`). See LOG.CLASS_HERITAGE / Hc.
-    state.write(`extends ${LOG.CLASS_HERITAGE}(${newId(superClass)}, `);
-    state.walk(superClass);
-    state.write(') ');
+    state.write('extends ');
+    emitCall(
+      state,
+      LOG.CLASS_HERITAGE,
+      String(newId(superClass)),
+      () => state.walk(superClass),
+    );
+    state.write(' ');
   }
   // the stamp inside the class body covers bodiless classes (`class K {}`),
   // whose toString contains no method body to carry one
@@ -344,15 +392,26 @@ export function logFuncEnter(state: State, func: acorn.Function): void {
   } else {
     argsExpr = 'arguments';
   }
-  state.writeln(
-    `${LOG.FUNC_ENTER}(${newId(func)}, ${name}, ${thisArg}, ${argsExpr}, ${func.async}, ${func.generator});`,
+  emitCallStmt(
+    state,
+    LOG.FUNC_ENTER,
+    String(newId(func)),
+    name,
+    thisArg,
+    argsExpr,
+    String(func.async),
+    String(func.generator),
   );
 }
 
 export function logFuncExit(state: State, func: acorn.Function): void {
   if (!state.partial.Fe) return;
-  state.writeln(
-    `${LOG.FUNC_EXIT}(${newId(func)}, ${func.async}, ${func.generator});`,
+  emitCallStmt(
+    state,
+    LOG.FUNC_EXIT,
+    String(newId(func)),
+    String(func.async),
+    String(func.generator),
   );
 }
 
@@ -421,9 +480,13 @@ export function logForInOfObject(
   if (!state.partial.forLoopRhsObj) {
     state.walk(expr);
   } else {
-    state.write(`${LOG.FOR_IN_OF_OBJECT}(${newId(expr)}, `);
-    state.walk(expr);
-    state.write(`, ${isForIn})`);
+    emitCall(
+      state,
+      LOG.FOR_IN_OF_OBJECT,
+      String(newId(expr)),
+      () => state.walk(expr),
+      String(isForIn),
+    );
   }
 }
 
@@ -442,23 +505,34 @@ export function logGetField(state: State, expr: acorn.Expression): void {
     expr as acorn.MemberExpression;
   if (object.type === 'Super') {
     if (state.partial.Gs) {
-      state.write(`${LOG.SUPER_GET_FIELD}(${newId(expr)}, this, `);
+      let propArg: Arg = '';
+      let getterArg: Arg = '';
       if (computed) {
-        state.write(`${LOG.TEMP_VAR} = (`);
-        state.walk(property);
-        state.write('), () => super[' + LOG.TEMP_VAR + ']');
+        propArg = () => {
+          state.write(`${LOG.TEMP_VAR} = (`);
+          state.walk(property);
+          state.write(')');
+        };
+        getterArg = `() => super[${LOG.TEMP_VAR}]`;
       } else if (property.type === 'Identifier') {
-        state.write(`"${property.name}", () => super.${property.name}`);
+        propArg = `"${property.name}"`;
+        getterArg = `() => super.${property.name}`;
       } else if (property.type === 'PrivateIdentifier') {
-        state.write(
-          `"#${(property as any).name}", () => super.#${(property as any).name}`,
-        );
+        propArg = `"#${(property as any).name}"`;
+        getterArg = `() => super.#${(property as any).name}`;
       } else {
         warn(
           `MemberExpression: unexpected super property type${getLocStr(expr)}`,
         );
       }
-      state.write(')');
+      emitCall(
+        state,
+        LOG.SUPER_GET_FIELD,
+        String(newId(expr)),
+        'this',
+        propArg,
+        getterArg,
+      );
     } else {
       state.write('super');
       if (computed) {
@@ -501,12 +575,15 @@ export function logGetField(state: State, expr: acorn.Expression): void {
     return;
   }
   if (property.type === 'PrivateIdentifier') {
-    state.write(`${LOG.PRIVATE_GET_FIELD}(${newId(expr)}, `);
-    state.walk(object);
-    state.write(`, "${getPrivateName(property)}", `);
-    writePrivateGetter(state, property);
-    state.write(`, ${optional}`);
-    state.write(')');
+    emitCall(
+      state,
+      LOG.PRIVATE_GET_FIELD,
+      String(newId(expr)),
+      () => state.walk(object),
+      `"${getPrivateName(property)}"`,
+      () => writePrivateGetter(state, property),
+      String(optional),
+    );
     return;
   }
   let propArg: Arg = '';
@@ -537,29 +614,35 @@ export function logPutField(
   if (object.type === 'Super') {
     if (state.partial.Ps) {
       const valVar = `${TEMP_PARAM_VAR}v`;
-      state.write(`${LOG.SUPER_PUT_FIELD}(${newId(lhs)}, this, `);
+      let propArg: Arg = '';
+      let writerArg: Arg = '';
       if (computed) {
-        state.write(`${LOG.TEMP_VAR} = (`);
-        state.walk(property);
-        state.write('), ');
-        body();
-        state.write(`, ${valVar} => super[${LOG.TEMP_VAR}] = ${valVar}`);
+        propArg = () => {
+          state.write(`${LOG.TEMP_VAR} = (`);
+          state.walk(property);
+          state.write(')');
+        };
+        writerArg = `${valVar} => super[${LOG.TEMP_VAR}] = ${valVar}`;
       } else if (property.type === 'Identifier') {
-        state.write(`"${property.name}", `);
-        body();
-        state.write(`, ${valVar} => super.${property.name} = ${valVar}`);
+        propArg = `"${property.name}"`;
+        writerArg = `${valVar} => super.${property.name} = ${valVar}`;
       } else if (property.type === 'PrivateIdentifier') {
-        state.write(`"#${(property as any).name}", `);
-        body();
-        state.write(
-          `, ${valVar} => super.#${(property as any).name} = ${valVar}`,
-        );
+        propArg = `"#${(property as any).name}"`;
+        writerArg = `${valVar} => super.#${(property as any).name} = ${valVar}`;
       } else {
         warn(
           `MemberExpression: unexpected super property type${getLocStr(lhs)}`,
         );
       }
-      state.write(')');
+      emitCall(
+        state,
+        LOG.SUPER_PUT_FIELD,
+        String(newId(lhs)),
+        'this',
+        propArg,
+        body,
+        writerArg,
+      );
     } else {
       state.write('super');
       if (computed) {
@@ -596,29 +679,34 @@ export function logPutField(
     return;
   }
   if (property.type === 'PrivateIdentifier') {
-    state.write(`${LOG.PRIVATE_PUT_FIELD}(${newId(lhs)}, `);
-    state.walk(object);
-    state.write(`, "${getPrivateName(property)}", `);
-    body();
-    state.write(', ');
-    writePrivateSetter(state, property);
-    state.write(')');
+    emitCall(
+      state,
+      LOG.PRIVATE_PUT_FIELD,
+      String(newId(lhs)),
+      () => state.walk(object),
+      `"${getPrivateName(property)}"`,
+      body,
+      () => writePrivateSetter(state, property),
+    );
     return;
   }
-  state.write(`${LOG.PUT_FIELD}(${newId(lhs)}, `);
-  state.walk(object);
-  state.write(', ');
+  let propArg: Arg = '';
   if (computed) {
-    state.walk(property);
+    propArg = () => state.walk(property);
   } else if (property.type === 'Identifier') {
-    state.write(`"${property.name}"`);
+    propArg = `"${property.name}"`;
   } else {
     warn(`MemberExpression: unexpected property type${getLocStr(lhs)}`);
   }
-  state.write(', ');
-  body();
-  state.write(`, ${state.isStrict}`);
-  state.write(')');
+  emitCall(
+    state,
+    LOG.PUT_FIELD,
+    String(newId(lhs)),
+    () => state.walk(object),
+    propArg,
+    body,
+    String(state.isStrict),
+  );
 }
 
 export function logDelete(state: State, expr: acorn.Expression): void {
@@ -654,24 +742,26 @@ export function logDelete(state: State, expr: acorn.Expression): void {
   }
   if (expr.type === 'ChainExpression') {
     // delete a?.b — wrap with Ch to convert chainSkip → undefined
-    state.write(`${LOG.CHAIN}(`);
-    logDelete(state, expr.expression);
-    state.write(')');
+    emitCall(state, LOG.CHAIN, () => logDelete(state, expr.expression));
   } else if (expr.type === 'MemberExpression') {
     const { object, property, computed, optional } =
       expr as acorn.MemberExpression;
-    state.write(`${LOG.DELETE_OP}(${newId(expr)}, `);
-    state.walk(object);
-    state.write(', ');
+    let propArg: Arg = '';
     if (computed) {
-      state.walk(property);
+      propArg = () => state.walk(property);
     } else if (property.type === 'Identifier') {
-      state.write(`"${property.name}"`);
+      propArg = `"${property.name}"`;
     } else {
       warn(`Delete operator on unexpected property type${getLocStr(expr)}`);
     }
-    state.write(`, ${optional}`);
-    state.write(')');
+    emitCall(
+      state,
+      LOG.DELETE_OP,
+      String(newId(expr)),
+      () => state.walk(object),
+      propArg,
+      String(optional),
+    );
   } else {
     warn(`Delete operator on unexpected type${getLocStr(expr)}`);
     state.write(`delete ${generate(expr)}`);
@@ -694,14 +784,14 @@ export function logUnaryOp(state: State, expr: acorn.UnaryExpression): void {
     }
     return;
   }
-  state.write(`${LOG.UNARY_OP}(${newId(expr)}, "${operator}", `);
-  // special handling for `typeof x` where x is an identifier to avoid ReferenceError
-  if (operator === 'typeof' && argument.type === 'Identifier') {
-    var x = (argument as acorn.Identifier).name;
-    state.write(`typeof ${x} === "undefined" ? undefined : `);
-  }
-  state.walk(argument);
-  state.write(')');
+  emitCall(state, LOG.UNARY_OP, String(newId(expr)), `"${operator}"`, () => {
+    // special handling for `typeof x` where x is an identifier to avoid ReferenceError
+    if (operator === 'typeof' && argument.type === 'Identifier') {
+      const x = (argument as acorn.Identifier).name;
+      state.write(`typeof ${x} === "undefined" ? undefined : `);
+    }
+    state.walk(argument);
+  });
 }
 
 export function logBinaryOp(state: State, expr: acorn.BinaryExpression): void {
@@ -741,13 +831,19 @@ export function logUpdateOp(state: State, expr: acorn.UpdateExpression): void {
     return;
   }
   const { argument, operator, prefix } = expr;
-  state.write(
-    `${LOG.UPDATE_OP}(${newId(expr)}, ${newId(expr)}, "${operator}", ${prefix}, `,
+  emitCall(
+    state,
+    LOG.UPDATE_OP,
+    String(newId(expr)),
+    String(newId(expr)),
+    `"${operator}"`,
+    String(prefix),
+    () => state.walk(argument),
+    () => {
+      state.write(`${TEMP_PARAM_VAR} => `);
+      logWrite(state, argument, argument, () => state.write(TEMP_PARAM_VAR));
+    },
   );
-  state.walk(argument);
-  state.write(`, ${TEMP_PARAM_VAR} => `);
-  logWrite(state, argument, argument, () => state.write(TEMP_PARAM_VAR));
-  state.write(')');
 }
 
 export function logCondition(
@@ -761,10 +857,10 @@ export function logCondition(
     else state.walk(test);
     return;
   }
-  state.write(`${LOG.CONDITION}(${newId(test)}, "${kind}", `);
-  if (end) logExpression(state, test);
-  else state.walk(test);
-  state.write(`)`);
+  emitCall(state, LOG.CONDITION, String(newId(test)), `"${kind}"`, () => {
+    if (end) logExpression(state, test);
+    else state.walk(test);
+  });
 }
 
 export function logSwitchLeft(
@@ -775,9 +871,9 @@ export function logSwitchLeft(
     logExpression(state, discriminant);
     return;
   }
-  state.write(`${LOG.SWITCH_LEFT}(${newId(discriminant)}, `);
-  logExpression(state, discriminant);
-  state.write(')');
+  emitCall(state, LOG.SWITCH_LEFT, String(newId(discriminant)), () =>
+    logExpression(state, discriminant),
+  );
 }
 
 export function logSwitchRight(state: State, test: acorn.Expression): void {
@@ -785,9 +881,9 @@ export function logSwitchRight(state: State, test: acorn.Expression): void {
     logExpression(state, test);
     return;
   }
-  state.write(`${LOG.SWITCH_RIGHT}(${newId(test)}, `);
-  logExpression(state, test);
-  state.write(')');
+  emitCall(state, LOG.SWITCH_RIGHT, String(newId(test)), () =>
+    logExpression(state, test),
+  );
 }
 
 export function logDeclare(
@@ -818,12 +914,26 @@ export function logDeclare(
     const isSpread = spreadVars?.has(name) ?? false;
     const omitValue = isTDZ;
     if (omitValue) {
-      state.writeln(
-        `${LOG.DECLARE}(${newId(node)}, "${name}", ${kind}, ${isSpread}, false, undefined);`,
+      emitCallStmt(
+        state,
+        LOG.DECLARE,
+        String(newId(node)),
+        `"${name}"`,
+        String(kind),
+        String(isSpread),
+        'false',
+        'undefined',
       );
     } else {
-      state.writeln(
-        `${LOG.DECLARE}(${newId(node)}, "${name}", ${kind}, ${isSpread}, true, ${name});`,
+      emitCallStmt(
+        state,
+        LOG.DECLARE,
+        String(newId(node)),
+        `"${name}"`,
+        String(kind),
+        String(isSpread),
+        'true',
+        name,
       );
     }
   }
@@ -838,7 +948,7 @@ export function logRead(
     state.write(name);
     return;
   }
-  state.write(`${LOG.READ}(${newId(node)}, "${name}", ${name})`);
+  emitCall(state, LOG.READ, String(newId(node)), `"${name}"`, name);
 }
 
 export function logWrite(
@@ -858,11 +968,15 @@ export function logWrite(
     }
     // destructuring write
     state.withLHS(() => state.walk(lhs));
-    state.write(` = ${LOG.WRITE}(${newId(rhs)}, `);
+    state.write(' = ');
     const xs = collectIdentifiers(lhs as acorn.Pattern);
-    state.write(`[${xs.map((x) => `"${x}"`).join(', ')}], `);
-    body();
-    state.write(')');
+    emitCall(
+      state,
+      LOG.WRITE,
+      String(newId(rhs)),
+      `[${xs.map((x) => `"${x}"`).join(', ')}]`,
+      body,
+    );
   } else {
     if (!state.partial.W) {
       const x = lhs as acorn.Identifier;
@@ -872,11 +986,15 @@ export function logWrite(
     }
     // variable write
     const x = lhs as acorn.Identifier;
-    state.write(`${x.name} = ${LOG.WRITE}(${newId(rhs)}, `);
+    state.write(`${x.name} = `);
     const xs = collectIdentifiers(lhs as acorn.Pattern);
-    state.write(`[${xs.map((x) => `"${x}"`).join(', ')}], `);
-    body();
-    state.write(')');
+    emitCall(
+      state,
+      LOG.WRITE,
+      String(newId(rhs)),
+      `[${xs.map((x) => `"${x}"`).join(', ')}]`,
+      body,
+    );
   }
 }
 
@@ -905,10 +1023,10 @@ export function logLiteral(
     if (isFunctionLike) state.write(')');
     return;
   }
-  state.write(`${LOG.LITERAL}(${newId(literal)}, `);
-  if (body) body();
-  else state.write(generate(literal));
-  state.write(`)`);
+  emitCall(state, LOG.LITERAL, String(newId(literal)), () => {
+    if (body) body();
+    else state.write(generate(literal));
+  });
 }
 
 // logging a synthesized string literal for template literal quasis.
@@ -923,7 +1041,12 @@ export function writeQuasiLiteral(
     raw: JSON.stringify(value),
   } as unknown as acorn.Literal;
   if (state.partial.literal(synthetic)) {
-    state.write(`${LOG.LITERAL}(${newId(refNode)}, ${JSON.stringify(value)})`);
+    emitCall(
+      state,
+      LOG.LITERAL,
+      String(newId(refNode)),
+      JSON.stringify(value),
+    );
   } else {
     state.write(JSON.stringify(value));
   }
@@ -934,9 +1057,9 @@ export function logThrow(state: State, arg: acorn.Expression): void {
     logExpression(state, arg);
     return;
   }
-  state.write(`${LOG.THROW}(${newId(arg)}, `);
-  logExpression(state, arg);
-  state.write(')');
+  emitCall(state, LOG.THROW, String(newId(arg)), () =>
+    logExpression(state, arg),
+  );
 }
 
 export function logYield(
@@ -952,12 +1075,19 @@ export function logYield(
     if (argument) logExpression(state, argument);
     else state.write('undefined');
   } else {
-    state.write(
-      `${LOG.YIELD_RESULT}(${newId(node)}, yield${delegate ? '*' : ''} ${LOG.YIELD}(${newId(node)}, `,
-    );
-    if (argument) logExpression(state, argument);
-    else state.write('undefined');
-    state.writeln(`, ${delegate}))`);
+    emitCall(state, LOG.YIELD_RESULT, String(newId(node)), () => {
+      state.write(`yield${delegate ? '*' : ''} `);
+      emitCall(
+        state,
+        LOG.YIELD,
+        String(newId(node)),
+        () => {
+          if (argument) logExpression(state, argument);
+          else state.write('undefined');
+        },
+        String(delegate),
+      );
+    });
   }
 }
 
@@ -971,17 +1101,18 @@ export function logAwait(
     if (argument) logExpression(state, argument);
     else state.write('undefined');
   } else {
-    state.write(
-      `${LOG.AWAIT_RESULT}(${newId(node)}, await ${LOG.AWAIT}(${newId(node)}, `,
-    );
-    if (argument) logExpression(state, argument);
-    else state.write('undefined');
-    state.write(`))`);
+    emitCall(state, LOG.AWAIT_RESULT, String(newId(node)), () => {
+      state.write('await ');
+      emitCall(state, LOG.AWAIT, String(newId(node)), () => {
+        if (argument) logExpression(state, argument);
+        else state.write('undefined');
+      });
+    });
   }
 }
 
 export function logException(state: State, program: acorn.Node): void {
-  state.writeln(`${LOG.EXCEPTION}(${newId(program)}, ${EXCEPTION_VAR});`);
+  emitCallStmt(state, LOG.EXCEPTION, String(newId(program)), EXCEPTION_VAR);
 }
 
 // -----------------------------------------------------------------------------
@@ -1231,27 +1362,36 @@ export function writeCompoundMemberGet(
     return;
   }
   if (property.type === 'PrivateIdentifier') {
-    state.write(`${LOG.PRIVATE_GET_FIELD}(${newId(expr)}, `);
-    writeTempRef(state, objectRef);
-    state.write(`, "${getPrivateName(property)}", `);
-    writePrivateGetter(state, property);
-    state.write(`, ${optional}`);
-    state.write(')');
+    emitCall(
+      state,
+      LOG.PRIVATE_GET_FIELD,
+      String(newId(expr)),
+      () => writeTempRef(state, objectRef),
+      `"${getPrivateName(property)}"`,
+      () => writePrivateGetter(state, property),
+      String(optional),
+    );
     return;
   }
-  state.write(`${LOG.GET_FIELD}(${newId(expr)}, `);
-  writeTempRef(state, objectRef);
-  state.write(', ');
+  let propArg: Arg = '';
   if (computed) {
-    if (propertyRef != null) writeTempRef(state, propertyRef);
-    else state.walk(property);
+    propArg = () => {
+      if (propertyRef != null) writeTempRef(state, propertyRef);
+      else state.walk(property);
+    };
   } else if (property.type === 'Identifier') {
-    state.write(`"${property.name}"`);
+    propArg = `"${property.name}"`;
   } else {
     warn(`MemberExpression: unexpected property type${getLocStr(expr)}`);
   }
-  state.write(`, ${optional}`);
-  state.write(')');
+  emitCall(
+    state,
+    LOG.GET_FIELD,
+    String(newId(expr)),
+    () => writeTempRef(state, objectRef),
+    propArg,
+    String(optional),
+  );
 }
 
 export function writeCompoundMemberPut(
@@ -1281,30 +1421,37 @@ export function writeCompoundMemberPut(
     return;
   }
   if (property.type === 'PrivateIdentifier') {
-    state.write(`${LOG.PRIVATE_PUT_FIELD}(${newId(lhs)}, `);
-    writeTempRef(state, objectRef);
-    state.write(`, "${getPrivateName(property)}", `);
-    body();
-    state.write(', ');
-    writePrivateSetter(state, property);
-    state.write(')');
+    emitCall(
+      state,
+      LOG.PRIVATE_PUT_FIELD,
+      String(newId(lhs)),
+      () => writeTempRef(state, objectRef),
+      `"${getPrivateName(property)}"`,
+      body,
+      () => writePrivateSetter(state, property),
+    );
     return;
   }
-  state.write(`${LOG.PUT_FIELD}(${newId(lhs)}, `);
-  writeTempRef(state, objectRef);
-  state.write(', ');
+  let propArg: Arg = '';
   if (computed) {
-    if (propertyRef != null) writeTempRef(state, propertyRef);
-    else state.walk(property);
+    propArg = () => {
+      if (propertyRef != null) writeTempRef(state, propertyRef);
+      else state.walk(property);
+    };
   } else if (property.type === 'Identifier') {
-    state.write(`"${property.name}"`);
+    propArg = `"${property.name}"`;
   } else {
     warn(`MemberExpression: unexpected property type${getLocStr(lhs)}`);
   }
-  state.write(', ');
-  body();
-  state.write(`, ${state.isStrict}`);
-  state.write(')');
+  emitCall(
+    state,
+    LOG.PUT_FIELD,
+    String(newId(lhs)),
+    () => writeTempRef(state, objectRef),
+    propArg,
+    body,
+    String(state.isStrict),
+  );
 }
 
 export function writeAssignmentWrite(
@@ -1395,29 +1542,39 @@ export function writeCompoundAssignmentValue(
       left,
       node,
       () => {
-        state.write(`${LOG.BINARY_OP}(${newId(node)}, "${binaryOperator}", `);
-        writeCompoundAssignmentRead(
+        emitCall(
           state,
-          left,
-          objectSlot ?? undefined,
-          propertySlot,
+          LOG.BINARY_OP,
+          String(newId(node)),
+          `"${binaryOperator}"`,
+          () =>
+            writeCompoundAssignmentRead(
+              state,
+              left,
+              objectSlot ?? undefined,
+              propertySlot,
+            ),
+          () => state.walk(right),
         );
-        state.write(', ');
-        state.walk(right);
-        state.write(')');
       },
       objectSlot ?? undefined,
       propertySlot,
     );
   } else {
-    state.write(`${LOG.CONDITION}(${newId(left)}, "${logicalOperator}", `);
-    writeCompoundAssignmentRead(
+    emitCall(
       state,
-      left,
-      objectSlot ?? undefined,
-      propertySlot,
+      LOG.CONDITION,
+      String(newId(left)),
+      `"${logicalOperator}"`,
+      () =>
+        writeCompoundAssignmentRead(
+          state,
+          left,
+          objectSlot ?? undefined,
+          propertySlot,
+        ),
     );
-    state.write(`) ${logicalOperator} `);
+    state.write(` ${logicalOperator} `);
     state.write('(');
     writeAssignmentWrite(
       state,

@@ -44,3 +44,15 @@ export function emitCall<C extends `${typeof DYNAJS_VAR}.${HookName}`>(
   }
   state.write(')');
 }
+
+// Like emitCall but as a statement on its own line: `<newline+indent><callee>(...);`.
+// Matches the old `state.writeln(`${LOG.X}(...);`)` sites.
+export function emitCallStmt<C extends `${typeof DYNAJS_VAR}.${HookName}`>(
+  state: State,
+  callee: C,
+  ...args: ArgsFor<C>
+): void {
+  state.writeln('');
+  emitCall(state, callee, ...args);
+  state.write(';');
+}
