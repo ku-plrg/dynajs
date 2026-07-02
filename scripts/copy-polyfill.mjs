@@ -139,7 +139,7 @@ const destDir = resolve(
   dirname(fileURLToPath(import.meta.url)),
   '..',
   'analyses',
-  'flow',
+  'shadow',
   'spec',
 );
 mkdirSync(destDir, { recursive: true });
@@ -266,12 +266,12 @@ writeFileSync(join(destDir, 'index.ts'), barrel);
 
 console.log(
   chalk.green(
-    `✓ Copied ${copiedNames.length} polyfill file(s) → analyses/flow/spec/`,
+    `✓ Copied ${copiedNames.length} polyfill file(s) → analyses/shadow/spec/`,
   ),
 );
 console.log(
   chalk.green(
-    `✓ Wrote barrel (${barrelBases.length} exports) → analyses/flow/spec/index.ts`,
+    `✓ Wrote barrel (${barrelBases.length} exports) → analyses/shadow/spec/index.ts`,
   ),
 );
 
@@ -309,7 +309,7 @@ for (const base of barrelBases) {
 }
 const fmt = (c) =>
   `${String(c.total).padStart(3)}  (INTRINSICS ${c.INTRINSICS}, AO__ ${c.AO__}, SYNTAX__ ${c.SYNTAX__}, other ${c.other})`;
-console.log(chalk.cyan('\nArtifact summary (analyses/flow/spec/):'));
+console.log(chalk.cyan('\nArtifact summary (analyses/shadow/spec/):'));
 console.log(chalk.cyan(`  auto-extracted (esmeta gen-poly): ${fmt(auto)}`));
 console.log(chalk.cyan(`  manual (*.manual.ts):             ${fmt(manual)}`));
 console.log(
@@ -321,7 +321,7 @@ console.log(
 // barreled without complaint. Recompute reachability WITHOUT that blanket seed:
 // a manual file earns its keep only if it is an INCLUDE root, a transitive AO
 // dependency of one, or referenced by name from framework source outside spec/
-// (e.g. flow.ts imports SYNTAX__add, which no INCLUDE root reaches).
+// (e.g. shadow.ts imports SYNTAX__add, which no INCLUDE root reaches).
 function contentForDeps(base) {
   const manualFile = manualBases.get(base);
   if (manualFile !== undefined)
@@ -345,7 +345,7 @@ function reachableFrom(start) {
 }
 
 // Identifiers used in framework source (the barrel's consumers: anything under
-// analyses/flow/ except spec/ itself). A base whose mangled export name
+// analyses/shadow/ except spec/ itself). A base whose mangled export name
 // (dots → underscores) appears there is treated as a reachability root.
 function collectFrameworkSource(dir) {
   let text = '';
