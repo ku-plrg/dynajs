@@ -279,7 +279,7 @@ export const visitors: RecursiveVisitors<State> = {
       node.id != null
     ) {
       state.writeln(
-        `${LOG.DECLARE}(${write.newId(node)}, "${node.id.name}", ${VarKind.Func}, false);`,
+        `${LOG.DECLARE}(${write.newId(node)}, "${node.id.name}", ${VarKind.Func}, false, false, undefined);`,
       );
     }
     write.logFuncDeclare(state, node, false);

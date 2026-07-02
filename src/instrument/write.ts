@@ -1,16 +1,17 @@
-import * as LOG from './constant.js';
 import type * as acorn from 'acorn';
-import { getLocFromNode, VarKind, warn } from '../utils.js';
-import { collectIdentifiers, getLocStr } from './aux.js';
-import type { State } from './state.js';
+import { generate } from 'astring';
 import {
-  POS_MODE_DEFAULT,
   EXCEPTION_VAR,
   INSTRUMENTED_MARK,
+  POS_MODE_DEFAULT,
   PosMode,
   TEMP_PARAM_VAR,
 } from '../constant.js';
-import { generate } from 'astring';
+import { getLocFromNode, VarKind, warn } from '../utils.js';
+import { collectIdentifiers, getLocStr } from './aux.js';
+import * as LOG from './constant.js';
+import { type Arg, emitCall } from './emit.js';
+import type { State } from './state.js';
 
 export function hasUseStrictDirective(body: readonly acorn.AnyNode[]): boolean {
   for (const statement of body) {
@@ -366,9 +367,9 @@ export function logReturn(
     state.write(';');
     return;
   }
-  state.write(`return ${LOG.RETURN}(${newId(expr)}, `);
-  body();
-  state.write(');');
+  state.write('return ');
+  emitCall(state, LOG.RETURN, String(newId(expr)), body);
+  state.write(';');
 }
 
 export function logForInOfStatement(
@@ -430,9 +431,9 @@ export function logExpression(state: State, expr: acorn.Expression): void {
   if (!state.partial.E) {
     state.walk(expr);
   } else {
-    state.write(`${LOG.EXPRESSION}(${newId(expr)}, `);
-    state.walk(expr);
-    state.write(')');
+    emitCall(state, LOG.EXPRESSION, String(newId(expr)), () =>
+      state.walk(expr),
+    );
   }
 }
 
@@ -504,22 +505,26 @@ export function logGetField(state: State, expr: acorn.Expression): void {
     state.walk(object);
     state.write(`, "${getPrivateName(property)}", `);
     writePrivateGetter(state, property);
-    if (optional) state.write(', true');
+    state.write(`, ${optional}`);
     state.write(')');
     return;
   }
-  state.write(`${LOG.GET_FIELD}(${newId(expr)}, `);
-  state.walk(object);
-  state.write(', ');
+  let propArg: Arg = '';
   if (computed) {
-    state.walk(property);
+    propArg = () => state.walk(property);
   } else if (property.type === 'Identifier') {
-    state.write(`"${property.name}"`);
+    propArg = `"${property.name}"`;
   } else {
     warn(`MemberExpression: unexpected property type${getLocStr(expr)}`);
   }
-  if (optional) state.write(', true');
-  state.write(')');
+  emitCall(
+    state,
+    LOG.GET_FIELD,
+    String(newId(expr)),
+    () => state.walk(object),
+    propArg,
+    String(optional),
+  );
 }
 
 export function logPutField(
@@ -665,7 +670,7 @@ export function logDelete(state: State, expr: acorn.Expression): void {
     } else {
       warn(`Delete operator on unexpected property type${getLocStr(expr)}`);
     }
-    if (optional) state.write(', true');
+    state.write(`, ${optional}`);
     state.write(')');
   } else {
     warn(`Delete operator on unexpected type${getLocStr(expr)}`);
@@ -720,11 +725,14 @@ export function logBinaryOp(state: State, expr: acorn.BinaryExpression): void {
     state.write(')');
     return;
   }
-  state.write(`${LOG.BINARY_OP}(${newId(expr)}, "${operator}", `);
-  state.walk(left);
-  state.write(', ');
-  state.walk(right);
-  state.write(')');
+  emitCall(
+    state,
+    LOG.BINARY_OP,
+    String(newId(expr)),
+    `"${operator}"`,
+    () => state.walk(left),
+    () => state.walk(right),
+  );
 }
 
 export function logUpdateOp(state: State, expr: acorn.UpdateExpression): void {
@@ -811,11 +819,11 @@ export function logDeclare(
     const omitValue = isTDZ;
     if (omitValue) {
       state.writeln(
-        `${LOG.DECLARE}(${newId(node)}, "${name}", ${kind}, ${isSpread});`,
+        `${LOG.DECLARE}(${newId(node)}, "${name}", ${kind}, ${isSpread}, false, undefined);`,
       );
     } else {
       state.writeln(
-        `${LOG.DECLARE}(${newId(node)}, "${name}", ${kind}, ${isSpread}, ${name});`,
+        `${LOG.DECLARE}(${newId(node)}, "${name}", ${kind}, ${isSpread}, true, ${name});`,
       );
     }
   }
@@ -1186,8 +1194,8 @@ function getLogicalAssignmentOperator(operator: string): string | null {
 }
 
 export function nextTempSlot(node: acorn.Node): string {
-  let n = newId(node);
-  let str = n < 0 ? `n${-n}` : `p${n}`;
+  const n = newId(node);
+  const str = n < 0 ? `n${-n}` : `p${n}`;
   return `${LOG.TEMP_VAR}${str}`;
 }
 
@@ -1227,7 +1235,7 @@ export function writeCompoundMemberGet(
     writeTempRef(state, objectRef);
     state.write(`, "${getPrivateName(property)}", `);
     writePrivateGetter(state, property);
-    if (optional) state.write(', true');
+    state.write(`, ${optional}`);
     state.write(')');
     return;
   }
@@ -1242,7 +1250,7 @@ export function writeCompoundMemberGet(
   } else {
     warn(`MemberExpression: unexpected property type${getLocStr(expr)}`);
   }
-  if (optional) state.write(', true');
+  state.write(`, ${optional}`);
   state.write(')');
 }
 

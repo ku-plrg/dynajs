@@ -91,7 +91,7 @@ export function M(
     base = C(id, '?.', base);
     if (base === null || base === undefined) return () => chainSkip;
   }
-  let f = G(id, base, prop);
+  let f = G(id, base, prop, false);
   if (f === chainSkip) return () => chainSkip;
   if (callOptional) {
     f = C(id, '?.', f);
@@ -117,7 +117,7 @@ export function Mp(
     base = C(id, '?.', base);
     if (base === null || base === undefined) return () => chainSkip;
   }
-  let f = Gp(id, base, prop, getter);
+  let f = Gp(id, base, prop, getter, false);
   if (f === chainSkip) return () => chainSkip;
   if (callOptional) {
     f = C(id, '?.', f);
@@ -138,7 +138,7 @@ export function TF(id: number, f: any): any {
 
 // hook for tagged template method calls
 export function TM(id: number, base: any, prop: any): any {
-  const f = G(id, base, prop);
+  const f = G(id, base, prop, false);
   return (strings: any, ...values: any[]) =>
     invokeTT(id, base, f, strings, values, true);
 }
@@ -149,7 +149,7 @@ export function TMp(
   prop: any,
   getter: (base: any) => any,
 ): any {
-  const f = Gp(id, base, prop, getter);
+  const f = Gp(id, base, prop, getter, false);
   return (strings: any, ...values: any[]) =>
     invokeTT(id, base, f, strings, values, true);
 }
@@ -218,7 +218,7 @@ export function G(
   id: number,
   base: any,
   prop: any,
-  optional: boolean = false,
+  optional: boolean,
 ): any {
   if (base === chainSkip) return chainSkip;
   if (optional) {
@@ -254,7 +254,7 @@ export function Gp(
   base: any,
   prop: any,
   getter: (base: any) => any,
-  optional: boolean = false,
+  optional: boolean,
 ): any {
   if (base === chainSkip) return chainSkip;
   if (optional) {
@@ -289,7 +289,7 @@ export function P(
   base: any,
   prop: any,
   value: any,
-  strict: boolean = false,
+  strict: boolean,
 ): any {
   let skip = false;
   let frame: unknown;
@@ -355,7 +355,7 @@ export function De(
   id: number,
   base: any,
   prop: any,
-  optional: boolean = false,
+  optional: boolean,
 ): any {
   if (base === chainSkip) return chainSkip;
   if (optional) {
@@ -626,9 +626,9 @@ export function D(
   name: string,
   kind: VarKind,
   isSpread: boolean,
-  value?: any,
+  init: boolean,
+  value: any,
 ): void {
-  const init = arguments.length >= 5;
   D$.analysis.declare?.(id, name, kindToStr[kind], init, value, isSpread);
 }
 
