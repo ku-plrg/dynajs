@@ -79,10 +79,14 @@ npm test -- --update        # rewrite mismatching .out snapshots (-u)
 npm test -- --all           # regression + taint + concolic
 ```
 
-Cases are discovered from the `tests/` fixture directories; shared helpers live
-in `tests/support/`, and `scripts/run-tests.mjs` parses the flags above. The
-`test:*` scripts are thin aliases that delegate through `npm run test --`, so the
-build always runs exactly once via `pretest`:
+The regression suite is split by what it checks. `tests/behavior.test.mjs`
+verifies that instrumentation preserves program semantics — dynajs output is
+compared against plain Node, in both `--partial` and `--full` mode.
+`tests/snapshot.test.mjs` verifies that an analysis's emitted trace still matches
+its golden `.out` file. Cases are discovered from the `tests/` fixture
+directories; shared helpers live in `tests/support/`, and `scripts/run-tests.mjs`
+parses the flags above. The `test:*` scripts are thin aliases that delegate
+through `npm run test --`, so the build always runs exactly once via `pretest`:
 
 ```shell
 npm run test:watch      # npm run test -- --watch

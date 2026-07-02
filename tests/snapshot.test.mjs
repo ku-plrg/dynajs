@@ -7,9 +7,12 @@ import { iterTestTargets } from './support/discover.mjs';
 import { runDynajs } from './support/run.mjs';
 import { assertSnapshot, expectedExitCode } from './support/snapshot.mjs';
 
-// Each suite runs one analysis over a directory of targets. A target with a
-// sibling .out is checked against that snapshot; every target is checked against
-// its expected exit code (default 0, overridden in expected-exit-codes.json).
+// Snapshot regression: the trace an analysis emits must match its golden .out.
+// Run in the canonical partial mode only — TraceAll's trace is byte-identical
+// under partial and full (it hooks every feature), so a per-mode snapshot would
+// just duplicate. A target with a sibling .out is checked against it; every
+// target is also held to its expected exit code (default 0, overridden in
+// expected-exit-codes.json).
 const SUITES = [
   {
     name: 'trace-all',
@@ -25,11 +28,6 @@ const SUITES = [
     name: 'hierarchy',
     dir: 'tests/regression-trace/hierarchy',
     analysis: 'samples/HierarchyDemo.js',
-  },
-  {
-    name: 'regression-node/trace-all',
-    dir: 'tests/regression-node/trace-all',
-    analysis: 'samples/TraceAll.js',
   },
 ];
 
