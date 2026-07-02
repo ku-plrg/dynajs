@@ -70,7 +70,7 @@ function resolveAnalysisFile(p: string): string {
 type RunArgs = {
   preset?: string;
   analysis?: string;
-  'no-analysis'?: boolean;
+  bare?: boolean;
   verbose?: boolean;
   partial?: boolean;
   full?: boolean;
@@ -84,7 +84,7 @@ type RunArgs = {
 
 function cmdRun(argv: RunArgs): number {
   let analysisPath: string | undefined;
-  if (argv['no-analysis']) {
+  if (argv.bare) {
     analysisPath = undefined;
   } else if (argv.preset) {
     analysisPath = resolvePreset(argv.preset);
@@ -92,7 +92,7 @@ function cmdRun(argv: RunArgs): number {
     analysisPath = resolveAnalysisFile(argv.analysis);
   } else {
     process.stderr.write(
-      'Error: one of --preset/-p, --analysis/-a, or --no-analysis is required.\n',
+      'Error: one of --preset/-p, --analysis/-a, or --bare is required.\n',
     );
     return 2;
   }
@@ -283,9 +283,6 @@ try {
           .strictCommands(false)
           .parserConfiguration({
             'populate--': true,
-            // Without this, `--no-analysis` would be re-interpreted as
-            // setting `--analysis=false` rather than as its own boolean flag.
-            'boolean-negation': false,
           })
           .positional('cmd', {
             type: 'string',
@@ -304,9 +301,9 @@ try {
             type: 'string',
             describe: 'Path to a custom analysis file',
           })
-          .option('no-analysis', {
+          .option('bare', {
             type: 'boolean',
-            describe: 'Run dynajs without injecting an --analysis',
+            describe: 'Run dynajs bare (instrument only, no analysis injected)',
           })
           .option('verbose', {
             type: 'boolean',
@@ -351,8 +348,8 @@ try {
             'Use a custom analysis file',
           )
           .example(
-            '$0 run --no-analysis -- node target.js',
-            'Run dynajs without injecting an --analysis',
+            '$0 run --bare -- node target.js',
+            'Run dynajs bare (instrument only, no analysis)',
           ),
       (argv) => {
         exitCode = cmdRun(argv as unknown as RunArgs);

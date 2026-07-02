@@ -42,7 +42,7 @@ DYNAJS_OPTIONS='--analysis ./samples/TraceAll.js --partial' dynajs node target.j
 `./djx` bundles the most common workflows into one command:
 
 ```shell
-./djx run (-p <preset> | -a <path> | --no-analysis) [opts] -- <cmd...>
+./djx run (-p <preset> | -a <path> | --bare) [opts] -- <cmd...>
                                    # wraps dynajs; target command goes after `--`
 ./djx instrument [--verbose] <file># static instrumentation (writes a *__dynajs__.js sibling)
 ./djx clean [dir]                  # removes generated *__dynajs__.js files
@@ -53,8 +53,9 @@ DYNAJS_OPTIONS='--analysis ./samples/TraceAll.js --partial' dynajs node target.j
 
 `djx run` picks the analysis via `-p/--preset <name>` (a built preset like
 `taint`/`concolic` or a bundled `samples/<Name>.js`), `-a/--analysis <path>`
-(custom file), or `--no-analysis`. Forwarded dynajs flags: `--verbose`,
-`--partial`, `--full`, `--ignore-node-modules`, `--pos`, `--home`, `--include`.
+(custom file), or `--bare` (instrument only, no analysis). Forwarded dynajs
+flags: `--verbose`, `--partial`, `--full`, `--ignore-node-modules`, `--pos`,
+`--home`, `--include`.
 Run `./djx run --help` for the full list.
 
 ## For Developers
