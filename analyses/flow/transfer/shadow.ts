@@ -1,4 +1,4 @@
-import { LiftedDomain } from "./lift-domain.js";
+import { LiftedDomain } from "../internal/lift-domain.js";
 import type {
   Lifted,
   Unlifted,

@@ -1,9 +1,9 @@
-import { FlowAnalysis } from '../flow/index.js';
+import { ShadowExecution } from '../flow/index.js';
 import type { Analysis } from '../../src/index.js';
 
 declare const D$: { analysis: Analysis } & Record<string, any>;
 
-export class NoopAnalysis extends FlowAnalysis<undefined> {
+export class NoopAnalysis extends ShadowExecution<undefined> {
   domain = {
     isBottom: (_info: undefined) => true,
     getBottom: () => undefined,

@@ -12,11 +12,8 @@ import { isConstructable } from './internal/constructable.js';
 import * as site from './internal/site.js';
 import type * as escape from './internal/escape.js';
 import { AO__CanonicalNumericIndexString, SYNTAX__add } from './spec/index.js';
-import * as lift from './internal/lift-domain.js';
-import { CAPTURED, concatList } from './utils.js';
-import { LiftedTransferClass } from './internal/lift.js';
-
-const { ReflectApply } = CAPTURED;
+import { concatList } from './utils.js';
+import { LiftedTransferClass } from './transfer/lift.js';
 
 const NON_VALUE_BINARY_OPS = new Set(['instanceof', 'in']);
 
@@ -46,9 +43,7 @@ type OpaqueCall = {
 type TransparentCall = { ty: 'transparent'; entries: unknown[] };
 
 
-export abstract class ShadowExecution<Info>
-  extends LiftedTransferClass<Info>
-  implements Analysis
+export abstract class ShadowExecution<Info> extends LiftedTransferClass<Info> implements Analysis
 {
   protected site(): site.Site {
     return this.siteResolver.resolve();

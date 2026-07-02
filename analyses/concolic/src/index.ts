@@ -1,5 +1,5 @@
 import { writeFileSync } from 'node:fs';
-import { FlowAnalysis, type Valued } from '../../flow/index.js';
+import { ShadowExecution, type Valued } from '../../flow/index.js';
 import {
   type Sym,
   type Sort,
@@ -31,7 +31,7 @@ type PathConstraint = {
 type ArrayMeta = { elemSort: Sort; lenSym: Sym };
 type ObjectMeta = { name: string; counter: number; fields: Map<string, Sym> };
 
-export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
+export class ConcolicAnalysis extends ShadowExecution<Sym | undefined> {
   result: unknown;
   private pathConstraints: PathConstraint[] = [];
   private errors: { error: string; stack?: string }[] = [];

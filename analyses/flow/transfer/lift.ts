@@ -9,9 +9,9 @@ import type {
   LiftedTransfer,
 } from '../type.js';
 import { CAPTURED, concatList } from '../utils.js';
-import type * as escape from './escape.js';
-import Model from './model.js';
-import { SiteResolver } from './site.js';
+import type * as escape from '../internal/escape.js';
+import Model from '../internal/model.js';
+import { SiteResolver } from '../internal/site.js';
 
 const { ReflectApply } = CAPTURED;
 

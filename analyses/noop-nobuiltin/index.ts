@@ -1,11 +1,11 @@
-import { FlowAnalysis } from '../flow/index.js';
+import { ShadowExecution } from '../flow/index.js';
 import type { Analysis } from '../../src/index.js';
 
 declare const D$: { analysis: Analysis } & Record<string, any>;
 
 // Same as Noop, but builtins run natively (opaque) instead of through the spec
 // model — a baseline that isolates the cost/effect of the builtin model layer.
-export class NoopNoBuiltinAnalysis extends FlowAnalysis<undefined> {
+export class NoopNoBuiltinAnalysis extends ShadowExecution<undefined> {
   protected modelBuiltins = false;
 
   domain = {

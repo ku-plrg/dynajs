@@ -1,5 +1,5 @@
 import type { Analysis } from '../../../src/index.js';
-import { FlowAnalysis, type Valued, type Site } from '../../flow/index.js';
+import { ShadowExecution, type Valued, type Site } from '../../flow/index.js';
 import { installPrelude } from './prelude.js';
 
 declare const D$: { analysis: Analysis } & Record<string, any>;
@@ -23,7 +23,7 @@ function inheritedOrigin(parents: Valued<TaintInfo>[]): Site | undefined {
   return undefined;
 }
 
-export class TaintAnalysis extends FlowAnalysis<TaintInfo> {
+export class TaintAnalysis extends ShadowExecution<TaintInfo> {
   protected transparentCalls = GHOSTS;
 
   domain = {
