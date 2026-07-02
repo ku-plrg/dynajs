@@ -8,10 +8,6 @@ import { StateOption } from './instrument/state.js';
 import { CAPTURED } from './captured.js';
 import { INSTRUMENTED_MARK } from './constant.js';
 
-declare global {
-  var D$: DynaJSType;
-}
-
 // sentinel symbol for optional chain short-circuit propagation
 const chainSkip = Symbol('D$.chainSkip');
 

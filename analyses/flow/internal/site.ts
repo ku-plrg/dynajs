@@ -1,7 +1,3 @@
-import type { DynaJSType } from '../../../src/analysis.js';
-
-declare const D$: DynaJSType;
-
 export type Pos = { line: number; column: number };
 
 export type CodeSite = {

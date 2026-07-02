@@ -1,4 +1,4 @@
-import type { Analysis } from '../../../src/types/analysis.js';
+import type { Analysis } from '../../../src/index.js';
 import { FlowAnalysis, type Valued, type Site } from '../../flow/index.js';
 import { installPrelude } from './prelude.js';
 

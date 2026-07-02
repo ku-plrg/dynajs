@@ -1,5 +1,5 @@
 import { isInstrumentedFn, required } from './utils.js';
-import type { Analysis } from '../../src/types/analysis.js';
+import type { Analysis } from '../../src/index.js';
 import type {
   SpecRuntime,
   Lifted,

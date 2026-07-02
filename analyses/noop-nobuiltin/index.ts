@@ -1,5 +1,5 @@
 import { FlowAnalysis } from '../flow/index.js';
-import type { Analysis } from '../../src/types/analysis.js';
+import type { Analysis } from '../../src/index.js';
 
 declare const D$: { analysis: Analysis } & Record<string, any>;
 

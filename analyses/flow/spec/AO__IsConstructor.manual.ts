@@ -1,4 +1,4 @@
-import { CAPTURED } from '../../../src/captured.js';
+import { CAPTURED } from '../utils.js';
 import type { Lifted, SpecRuntime } from "../type.js";
 
 export function AO__IsConstructor ($ : SpecRuntime, argument : Lifted<unknown>) {
