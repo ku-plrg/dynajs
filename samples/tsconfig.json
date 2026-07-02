@@ -8,5 +8,5 @@
     "checkJs": true,
     "paths": {}
   },
-  "include": ["globals.d.ts", "*.js"]
+  "include": ["global.ts", "*.js"]
 }
