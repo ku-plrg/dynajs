@@ -30,7 +30,7 @@ export function emitPartialTs(L: Loaded): { source: string; edits: number } {
 
   const { req, shape } = loadGetters(L);
   const { fires } = loadInvokes(L, universeOf(L));
-  const { getterCallbacks } = generateGetters(L, emitHook, fires);
+  const { getterCallbacks } = generateGetters(L, emitHook, fires, req);
 
   const disjunction = (name: string, indent: string): string => {
     const cbs = new Set<string>([

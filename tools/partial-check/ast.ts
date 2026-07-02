@@ -45,7 +45,11 @@ export function partialAtomsIn(
     const init = constInit(e, checker);
     if (init) return partialAtomsIn(init, checker, out);
   }
-  ts.forEachChild(e, (c) => partialAtomsIn(c, checker, out));
+  // NB: the callback must return void — ts.forEachChild stops at the first
+  // truthy result, which would visit only the first operand of `A && B`.
+  ts.forEachChild(e, (c) => {
+    partialAtomsIn(c, checker, out);
+  });
   return out;
 }
 

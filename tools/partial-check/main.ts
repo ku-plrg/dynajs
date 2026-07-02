@@ -53,7 +53,7 @@ for (const f of findings) {
 
 // P2 shared-state invariants
 console.log('\n## P2 STATE INVARIANTS (@dynajs-meta protocols)');
-const st = checkState(L, d, gate, hooks);
+const st = checkState(L, d, gate, req, universe, hooks);
 for (const e of st.metaErrors) { errors++; console.log(`   ✗ META: ${e}`); }
 for (const r of st.rows) console.log(`   ${r}`);
 for (const f of st.findings) { errors++; console.log(`   ✗ ${f}`); }

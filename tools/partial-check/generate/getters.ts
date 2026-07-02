@@ -2,6 +2,7 @@ import ts from 'typescript';
 import { walk, partialAtomsIn } from '../ast.js';
 import { Loaded } from '../program.js';
 import { Fires } from '../extract/invokes.js';
+import { loadState } from '../extract/state.js';
 
 // Which callbacks must turn a getter on = the coverage closure: for each hook H
 // gated by getter g, the callbacks for which H is a NECESSARY carrier (fired
@@ -66,6 +67,7 @@ export function generateGetters(
   L: Loaded,
   emitHook: (n: ts.Node) => string | null,
   fires: Fires,
+  req: Map<string, Set<string>>, // current getter callbacks (for the state closure)
 ): GenResult {
   const hg = hookGetters(L, emitHook);
 
@@ -83,12 +85,37 @@ export function generateGetters(
     return out;
   };
 
-  // getter(g) = ⋃ over hooks gated by g of requiredOf(hook)
+  // getter(g) = ⋃ over hooks gated by g of requiredOf(hook)  [COVERAGE closure]
   const getterCallbacks = new Map<string, Set<string>>();
   const allHooks = new Set([...fires.keys()]);
+  const addCb = (g: string, c: string) =>
+    (getterCallbacks.get(g) ?? getterCallbacks.set(g, new Set()).get(g)!).add(c);
   for (const H of allHooks)
-    for (const g of hg.get(H) ?? [])
-      for (const c of requiredOf(H)) (getterCallbacks.get(g) ?? getterCallbacks.set(g, new Set()).get(g)!).add(c);
+    for (const g of hg.get(H) ?? []) for (const c of requiredOf(H)) addCb(g, c);
+
+  // STATE closure: for a `save-restore` slot the save/restore hooks' getters must
+  // fire whenever a consumer does, else a nested scope clobbers the scalar. So
+  // add the consumer callbacks to the save/restore getters (e.g. switchLeft ⇒
+  // getter(Fe) ⊇ getterCallbacks(B) ∪ getterCallbacks(C)).
+  const { protocol, touches } = loadState(L, [...allHooks]);
+  const gettersOfHooks = (hooks: string[]) =>
+    new Set(hooks.flatMap((h) => [...(hg.get(h) ?? [])]));
+  for (const [slot, proto] of protocol) {
+    if (proto !== 'save-restore') continue;
+    const m = touches.get(slot);
+    if (!m) continue;
+    const srHooks = [...m].filter(([, r]) => r.has('save') || r.has('restore')).map(([h]) => h);
+    const consumerHooks = [...m].filter(([, r]) => r.has('read') || r.has('write')).map(([h]) => h);
+    // consumer callbacks = the effective getter value (generated ∪ current), so
+    // state deps preserved in current (e.g. B's full binary family) are included
+    const consumerCbs = new Set(
+      [...gettersOfHooks(consumerHooks)].flatMap((g) => [
+        ...(getterCallbacks.get(g) ?? []),
+        ...(req.get(g) ?? []),
+      ]),
+    );
+    for (const sg of gettersOfHooks(srHooks)) for (const c of consumerCbs) addCb(sg, c);
+  }
 
   const stateGatedHooks = [...allHooks].filter((h) => !(hg.get(h)?.size));
   return { getterCallbacks, stateGatedHooks };

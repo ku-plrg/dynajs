@@ -239,10 +239,15 @@ the coverage closure (necessary carriers) ∪ the current getter's terms, so
 coverage-fixable findings appear as *added* callbacks and non-derivable
 state-closure terms (e.g. `Aw`/`Y`'s frame deps) are preserved.
 
+A primary getter also gets its **state-closure** terms: for the `switchLeft`
+`save-restore` slot, `getter(Fe)` is augmented with the consumer callbacks
+(`getterCallbacks(B) ∪ getterCallbacks(C)`), so function-frame save/restore is
+emitted whenever a switch is instrumented.
+
 **Round-trip proof (empirical):** swapping the emitted file in and re-running the
-checker gives **0 P1** findings (down from 16), leaving only the P2 `switchLeft`
-finding (which needs a state-closure getter — see §8). So the generated file is
-*coverage-correct by construction*.
+checker gives **0 P1 + 0 P2 + 0 meta + 0 sync** — the generated file is
+*correct by construction* (coverage + state closure). The current hand file
+still reports 16 P1 + 1 P2.
 
 Notably `super*` is fixed **without** an instrumenter change: the emit sits under
 both `logCall`'s `if(!F)` and the `Sm` guard, so `hookGetters(Sm) = {F, Sm}` and
@@ -252,13 +257,13 @@ the generator adds `super*` to **both** `getter(F)` and `getter(Sm)`; then
 ## 8. Limitations & what is not done yet
 
 ### Generator: what's left
-- The emitter produces a full file and round-trips to **0 P1** (§7). What it does
-  NOT yet derive is the **state closure** — the getter terms that come from P2
-  obligations rather than coverage: `getter(Fe) ⊇ (B∨C)` (from `switchLeft`
-  `save-restore`, the one remaining finding), `shouldWrapThrow` (from
-  `uncaughtException` `set-drain`), and the `Aw`/`Y` frame deps. The emitter
-  currently PRESERVES these from the existing file (union), so behaviour is kept,
-  but it cannot yet regenerate them from scratch.
+- The emitter produces a full file that round-trips to **0 P1 + 0 P2** (§7). The
+  `switchLeft` `save-restore` state closure (`getter(Fe) ⊇ B∨C`) is derived; the
+  `set-drain` obligation on `uncaughtException` currently passes without an added
+  term (its clearer `Ce` is always-on). The `Aw`/`Y` frame deps and
+  `shouldWrapThrow` are still PRESERVED from the existing file (union), not
+  regenerated from a state model — deriving those needs an async/generator frame
+  protocol (not yet modelled).
 - Formatting is minimal; run `prettier` on the emitted file.
 
 ### Adopting the generated file is a policy call
@@ -319,9 +324,9 @@ the generator adds `super*` to **both** `getter(F)` and `getter(Sm)`; then
 
 ## 9. Suggested next steps
 
-1. **State closure in the generator**: derive `getter(Fe) ⊇ (B∨C)` (from the
-   `switchLeft` `save-restore` obligation) so `check:partial:emit` round-trips to
-   **0 P1 + 0 P2**, not just 0 P1. Same machinery gives `shouldWrapThrow`.
+1. (done) **State closure**: `getter(Fe) ⊇ (B∨C)` from `switchLeft` — emit now
+   round-trips to 0 P1 + 0 P2. Remaining state closure: regenerate `Aw`/`Y` frame
+   deps + `shouldWrapThrow` from a model instead of preserving them.
 2. **Triage / adopt**: decide whether to adopt the emitted (maximally-sound,
    over-instrumenting) getters or document `optionalChain`/`super*`-only as
    non-goals.

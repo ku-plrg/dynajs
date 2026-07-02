@@ -17,7 +17,7 @@ const emitHook = (n: ts.Node): string | null =>
 
 const { universe, req, shape } = loadGetters(L);
 const { fires } = loadInvokes(L, universe);
-const { getterCallbacks, stateGatedHooks } = generateGetters(L, emitHook, fires);
+const { getterCallbacks, stateGatedHooks } = generateGetters(L, emitHook, fires, req);
 
 const eq = (a: Set<string>, b: Set<string>) =>
   a.size === b.size && [...a].every((x) => b.has(x));
