@@ -30,7 +30,9 @@
     "rules": {
       "recommended": true,
       "suspicious": { "noExplicitAny": "off" },
-      "security": { "noGlobalEval": "off" }
+      "security": { "noGlobalEval": "off" },
+      "useTemplate": "off",
+      "noUnusedTemplateLiteral": "error"
     }
   },
   "javascript": {
