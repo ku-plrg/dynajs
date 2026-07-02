@@ -8,6 +8,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import chalk from 'chalk';
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 
 const SPEC_DIR = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -83,7 +85,7 @@ function intrinsicCategoryData(byCategory) {
   const cats = new Set([...byCategory.keys(), ...Object.keys(TOTAL_BUILTINS)]);
   const rows = [...cats].map((cat) => {
     const t = tally(byCategory.get(cat) ?? []);
-    const declared = Object.prototype.hasOwnProperty.call(TOTAL_BUILTINS, cat);
+    const declared = Object.hasOwn(TOTAL_BUILTINS, cat);
     const spec = declared ? TOTAL_BUILTINS[cat] : t.total;
     return {
       category: cat,
@@ -140,9 +142,28 @@ function printTable(title, labelHead, rows, totalHead = 'total') {
 }
 
 function main() {
-  const args = process.argv.slice(2);
-  const asJson = args.includes('--json');
-  const showList = args.includes('--list');
+  const argv = yargs(hideBin(process.argv))
+    .scriptName('spec-coverage.mjs')
+    .usage(
+      'Usage: $0 [options]\n\nReport esmeta auto-extraction coverage of analyses/flow/spec',
+    )
+    .option('json', {
+      type: 'boolean',
+      default: false,
+      describe: 'emit machine-readable JSON instead of the tables',
+    })
+    .option('list', {
+      type: 'boolean',
+      default: false,
+      describe: 'also list the manual shims, grouped by intrinsic category',
+    })
+    .help()
+    .alias('h', 'help')
+    .strictOptions()
+    .parse();
+
+  const asJson = argv.json;
+  const showList = argv.list;
 
   const entries = collectEntries(SPEC_DIR);
   const intrinsics = entries.filter((e) => e.base.startsWith('INTRINSICS.'));

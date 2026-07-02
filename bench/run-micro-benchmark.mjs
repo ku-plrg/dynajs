@@ -67,6 +67,8 @@ import {
 import path from "node:path";
 import { homedir, tmpdir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BENCH_DIR = path.join(REPO_ROOT, "bench/micro");
@@ -834,58 +836,53 @@ function makeRunners(opts) {
 // ---------------------------------------------------------------------------
 
 function parseArgs(argv) {
-  const opts = {
-    analysis: null, // override; default analysis comes from each bench's @type
-    dynajsFlags: null, // override; default flags come from each bench's @type
-    reps: 1, // verdict-only default (verdicts are deterministic); pass --reps N for timing
-    warmup: 0, // each rep is a fresh process, so warmup doesn't warm anything measured
-    timeoutSec: 60,
-    outputDir: null,
-    runnerFilters: [],
-    benchFilters: [],
-    dirFilters: [], // restrict to benches under one or more subdirs of bench/micro
-    check: false, // compare against the committed snapshot, exit non-zero on drift
-    updateSnapshot: false, // (re)write the committed snapshot from this run
-    repsSet: false, // whether --reps was passed (snapshot modes default reps to 1)
-    onlyDone: false, // run only benches marked `// @done` (eye-verified)
-    count: false, // just report how many benches match (+ breakdown), then exit
-    coverage: false, // census of @done taint benches by area (BuiltIns/Syntax), then exit
-    replay: false, // run ONLY the multi-path *-replay runners (reach corpus); default excludes them
+  const parsed = yargs(argv)
+    .scriptName("run-micro-benchmark.mjs")
+    .usage(
+      "Usage: $0 [options]\n\nRun the micro benchmark corpus across runners and score each verdict against its bench oracle",
+    )
+    // override; default analysis/flags come from each bench's @type
+    .option("runner", { type: "string", array: true, default: [], describe: "restrict to runner(s) by name (repeatable)" })
+    .option("bench", { type: "string", array: true, default: [], describe: "restrict to bench(es) by name (repeatable)" })
+    .option("dir", { type: "string", array: true, default: [], describe: "restrict to benches under subdir(s) of bench/micro (repeatable)" })
+    .option("analysis", { type: "string", default: null, describe: "override analysis (default comes from each bench's @type)" })
+    .option("dynajs-flags", { type: "string", default: null, describe: "override dynajs flags (default comes from each bench's @type)" })
+    // verdicts are deterministic, so 1 rep / no warmup by default; each rep is a fresh process
+    .option("reps", { type: "number", default: 1, describe: "timing repetitions per bench" })
+    .option("warmup", { type: "number", default: 0, describe: "warmup reps before timing" })
+    .option("timeout", { type: "number", default: 60, describe: "per-bench timeout in seconds" })
+    .option("output-dir", { type: "string", default: null, describe: "write per-run artifacts here" })
+    .option("check", { type: "boolean", default: false, describe: "compare against the committed snapshot; exit non-zero on drift" })
+    .option("update-snapshot", { type: "boolean", default: false, describe: "(re)write the committed snapshot from this run" })
+    .option("done", { type: "boolean", default: false, describe: "run only benches marked `// @done` (eye-verified)" })
+    .option("count", { type: "boolean", default: false, describe: "just report how many benches match (+ breakdown), then exit" })
+    .option("coverage", { type: "boolean", default: false, describe: "census of @done taint benches by area (BuiltIns/Syntax), then exit" })
+    .option("replay", { type: "boolean", default: false, describe: "run ONLY the multi-path *-replay runners (reach corpus); default excludes them" })
+    .help()
+    .alias("h", "help")
+    .strict()
+    .parse();
+
+  return {
+    analysis: parsed.analysis,
+    dynajsFlags: parsed.dynajsFlags,
+    reps: parsed.reps,
+    warmup: parsed.warmup,
+    timeoutSec: parsed.timeout,
+    outputDir: parsed.outputDir,
+    runnerFilters: [...parsed.runner],
+    benchFilters: [...parsed.bench],
+    dirFilters: [...parsed.dir],
+    check: parsed.check,
+    updateSnapshot: parsed.updateSnapshot,
+    // yargs doesn't report whether a flag was explicit, and snapshot modes
+    // default reps to 1 only when it wasn't set, so detect it from the raw args.
+    repsSet: argv.some((a) => a === "--reps" || a.startsWith("--reps=")),
+    onlyDone: parsed.done,
+    count: parsed.count,
+    coverage: parsed.coverage,
+    replay: parsed.replay,
   };
-  const need = (i, flag) => {
-    if (i + 1 >= argv.length) die(`${flag} requires a value`);
-    return argv[i + 1];
-  };
-  for (let i = 0; i < argv.length; i++) {
-    const a = argv[i];
-    switch (a) {
-      case "--runner": opts.runnerFilters.push(need(i, a)); i++; break;
-      case "--bench": opts.benchFilters.push(need(i, a)); i++; break;
-      case "--dir": opts.dirFilters.push(need(i, a)); i++; break;
-      case "--analysis": opts.analysis = need(i, a); i++; break;
-      case "--dynajs-flags": opts.dynajsFlags = need(i, a); i++; break;
-      case "--reps": opts.reps = Number(need(i, a)); opts.repsSet = true; i++; break;
-      case "--warmup": opts.warmup = Number(need(i, a)); i++; break;
-      case "--timeout": opts.timeoutSec = Number(need(i, a)); i++; break;
-      case "--output-dir": opts.outputDir = need(i, a); i++; break;
-      case "--check": opts.check = true; break;
-      case "--update-snapshot": opts.updateSnapshot = true; break;
-      case "--done": opts.onlyDone = true; break;
-      case "--count": opts.count = true; break;
-      case "--coverage": opts.coverage = true; break;
-      case "--replay": opts.replay = true; break;
-      case "--help":
-        console.log(
-          "Usage: node bench/run-micro-benchmark.mjs " +
-            "[--runner NAME] [--bench NAME] [--dir SUB] [--analysis NAME] [--dynajs-flags STR] " +
-            "[--reps N] [--warmup N] [--timeout SEC] [--output-dir DIR] " +
-            "[--done] [--count] [--coverage] [--replay] [--check | --update-snapshot]",
-        );
-        process.exit(0);
-      default: die(`unknown option: ${a}`);
-    }
-  }
-  return opts;
 }
 
 const matchesAny = (value, filters) =>

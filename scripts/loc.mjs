@@ -1,11 +1,13 @@
 #!/usr/bin/env node
+import { spawnSync } from 'node:child_process';
 // Measure LOC of JS/TS files. Each file is stripped of comments and run through
 // biome (same formatting for everyone) before non-blank lines are counted.
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
-import ts from 'typescript';
 import chalk from 'chalk';
+import ts from 'typescript';
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 
 const EXTENSIONS = new Set([
   '.js',
@@ -98,12 +100,18 @@ function collectFiles(target) {
 }
 
 function main() {
-  const targets = process.argv.slice(2).filter((a) => !a.startsWith('-'));
-  if (targets.length === 0) {
-    console.error('Usage: node scripts/loc.mjs <file-or-dir> [more...]');
-    process.exit(1);
-  }
+  const argv = yargs(hideBin(process.argv))
+    .scriptName('loc.mjs')
+    .usage(
+      'Usage: $0 <file-or-dir> [more...]\n\nMeasure LOC of JS/TS files (comments stripped, biome-formatted, blank lines excluded)',
+    )
+    .demandCommand(1, 'Provide at least one file or directory')
+    .help()
+    .alias('h', 'help')
+    .strictOptions()
+    .parse();
 
+  const targets = argv._.map(String);
   const files = [...new Set(targets.flatMap(collectFiles))].sort();
   if (files.length === 0) {
     console.error('No JS/TS files found.');
