@@ -8,7 +8,7 @@
       "!bench/**",
       "!tests/**",
       "!samples/**",
-      "!analyses/flow/spec/**",
+      "!analyses/shadow/spec/**",
       "!**/*.html"
     ]
   },

@@ -47,8 +47,7 @@ interface SpecOps
     CompareOps,
     MathOps,
     ListOps,
-    RangeOps {
-}
+    RangeOps {}
 
 interface CondOps {
   /* ... */

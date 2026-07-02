@@ -42,8 +42,9 @@ type OpaqueCall = {
 };
 type TransparentCall = { ty: 'transparent'; entries: unknown[] };
 
-
-export abstract class ShadowExecution<Info> extends LiftedTransferClass<Info> implements Analysis
+export abstract class ShadowExecution<Info>
+  extends LiftedTransferClass<Info>
+  implements Analysis
 {
   protected site(): site.Site {
     return this.siteResolver.resolve();

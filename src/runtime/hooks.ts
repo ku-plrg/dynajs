@@ -28,7 +28,11 @@ import { err, kindToStr, type VarKind } from '../utils.js';
 // -----------------------------------------------------------------------------
 
 // hook for script enter
-export function Se(id: number, instrumentedPath: string, originalPath: string): void {
+export function Se(
+  id: number,
+  instrumentedPath: string,
+  originalPath: string,
+): void {
   rt.lastComputedValue = undefined;
   D$.analysis.scriptEnter?.(id, instrumentedPath, originalPath);
 }
@@ -210,7 +214,12 @@ export function Sp(id: number, value: any): any {
 }
 
 // hook for property reads (get-field)
-export function G(id: number, base: any, prop: any, optional: boolean = false): any {
+export function G(
+  id: number,
+  base: any,
+  prop: any,
+  optional: boolean = false,
+): any {
   if (base === chainSkip) return chainSkip;
   if (optional) {
     base = C(id, '?.', base);
@@ -342,7 +351,12 @@ export function Pp(
 }
 
 // hook for delete operations
-export function De(id: number, base: any, prop: any, optional: boolean = false): any {
+export function De(
+  id: number,
+  base: any,
+  prop: any,
+  optional: boolean = false,
+): any {
   if (base === chainSkip) return chainSkip;
   if (optional) {
     base = C(id, '?.', base);
@@ -783,7 +797,12 @@ export function Sm(
 
 // hook for super.prop / super[k] reads
 // getter is () => super.prop (thunk, ignores thisVal since super is lexical)
-export function Gs(id: number, thisVal: any, prop: any, getter: () => any): any {
+export function Gs(
+  id: number,
+  thisVal: any,
+  prop: any,
+  getter: () => any,
+): any {
   let value: any;
   const pre = D$.analysis.superGetFieldPre?.(id, thisVal, prop);
   if (pre) prop = pre.prop;
@@ -817,4 +836,3 @@ export function Ps(
 export function Ev(id: number, code: any, isDirect: boolean): any {
   return EvInternal(id, code, isDirect);
 }
-

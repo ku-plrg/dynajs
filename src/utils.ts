@@ -291,5 +291,5 @@ export const getLocFromNode = (
 };
 
 export const spec = {
-  ToString: (x: any): string => String(new String(x))
-}
+  ToString: (x: any): string => String(new String(x)),
+};
