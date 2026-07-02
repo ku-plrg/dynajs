@@ -1,7 +1,7 @@
 import { INSTRUMENTED_MARK } from '../constant.js';
 import type { RuntimeOptions } from '../entry/options.js';
 import * as hooks from './hooks.js';
-import { chainSkip } from './hooks-internal.js';
+import { chainSkip } from './runtime.js';
 import { instrument } from '../instrument/main.js';
 import type { StateOption } from '../instrument/state.js';
 import type { Analysis } from '../types/analysis.js';

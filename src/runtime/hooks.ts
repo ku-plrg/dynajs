@@ -18,7 +18,7 @@ import {
   SWITCH_NOMATCH,
   templateConcatStep,
   UNARY_OPS,
-} from './hooks-internal.js';
+} from './runtime.js';
 import type { Analysis } from '../types/analysis.js';
 import { err, kindToStr, type VarKind } from '../utils.js';
 
