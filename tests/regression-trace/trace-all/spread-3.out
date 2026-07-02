@@ -7,6 +7,7 @@ Se() @ 1:1-5:5
   E(<object>) @ 1:9-30
   W([a], <object>) @ 1:9-30
   R(a, <object>) @ 2:14-15
+  Sp(<object>) @ 2:11-15
   L(true) @ 2:20-24
   L(<object>) @ 2:9-26
   E(<object>) @ 2:9-26

@@ -9,6 +9,7 @@ Se() @ 1:1-5:9
   W([a], <array>) @ 1:9-18
   R(f, <function>) @ 5:1-2
   R(a, <array>) @ 5:6-7
+  Sp(<array>) @ 5:3-7
   F[pre](<function>, undefined, [1, 2, 3], false, false) @ 5:1-2
   Fe(<function>, undefined, [1, 2, 3]) @ 2:1-4:2
     D(arguments, <arguments>, <object>, false) @ 2:1-4:2

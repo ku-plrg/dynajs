@@ -1,76 +1,62 @@
-import { VarKind, err, kindToStr, locToStr } from './utils.js';
-import type { Analysis } from './types/analysis.js';
-import type { RuntimeOptions } from './entry/options.js';
-import * as utils from './utils.js';
-import * as spec from './spec.js';
-import { instrument } from './instrument/main.js';
-import { StateOption } from './instrument/state.js';
-import { INSTRUMENTED_MARK } from './constant.js';
-
-const CAPTURED = utils.CAPTURED;
-
-// sentinel symbol for optional chain short-circuit propagation
-const chainSkip = Symbol('D$.chainSkip');
-
-// stack to store return values
-let returnStack: any[] = [];
-
-// store uncaught exception
-let uncaughtException: { exception: any } | undefined = undefined;
-
-let lastComputedValue: any = undefined;
-
-// store left side of a switch statement
-let switchLeft: any = undefined;
-let switchStack: any[] = [];
-// Sentinels so the *native* `switch` branches on the value-aware `===` result
-// (computed via B/C) rather than comparing lifted operands by proxy identity:
-// Swl returns MATCH as the discriminant, each case returns MATCH iff its
-// comparison held. Distinct per-statement matching is preserved (a switch only
-// compares its own discriminant to its own case values).
-const SWITCH_MATCH = Symbol('switch-match');
-const SWITCH_NOMATCH = Symbol('switch-nomatch');
-function pushSwitchLeft() {
-  switchStack.push(switchLeft);
-}
-function popSwitchLeft() {
-  switchLeft = switchStack.pop();
-}
+import {
+  BINARY_OPS,
+  CONDITION_CB,
+  chainSkip,
+  EvInternal,
+  fireSpecificBinary,
+  fireSpecificBinaryPre,
+  fireSpecificUnary,
+  fireSpecificUnaryPre,
+  invokeFun,
+  invokeSuperMethod,
+  invokeTT,
+  popSwitchLeft,
+  pushSwitchLeft,
+  returnStack,
+  rt,
+  SWITCH_MATCH,
+  SWITCH_NOMATCH,
+  templateConcatStep,
+  UNARY_OPS,
+} from './hooks-internal.js';
+import type { Analysis } from '../types/analysis.js';
+import { err, kindToStr, type VarKind } from '../utils.js';
 
 // -----------------------------------------------------------------------------
-// hooks for dynamic analysis
+// hooks for dynamic analysis — the functions the instrumented code calls as
+// `D$.<name>(...)`. The shared machinery they lean on lives in hooks-internal.ts.
 // -----------------------------------------------------------------------------
 
 // hook for script enter
-function Se(id: number, instrumentedPath: string, originalPath: string): void {
-  lastComputedValue = undefined;
+export function Se(id: number, instrumentedPath: string, originalPath: string): void {
+  rt.lastComputedValue = undefined;
   D$.analysis.scriptEnter?.(id, instrumentedPath, originalPath);
 }
 
 // Sets and returns the last computed expression-statement value.
-function Lcs(value: any): any {
-  lastComputedValue = value;
+export function Lcs(value: any): any {
+  rt.lastComputedValue = value;
   return value;
 }
 
 // Returns the last computed expression-statement value.
-function Lcv(): any {
-  return lastComputedValue;
+export function Lcv(): any {
+  return rt.lastComputedValue;
 }
 
 // hook for script exit
-function Sx(id: number): void {
-  const exc = uncaughtException;
+export function Sx(id: number): void {
+  const exc = rt.uncaughtException;
   D$.analysis.scriptExit?.(id, exc);
   if (exc) {
     const { exception } = exc;
-    uncaughtException = undefined;
+    rt.uncaughtException = undefined;
     throw exception;
   }
 }
 
 // hook for function calls
-function F(
+export function F(
   id: number,
   f: any,
   isConstructor: boolean,
@@ -88,7 +74,7 @@ function F(
 }
 
 // hook for method calls
-function M(
+export function M(
   id: number,
   base: any,
   prop: any,
@@ -113,7 +99,7 @@ function M(
   };
 }
 
-function Mp(
+export function Mp(
   id: number,
   base: any,
   prop: any,
@@ -140,218 +126,32 @@ function Mp(
 }
 
 // hook for tagged template function calls
-function TF(id: number, f: any): any {
+export function TF(id: number, f: any): any {
   return function (this: any, strings: any, ...values: any[]) {
     return invokeTT(id, this, f, strings, values, false);
   };
 }
 
 // hook for tagged template method calls
-function TM(id: number, base: any, prop: any): any {
+export function TM(id: number, base: any, prop: any): any {
   const f = G(id, base, prop);
-  return function (strings: any, ...values: any[]) {
-    return invokeTT(id, base, f, strings, values, true);
-  };
+  return (strings: any, ...values: any[]) =>
+    invokeTT(id, base, f, strings, values, true);
 }
 
-function TMp(
+export function TMp(
   id: number,
   base: any,
   prop: any,
   getter: (base: any) => any,
 ): any {
   const f = Gp(id, base, prop, getter);
-  return function (strings: any, ...values: any[]) {
-    return invokeTT(id, base, f, strings, values, true);
-  };
-}
-
-// helper to invoke a tagged template call with hierarchical hooks (general-first, specific wins)
-function invokeTT(
-  id: number,
-  base: any,
-  f: any,
-  strings: any,
-  values: any[],
-  isMethod: boolean,
-): any {
-  let result: any;
-  let skip = false;
-  let args: any[] = [strings, ...values];
-  let generalFrame: unknown;
-  let specificFrame: unknown;
-
-  // General hook fires first
-  const generalPre = D$.analysis.invokeFunPre?.(
-    id,
-    f,
-    base,
-    args,
-    false,
-    isMethod,
-  );
-  if (generalPre) {
-    f = generalPre.f;
-    base = generalPre.base;
-    args = generalPre.args;
-    skip = generalPre.skip;
-    generalFrame = generalPre.frame;
-    strings = args[0];
-    values = args.slice(1);
-  }
-
-  // Specific hook fires second and wins
-  const specificPre = D$.analysis.taggedTemplatePre?.(
-    id,
-    f,
-    base,
-    strings,
-    values,
-    isMethod,
-  );
-  if (specificPre) {
-    f = specificPre.f;
-    base = specificPre.base;
-    strings = specificPre.strings;
-    values = specificPre.values;
-    skip = specificPre.skip;
-    specificFrame = specificPre.frame;
-  }
-
-  if (!skip) {
-    result = Function.prototype.apply.call(f, base, [strings, ...values]);
-  }
-
-  args = [strings, ...values];
-
-  // General post-hook fires first
-  const generalPost = D$.analysis.invokeFun?.(
-    id,
-    f,
-    base,
-    args,
-    result,
-    false,
-    isMethod,
-    generalFrame,
-  );
-  if (generalPost) result = generalPost.result;
-
-  // Specific post-hook fires second and wins
-  const specificPost = D$.analysis.taggedTemplate?.(
-    id,
-    f,
-    base,
-    strings,
-    values,
-    result,
-    isMethod,
-    specificFrame,
-  );
-  if (specificPost) result = specificPost.result;
-
-  return result;
-}
-
-// Instruments a `Function(...)`/`new Function(...)` call so that its body
-// participates in the analysis. The last argument is treated as the function
-// body and the preceding ones as parameter lists, matching the Function
-// constructor semantics.
-function invokeFunctionConstructor(id: number, f: any, args: any): any {
-  const argArr: string[] = Array.prototype.slice
-    .call(args)
-    .map((v: any) => spec.ToString(v));
-  // Invoke the original constructor first so that invalid params or body
-  // throw exactly the error the user would normally see.
-  f.apply(null, argArr);
-  const paramList = argArr.slice(0, Math.max(argArr.length - 1, 0)).join(', ');
-  const body = argArr.length > 0 ? argArr[argArr.length - 1] : '';
-  const wrapped = `(function anonymous(${paramList}) {\n${body}\n})`;
-  const processed = Ev(id, wrapped, false);
-  if (typeof processed !== 'string') return processed;
-  return CAPTURED.IndirectEval(processed);
-}
-
-// helper function to invoke a function
-function invokeFun(
-  id: number,
-  base: any,
-  f: any,
-  args: any,
-  isConstructor: boolean,
-  isMethod: boolean,
-) {
-  let result: any;
-  let skip = false;
-  let frame: unknown;
-  const pre = D$.analysis.invokeFunPre?.(
-    id,
-    f,
-    base,
-    args,
-    isConstructor,
-    isMethod,
-  );
-  if (pre) {
-    f = pre.f;
-    base = pre.base;
-    args = pre.args;
-    skip = pre.skip;
-    frame = pre.frame;
-  }
-  if (!skip) {
-    if (f === CAPTURED.FunctionConstructor) {
-      result = invokeFunctionConstructor(id, f, args);
-    } else if (isConstructor) {
-      result = construct(f, args);
-    } else {
-      result = CAPTURED.FunctionConstructor.prototype.apply.call(f, base, args);
-    }
-  }
-  const post = D$.analysis.invokeFun?.(
-    id,
-    f,
-    base,
-    args,
-    result,
-    isConstructor,
-    isMethod,
-    frame,
-  );
-  if (post) result = post.result;
-  return result;
-}
-
-// helper function to construct an object
-function construct(f: any, args: any): any {
-  if (typeof Reflect !== 'undefined' && Reflect.construct) {
-    return Reflect.construct(f, args);
-  } else {
-    // for older environments without Reflect.construct
-    switch (args.length) {
-      case 0:
-        return new f();
-      case 1:
-        return new f(args[0]);
-      case 2:
-        return new f(args[0], args[1]);
-      case 3:
-        return new f(args[0], args[1], args[2]);
-      case 4:
-        return new f(args[0], args[1], args[2], args[3]);
-    }
-    // for more than 4 arguments
-    const argArray = Array.prototype.slice.call(args);
-    const TempConstructor: any = function (this: any) {
-      return f.apply(this, argArray);
-    };
-    TempConstructor.prototype = f.prototype;
-    return new TempConstructor();
-  }
+  return (strings: any, ...values: any[]) =>
+    invokeTT(id, base, f, strings, values, true);
 }
 
 // hook for function enter
-function Fe(
+export function Fe(
   id: number,
   f: any,
   base: any,
@@ -365,20 +165,20 @@ function Fe(
 }
 
 // hook for function exit
-function Fx(id: number, isAsync: boolean, isGenerator: boolean): void {
-  const exc = uncaughtException;
+export function Fx(id: number, isAsync: boolean, isGenerator: boolean): void {
+  const exc = rt.uncaughtException;
   const ret = returnStack.pop();
   popSwitchLeft();
   D$.analysis.functionExit?.(id, ret, exc, isAsync, isGenerator);
   if (exc) {
     const { exception } = exc;
-    uncaughtException = undefined;
+    rt.uncaughtException = undefined;
     throw exception;
   }
 }
 
 // hook for return statements
-function Re(id: number, value: any): any {
+export function Re(id: number, value: any): any {
   const post = D$.analysis._return?.(id, value);
   if (post) {
     value = post.result;
@@ -388,14 +188,14 @@ function Re(id: number, value: any): any {
 }
 
 // hook for RHS object of for-in/of loops
-function O(id: number, value: any, isForIn: boolean): any {
+export function O(id: number, value: any, isForIn: boolean): any {
   const post = D$.analysis.forInOfObject?.(id, value, isForIn);
   if (post) value = post.result;
   return value;
 }
 
 // hook for the end of an expression
-function E(id: number, value: any): any {
+export function E(id: number, value: any): any {
   D$.analysis.endExpression?.(id, value);
   return value;
 }
@@ -403,14 +203,14 @@ function E(id: number, value: any): any {
 // hook for spread elements (`...value` in array literals, call arguments, and
 // object literals). Fires before the value is spread natively, so the
 // (possibly replaced) return value is what gets iterated/copied.
-function Sp(id: number, value: any): any {
+export function Sp(id: number, value: any): any {
   const post = D$.analysis.spread?.(id, value);
   if (post) value = post.result;
   return value;
 }
 
 // hook for property reads (get-field)
-function G(id: number, base: any, prop: any, optional: boolean = false): any {
+export function G(id: number, base: any, prop: any, optional: boolean = false): any {
   if (base === chainSkip) return chainSkip;
   if (optional) {
     base = C(id, '?.', base);
@@ -440,7 +240,7 @@ function G(id: number, base: any, prop: any, optional: boolean = false): any {
   return value;
 }
 
-function Gp(
+export function Gp(
   id: number,
   base: any,
   prop: any,
@@ -475,7 +275,7 @@ function Gp(
 }
 
 // hook for property writes (set-field)
-function P(
+export function P(
   id: number,
   base: any,
   prop: any,
@@ -512,7 +312,7 @@ function P(
   return value;
 }
 
-function Pp(
+export function Pp(
   id: number,
   base: any,
   prop: any,
@@ -542,7 +342,7 @@ function Pp(
 }
 
 // hook for delete operations
-function De(id: number, base: any, prop: any, optional: boolean = false): any {
+export function De(id: number, base: any, prop: any, optional: boolean = false): any {
   if (base === chainSkip) return chainSkip;
   if (optional) {
     base = C(id, '?.', base);
@@ -580,7 +380,7 @@ function De(id: number, base: any, prop: any, optional: boolean = false): any {
 }
 
 // hook for unary operations (except for `delete`)
-function U(id: number, op: string, operand: any): any {
+export function U(id: number, op: string, operand: any): any {
   let value;
   let skip = false;
   let frame: unknown;
@@ -627,84 +427,9 @@ function U(id: number, op: string, operand: any): any {
   }
   return value;
 }
-const UNARY_OPS: { [op: string]: (a: any) => any } = {
-  '-': (a: any) => -a,
-  '+': (a: any) => +a,
-  '!': (a: any) => !a,
-  '~': (a: any) => ~a,
-  typeof: (a: any) => typeof a,
-  void: (a: any) => void a,
-};
 
-// helpers to fire specific binary pre/post callbacks based on op
-function fireSpecificBinaryPre(
-  id: number,
-  op: string,
-  left: any,
-  right: any,
-):
-  | { op: string; left: any; right: any; skip: boolean; frame?: unknown }
-  | undefined {
-  let cb: keyof Analysis | undefined;
-  if (ARITHMETIC_BINARY_OPS.has(op)) cb = 'arithmeticBinaryPre';
-  else if (COMPARISON_BINARY_OPS.has(op)) cb = 'comparisonBinaryPre';
-  else if (BITWISE_BINARY_OPS.has(op)) cb = 'bitwiseBinaryPre';
-  if (!cb) return undefined;
-  return (D$.analysis[cb] as any)?.(id, op, left, right);
-}
-function fireSpecificBinary(
-  id: number,
-  op: string,
-  left: any,
-  right: any,
-  value: any,
-  frame?: unknown,
-): { result: any } | undefined {
-  let cb: keyof Analysis | undefined;
-  if (ARITHMETIC_BINARY_OPS.has(op)) cb = 'arithmeticBinary';
-  else if (COMPARISON_BINARY_OPS.has(op)) cb = 'comparisonBinary';
-  else if (BITWISE_BINARY_OPS.has(op)) cb = 'bitwiseBinary';
-  if (!cb) return undefined;
-  return (D$.analysis[cb] as any)?.(id, op, left, right, value, frame);
-}
-// helpers to fire specific unary pre/post callbacks based on op
-function fireSpecificUnaryPre(
-  id: number,
-  op: string,
-  prefix: boolean,
-  operand: any,
-): { op: string; operand: any; skip: boolean; frame?: unknown } | undefined {
-  let cb: keyof Analysis | undefined;
-  if (ARITHMETIC_UNARY_OPS.has(op)) cb = 'arithmeticUnaryPre';
-  else if (op === '!') cb = 'logicalUnaryPre';
-  else if (op === '~') cb = 'bitwiseUnaryPre';
-  else if (op === 'typeof') cb = 'typeofUnaryPre';
-  else if (op === 'void') cb = 'voidUnaryPre';
-  else if (UPDATE_UNARY_OPS.has(op)) cb = 'updateUnaryPre';
-  if (!cb) return undefined;
-  return (D$.analysis[cb] as any)?.(id, op, prefix, operand);
-}
-function fireSpecificUnary(
-  id: number,
-  op: string,
-  prefix: boolean,
-  operand: any,
-  value: any,
-  frame?: unknown,
-): { result: any } | undefined {
-  let cb: keyof Analysis | undefined;
-  if (ARITHMETIC_UNARY_OPS.has(op)) cb = 'arithmeticUnary';
-  else if (op === '!') cb = 'logicalUnary';
-  else if (op === '~') cb = 'bitwiseUnary';
-  else if (op === 'typeof') cb = 'typeofUnary';
-  else if (op === 'void') cb = 'voidUnary';
-  else if (UPDATE_UNARY_OPS.has(op)) cb = 'updateUnary';
-  if (!cb) return undefined;
-  return (D$.analysis[cb] as any)?.(id, op, prefix, operand, value, frame);
-}
-
-// hook for the end of an expression
-function B(id: number, op: string, left: any, right: any): any {
+// hook for binary operations
+export function B(id: number, op: string, left: any, right: any): any {
   let value;
   let skip = false;
   let frame: unknown;
@@ -749,60 +474,8 @@ function B(id: number, op: string, left: any, right: any): any {
   if (specificPost) value = specificPost.result;
   return value;
 }
-const BINARY_OPS: { [op: string]: (a: any, b: any) => any } = {
-  '==': (a: any, b: any) => a == b,
-  '!=': (a: any, b: any) => a != b,
-  '===': (a: any, b: any) => a === b,
-  '!==': (a: any, b: any) => a !== b,
-  '<': (a: any, b: any) => a < b,
-  '<=': (a: any, b: any) => a <= b,
-  '>': (a: any, b: any) => a > b,
-  '>=': (a: any, b: any) => a >= b,
-  '<<': (a: any, b: any) => a << b,
-  '>>': (a: any, b: any) => a >> b,
-  '>>>': (a: any, b: any) => a >>> b,
-  '+': (a: any, b: any) => a + b,
-  '-': (a: any, b: any) => a - b,
-  '*': (a: any, b: any) => a * b,
-  '/': (a: any, b: any) => a / b,
-  '%': (a: any, b: any) => a % b,
-  '|': (a: any, b: any) => a | b,
-  '^': (a: any, b: any) => a ^ b,
-  '&': (a: any, b: any) => a & b,
-  in: (a: any, b: any) => a in b,
-  instanceof: (a: any, b: any) => a instanceof b,
-  '**': (a: any, b: any) => a ** b,
-};
-const ARITHMETIC_BINARY_OPS = new Set(['+', '-', '*', '/', '%', '**']);
-const COMPARISON_BINARY_OPS = new Set([
-  '==',
-  '!=',
-  '===',
-  '!==',
-  '<',
-  '<=',
-  '>',
-  '>=',
-  'in',
-  'instanceof',
-]);
-const BITWISE_BINARY_OPS = new Set(['&', '|', '^', '<<', '>>', '>>>']);
-const ARITHMETIC_UNARY_OPS = new Set(['+', '-']);
-const UPDATE_UNARY_OPS = new Set(['++', '--']);
-const CONDITION_CB: Record<string, keyof Analysis> = {
-  if: 'ifCondition',
-  while: 'whileCondition',
-  'do-while': 'whileCondition',
-  for: 'forCondition',
-  '?': 'ternaryCondition',
-  '&&': 'logicalAnd',
-  '||': 'logicalOr',
-  '??': 'nullishCoalescing',
-  '?.': 'optionalChain',
-  switch: 'switchCondition',
-};
 
-function Up(
+export function Up(
   id: number,
   binaryId: number,
   op: string,
@@ -853,7 +526,6 @@ function Up(
   }
   let newValue;
   if (!skip) {
-    // @ts-ignore
     newValue = op === '++' ? left + right : left - right;
   }
   const binaryPost = D$.analysis.binary?.(
@@ -898,7 +570,7 @@ function Up(
 }
 
 // hook for condition expressions
-function C(id: number, op: string, value: any): any {
+export function C(id: number, op: string, value: any): any {
   // general condition fires first
   const post = D$.analysis.condition?.(id, op, value);
   if (post) {
@@ -917,25 +589,25 @@ function C(id: number, op: string, value: any): any {
 // a raw constructor or null, so unlift E — a lifted primitive (e.g. `null`) would
 // otherwise be rejected as "not a constructor or null". A real (object) heritage
 // unlifts to itself, so non-primitive `extends` is unaffected.
-function Hc(id: number, value: any): any {
+export function Hc(id: number, value: any): any {
   const post = D$.analysis.classHeritage?.(id, value);
   return post ? post.result : value;
 }
 
 // hook for left side of a switch statement
-function Swl(id: number, value: any): any {
-  switchLeft = value;
+export function Swl(id: number, value: any): any {
+  rt.switchLeft = value;
   return SWITCH_MATCH;
 }
 
 // hook for right side of a switch case
-function Swr(id: number, caseValue: any): any {
-  const matches = C(id, 'switch', B(id, '===', switchLeft, caseValue));
+export function Swr(id: number, caseValue: any): any {
+  const matches = C(id, 'switch', B(id, '===', rt.switchLeft, caseValue));
   return matches ? SWITCH_MATCH : SWITCH_NOMATCH;
 }
 
 // hook for variable declarations
-function D(
+export function D(
   id: number,
   name: string,
   kind: VarKind,
@@ -947,7 +619,7 @@ function D(
 }
 
 // hook for variable reads
-function R(id: number, name: string, value: any): any {
+export function R(id: number, name: string, value: any): any {
   // general memoryAccess fires first
   const generalPost = D$.analysis.memoryAccess?.(id, value);
   if (generalPost) value = generalPost.result;
@@ -960,7 +632,7 @@ function R(id: number, name: string, value: any): any {
 }
 
 // hook for variable writes
-function W(id: number, names: string[], value: any): any {
+export function W(id: number, names: string[], value: any): any {
   // general memoryWrite fires first
   const generalPost = D$.analysis.memoryWrite?.(id, value);
   if (generalPost) value = generalPost.result;
@@ -973,9 +645,9 @@ function W(id: number, names: string[], value: any): any {
 }
 
 // hook for literals
-function L(id: number, value: any): any {
+export function L(id: number, value: any): any {
   // general fires first
-  let post = D$.analysis.literal?.(id, value);
+  const post = D$.analysis.literal?.(id, value);
   if (post) {
     value = post.result;
   }
@@ -1000,32 +672,13 @@ function L(id: number, value: any): any {
 // hook for template literal chain — each step fires templateConcat twice
 // (base + expr, then intermediate + quasi) so the binary-pair hook can be
 // reused outside of templates.
-function TL(id: number, base: any, expr: any, quasi: string): any {
+export function TL(id: number, base: any, expr: any, quasi: string): any {
   const intermediate = templateConcatStep(id, base, expr);
   return templateConcatStep(id, intermediate, quasi);
 }
 
-function templateConcatStep(id: number, left: any, right: any): any {
-  let skip = false;
-  let frame: unknown;
-  const pre = D$.analysis.templateConcatPre?.(id, left, right);
-  if (pre) {
-    left = pre.left;
-    right = pre.right;
-    skip = pre.skip;
-    frame = pre.frame;
-  }
-  let result: any;
-  if (!skip) {
-    result = left + spec.ToString(right);
-  }
-  const post = D$.analysis.templateConcat?.(id, left, right, result, frame);
-  if (post) result = post.result;
-  return result;
-}
-
 // hook for throw statements
-function Th(id: number, value: any): any {
+export function Th(id: number, value: any): any {
   const post = D$.analysis._throw?.(id, value);
   if (post) {
     value = post.result;
@@ -1034,86 +687,51 @@ function Th(id: number, value: any): any {
 }
 
 // hook for yield expressions (value being sent out)
-function Y(id: number, value: any, isDelegate: boolean): any {
+export function Y(id: number, value: any, isDelegate: boolean): any {
   const post = D$.analysis._yield?.(id, value, isDelegate);
   if (post) value = post.result;
   return value;
 }
 
 // hook for yield resume (value received back from .next())
-function Yr(id: number, received: any): any {
+export function Yr(id: number, received: any): any {
   const post = D$.analysis._resume?.(id, received);
   if (post) received = post.result;
   return received;
 }
 
 // hook for await expressions (value being awaited)
-function Aw(id: number, value: any): any {
+export function Aw(id: number, value: any): any {
   const post = D$.analysis._await?.(id, value);
   if (post) value = post.result;
   return value;
 }
 
 // hook for await resume (resolved value)
-function Awr(id: number, value: any): any {
+export function Awr(id: number, value: any): any {
   const post = D$.analysis._awaitResult?.(id, value);
   if (post) value = post.result;
   return value;
 }
 
 // hook for chain expression boundary — converts chainSkip sentinel back to undefined
-function Ch(value: any): any {
+export function Ch(value: any): any {
   return value === chainSkip ? undefined : value;
 }
 
 // hook for uncaught exceptions
-function X(id: number, exception: any): void {
-  uncaughtException = { exception };
-}
-
-// -----------------------------------------------------------------------------
-// instrumented-function detection
-// -----------------------------------------------------------------------------
-// The instrumenter stamps INSTRUMENTED_MARK into every function body it emits
-// (logFuncTail always writes a block body, so every function syntax funnels
-// through one stamp; bodiless classes carry it in the class body), and
-// Function.prototype.toString preserves source text verbatim. So a function's
-// text answers the actual question — "does this code call D$ hooks?" — for
-// every creation form (declarations, expressions, methods, accessors, class
-// fields), with no per-syntax registration sites and no hoisting window.
-// `isInstrumented` is the "controlled code" predicate: it separates
-// hook-bearing functions from natives AND from uninstrumented JS (files
-// outside the include roots), whose toString() looks like ordinary source —
-// a native-code check cannot tell those apart. Bound functions and callable
-// proxies report "[native code]" and correctly fall out as uncontrolled.
-const instrumentedCache = new WeakMap<Function, boolean>();
-
-function isInstrumented(f: unknown): boolean {
-  if (typeof f !== 'function') return false;
-  let cached = instrumentedCache.get(f);
-  if (cached === undefined) {
-    let src = '';
-    // pristine toString: user code may override Function.prototype.toString;
-    // exotic callables (revoked proxies) may throw — treat as uncontrolled
-    try {
-      src = CAPTURED.FunctionToString.call(f);
-    } catch {
-      /* uncontrolled */
-    }
-    cached = src.includes(INSTRUMENTED_MARK);
-    instrumentedCache.set(f, cached);
-  }
-  return cached;
+export function X(id: number, exception: any): void {
+  rt.uncaughtException = { exception };
 }
 
 // hook for catch clause enter — always emitted, clears uncaughtException
 // regardless of isEnabled.D so partial hooking cannot leave it stale
-function Ce(): void {
-  uncaughtException = undefined;
+export function Ce(): void {
+  rt.uncaughtException = undefined;
 }
 
 // hook for class field initialization
-function Fi(
+export function Fi(
   id: number,
   obj: any,
   key: any,
@@ -1127,7 +745,7 @@ function Fi(
 
 // hook for super() constructor calls
 // caller is (...args) => super(...args); returns function so args flow normally
-function Su(id: number, caller: (...args: any[]) => any): any {
+export function Su(id: number, caller: (...args: any[]) => any): any {
   return function () {
     let args: any[] = Array.from(arguments);
     const pre = D$.analysis.superCallPre?.(id, args);
@@ -1139,30 +757,10 @@ function Su(id: number, caller: (...args: any[]) => any): any {
   };
 }
 
-// helper to dispatch super method call hooks around an already-resolved function
-function invokeSuperMethod(
-  id: number,
-  thisVal: any,
-  prop: any,
-  f: any,
-  rawArgs: IArguments,
-): any {
-  let args: any[] = Array.from(rawArgs);
-  const pre = D$.analysis.superMethodCallPre?.(id, thisVal, prop, args);
-  if (pre) {
-    prop = pre.prop;
-    args = pre.args;
-  }
-  let result = Function.prototype.apply.call(f, thisVal, args);
-  const post = D$.analysis.superMethodCall?.(id, thisVal, prop, args, result);
-  if (post) result = post.result;
-  return result;
-}
-
 // hook for super.method() / super[k]() calls
 // getter is () => super.method (thunk); returns function so args flow normally
 // memberOptional is always false for super (super?.method() is not valid syntax)
-function Sm(
+export function Sm(
   id: number,
   thisVal: any,
   prop: any,
@@ -1185,7 +783,7 @@ function Sm(
 
 // hook for super.prop / super[k] reads
 // getter is () => super.prop (thunk, ignores thisVal since super is lexical)
-function Gs(id: number, thisVal: any, prop: any, getter: () => any): any {
+export function Gs(id: number, thisVal: any, prop: any, getter: () => any): any {
   let value: any;
   const pre = D$.analysis.superGetFieldPre?.(id, thisVal, prop);
   if (pre) prop = pre.prop;
@@ -1197,7 +795,7 @@ function Gs(id: number, thisVal: any, prop: any, getter: () => any): any {
 
 // hook for super.prop = v / super[k] = v writes
 // writer is (v) => super.prop = v
-function Ps(
+export function Ps(
   id: number,
   thisVal: any,
   prop: any,
@@ -1214,118 +812,9 @@ function Ps(
   return value;
 }
 
-// get the location string from an id
-function idToLoc(id: number): string {
-  return locToStr(D$.ids[id]);
+// hook for eval code instrumentation — delegates to the shared EvInternal so
+// invokeFunctionConstructor can reuse the same logic without importing hooks.ts
+export function Ev(id: number, code: any, isDirect: boolean): any {
+  return EvInternal(id, code, isDirect);
 }
 
-// get the originating file for an id. `D$.files` holds one [lo, hi, file]
-// interval per instrumented file (ids are globally unique and contiguous per
-// file); intervals are disjoint, so the first containing interval is the file.
-function idToFile(id: number): string | undefined {
-  for (const [lo, hi, file] of D$.files) {
-    if (id >= lo && id <= hi) return file;
-  }
-  return undefined;
-}
-
-// hook for eval code instrumentation
-function Ev(id: number, code: any, isDirect: boolean): any {
-  const pre = D$.analysis.instrumentCodePre?.(id, code, isDirect);
-  if (pre) {
-    code = pre.code;
-    if (pre.skip) return code;
-  }
-  const instCode =
-    typeof code === 'string'
-      ? D$.instrument(code, isDirect ? 'eval' : 'evalIndirect')
-      : code;
-  const post = D$.analysis.instrumentCode?.(id, instCode, isDirect);
-  return post ? post.result : instCode;
-}
-
-// -----------------------------------------------------------------------------
-// assign to the global D$ variable
-// -----------------------------------------------------------------------------
-const BASE = {
-  analysis: {} as Analysis,
-  ids: {} as Record<string, [number, number, number, number]>,
-  files: [] as Array<[number, number, string]>,
-  idToLoc,
-  idToFile,
-  utils,
-  chainSkip,
-  Ch,
-  Se,
-  Sx,
-  F,
-  M,
-  Mp,
-  TF,
-  TM,
-  TMp,
-  Fe,
-  Fx,
-  Re,
-  O,
-  E,
-  Sp,
-  G,
-  Gp,
-  P,
-  Pp,
-  De,
-  U,
-  B,
-  Up,
-  C,
-  Hc,
-  Swl,
-  Swr,
-  D,
-  R,
-  W,
-  L,
-  TL,
-  Th,
-  X,
-  Y,
-  Yr,
-  Aw,
-  Awr,
-  Fi,
-  Ce,
-  Su,
-  Sm,
-  Gs,
-  Ps,
-  Ev,
-  Lcs,
-  Lcv,
-  isInstrumented,
-};
-type GENERATED = {
-  // on-the-fly instrumentation API
-  instrument: (code: string, filename: string | undefined) => string;
-};
-export type DynaJSType = typeof BASE & GENERATED;
-
-export function setBaseObj(runtimeOpts: RuntimeOptions) {
-  let counter = 0;
-
-  const generated = {
-    instrument: (code: string, filename: string | undefined) => {
-      const instrumentOpt: StateOption = {
-        ...runtimeOpts,
-        isScript: false, // treat as module code for now - see issue #5
-        callbackHint: undefined, // TODO mode,
-        originalPath: filename,
-        instrumentedPath: undefined, // TODO newPath,
-      };
-
-      return instrument(code, instrumentOpt);
-    },
-  };
-  const dynaJSType = { ...BASE, ...generated } as DynaJSType;
-  globalThis.D$ = dynaJSType;
-}
