@@ -28,8 +28,7 @@ export type Primitive =
 export interface SpecRuntime extends SpecOps {}
 
 interface SpecOps
-  extends
-    CondOps,
+  extends CondOps,
     DynamicOps,
     ObjectOps,
     StringOps,

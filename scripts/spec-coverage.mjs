@@ -32,7 +32,8 @@ function groupOf(base) {
   if (base.startsWith('INTRINSICS.')) return 'INTRINSICS';
   if (base.startsWith('AO__')) return 'AO (abstract ops)';
   if (base.startsWith('SYNTAX__')) return 'SYNTAX';
-  if (base.startsWith('Number__') || base.startsWith('BigInt__')) return 'Number/BigInt ops';
+  if (base.startsWith('Number__') || base.startsWith('BigInt__'))
+    return 'Number/BigInt ops';
   return null;
 }
 
@@ -84,9 +85,17 @@ function intrinsicCategoryData(byCategory) {
     const t = tally(byCategory.get(cat) ?? []);
     const declared = Object.prototype.hasOwnProperty.call(TOTAL_BUILTINS, cat);
     const spec = declared ? TOTAL_BUILTINS[cat] : t.total;
-    return { category: cat, auto: t.auto, manual: t.manual, modeled: t.total, spec };
+    return {
+      category: cat,
+      auto: t.auto,
+      manual: t.manual,
+      modeled: t.total,
+      spec,
+    };
   });
-  rows.sort((a, b) => b.modeled - a.modeled || a.category.localeCompare(b.category));
+  rows.sort(
+    (a, b) => b.modeled - a.modeled || a.category.localeCompare(b.category),
+  );
   const total = rows.reduce(
     (acc, r) => ({
       auto: acc.auto + r.auto,
@@ -139,16 +148,25 @@ function main() {
   const intrinsics = entries.filter((e) => e.base.startsWith('INTRINSICS.'));
 
   const byCategory = bucketBy(intrinsics, intrinsicCategory);
-  const byGroup = bucketBy(entries.filter((e) => groupOf(e.base)), (b) => groupOf(b));
+  const byGroup = bucketBy(
+    entries.filter((e) => groupOf(e.base)),
+    (b) => groupOf(b),
+  );
   const intr = intrinsicCategoryData(byCategory);
 
   if (asJson) {
-    const withPct = (r) => ({ ...r, autoPct: r.spec === 0 ? null : Number(((100 * r.auto) / r.spec).toFixed(2)) });
+    const withPct = (r) => ({
+      ...r,
+      autoPct:
+        r.spec === 0 ? null : Number(((100 * r.auto) / r.spec).toFixed(2)),
+    });
     const dump = (map, keyName) =>
-      [...map].sort((a, b) => a[0].localeCompare(b[0])).map(([k, es]) => ({
-        [keyName]: k,
-        ...tally(es),
-      }));
+      [...map]
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([k, es]) => ({
+          [keyName]: k,
+          ...tally(es),
+        }));
     console.log(
       JSON.stringify(
         {
@@ -182,14 +200,25 @@ function main() {
     pct: pctOf(intr.total.auto, intr.total.spec),
     bold: true,
   });
-  printTable('INTRINSICS (built-ins) — auto-extraction by category', 'Category', catRows, 'spec');
+  printTable(
+    'INTRINSICS (built-ins) — auto-extraction by category',
+    'Category',
+    catRows,
+    'spec',
+  );
 
   // Whole spec/ by group
   const groupRows = [...byGroup]
     .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([g, es]) => {
       const t = tally(es);
-      return { label: g, auto: t.auto, manual: t.manual, total: t.total, pct: pct(t) };
+      return {
+        label: g,
+        auto: t.auto,
+        manual: t.manual,
+        total: t.total,
+        pct: pct(t),
+      };
     });
   const specEntries = entries.filter((e) => groupOf(e.base));
   const specTotal = tally(specEntries);
@@ -205,7 +234,9 @@ function main() {
 
   if (showList) {
     console.log(chalk.bold('\nManual shims (backed by *.manual.ts)'));
-    for (const [cat, es] of [...byCategory].sort((a, b) => a[0].localeCompare(b[0]))) {
+    for (const [cat, es] of [...byCategory].sort((a, b) =>
+      a[0].localeCompare(b[0]),
+    )) {
       const man = es.filter((e) => !e.auto);
       if (man.length === 0) continue;
       console.log(chalk.dim(`  [${cat}] (${man.length})`));

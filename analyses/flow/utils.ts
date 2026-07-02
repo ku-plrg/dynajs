@@ -13,7 +13,6 @@ export function isInstrumentedFn(f: unknown): boolean {
   return D$.isInstrumented?.(f) ?? false;
 }
 
-
 /** to capture built-in objects that may be overridden by user code. */
 export const CAPTURED = Object.freeze({
   FunctionConstructor: Function,
@@ -42,7 +41,10 @@ export const CAPTURED = Object.freeze({
 // `Object.defineProperty(Array.prototype, "2", {get})`) would hijack or throw
 // ("…which has only a getter"). defineProperty defines an own data property
 // directly, exactly like the spread it replaces.
-export function concatList(heads: unknown[], tail: ArrayLike<unknown>): unknown[] {
+export function concatList(
+  heads: unknown[],
+  tail: ArrayLike<unknown>,
+): unknown[] {
   const out: unknown[] = [];
   let n = 0;
   const put = (v: unknown) =>

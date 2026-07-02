@@ -49,7 +49,7 @@ const EXCLUDE = [
   'INTRINSICS.Array.prototype.keys',
   'INTRINSICS.Array.prototype.values',
   'INTRINSICS.String.prototype__Symbol.iterator__',
-  
+
   /* implementation defined - host environment dependent */
   'INTRINSICS.Array.prototype.toLocaleString', // esmeta not supported
   'INTRINSICS.String.prototype.toLocaleLowerCase', // esmeta not supported
@@ -81,7 +81,7 @@ const NO_CHECK = [
   'AO__IteratorStep',
   'AO__IteratorStepValue',
   'INTRINSICS.Array.of',
-  'INTRINSICS.Array.prototype.sort',  
+  'INTRINSICS.Array.prototype.sort',
   'INTRINSICS.Array.prototype.reduce',
   'INTRINSICS.Array.prototype.reduceRight',
   'INTRINSICS.Array.prototype.reverse',
@@ -169,9 +169,7 @@ const AUTO_GEN_WARNING = `// THIS FILE IS AUTO-GENERATED, DO NOT EDIT\n`;
 // or hand-authored. The shim is regenerated each run; edit the .manual.ts file.
 for (const [base, file] of manualBases) {
   if (isExcluded(base)) continue;
-  const shim =
-    AUTO_GEN_WARNING +
-    `export * from "./${base}.manual.js";\n`;
+  const shim = AUTO_GEN_WARNING + `export * from "./${base}.manual.js";\n`;
   writeFileSync(join(destDir, `${base}.ts`), shim);
 }
 
@@ -287,7 +285,13 @@ const kindOf = (base) =>
       : base.startsWith('SYNTAX__')
         ? 'SYNTAX__'
         : 'other';
-const tally = () => ({ INTRINSICS: 0, AO__: 0, SYNTAX__: 0, other: 0, total: 0 });
+const tally = () => ({
+  INTRINSICS: 0,
+  AO__: 0,
+  SYNTAX__: 0,
+  other: 0,
+  total: 0,
+});
 const auto = tally();
 const manual = tally();
 let shimCount = 0;

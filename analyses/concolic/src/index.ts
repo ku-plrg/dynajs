@@ -267,11 +267,9 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
         ? s.value
         : undefined;
     const av = nonFinite(a);
-    if (av !== undefined)
-      return (op === 'min') === (av === Infinity) ? b : a;
+    if (av !== undefined) return (op === 'min') === (av === Infinity) ? b : a;
     const bv = nonFinite(b);
-    if (bv !== undefined)
-      return (op === 'min') === (bv === Infinity) ? a : b;
+    if (bv !== undefined) return (op === 'min') === (bv === Infinity) ? a : b;
     return { kind: 'binary', op, left: a, right: b };
   }
 
@@ -308,7 +306,6 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     return this.extremum('max', operands);
   }
 
-
   protected conditionInfo(id: number, cond: Valued<Sym>, taken: boolean): void {
     this.cov?.decision(id, taken);
     const sym = this.symOf(cond);
@@ -317,7 +314,6 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     if (bool !== undefined)
       this.pathConstraints.push({ id, constraint: bool, taken });
   }
-
 
   private recordRangeGuards(
     indices: number[],
@@ -336,7 +332,7 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     });
     if (indices.length) {
       const last = indices[indices.length - 1];
-      this.pushConstraint(guard(last), true); 
+      this.pushConstraint(guard(last), true);
       this.pushBranch(guard(last + 1), false);
     } else {
       this.pushBranch(guard(start), false);
@@ -352,10 +348,10 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     return syms.reduce((left, right) => this.minMax(op, left, right));
   }
 
-
   // Spec-model branch ids are `Number.MAX_SAFE_INTEGER - N` (esmeta); user-code
   // branch ids are minted from 0 by ±1, so they never reach this floor.
-  private static readonly SPEC_BRANCH_FLOOR = Number.MAX_SAFE_INTEGER - 1_000_000;
+  private static readonly SPEC_BRANCH_FLOOR =
+    Number.MAX_SAFE_INTEGER - 1_000_000;
 
   // Statement-coverage observers - not neccessary for just running
   // read(id: number): void {

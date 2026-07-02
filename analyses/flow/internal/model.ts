@@ -8,10 +8,7 @@ export default class Model {
       [
         [String, generated.INTRINSICS_String],
         [String.fromCharCode, generated.INTRINSICS_String_fromCharCode],
-        [
-          String.fromCodePoint,
-          generated.INTRINSICS_String_fromCodePoint,
-        ],
+        [String.fromCodePoint, generated.INTRINSICS_String_fromCodePoint],
         [String.raw, generated.INTRINSICS_String_raw],
         [String.prototype.at, generated.INTRINSICS_String_prototype_at],
         [String.prototype.charAt, generated.INTRINSICS_String_prototype_charAt],
@@ -157,10 +154,7 @@ export default class Model {
           Array.prototype.includes,
           generated.INTRINSICS_Array_prototype_includes,
         ],
-        [
-          Array.prototype.indexOf,
-          generated.INTRINSICS_Array_prototype_indexOf,
-        ],
+        [Array.prototype.indexOf, generated.INTRINSICS_Array_prototype_indexOf],
         [Array.prototype.join, generated.INTRINSICS_Array_prototype_join],
         [
           Array.prototype.lastIndexOf,
@@ -198,7 +192,6 @@ export default class Model {
         ],
         [Array.prototype.unshift, generated.INTRINSICS_Array_prototype_unshift],
         [Array.prototype.with, generated.INTRINSICS_Array_prototype_with],
-
       ] as [Function | undefined, Function][]
     ).filter((entry): entry is [Function, Function] => entry[0] !== undefined),
   );

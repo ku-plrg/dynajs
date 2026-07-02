@@ -36,4 +36,4 @@
 //   - String.prototype.replace(/re/, ...) has no global-flag assertion, so it
 //     never calls `$.contains`.
 
-console.log("a.b.c".replaceAll(/\./g, "@"));
+console.log('a.b.c'.replaceAll(/\./g, '@'));

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Measure LOC of JS/TS files. Each file is stripped of comments and run through
-// prettier (same formatting for everyone) before non-blank lines are counted.
+// biome (same formatting for everyone) before non-blank lines are counted.
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -34,7 +34,7 @@ function scriptKindFor(file) {
   }
 }
 
-// Reprint the AST without comments; prettier normalizes the layout afterwards.
+// Reprint the AST without comments; biome normalizes the layout afterwards.
 function stripComments(source, file) {
   const sourceFile = ts.createSourceFile(
     file,
@@ -50,19 +50,25 @@ function stripComments(source, file) {
   return printer.printFile(sourceFile);
 }
 
-// Resolve the project-local prettier so the script works when run directly
+// Resolve the project-local biome so the script works when run directly
 // (node scripts/loc.mjs ...), not only via npm where node_modules/.bin is on PATH.
-const PRETTIER_BIN = path.join(import.meta.dirname, '..', 'node_modules', '.bin', 'prettier');
+const BIOME_BIN = path.join(
+  import.meta.dirname,
+  '..',
+  'node_modules',
+  '.bin',
+  'biome',
+);
 
-function prettierFormat(code, file) {
-  const res = spawnSync(PRETTIER_BIN, ['--stdin-filepath', file], {
+function biomeFormat(code, file) {
+  const res = spawnSync(BIOME_BIN, ['format', `--stdin-file-path=${file}`], {
     input: code,
     encoding: 'utf8',
     maxBuffer: 128 * 1024 * 1024,
   });
   if (res.error) throw res.error;
   if (res.status !== 0) {
-    throw new Error((res.stderr || '').trim() || `prettier exited ${res.status}`);
+    throw new Error((res.stderr || '').trim() || `biome exited ${res.status}`);
   }
   return res.stdout;
 }
@@ -109,7 +115,9 @@ function main() {
   for (const file of files) {
     const rel = path.relative(process.cwd(), file) || file;
     try {
-      const loc = countLoc(prettierFormat(stripComments(fs.readFileSync(file, 'utf8'), file), file));
+      const loc = countLoc(
+        biomeFormat(stripComments(fs.readFileSync(file, 'utf8'), file), file),
+      );
       total += loc;
       rows.push({ rel, loc: String(loc) });
     } catch (err) {
@@ -117,7 +125,11 @@ function main() {
     }
   }
 
-  const locWidth = Math.max(3, ...rows.map((r) => r.loc.length), String(total).length);
+  const locWidth = Math.max(
+    3,
+    ...rows.map((r) => r.loc.length),
+    String(total).length,
+  );
   for (const r of rows) {
     console.log(`${r.loc.padStart(locWidth)}  ${r.rel}`);
     if (r.note) console.log(`${' '.repeat(locWidth)}  ${chalk.dim(r.note)}`);

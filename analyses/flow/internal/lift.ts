@@ -34,7 +34,7 @@ class ProxiedPrimitive {
       return this.SymbolIterator.bind(this);
     }
   }
-  
+
   SymbolIterator() {
     if (typeof this.value === 'string') {
       return this.value[Symbol.iterator]();

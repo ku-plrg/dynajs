@@ -449,19 +449,33 @@ export abstract class FlowAnalysis<Info>
 
     // MathOps
     min: (...xs) => {
-      const v = ReflectApply(Math.min, undefined, xs.map((x) => this.unlift(x) as number)) as number;
+      const v = ReflectApply(
+        Math.min,
+        undefined,
+        xs.map((x) => this.unlift(x) as number),
+      ) as number;
       return this.lift(
         v,
         this.minInfo?.(xs.map((x) => this.valued(x))) ??
-          this.defaultInfo(v, xs.map((x) => this.valued(x))),
+          this.defaultInfo(
+            v,
+            xs.map((x) => this.valued(x)),
+          ),
       );
     },
     max: (...xs) => {
-      const v = ReflectApply(Math.max, undefined, xs.map((x) => this.unlift(x) as number)) as number;
+      const v = ReflectApply(
+        Math.max,
+        undefined,
+        xs.map((x) => this.unlift(x) as number),
+      ) as number;
       return this.lift(
         v,
         this.maxInfo?.(xs.map((x) => this.valued(x))) ??
-          this.defaultInfo(v, xs.map((x) => this.valued(x))),
+          this.defaultInfo(
+            v,
+            xs.map((x) => this.valued(x)),
+          ),
       );
     },
     abs: (x) => this.numOp(Math.abs(this.unlift(x) as number), [x]),
@@ -641,15 +655,15 @@ export abstract class FlowAnalysis<Info>
   } satisfies SpecRuntime;
 
   condition(id: number, _op: string, value: unknown): { result: unknown } {
-  if (_op !== 'model') this.siteResolver.reportId(id);
-  // is this correct...
-  const cond = this.$.condition(
-    id,
-    value as Lifted<unknown> as Lifted<boolean>,
-  );
-  const raw = this.$.value(cond);
-  return { result: raw };
-}
+    if (_op !== 'model') this.siteResolver.reportId(id);
+    // is this correct...
+    const cond = this.$.condition(
+      id,
+      value as Lifted<unknown> as Lifted<boolean>,
+    );
+    const raw = this.$.value(cond);
+    return { result: raw };
+  }
 
   classHeritage(_id: number, value: unknown): { result: unknown } {
     return { result: this.$.value(value as Lifted<unknown>) };
@@ -917,7 +931,12 @@ export abstract class FlowAnalysis<Info>
     const modelFn = Model.ofBuiltin(f);
     return this.siteResolver.withBuiltinSite(
       this.siteResolver.builtinName(f),
-      () => ReflectApply(modelFn as Function, undefined, concatList([this.$, base], args)),
+      () =>
+        ReflectApply(
+          modelFn as Function,
+          undefined,
+          concatList([this.$, base], args),
+        ),
     ) as Lifted<unknown>;
   }
 

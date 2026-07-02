@@ -93,7 +93,8 @@ export class BoundaryEscape {
    * arms it too). */
   markEscapableLiteral(value: unknown): void {
     if (typeof value !== 'object' || value === null) return;
-    if (this.containersMayHoldLifted && this.mayHaveInstrumentedCoercion) return;
+    if (this.containersMayHoldLifted && this.mayHaveInstrumentedCoercion)
+      return;
     const keys = ReflectOwnKeys(value);
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i];
@@ -229,7 +230,8 @@ export class BoundaryEscape {
    * valueOf/toString already return raw. The shadow is an own property,
    * restored (deleted or reset) by restore(). */
   private wrapCoercion(v: unknown, log: EscapeRecord[]): void {
-    if (v === null || (typeof v !== 'object' && typeof v !== 'function')) return;
+    if (v === null || (typeof v !== 'object' && typeof v !== 'function'))
+      return;
     const obj = v as object;
     const keys = BoundaryEscape.COERCION_KEYS;
     for (let i = 0; i < keys.length; i++) {
@@ -246,7 +248,12 @@ export class BoundaryEscape {
       const unlift = this.unlift;
       const lift = this.lift;
       const wrapper = function (this: unknown, ...a: unknown[]): unknown {
-        return unlift(fn.apply(this, a.map((x) => lift(x))));
+        return unlift(
+          fn.apply(
+            this,
+            a.map((x) => lift(x)),
+          ),
+        );
       };
       const prev = ObjectGetOwnPropertyDescriptor(obj, key);
       try {
@@ -275,7 +282,8 @@ export class BoundaryEscape {
    * Plain arrays/Map/Set keep their native @@iterator and are handled by the
    * element strip in escapeInto / the Map-Set walk. */
   private wrapIterable(v: unknown, log: EscapeRecord[]): void {
-    if (v === null || (typeof v !== 'object' && typeof v !== 'function')) return;
+    if (v === null || (typeof v !== 'object' && typeof v !== 'function'))
+      return;
     const obj = v as Record<string | symbol, any>;
     let atIter: unknown;
     try {
@@ -314,7 +322,9 @@ export class BoundaryEscape {
     // returns (fresh per call, so its method shadows need no restore).
     if (isInstrumentedFn(atIter)) {
       this.mayHaveInstrumentedCoercion = true; // backstop: arm the nested walk
-      const origIter = atIter as (...a: unknown[]) => Record<string | symbol, any>;
+      const origIter = atIter as (
+        ...a: unknown[]
+      ) => Record<string | symbol, any>;
       const wrapper = function (this: unknown, ...a: unknown[]): unknown {
         const it = origIter.apply(this, a);
         wrapIteratorMethods(it);
