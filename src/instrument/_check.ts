@@ -3,8 +3,14 @@
 import type * as Root from '../constant.js';
 import type * as Hooks from '../runtime/hooks.js';
 import type * as Constants from './constant.js';
+import type { PartialChecker } from './partial.js';
+
+type AssertNever<T extends never> = T;
 
 type HookName = keyof typeof Hooks;
+
+
+// check 1. constants
 
 // `D$.<name>` constants that are intentionally not hooks. Add here (with a reason)
 // if you introduce another non-hook D$ member; anything not listed is flagged.
@@ -28,8 +34,24 @@ type WiredHook = Exclude<SuffixOf<ConstantValue>, NonHookConstant>;
 type MissingConstant = Exclude<HookName, WiredHook>; // hook with no constant
 type StrayConstant = Exclude<WiredHook, HookName>; // constant naming a non-hook
 
-type AssertNever<T extends never> = T;
 type _NoMissingConstant = AssertNever<MissingConstant>;
 type _NoStrayConstant = AssertNever<StrayConstant>;
 
+// check 2. partial checker
+
+// PartialChecker members that are intentionally NOT hook gates. Add here (with a
+// reason) if you introduce another non-hook member; anything not listed is flagged.
+type NonHookGate = 'callbackHint' | 'shouldWrapThrow';
+
+// The gate names PartialChecker exposes (everything but the non-hook members).
+type GateName = Exclude<keyof PartialChecker, NonHookGate>;
+
+type MissingGate = Exclude<HookName, GateName>; // hook with no gate
+type StrayGate = Exclude<GateName, HookName>; // gate naming a non-hook
+
+type _NoMissingGate = AssertNever<MissingGate>;
+type _NoStrayGate = AssertNever<StrayGate>;
+
+
 export {};
+

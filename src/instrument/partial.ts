@@ -2,7 +2,7 @@
 // adaptive instrumentation: parse analysis file to determine needed hooks
 // -----------------------------------------------------------------------------
 import type { Analysis } from '../types/analysis.js';
-import type * as acorn from 'acorn';
+import type * as Hooks from '../runtime/hooks.js';
 
 type Unpartial<T> = {
   [K in keyof T]-?: T[K];
@@ -105,66 +105,38 @@ export const callbackHintEmpty: Record<keyof Unpartial<CallbacksOnly>, false> =
     Object.keys(callbackHintFull).map((k) => [k, false]),
   ) as Record<keyof Unpartial<CallbacksOnly>, false>;
 
+// Every getter/method below names a runtime hook exported from runtime/hooks.ts
+// (D$.<name>): the gate answers "must this hook be emitted for the requested
+// callbacks?". The 1:1 with the hook surface is enforced at the bottom of the file
+// (see `_NoMissingGate` / `_NoStrayGate`, mirroring src/instrument/_check.ts).
+//
+// Three shapes of gate:
+//   - primary — a real callbackHint disjunction, consulted at the emit site.
+//   - delegating — a hook grouped with a primary (e.g. `M`/`Mp` ride `F`, `Fx`
+//     rides `Fe`): the instrumenter gates the whole family on the primary.
+//   - always-on — a hook emitted unconditionally (its getter is `true`), kept only
+//     to hold the 1:1; the instrumenter never reads it.
 export class PartialChecker {
   callbackHint: CallbackHint;
   constructor(callbackHint: CallbackHint | undefined) {
     this.callbackHint = callbackHint ?? callbackHintFull;
   }
 
+  // Not a hook: whether a function/script body needs a try/catch to propagate an
+  // uncaught exception out to functionExit/scriptExit. Consumers: X, Ce, Fx.
   get shouldWrapThrow() {
-    // hooks using uncaughtException: X, Ce, Sx, Fx;
-    // consumers of uncaughtException
     return this.callbackHint.functionExit || this.callbackHint.scriptExit;
   }
 
-  get declare() {
-    return this.callbackHint.declare;
-  }
-  get scriptEnter() {
+  // --- script ---
+  get Se() {
     return this.callbackHint.scriptEnter;
   }
-  get scriptExit() {
+  get Sx() {
     return this.callbackHint.scriptExit;
   }
 
-  get P() {
-    return (
-      this.callbackHint.putFieldPre ||
-      this.callbackHint.putField ||
-      this.callbackHint.memoryWrite
-    );
-  }
-  get G() {
-    return (
-      this.callbackHint.getFieldPre ||
-      this.callbackHint.getField ||
-      this.callbackHint.memoryAccess
-    );
-  }
-  get De() {
-    return this.callbackHint._deletePre || this.callbackHint._delete;
-  }
-  get Aw() {
-    return (
-      this.callbackHint._await ||
-      this.callbackHint._awaitResult ||
-      this.callbackHint.invokeFunPre ||
-      this.callbackHint.invokeFun ||
-      this.callbackHint.functionEnter ||
-      this.callbackHint.functionExit
-    );
-  }
-  get Y() {
-    return (
-      this.callbackHint._yield ||
-      this.callbackHint._resume ||
-      this.callbackHint.invokeFunPre ||
-      this.callbackHint.invokeFun ||
-      this.callbackHint.functionEnter ||
-      this.callbackHint.functionExit
-    );
-  }
-
+  // --- calls ---
   // Function-constructor interception (for instrumentCodePre/instrumentCode on
   // `new Function(...)` bodies) happens inside the invokeFun runtime helper,
   // so call sites must be wrapped whenever eval hooks are requested too.
@@ -176,57 +148,81 @@ export class PartialChecker {
       this.callbackHint.instrumentCode
     );
   }
-
-  literal(
-    node:
-      | acorn.Literal
-      | acorn.ArrayExpression
-      | acorn.ObjectExpression
-      | acorn.FunctionExpression
-      | acorn.ClassExpression
-      | acorn.TemplateLiteral
-      | acorn.ArrowFunctionExpression,
-  ): boolean {
-    if (this.callbackHint.literal) return true;
-
-    switch (node.type) {
-      case 'Literal':
-        if (this.callbackHint.numberLiteral && typeof node.value === 'number')
-          return true;
-        if (this.callbackHint.bigintLiteral && typeof node.value === 'bigint')
-          return true;
-        if (this.callbackHint.stringLiteral && typeof node.value === 'string')
-          return true;
-        if (this.callbackHint.booleanLiteral && typeof node.value === 'boolean')
-          return true;
-        if (this.callbackHint.nullLiteral && node.value === null) return true;
-        if (this.callbackHint.regexpLiteral && node.regex) return true;
-        break;
-      case 'ArrayExpression':
-        if (this.callbackHint.arrayLiteral) return true;
-        break;
-      case 'ObjectExpression':
-        if (this.callbackHint.objectLiteral) return true;
-        break;
-      case 'FunctionExpression':
-      case 'ArrowFunctionExpression':
-        if (this.callbackHint.functionLiteral) return true;
-        break;
-      case 'ClassExpression':
-        if (this.callbackHint.functionLiteral) return true;
-        break;
-      case 'TemplateLiteral':
-        if (this.callbackHint.functionLiteral) return true;
-        break;
-    }
-
-    return false;
+  get M() {
+    return this.F;
+  }
+  get Mp() {
+    return this.F;
+  }
+  // invokeFun callbacks also fire for tagged-template call sites (TF coerces to F)
+  get TF() {
+    return (
+      this.callbackHint.taggedTemplatePre ||
+      this.callbackHint.taggedTemplate ||
+      this.callbackHint.invokeFunPre ||
+      this.callbackHint.invokeFun
+    );
+  }
+  get TM() {
+    return this.TF;
+  }
+  get TMp() {
+    return this.TF;
   }
 
-  get W() {
-    return this.callbackHint.write || this.callbackHint.memoryWrite;
+  // --- functions ---
+  get Fe() {
+    return this.callbackHint.functionEnter || this.callbackHint.functionExit;
+  }
+  get Fx() {
+    return this.Fe;
+  }
+  get Re() {
+    return this.callbackHint._return;
+  }
+  get O() {
+    return this.callbackHint.forInOfObject;
   }
 
+  // --- expressions / spread ---
+  get E() {
+    return this.callbackHint.endExpression;
+  }
+  get Sp() {
+    return this.callbackHint.spread;
+  }
+
+  // --- member access ---
+  get G() {
+    return (
+      this.callbackHint.getFieldPre ||
+      this.callbackHint.getField ||
+      this.callbackHint.memoryAccess
+    );
+  }
+  get Gp() {
+    return this.G;
+  }
+  get P() {
+    return (
+      this.callbackHint.putFieldPre ||
+      this.callbackHint.putField ||
+      this.callbackHint.memoryWrite
+    );
+  }
+  get Pp() {
+    return this.P;
+  }
+  get De() {
+    return this.callbackHint._deletePre || this.callbackHint._delete;
+  }
+  // chain boundary (D$.Ch) is emitted only around an optional member / call /
+  // delete that is itself hooked — see needsChainBoundary.
+  get Ch() {
+    return this.G || this.F || this.De;
+  }
+
+  // --- operators ---
   get U() {
     return (
       this.callbackHint.unaryPre ||
@@ -245,8 +241,8 @@ export class PartialChecker {
       this.callbackHint.updateUnary
     );
   }
-  get Th() {
-    return this.callbackHint._throw;
+  get Up() {
+    return this.U;
   }
   get B() {
     return (
@@ -260,10 +256,6 @@ export class PartialChecker {
       this.callbackHint.bitwiseBinary ||
       this.callbackHint.switchCondition
     );
-  }
-
-  get R() {
-    return this.callbackHint.read || this.callbackHint.memoryAccess;
   }
   get C() {
     return (
@@ -279,37 +271,81 @@ export class PartialChecker {
       this.callbackHint.switchCondition
     );
   }
-  get Re() {
-    return this.callbackHint._return;
+  // a switch discriminant/case desugars to D$.C('switch', D$.B('===', …))
+  get Swl() {
+    return this.B || this.C;
   }
-  get forLoopRhsObj() {
-    return this.callbackHint.forInOfObject;
-  }
-  get E() {
-    return this.callbackHint.endExpression;
-  }
-  get Sp() {
-    return this.callbackHint.spread;
-  }
-  get Fe() {
-    return this.callbackHint.functionEnter || this.callbackHint.functionExit;
-  }
-  // invokeFun callbacks also fire for tagged-template call sites (TF coerces to F)
-  get TF() {
-    return (
-      this.callbackHint.taggedTemplatePre ||
-      this.callbackHint.taggedTemplate ||
-      this.callbackHint.invokeFunPre ||
-      this.callbackHint.invokeFun
-    );
-  }
-  get S() {
-    return this.callbackHint.scriptEnter || this.callbackHint.scriptExit;
+  get Swr() {
+    return this.B || this.C;
   }
 
+  // --- variables ---
+  get D() {
+    return this.callbackHint.declare;
+  }
+  get R() {
+    return this.callbackHint.read || this.callbackHint.memoryAccess;
+  }
+  get W() {
+    return this.callbackHint.write || this.callbackHint.memoryWrite;
+  }
+
+  // --- literals ---
+  // coarse like U/B: any literal-family callback turns the gate on, and the runtime
+  // L hook dispatches to the type-specific callback (numberLiteral/stringLiteral/…)
+  // by `typeof value`; a literal whose type callback is unimplemented no-ops there.
+  get L() {
+    return (
+      this.callbackHint.literal ||
+      this.callbackHint.numberLiteral ||
+      this.callbackHint.bigintLiteral ||
+      this.callbackHint.stringLiteral ||
+      this.callbackHint.booleanLiteral ||
+      this.callbackHint.nullLiteral ||
+      this.callbackHint.regexpLiteral ||
+      this.callbackHint.arrayLiteral ||
+      this.callbackHint.objectLiteral ||
+      this.callbackHint.functionLiteral
+    );
+  }
+
+  // --- control flow ---
+  get Th() {
+    return this.callbackHint._throw;
+  }
+  get Y() {
+    return (
+      this.callbackHint._yield ||
+      this.callbackHint._resume ||
+      this.callbackHint.invokeFunPre ||
+      this.callbackHint.invokeFun ||
+      this.callbackHint.functionEnter ||
+      this.callbackHint.functionExit
+    );
+  }
+  get Yr() {
+    return this.Y;
+  }
+  get Aw() {
+    return (
+      this.callbackHint._await ||
+      this.callbackHint._awaitResult ||
+      this.callbackHint.invokeFunPre ||
+      this.callbackHint.invokeFun ||
+      this.callbackHint.functionEnter ||
+      this.callbackHint.functionExit
+    );
+  }
+  get Awr() {
+    return this.Aw;
+  }
+
+  // --- class fields ---
   get Fi() {
     return this.callbackHint.fieldInit;
   }
+
+  // --- super ---
   get Su() {
     return this.callbackHint.superCallPre || this.callbackHint.superCall;
   }
@@ -319,18 +355,41 @@ export class PartialChecker {
     );
   }
   get Gs() {
-    return (
-      this.callbackHint.superGetFieldPre || this.callbackHint.superGetField
-    );
+    return this.callbackHint.superGetFieldPre || this.callbackHint.superGetField;
   }
   get Ps() {
-    return (
-      this.callbackHint.superPutFieldPre || this.callbackHint.superPutField
-    );
+    return this.callbackHint.superPutFieldPre || this.callbackHint.superPutField;
   }
+
+  // --- eval ---
   get Ev() {
     return (
       this.callbackHint.instrumentCodePre || this.callbackHint.instrumentCode
     );
+  }
+
+  // --- always-on hooks (emitted unconditionally; getters kept only for the 1:1
+  //     with runtime/hooks.ts, never read by the instrumenter) ---
+  // Hc: `extends E` is always unlifted so native class machinery sees a raw
+  //   constructor/null. Ce: catch-enter always clears uncaughtException. TL:
+  //   template concat. Lcs/Lcv: completion-value tracking. X: uncaught-exception
+  //   recording (module declaration chunks wrap unconditionally ⇒ gate is ⊤).
+  get Hc() {
+    return true;
+  }
+  get Ce() {
+    return true;
+  }
+  get TL() {
+    return true;
+  }
+  get Lcs() {
+    return true;
+  }
+  get Lcv() {
+    return true;
+  }
+  get X() {
+    return true;
   }
 }
