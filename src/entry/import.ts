@@ -6,7 +6,7 @@ import { getInstrumentedName, getStatName, log, writeFile } from '../utils.js';
 import { setBaseObj } from '../runtime/analysis.js';
 import { instrument } from '../instrument/main.js';
 import { checkAnalysisHooks } from './boot.js';
-import type { CallbackHint } from '../partial.js';
+import type { CallbackHint } from '../instrument/partial.js';
 import {
   getRuntimeOptions,
   printHelp,

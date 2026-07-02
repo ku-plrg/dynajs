@@ -1,7 +1,7 @@
 import { recursive } from 'acorn-walk';
 import { Scope } from './scope.js';
 import { visitors } from './visitor.js';
-import { PartialChecker, type CallbackHint } from '../partial.js';
+import { PartialChecker, type CallbackHint } from './partial.js';
 import type * as acorn from 'acorn';
 import type { PosMode } from '../constant.js';
 

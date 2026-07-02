@@ -275,7 +275,7 @@ export const visitors: RecursiveVisitors<State> = {
   },
   FunctionDeclaration: (node, state) => {
     if (
-      state.partial.declare &&
+      state.partial.D &&
       state.scope?.isLexicalScope() &&
       node.id != null
     ) {

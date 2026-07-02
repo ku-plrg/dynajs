@@ -2,7 +2,7 @@ import { createRequire as createVmRequire } from 'node:module';
 import { syncBuiltinESMExports } from 'node:module';
 import path from 'node:path';
 import { full } from 'acorn-walk';
-import type { CallbackHint } from '../partial.js';
+import type { CallbackHint } from '../instrument/partial.js';
 import { instrument } from '../instrument/main.js';
 import {
   getInstrumentedName,

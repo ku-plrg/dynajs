@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------------------
 // adaptive instrumentation: parse analysis file to determine needed hooks
 // -----------------------------------------------------------------------------
-import type { Analysis } from './types/analysis.js';
+import type { Analysis } from '../types/analysis.js';
 import type * as acorn from 'acorn';
 
 type Unpartial<T> = {

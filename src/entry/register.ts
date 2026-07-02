@@ -1,5 +1,5 @@
 import type { InitializeHook, LoadHook, ResolveHook } from 'node:module';
-import type { CallbackHint } from '../partial.js';
+import type { CallbackHint } from '../instrument/partial.js';
 import { instrument } from '../instrument/main.js';
 import { getInstrumentedName, getStatName, log, writeFile } from '../utils.js';
 import type { RuntimeOptions } from './options.js';

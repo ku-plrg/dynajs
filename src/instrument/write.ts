@@ -28,7 +28,7 @@ export function hasUseStrictDirective(body: readonly acorn.AnyNode[]): boolean {
 // -----------------------------------------------------------------------------
 
 export function logScriptEnter(state: State, program: acorn.Node): void {
-  if (!state.partial.scriptEnter) return;
+  if (!state.partial.Se) return;
   const { instrumentedPath: i, originalPath: o } = state;
   emitCallStmt(
     state,
@@ -40,7 +40,7 @@ export function logScriptEnter(state: State, program: acorn.Node): void {
 }
 
 export function logScriptExit(state: State, program: acorn.Node): void {
-  if (!state.partial.scriptExit) return;
+  if (!state.partial.Sx) return;
   emitCallStmt(state, LOG.SCRIPT_EXIT, String(newId(program)));
 }
 
@@ -477,7 +477,7 @@ export function logForInOfObject(
   expr: acorn.Expression,
   isForIn: boolean,
 ): void {
-  if (!state.partial.forLoopRhsObj) {
+  if (!state.partial.O) {
     state.walk(expr);
   } else {
     emitCall(
@@ -898,7 +898,7 @@ export function logDeclare(
     | acorn.Program
     | acorn.Function,
 ): void {
-  if (!state.partial.declare) return;
+  if (!state.partial.D) return;
   const vars = state.scope?.vars;
   if (!vars) return;
   const spreadVars = state.scope?.spreadVars;
@@ -1010,7 +1010,7 @@ export function logLiteral(
     | acorn.ArrowFunctionExpression,
   body?: () => void,
 ): void {
-  const enabled = state.partial.literal(literal);
+  const enabled = state.partial.L;
   if (!enabled) {
     // to handle iife like (function(){})() or (function () {}).call(...)
     const isFunctionLike =
@@ -1035,12 +1035,7 @@ export function writeQuasiLiteral(
   refNode: acorn.Node,
   value: string,
 ): void {
-  const synthetic = {
-    type: 'Literal',
-    value,
-    raw: JSON.stringify(value),
-  } as unknown as acorn.Literal;
-  if (state.partial.literal(synthetic)) {
+  if (state.partial.L) {
     emitCall(
       state,
       LOG.LITERAL,
