@@ -289,3 +289,7 @@ export const getLocFromNode = (
     node.loc.end.column + 1,
   ];
 };
+
+export const spec = {
+  ToString: (x: any): string => String(new String(x))
+}

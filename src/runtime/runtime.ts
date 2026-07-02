@@ -1,6 +1,5 @@
-import * as spec from '../spec.js';
 import type { Analysis } from '../types/analysis.js';
-import { CAPTURED } from '../utils.js';
+import { CAPTURED, spec } from '../utils.js';
 
 // -----------------------------------------------------------------------------
 // runtime state shared by the hooks
