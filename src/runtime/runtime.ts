@@ -9,6 +9,7 @@ import { CAPTURED, spec } from '../utils.js';
 export const chainSkip = Symbol('D$.chainSkip');
 
 // stack to store return values
+/** @dynajs-meta state balanced-stack */
 export const returnStack: any[] = [];
 
 // Mutable runtime state the hooks reassign. It lives behind a holder object so
@@ -19,11 +20,15 @@ export const rt: {
   lastComputedValue: any;
   switchLeft: any;
 } = {
+  /** @dynajs-meta state set-drain */
   uncaughtException: undefined,
+  /** @dynajs-meta state scratch */
   lastComputedValue: undefined,
+  /** @dynajs-meta state save-restore */
   switchLeft: undefined,
 };
 
+/** @dynajs-meta state balanced-stack */
 const switchStack: any[] = [];
 // Sentinels so the *native* `switch` branches on the value-aware `===` result
 // (computed via B/C) rather than comparing lifted operands by proxy identity:
