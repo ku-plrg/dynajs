@@ -5,8 +5,9 @@ import * as utils from './utils.js';
 import * as spec from './spec.js';
 import { instrument } from './instrument/main.js';
 import { StateOption } from './instrument/state.js';
-import { CAPTURED } from './captured.js';
 import { INSTRUMENTED_MARK } from './constant.js';
+
+const CAPTURED = utils.CAPTURED;
 
 // sentinel symbol for optional chain short-circuit propagation
 const chainSkip = Symbol('D$.chainSkip');
