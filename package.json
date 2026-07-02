@@ -40,6 +40,7 @@
     "check:partial": "node ./tools/partial-check/run.mjs",
     "check:partial:test": "node ./tools/partial-check/run.mjs --test",
     "check:partial:gen": "node ./tools/partial-check/run.mjs --gen",
+    "check:partial:emit": "node ./tools/partial-check/run.mjs --emit",
     "pretest": "npm run build",
     "test": "node ./scripts/run-tests.mjs",
     "test:watch": "npm run test -- --watch",

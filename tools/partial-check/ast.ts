@@ -27,6 +27,28 @@ export function partialGetter(node: ts.Node): string | null {
 export const isNot = (e: ts.Expression): e is ts.PrefixUnaryExpression =>
   ts.isPrefixUnaryExpression(e) && e.operator === ts.SyntaxKind.ExclamationToken;
 
+// All getter names mentioned by a condition (which getters GATE the guarded
+// emit), resolving `const` aliases and ignoring boolean structure/polarity — so
+// `!enabled` (enabled = state.partial.B) yields B, and `!Fi && !computed` yields
+// Fi (unlike a BDD, this doesn't collapse to ⊤ on the non-partial `computed`).
+export function partialAtomsIn(
+  e: ts.Node,
+  checker: ts.TypeChecker,
+  out = new Set<string>(),
+): Set<string> {
+  const g = partialGetter(e);
+  if (g) {
+    out.add(g);
+    return out;
+  }
+  if (ts.isIdentifier(e)) {
+    const init = constInit(e, checker);
+    if (init) return partialAtomsIn(init, checker, out);
+  }
+  ts.forEachChild(e, (c) => partialAtomsIn(c, checker, out));
+  return out;
+}
+
 // A `@dynajs-meta <attr> <value>` custom doc annotation.
 export interface Meta {
   attr: string;

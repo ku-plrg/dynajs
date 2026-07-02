@@ -36,8 +36,13 @@ are two directions of the same analysis).
 ```
 npm run check:partial        # SYNC + P1 coverage + P2 state invariants
 npm run check:partial:test   # unit tests for the BDD domain (node:test)
-npm run check:partial:gen    # generate PartialChecker getters, diff vs current
+npm run check:partial:gen    # derive PartialChecker getters, diff vs current
+npm run check:partial:emit   # emit a full regenerated src/instrument/partial.ts
 ```
+
+`check:partial:emit` prints to stdout (a proposal; it does not overwrite the
+file). Redirect with `node` directly (not `npm run`, whose banner pollutes
+stdout): `node ./tools/partial-check/run.mjs --emit > /tmp/partial.gen.ts`.
 
 All three go through `run.mjs`, which bundles the (TypeScript) tool with esbuild
 (it depends on the `typescript` compiler API) and runs it against the repo root.
@@ -221,49 +226,52 @@ bug to fix or an accepted non-goal is a semantics decision (see §8).
 
 ## 7. What the generator does today
 
-`npm run check:partial:gen` (v1, **coverage closure only**) reproduces **16
-getters exactly** and reports 7 deltas that are precisely the P1 fixes as getter
-edits, e.g. `U: +binary-family` (fixes `x++`→binary), `G/De: +condition,
-optionalChain`, `F: +super*,+optionalChain`, `Sm: +superGetField(Pre),
-+optionalChain`. It also emits a concrete getter body, e.g.:
+The generator (dual of the checker) derives each getter from the same facts.
+`check:partial:gen` reports the derivation vs the current file; `check:partial:emit`
+emits a full regenerated `src/instrument/partial.ts`.
 
-```ts
-get G() {
-  return (
-    this.callbackHint.condition ||
-    this.callbackHint.getField ||
-    this.callbackHint.getFieldPre ||
-    this.callbackHint.memoryAccess ||
-    this.callbackHint.optionalChain
-  );
-}
-```
+Getter shapes are handled per the refactored file: **primary** getters get a
+generated disjunction; **delegating** (`return this.F`) and **always-on**
+(`return true`) getters and the `shouldWrapThrow` structural gate are preserved
+verbatim (the emitter splices only primary return-expressions into the current
+source, so imports/types/comments/data are untouched). A primary's callback set =
+the coverage closure (necessary carriers) ∪ the current getter's terms, so
+coverage-fixable findings appear as *added* callbacks and non-derivable
+state-closure terms (e.g. `Aw`/`Y`'s frame deps) are preserved.
 
-Generating the *correct* `partial.ts` is the same thing as applying the checker's
-fixes — with two caveats spelled out in §8.
+**Round-trip proof (empirical):** swapping the emitted file in and re-running the
+checker gives **0 P1** findings (down from 16), leaving only the P2 `switchLeft`
+finding (which needs a state-closure getter — see §8). So the generated file is
+*coverage-correct by construction*.
+
+Notably `super*` is fixed **without** an instrumenter change: the emit sits under
+both `logCall`'s `if(!F)` and the `Sm` guard, so `hookGetters(Sm) = {F, Sm}` and
+the generator adds `super*` to **both** `getter(F)` and `getter(Sm)`; then
+`superMethodCall` alone turns on both, satisfying the `F ∧ Sm` gate.
 
 ## 8. Limitations & what is not done yet
 
-### Generator is incomplete (v1)
-- Only the **coverage closure** is generated. The **state-closure** getters are
-  not yet derived: `shouldWrapThrow` (= `functionExit ∨ scriptExit`, from the
-  `set-drain` obligation on `uncaughtException`), the `Fe ⊇ (B∨C)` dependency
-  (from the `switchLeft` `save-restore` obligation), and the `Aw`/`Y` frame
-  dependencies. Getters `shouldWrapThrow, Aw, Y, E, Fi, S, forLoopRhsObj` are
-  currently not produced by the generator.
-- It does not yet **emit a full `src/partial.ts` file** (getters +
-  `callbackHintFull`/`callbackHintEmpty`).
-- No **round-trip proof**: the goal is `generate → check == 0 findings`
-  (correct-by-construction). Not wired yet.
+### Generator: what's left
+- The emitter produces a full file and round-trips to **0 P1** (§7). What it does
+  NOT yet derive is the **state closure** — the getter terms that come from P2
+  obligations rather than coverage: `getter(Fe) ⊇ (B∨C)` (from `switchLeft`
+  `save-restore`, the one remaining finding), `shouldWrapThrow` (from
+  `uncaughtException` `set-drain`), and the `Aw`/`Y` frame deps. The emitter
+  currently PRESERVES these from the existing file (union), so behaviour is kept,
+  but it cannot yet regenerate them from scratch.
+- Formatting is minimal; run `prettier` on the emitted file.
 
-### Fixing the findings requires decisions the tool can't make
-- The `optionalChain` fix (adding it to `getter(G/M/F/De)`) makes it coverable
-  but **over-instruments** — implementing `optionalChain` would then instrument
-  *every* property get/call. Fix vs document-as-non-goal is a policy call.
-- The `super*` findings are only *partly* a `partial.ts` problem. The gate is
-  `F ∧ Sm` because the super branch is **nested inside `logCall`'s `if(!F)`** —
-  fixing it also requires an **instrumenter** change (restructure `logCall`), not
-  just a getter edit.
+### Adopting the generated file is a policy call
+- The coverage fixes over-instrument: adding `optionalChain` to `getter(G/M/F/De)`
+  (and `super*` to `getter(F)`) makes those callbacks coverable but means
+  implementing `optionalChain` (or `superMethodCall`) alone now instruments
+  *every* get/call. "0 P1 by over-instrumenting" vs "document as non-goal" is the
+  user's decision — the emitter shows the maximally-sound version.
+- (Historical note; now resolved) The `super*` findings were thought to also need
+  an instrumenter change. It doesn't: the gate is `F ∧ Sm` because the super
+  branch is nested inside `logCall`'s `if(!F)`, so `hookGetters(Sm) = {F, Sm}` and
+  the generator adds `super*` to both `getter(F)` and `getter(Sm)` — turning on
+  `superMethodCall` alone satisfies `F ∧ Sm`. No `logCall` restructure needed.
 
 ### Remaining hand-maintained input
 - The **FALLBACK recovery table** (`{M,Mp,TM,TMp → G,Gp}`) in `check/coverage.ts`
@@ -311,10 +319,12 @@ fixes — with two caveats spelled out in §8.
 
 ## 9. Suggested next steps
 
-1. **Complete the generator**: add the state-closure getters, emit a full
-   `src/partial.ts`, and prove `generate → check == 0`.
-2. **Triage the findings** into fix vs documented non-goal; for the `super*`
-   case, decide on the accompanying `logCall` restructure.
+1. **State closure in the generator**: derive `getter(Fe) ⊇ (B∨C)` (from the
+   `switchLeft` `save-restore` obligation) so `check:partial:emit` round-trips to
+   **0 P1 + 0 P2**, not just 0 P1. Same machinery gives `shouldWrapThrow`.
+2. **Triage / adopt**: decide whether to adopt the emitted (maximally-sound,
+   over-instrumenting) getters or document `optionalChain`/`super*`-only as
+   non-goals.
 3. **Auto-derive FALLBACK** (walk-vs-verbatim from the gate-false branch),
    removing the last hand table.
 4. **Wire into `npm test`** behind a findings snapshot; add a `tools/tsconfig`.

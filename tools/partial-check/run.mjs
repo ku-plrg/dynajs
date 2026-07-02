@@ -10,9 +10,16 @@ const mode = process.argv.includes('--test')
   ? 'test'
   : process.argv.includes('--gen')
     ? 'gen'
-    : 'check';
+    : process.argv.includes('--emit')
+      ? 'emit'
+      : 'check';
 const here = new URL('.', import.meta.url).pathname;
-const entryFile = { test: 'domain/domain.test.ts', gen: 'gen.ts', check: 'main.ts' }[mode];
+const entryFile = {
+  test: 'domain/domain.test.ts',
+  gen: 'gen.ts',
+  emit: 'emit-main.ts',
+  check: 'main.ts',
+}[mode];
 const entry = join(here, entryFile);
 const out = join(tmpdir(), `partial-check.${mode}.cjs`);
 

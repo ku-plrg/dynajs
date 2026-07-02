@@ -4,10 +4,8 @@ import { constHookMap } from './gate.js';
 import { loadGetters } from './extract/getters.js';
 import { loadInvokes } from './extract/invokes.js';
 import { generateGetters } from './generate/getters.js';
-import { BoolDomain } from './domain/lattice.js';
 
 const L = load(process.argv[2] || process.cwd());
-const d = new BoolDomain();
 const constHook = constHookMap(L);
 const emitHook = (n: ts.Node): string | null =>
   ts.isPropertyAccessExpression(n) &&
@@ -17,9 +15,9 @@ const emitHook = (n: ts.Node): string | null =>
     ? constHook.get(n.name.text)!
     : null;
 
-const { universe, req } = loadGetters(L);
+const { universe, req, shape } = loadGetters(L);
 const { fires } = loadInvokes(L, universe);
-const { getterCallbacks, stateGatedHooks } = generateGetters(L, emitHook, fires, d);
+const { getterCallbacks, stateGatedHooks } = generateGetters(L, emitHook, fires);
 
 const eq = (a: Set<string>, b: Set<string>) =>
   a.size === b.size && [...a].every((x) => b.has(x));
@@ -49,11 +47,18 @@ if (deltas.length) {
   deltas.forEach((d) => console.log(d));
 }
 
-// getters that are purely state-consistency (not coverage) — need the state closure
+// delegating (`return this.F`) and always-on (`return true`) getters are emitted
+// trivially from their shape; only PRIMARY getters not reproduced here are real
+// gaps needing the state closure (e.g. shouldWrapThrow).
 const coverageGetters = new Set(getters);
-const stateOnly = [...req.keys()].filter((g) => !coverageGetters.has(g)).sort();
-console.log(`\n   state-closure getters (not yet generated here): ${stateOnly.join(', ') || '(none)'}`);
-console.log(`   hooks with no lexical getter (always/state-gated): ${stateGatedHooks.sort().join(', ')}`);
+const delegating = [...req.keys()].filter((g) => shape.get(g) === 'delegating').sort();
+const alwaysOnG = [...req.keys()].filter((g) => shape.get(g) === 'always-on').sort();
+const primaryGaps = [...req.keys()]
+  .filter((g) => shape.get(g) === 'primary' && !coverageGetters.has(g))
+  .sort();
+console.log(`\n   delegating getters (emit \`return this.<primary>\`): ${delegating.join(', ')}`);
+console.log(`   always-on getters (emit \`return true\`): ${alwaysOnG.join(', ')}`);
+console.log(`   PRIMARY gaps needing the state closure: ${primaryGaps.join(', ') || '(none)'}`);
 
 // show one concrete generated getter body
 const sample = 'G';

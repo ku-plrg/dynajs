@@ -1,9 +1,7 @@
 import ts from 'typescript';
-import { walk } from '../ast.js';
+import { walk, partialAtomsIn } from '../ast.js';
 import { Loaded } from '../program.js';
 import { Fires } from '../extract/invokes.js';
-import { BoolDomain } from '../domain/lattice.js';
-import { guardBdd } from '../solve/intra.js';
 
 // Which callbacks must turn a getter on = the coverage closure: for each hook H
 // gated by getter g, the callbacks for which H is a NECESSARY carrier (fired
@@ -15,18 +13,18 @@ const FALLBACK: Record<string, string[]> = {
   M: ['G', 'Gp'], Mp: ['G', 'Gp'], TM: ['G', 'Gp'], TMp: ['G', 'Gp'],
 };
 
-// hook -> the getter names that lexically gate its emit. Uses guardBdd (which
-// resolves `const enabled = state.partial.B` aliases via the checker) and takes
-// the support of the reach condition. Unguarded emits (module wrapper, always-on
-// Hc/Ce/TL) contribute nothing — those hooks aren't getter-gated.
+// hook -> the getter names that lexically gate its emit. Collects the partial
+// atoms of every enclosing `if` condition whose then/else branch contains the
+// emit, plus preceding early-exit guards. Unguarded emits (module wrapper,
+// always-on Hc/Ce/TL) contribute nothing — those hooks aren't getter-gated.
 function hookGetters(
   L: Loaded,
   emitHook: (n: ts.Node) => string | null,
-  d: BoolDomain,
 ): Map<string, Set<string>> {
   const out = new Map<string, Set<string>>();
-  const add = (h: string, cond: ReturnType<typeof d.atom>) => {
-    for (const g of d.support(cond)) (out.get(h) ?? out.set(h, new Set()).get(h)!).add(g);
+  const add = (h: string, cond: ts.Expression) => {
+    for (const g of partialAtomsIn(cond, L.checker))
+      (out.get(h) ?? out.set(h, new Set()).get(h)!).add(g);
   };
   for (const file of ['/instrument/write.ts', '/instrument/visitor.ts']) {
     const sf = L.sf(file);
@@ -36,19 +34,20 @@ function hookGetters(
       let cur: ts.Node = n;
       while (cur.parent && !ts.isFunctionDeclaration(cur)) {
         const p = cur.parent;
-        if (ts.isIfStatement(p) && p.thenStatement === cur)
-          add(hook, guardBdd(p.expression, true, d, L.checker));
+        // emit is inside this if's then- or else-branch → its condition gates it
+        if (ts.isIfStatement(p) && (p.thenStatement === cur || p.elseStatement === cur))
+          add(hook, p.expression);
+        // preceding early-exit guards in the enclosing block
         if (ts.isBlock(p)) {
           const idx = p.statements.indexOf(cur as ts.Statement);
           for (let i = 0; i < idx; i++) {
             const st = p.statements[i];
+            if (!ts.isIfStatement(st)) continue;
             let exits = false;
-            if (ts.isIfStatement(st))
-              walk(st.thenStatement, (x) => {
-                if (ts.isReturnStatement(x) || ts.isThrowStatement(x)) exits = true;
-              });
-            if (exits && ts.isIfStatement(st))
-              add(hook, guardBdd(st.expression, false, d, L.checker));
+            walk(st.thenStatement, (x) => {
+              if (ts.isReturnStatement(x) || ts.isThrowStatement(x)) exits = true;
+            });
+            if (exits) add(hook, st.expression);
           }
         }
         cur = p;
@@ -67,9 +66,8 @@ export function generateGetters(
   L: Loaded,
   emitHook: (n: ts.Node) => string | null,
   fires: Fires,
-  d: BoolDomain,
 ): GenResult {
-  const hg = hookGetters(L, emitHook, d);
+  const hg = hookGetters(L, emitHook);
 
   // necessary-carrier callbacks of a hook (coverage closure)
   const requiredOf = (H: string): Set<string> => {
