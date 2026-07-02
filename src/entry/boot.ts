@@ -1,5 +1,5 @@
-import { type CallbackHint, callbackHintEmpty } from './partial.js';
-import { warn } from './utils.js';
+import { type CallbackHint, callbackHintEmpty } from '../partial.js';
+import { warn } from '../utils.js';
 
 export function checkAnalysisHooks(fullOpt: boolean): CallbackHint | undefined {
   if (fullOpt) return undefined;

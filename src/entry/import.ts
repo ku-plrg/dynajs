@@ -5,7 +5,7 @@ import Module from 'module';
 import { getInstrumentedName, getStatName, log, writeFile } from '../utils.js';
 import { setBaseObj } from '../analysis.js';
 import { instrument } from '../instrument/main.js';
-import { checkAnalysisHooks } from '../boot.js';
+import { checkAnalysisHooks } from './boot.js';
 import type { CallbackHint } from '../partial.js';
 import {
   getRuntimeOptions,
