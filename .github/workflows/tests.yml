@@ -7,7 +7,7 @@ on:
   pull_request:
 
 jobs:
-  pytest:
+  test:
     runs-on: ubuntu-latest
 
     steps:
@@ -17,21 +17,10 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '23'
+          node-version: '24'
 
       - name: Install npm dependencies
         run: npm install
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Run pytest
-        run: |
-          pytest -vv
+      - name: Run tests
+        run: npm test

@@ -49,12 +49,6 @@ lerna-debug.log*
 *_jalangi_.js
 *_jalangi_.json
 
-# pytest cache
-.pytest_cache/
-
-# pytest results
-.cache/
-
 # coverage reports
 .coverage
 coverage.xml

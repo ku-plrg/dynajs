@@ -67,49 +67,33 @@ Run `./djx run --help` for the full list.
 
 ### Testing
 
-You can run the test suite with the following command:
+The suite is built on Node's built-in [test runner](https://nodejs.org/api/test.html)
+(no Python required). The `pretest` hook builds first, so every variant is just
+`npm test` with different flags:
 
 ```shell
-./run-tests.sh
+npm test                    # run the regression suite
+npm test -- --name class    # only tests whose name matches a pattern (-n)
+npm test -- --watch         # re-run on change (-w)
+npm test -- --update        # rewrite mismatching .out snapshots (-u)
+npm test -- --all           # regression + taint + concolic
 ```
 
-To run npm-based workflows with dynajs, use the new wrapper style:
+Cases are discovered from the `tests/` fixture directories; shared helpers live
+in `tests/support/`, and `scripts/run-tests.mjs` parses the flags above. The
+`test:*` scripts are thin aliases that delegate through `npm run test --`, so the
+build always runs exactly once via `pretest`:
+
+```shell
+npm run test:watch      # npm run test -- --watch
+npm run test:update     # npm run test -- --update
+npm run test:taint      # npm run test -- --taint
+npm run test:concolic   # npm run test -- --concolic
+npm run test:all        # npm run test -- --all
+```
+
+To run npm-based workflows with dynajs, use the wrapper style:
 
 ```shell
 DYNAJS_OPTIONS='--analysis ./samples/TraceAll.js' ./dynajs npm run test
-```
-
-#### Watching Mode
-
-If you want to turn on watching mode for tests, you can use:
-
-```shell
-./run-tests.sh --watch
-```
-
-or
-
-```shell
-./run-tests.sh -W
-```
-
-#### Output Update Mode
-
-If you want to update expected outputs for tests, you can use:
-
-```shell
-./run-tests.sh --update
-```
-
-or
-
-```shell
-./run-tests.sh -U
-```
-
-It is based on [`pytest`](https://docs.pytest.org/), so you can also use any
-`pytest` options. If you want to see more options, you can run:
-
-```shell
-./run-tests.sh --help
 ```
