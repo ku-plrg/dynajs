@@ -263,6 +263,22 @@ interface FullAnalysis {
   endExpression: (id: number, value: any) => void;
 
   // ---------------------------------------------------------------------------
+  // Spread element
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Called when a spread element (`...value`) is evaluated in an array literal
+   * (`[...value]`), call arguments (`f(...value)`), or object literal
+   * (`{...value}`), before the value is spread natively.
+   *
+   * @param id - Source location identifier.
+   * @param value - The value being spread (an iterable for array/call spread,
+   *                any object for object spread).
+   * @returns `{ result }` to replace the value that gets spread, or `void`.
+   */
+  spread: (id: number, value: any) => { result: any } | void;
+
+  // ---------------------------------------------------------------------------
   // Property access — Pre/Post pairs
   // ---------------------------------------------------------------------------
 

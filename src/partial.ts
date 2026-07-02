@@ -27,6 +27,7 @@ export const callbackHintFull: Record<keyof Unpartial<CallbacksOnly>, true> = {
   _return: true,
   forInOfObject: true,
   endExpression: true,
+  spread: true,
   getFieldPre: true,
   getField: true,
   putFieldPre: true,
@@ -286,6 +287,9 @@ export class PartialChecker {
   }
   get E() {
     return this.callbackHint.endExpression;
+  }
+  get Sp() {
+    return this.callbackHint.spread;
   }
   get Fe() {
     return this.callbackHint.functionEnter || this.callbackHint.functionExit;

@@ -400,6 +400,15 @@ function E(id: number, value: any): any {
   return value;
 }
 
+// hook for spread elements (`...value` in array literals, call arguments, and
+// object literals). Fires before the value is spread natively, so the
+// (possibly replaced) return value is what gets iterated/copied.
+function Sp(id: number, value: any): any {
+  const post = D$.analysis.spread?.(id, value);
+  if (post) value = post.result;
+  return value;
+}
+
 // hook for property reads (get-field)
 function G(id: number, base: any, prop: any, optional: boolean = false): any {
   if (base === chainSkip) return chainSkip;
@@ -1260,6 +1269,7 @@ const BASE = {
   Re,
   O,
   E,
+  Sp,
   G,
   Gp,
   P,

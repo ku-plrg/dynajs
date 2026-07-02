@@ -666,6 +666,7 @@ All literal callbacks share the signature `(id, value) => { result } | void`.
 | ------------------------------------------ | -------------------------------------- | ---------------------- |
 | `endExpression(id, value)`                 | End of an expression statement         | `void`                 |
 | `forInOfObject(id, value, isForIn)`        | Before a `for-in` / `for-of` loop      | `{ result }` \| `void` |
+| `spread(id, value)`                        | Spread element (`...value`)            | `{ result }` \| `void` |
 | `fieldInit(id, obj, key, isStatic, value)` | Class field initializer evaluation     | `{ result }` \| `void` |
 | `_throw(id, val)`                          | `throw` statement                      | `{ result }` \| `void` |
 | `_yield(id, value, isDelegate)`            | `yield` / `yield*` expression          | `{ result }` \| `void` |
@@ -680,6 +681,10 @@ All literal callbacks share the signature `(id, value) => { result } | void`.
     forInOfObject(id, value, isForIn) {
       // isForIn: true for for-in, false for for-of
       // return { result } to replace the iterable
+    },
+    spread(id, value) {
+      // fires for `...value` in [...value], f(...value), and {...value}
+      // return { result } to replace the value that gets spread
     },
     fieldInit(id, obj, key, isStatic, value) {
       // return { result } to replace the initialized value

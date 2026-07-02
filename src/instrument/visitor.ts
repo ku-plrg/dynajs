@@ -483,7 +483,13 @@ export const visitors: RecursiveVisitors<State> = {
   },
   SpreadElement: (node, state) => {
     state.write('...');
-    state.walk(node.argument);
+    if (state.partial.Sp) {
+      state.write(`${LOG.SPREAD}(${write.newId(node)}, `);
+      state.walk(node.argument);
+      state.write(')');
+    } else {
+      state.walk(node.argument);
+    }
   },
   ArrowFunctionExpression: (node, state) => {
     write.logLiteral(state, node, () => {

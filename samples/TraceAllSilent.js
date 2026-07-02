@@ -129,6 +129,11 @@
       var loc = getLoc(id);
       put('O(' + (isForIn ? 'forIn' : 'forOf') + ', ' + o + ')' + loc);
     },
+    spread: function (id, value) {
+      var v = getValue(value);
+      var loc = getLoc(id);
+      put('Sp(' + v + ')' + loc);
+    },
     endExpression: function (id, value) {
       var v = getValue(value);
       var loc = getLoc(id);

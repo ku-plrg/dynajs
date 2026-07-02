@@ -38,6 +38,7 @@ export const YIELD_RESULT = DYNAJS_VAR + '.Yr';
 export const AWAIT = DYNAJS_VAR + '.Aw';
 export const AWAIT_RESULT = DYNAJS_VAR + '.Awr';
 export const CHAIN = DYNAJS_VAR + '.Ch';
+export const SPREAD = DYNAJS_VAR + '.Sp';
 export const FIELD_INIT = `${DYNAJS_VAR}.Fi`;
 export const CATCH_ENTER = `${DYNAJS_VAR}.Ce`;
 export const SUPER_CALL = `${DYNAJS_VAR}.Su`;
