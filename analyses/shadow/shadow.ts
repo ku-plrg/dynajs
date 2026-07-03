@@ -13,7 +13,7 @@ import * as site from './internal/site.js';
 import type * as escape from './internal/escape.js';
 import { AO__CanonicalNumericIndexString, SYNTAX__add } from './spec/index.js';
 import { concatList } from './utils.js';
-import { LiftedTransferClass } from './transfer/lift.js';
+import { LiftedTransfer } from './transfer/lift.js';
 
 const NON_VALUE_BINARY_OPS = new Set(['instanceof', 'in']);
 
@@ -43,7 +43,7 @@ type OpaqueCall = {
 type TransparentCall = { ty: 'transparent'; entries: unknown[] };
 
 export abstract class ShadowExecution<Shadow>
-  extends LiftedTransferClass<Shadow>
+  extends LiftedTransfer<Shadow>
   implements Analysis
 {
   protected site(): site.Site {
