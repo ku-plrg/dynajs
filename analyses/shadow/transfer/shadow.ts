@@ -7,7 +7,7 @@ import type {
   Valued,
 } from '../type.js';
 
-/* transfer functions for shadow values */
+/** transfer functions for shadow values */
 export abstract class ShadowTransfer<Shadow> extends LiftedDomain<Shadow> {
 
   protected abstract defaultInfo(value: unknown, parents: Valued<Shadow>[]): Shadow;

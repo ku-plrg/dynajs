@@ -6,7 +6,7 @@ export function required(condition: boolean, message: string): void {
 }
 
 export function isInstrumentedFn(f: unknown): boolean {
-  return D$.isInstrumented?.(f) ?? false;
+  return D$.utils.isInstrumented(f) ?? false;
 }
 
 /** to capture built-in objects that may be overridden by user code. */

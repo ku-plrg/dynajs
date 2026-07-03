@@ -3,7 +3,7 @@ import inspect from 'object-inspect';
 import fs from 'fs';
 import path from 'path';
 import * as acorn from 'acorn';
-import { ECMA_VERSION, EXIT_CODE_TODO, SCRIPT_NAME } from './constant.js';
+import { ECMA_VERSION, EXIT_CODE_TODO, SCRIPT_NAME, INSTRUMENTED_MARK } from './constant.js';
 import type { Program, Node } from 'acorn';
 
 // This file is used to capture built-in objects that may be overridden by user code.
@@ -293,3 +293,24 @@ export const getLocFromNode = (
 export const spec = {
   ToString: (x: any): string => String(new String(x)),
 };
+
+const instrumentedCache = new WeakMap<Function, boolean>();
+
+/** check if a function is instrumented */
+export function isInstrumented(f: unknown): boolean {
+  if (typeof f !== 'function') return false;
+  let cached = instrumentedCache.get(f);
+  if (cached === undefined) {
+    let src = '';
+    // pristine toString: user code may override Function.prototype.toString;
+    // exotic callables (revoked proxies) may throw — treat as uncontrolled
+    try {
+      src = CAPTURED.FunctionToString.call(f);
+    } catch {
+      /* uncontrolled */
+    }
+    cached = src.includes(INSTRUMENTED_MARK);
+    instrumentedCache.set(f, cached);
+  }
+  return cached;
+}
