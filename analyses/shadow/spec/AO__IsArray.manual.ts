@@ -1,6 +1,6 @@
-import type { Lifted, LiftedTransfer } from "../type.js";
+import type { Lifted, LiftedTransferOps } from "../type.js";
 
-export function AO__IsArray ($ : LiftedTransfer, argument : Lifted<unknown>) {
+export function AO__IsArray ($ : LiftedTransferOps, argument : Lifted<unknown>) {
   if (!($.value($.isType(argument, "object"))))
   {
     return $.default<boolean>(false, []);

@@ -1,10 +1,10 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted } from "../type.js";
 
 import { AO__RequireObjectCoercible } from "./AO__RequireObjectCoercible.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function AO__TrimString ($ : LiftedTransfer, string : Lifted<unknown>, where : Lifted<unknown>) {
+export function AO__TrimString ($ : LiftedTransferOps, string : Lifted<unknown>, where : Lifted<unknown>) {
   var str = AO__RequireObjectCoercible($, string);
   var S = AO__ToString($, (str as Lifted<unknown>));
   if ($.value($.condition(Number.MAX_SAFE_INTEGER - 836, $.is(where, $.default<string>("start", [])))))

@@ -1,10 +1,10 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted } from "../type.js";
 
 import { AO__GetV } from "./AO__GetV.js";
 import { AO__IsCallable } from "./AO__IsCallable.js";
 
-export function AO__GetMethod ($ : LiftedTransfer, V : Lifted<unknown>, P : Lifted<unknown>) {
+export function AO__GetMethod ($ : LiftedTransferOps, V : Lifted<unknown>, P : Lifted<unknown>) {
   var func = AO__GetV($, (V as Lifted<unknown>), (P as Lifted<unknown>));
   if (($.value($.condition(Number.MAX_SAFE_INTEGER - 66, $.is(func, $.default<undefined>(undefined, [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 67, $.is(func, $.default<null>(null, []))))))
   {

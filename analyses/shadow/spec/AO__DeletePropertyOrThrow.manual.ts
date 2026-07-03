@@ -1,6 +1,6 @@
-import type { Lifted, LiftedTransfer } from "../type.js";
+import type { Lifted, LiftedTransferOps } from "../type.js";
 
-export function AO__DeletePropertyOrThrow ($ : LiftedTransfer, O : Lifted<unknown>, P : Lifted<unknown>) {
+export function AO__DeletePropertyOrThrow ($ : LiftedTransferOps, O : Lifted<unknown>, P : Lifted<unknown>) {
   "use strict";
 
   const Ou = $.value(O);

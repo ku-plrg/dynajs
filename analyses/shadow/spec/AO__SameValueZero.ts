@@ -1,11 +1,11 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted } from "../type.js";
 
 import { AO__SameType } from "./AO__SameType.js";
 import { AO__SameValueNonNumber } from "./AO__SameValueNonNumber.js";
 import { Number__sameValueZero } from "./Number__sameValueZero.js";
 
-export function AO__SameValueZero ($ : LiftedTransfer, x : Lifted<unknown>, y : Lifted<unknown>) {
+export function AO__SameValueZero ($ : LiftedTransferOps, x : Lifted<unknown>, y : Lifted<unknown>) {
   if ($.value($.condition(Number.MAX_SAFE_INTEGER - 735, $.is(AO__SameType($, (x as Lifted<unknown>), (y as Lifted<unknown>)), $.default<boolean>(false, [])))))
   {
     return $.default<boolean>(false, []);

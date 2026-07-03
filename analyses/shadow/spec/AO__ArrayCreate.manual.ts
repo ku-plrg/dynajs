@@ -1,6 +1,6 @@
-import type { LiftedTransfer, Lifted, Unlifted, Primitive } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted, Primitive } from "../type.js";
 
-export function AO__ArrayCreate($ : LiftedTransfer, length : Lifted<number>, proto: Lifted<unknown> = $.default(undefined, [])): Lifted<unknown> {
+export function AO__ArrayCreate($ : LiftedTransferOps, length : Lifted<number>, proto: Lifted<unknown> = $.default(undefined, [])): Lifted<unknown> {
   const len = $.value(length);
   // 1. If length > 2**32 - 1, throw a RangeError exception.
   if (len > 2 ** 32 - 1) {

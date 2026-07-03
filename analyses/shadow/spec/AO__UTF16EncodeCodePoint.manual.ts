@@ -4,9 +4,9 @@
 // on strings. The observable result is exactly `String.fromCodePoint`, which
 // already encodes BMP code points as one unit and supplementary ones as a
 // surrogate pair — so we defer to it and keep the value flowing through `$`.
-import type { LiftedTransfer, Lifted, Unlifted, Primitive } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted, Primitive } from "../type.js";
 
-export function AO__UTF16EncodeCodePoint($: LiftedTransfer, cp: Lifted<unknown>): Lifted<string> {
+export function AO__UTF16EncodeCodePoint($: LiftedTransferOps, cp: Lifted<unknown>): Lifted<string> {
   // 1. Assert: 0 ≤ cp ≤ 0x10FFFF.
   // 2. If cp ≤ 0xFFFF, return the code unit whose numeric value is cp.
   // 3. Let cu1 be the code unit whose numeric value is floor((cp - 0x10000) / 0x400) + 0xD800.

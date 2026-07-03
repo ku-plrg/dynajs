@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted } from "../type.js";
 
 import { AO__Call } from "./AO__Call.js";
 import { AO__CreateArrayFromList } from "./AO__CreateArrayFromList.js";
@@ -9,7 +9,7 @@ import { AO__StringIndexOf } from "./AO__StringIndexOf.js";
 import { AO__ToString } from "./AO__ToString.js";
 import { AO__ToUint32 } from "./AO__ToUint32.js";
 
-export function INTRINSICS_String_prototype_split ($ : LiftedTransfer, $this : Lifted<unknown>, separator : Lifted<unknown>, limit : Lifted<unknown>) {
+export function INTRINSICS_String_prototype_split ($ : LiftedTransferOps, $this : Lifted<unknown>, separator : Lifted<unknown>, limit : Lifted<unknown>) {
   var O = AO__RequireObjectCoercible($, $this);
   if (!($.value($.condition(Number.MAX_SAFE_INTEGER - 488, $.is(separator, $.default<undefined>(undefined, [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 489, $.is(separator, $.default<null>(null, []))))))
   {

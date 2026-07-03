@@ -25,7 +25,7 @@ export type Primitive =
   | null
   | undefined;
 
-export interface LiftedTransfer extends SpecOps {
+export interface LiftedTransferOps extends SpecOps {
   /** an injection (`unlifted -> lifted`). inverse of `$.value`. default information transformation */
   default: <T extends Unlifted | Primitive>(
     v: T,

@@ -5,7 +5,7 @@ import type {
   Primitive,
   ValuedGeneral,
   Valued,
-  LiftedTransfer,
+  LiftedTransferOps,
 } from '../type.js';
 import { CAPTURED, concatList } from '../utils.js';
 import type * as escape from '../internal/escape.js';
@@ -94,7 +94,7 @@ export abstract class LiftedTransferClass<Shadow> extends ShadowTransfer<Shadow>
     return this.carryOrDefault(result, entries);
   }
 
-  $: LiftedTransfer = {
+  $: LiftedTransferOps = {
     // StringOps
     length: (s) => {
       const v = (this.$.value(s) as string).length;
@@ -541,5 +541,5 @@ export abstract class LiftedTransferClass<Shadow> extends ShadowTransfer<Shadow>
         entries,
       );
     },
-  } satisfies LiftedTransfer;
+  } satisfies LiftedTransferOps;
 }

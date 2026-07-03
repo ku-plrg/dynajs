@@ -1,6 +1,6 @@
 // @ts-nocheck
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted } from "../type.js";
 
 import { AO__Call } from "./AO__Call.js";
 import { AO__Get } from "./AO__Get.js";
@@ -10,7 +10,7 @@ import { AO__LengthOfArrayLike } from "./AO__LengthOfArrayLike.js";
 import { AO__ToObject } from "./AO__ToObject.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_Array_prototype_reduceRight ($ : LiftedTransfer, $this : Lifted<unknown>, callback : Lifted<unknown>, initialValue : Lifted<unknown> = $.default<undefined>(undefined, [])) {
+export function INTRINSICS_Array_prototype_reduceRight ($ : LiftedTransferOps, $this : Lifted<unknown>, callback : Lifted<unknown>, initialValue : Lifted<unknown> = $.default<undefined>(undefined, [])) {
   var initialValueIsPresent = arguments.length > 3;
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));

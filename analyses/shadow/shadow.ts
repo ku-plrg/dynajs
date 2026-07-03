@@ -1,7 +1,7 @@
 import { isInstrumentedFn, required } from './utils.js';
 import type { Analysis } from '../../src/index.js';
 import type {
-  LiftedTransfer,
+  LiftedTransferOps,
   Lifted,
   Unlifted,
   Primitive,

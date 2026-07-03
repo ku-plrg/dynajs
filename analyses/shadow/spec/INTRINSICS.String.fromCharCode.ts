@@ -1,10 +1,10 @@
 // @ts-nocheck
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted } from "../type.js";
 
 import { AO__ToUint16 } from "./AO__ToUint16.js";
 
-export function INTRINSICS_String_fromCharCode ($ : LiftedTransfer, $this : Lifted<unknown>, ...codeUnits : Lifted<unknown>[]) {
+export function INTRINSICS_String_fromCharCode ($ : LiftedTransferOps, $this : Lifted<unknown>, ...codeUnits : Lifted<unknown>[]) {
   var result = $.default<string>("", []);
   for (var next of codeUnits)
   {

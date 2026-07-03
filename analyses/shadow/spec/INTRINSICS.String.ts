@@ -1,6 +1,6 @@
 // @ts-nocheck
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted } from "../type.js";
 
 import { markConstructable } from "../internal/constructable.js";
 import { AO__GetPrototypeFromConstructor } from "./AO__GetPrototypeFromConstructor.js";
@@ -8,7 +8,7 @@ import { AO__StringCreate } from "./AO__StringCreate.js";
 import { AO__SymbolDescriptiveString } from "./AO__SymbolDescriptiveString.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_String ($ : LiftedTransfer, $this : Lifted<unknown>, value : Lifted<unknown>) {
+export function INTRINSICS_String ($ : LiftedTransferOps, $this : Lifted<unknown>, value : Lifted<unknown>) {
   var valueIsPresent = arguments.length > 2;
   if (!valueIsPresent)
   {

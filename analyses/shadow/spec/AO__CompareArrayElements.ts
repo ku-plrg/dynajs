@@ -1,12 +1,12 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted } from "../type.js";
 
 import { AO__Call } from "./AO__Call.js";
 import { AO__IsLessThan } from "./AO__IsLessThan.js";
 import { AO__ToNumber } from "./AO__ToNumber.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function AO__CompareArrayElements ($ : LiftedTransfer, x : Lifted<unknown>, y : Lifted<unknown>, comparator : Lifted<unknown>) {
+export function AO__CompareArrayElements ($ : LiftedTransferOps, x : Lifted<unknown>, y : Lifted<unknown>, comparator : Lifted<unknown>) {
   if (($.value($.condition(Number.MAX_SAFE_INTEGER - 19, $.is(x, $.default<undefined>(undefined, [])))) && $.value($.condition(Number.MAX_SAFE_INTEGER - 20, $.is(y, $.default<undefined>(undefined, []))))))
   {
     return $.default<number>(0, []);

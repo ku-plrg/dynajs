@@ -1,10 +1,10 @@
-import type { LiftedTransfer, Lifted, Unlifted, Primitive } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted, Primitive } from "../type.js";
 
 import { AO__Get } from "./AO__Get.js";
 import { AO__IsConstructor } from "./AO__IsConstructor.js";
 import { AO__ArrayCreate } from "./AO__ArrayCreate.js";
 
-export function AO__ArraySpeciesCreate ($ : LiftedTransfer, originalArray : Lifted<unknown>, length : Lifted<number>) {
+export function AO__ArraySpeciesCreate ($ : LiftedTransferOps, originalArray : Lifted<unknown>, length : Lifted<number>) {
   // 1. Let isArray be ? IsArray(originalArray).
   const isArray = Array.isArray($.value(originalArray));
   // 2. If isArray is false, return ? ArrayCreate(length).

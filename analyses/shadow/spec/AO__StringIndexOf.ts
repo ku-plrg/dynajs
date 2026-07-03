@@ -1,7 +1,7 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted } from "../type.js";
 
-export function AO__StringIndexOf ($ : LiftedTransfer, string : Lifted<string>, searchValue : Lifted<string>, fromIndex : Lifted<number>) {
+export function AO__StringIndexOf ($ : LiftedTransferOps, string : Lifted<string>, searchValue : Lifted<string>, fromIndex : Lifted<number>) {
   var len = $.length(string);
   if ($.value($.condition(Number.MAX_SAFE_INTEGER - 779, $.is(searchValue, $.default<string>("", [])))) && $.value($.condition(Number.MAX_SAFE_INTEGER - 780, $.lessThanEqual(fromIndex, len))))
   {

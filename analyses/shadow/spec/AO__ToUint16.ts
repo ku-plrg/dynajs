@@ -1,9 +1,9 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted } from "../type.js";
 
 import { AO__ToNumber } from "./AO__ToNumber.js";
 
-export function AO__ToUint16 ($ : LiftedTransfer, argument : Lifted<unknown>) {
+export function AO__ToUint16 ($ : LiftedTransferOps, argument : Lifted<unknown>) {
   var number = AO__ToNumber($, (argument as Lifted<unknown>));
   if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 830, $.isFinite(number))) || ($.value($.condition(Number.MAX_SAFE_INTEGER - 831, $.is(number, $.default<number>(0, [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 832, $.is(number, $.default<number>(0, []))))))
   {

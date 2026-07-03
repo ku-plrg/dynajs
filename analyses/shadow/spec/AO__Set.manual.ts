@@ -1,6 +1,6 @@
-import type { LiftedTransfer, Lifted } from "../type.js";
+import type { LiftedTransferOps, Lifted } from "../type.js";
 
-export function AO__Set ($ : LiftedTransfer, O : Lifted<unknown>, P : Lifted<unknown>, V : Lifted<unknown>, Throw : Lifted<boolean>) {
+export function AO__Set ($ : LiftedTransferOps, O : Lifted<unknown>, P : Lifted<unknown>, V : Lifted<unknown>, Throw : Lifted<boolean>) {
   "use strict";
 
   // 1. Let success be ? O.[[Set]](P, V, O). `$.set` performs the native write

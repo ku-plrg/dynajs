@@ -1,11 +1,11 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted } from "../type.js";
 
 import { AO__ArrayCreate } from "./AO__ArrayCreate.js";
 import { AO__CreateDataPropertyOrThrow } from "./AO__CreateDataPropertyOrThrow.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function AO__CreateArrayFromList ($ : LiftedTransfer, elements : Lifted<unknown>[]) {
+export function AO__CreateArrayFromList ($ : LiftedTransferOps, elements : Lifted<unknown>[]) {
   var array = AO__ArrayCreate($, ($.default<number>(0, []) as Lifted<number>));
   var n = $.default<number>(0, []);
   for (var e of elements)

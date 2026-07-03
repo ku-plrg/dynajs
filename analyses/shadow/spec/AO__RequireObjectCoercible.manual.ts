@@ -1,6 +1,6 @@
-import type { LiftedTransfer, Lifted } from "../type.js";
+import type { LiftedTransferOps, Lifted } from "../type.js";
 
-export function AO__RequireObjectCoercible($: LiftedTransfer, argument: Lifted<unknown>): Lifted<unknown> {
+export function AO__RequireObjectCoercible($: LiftedTransferOps, argument: Lifted<unknown>): Lifted<unknown> {
   "use strict";
 
   const v = $.value(argument);

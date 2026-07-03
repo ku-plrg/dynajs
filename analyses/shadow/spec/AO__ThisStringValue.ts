@@ -1,7 +1,7 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted } from "../type.js";
 
-export function AO__ThisStringValue ($ : LiftedTransfer, value : Lifted<unknown>) {
+export function AO__ThisStringValue ($ : LiftedTransferOps, value : Lifted<unknown>) {
   if (($.value($.condition(Number.MAX_SAFE_INTEGER - 792, $.isType(value, "string")))))
   {
     return value;

@@ -1,11 +1,11 @@
 // @ts-nocheck
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted } from "../type.js";
 
 import { AO__ToNumber } from "./AO__ToNumber.js";
 import { AO__UTF16EncodeCodePoint } from "./AO__UTF16EncodeCodePoint.js";
 
-export function INTRINSICS_String_fromCodePoint ($ : LiftedTransfer, $this : Lifted<unknown>, ...codePoints : Lifted<unknown>[]) {
+export function INTRINSICS_String_fromCodePoint ($ : LiftedTransferOps, $this : Lifted<unknown>, ...codePoints : Lifted<unknown>[]) {
   var result = $.default<string>("", []);
   for (var next of codePoints)
   {

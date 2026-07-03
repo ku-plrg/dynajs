@@ -1,6 +1,6 @@
-import type { Lifted, LiftedTransfer } from "../type.js";
+import type { Lifted, LiftedTransferOps } from "../type.js";
 
-export function AO__HasProperty ($ : LiftedTransfer, O : Lifted<unknown>, P : Lifted<unknown>): Lifted<boolean> {
+export function AO__HasProperty ($ : LiftedTransferOps, O : Lifted<unknown>, P : Lifted<unknown>): Lifted<boolean> {
   "use strict";
 
   const o = $.value(O);

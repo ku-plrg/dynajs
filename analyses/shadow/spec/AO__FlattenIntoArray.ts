@@ -1,6 +1,6 @@
 // @ts-nocheck
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted } from "../type.js";
 
 import { AO__Call } from "./AO__Call.js";
 import { AO__CreateDataPropertyOrThrow } from "./AO__CreateDataPropertyOrThrow.js";
@@ -10,7 +10,7 @@ import { AO__IsArray } from "./AO__IsArray.js";
 import { AO__LengthOfArrayLike } from "./AO__LengthOfArrayLike.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function AO__FlattenIntoArray ($ : LiftedTransfer, target : Lifted<unknown>, source : Lifted<unknown>, sourceLen : Lifted<number>, start : Lifted<number>, depth : Lifted<unknown>, mapperFunction : Lifted<unknown> = $.default<undefined>(undefined, []), thisArg : Lifted<unknown> = $.default<undefined>(undefined, [])) {
+export function AO__FlattenIntoArray ($ : LiftedTransferOps, target : Lifted<unknown>, source : Lifted<unknown>, sourceLen : Lifted<number>, start : Lifted<number>, depth : Lifted<unknown>, mapperFunction : Lifted<unknown> = $.default<undefined>(undefined, []), thisArg : Lifted<unknown> = $.default<undefined>(undefined, [])) {
   var mapperFunctionIsPresent = arguments.length > 6;
   var targetIndex = start;
   var sourceIndex = $.default<number>(0, []);

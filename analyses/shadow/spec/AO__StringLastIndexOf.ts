@@ -1,7 +1,7 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted } from "../type.js";
 
-export function AO__StringLastIndexOf ($ : LiftedTransfer, string : Lifted<string>, searchValue : Lifted<string>, fromIndex : Lifted<number>) {
+export function AO__StringLastIndexOf ($ : LiftedTransferOps, string : Lifted<string>, searchValue : Lifted<string>, fromIndex : Lifted<number>) {
   var len = $.length(string);
   var searchLen = $.length(searchValue);
   for (var i of $.range(($.default<number>(0, []) as Lifted<number>), true, (fromIndex as Lifted<number>), true, false, Number.MAX_SAFE_INTEGER - 784))

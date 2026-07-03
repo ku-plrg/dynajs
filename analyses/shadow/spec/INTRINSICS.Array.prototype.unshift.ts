@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted } from "../type.js";
 
 import { AO__DeletePropertyOrThrow } from "./AO__DeletePropertyOrThrow.js";
 import { AO__Get } from "./AO__Get.js";
@@ -9,7 +9,7 @@ import { AO__Set } from "./AO__Set.js";
 import { AO__ToObject } from "./AO__ToObject.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_Array_prototype_unshift ($ : LiftedTransfer, $this : Lifted<unknown>, ...items : Lifted<unknown>[]) {
+export function INTRINSICS_Array_prototype_unshift ($ : LiftedTransferOps, $this : Lifted<unknown>, ...items : Lifted<unknown>[]) {
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
   var argCount = $.default<number>(items.length, []);

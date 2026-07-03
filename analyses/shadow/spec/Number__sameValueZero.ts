@@ -1,7 +1,7 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted } from "../type.js";
 
-export function Number__sameValueZero ($ : LiftedTransfer, x : Lifted<number>, y : Lifted<number>) {
+export function Number__sameValueZero ($ : LiftedTransferOps, x : Lifted<number>, y : Lifted<number>) {
   if ($.value($.condition(Number.MAX_SAFE_INTEGER - 659, $.isNaN(x as Lifted<number>))) && $.value($.condition(Number.MAX_SAFE_INTEGER - 660, $.isNaN(y as Lifted<number>))))
   {
     return $.default<boolean>(true, []);

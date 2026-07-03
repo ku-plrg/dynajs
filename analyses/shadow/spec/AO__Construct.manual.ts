@@ -1,6 +1,6 @@
-import type { LiftedTransfer, Lifted, Unlifted, Primitive } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted, Primitive } from "../type.js";
 
-export function AO__Construct($ : LiftedTransfer, F : Lifted<unknown>, argumentsList ?: Lifted<unknown[]>, newTarget ?: Lifted<unknown>) {
+export function AO__Construct($ : LiftedTransferOps, F : Lifted<unknown>, argumentsList ?: Lifted<unknown[]>, newTarget ?: Lifted<unknown>) {
   const Fu = $.value(F);
   const argumentsListu = argumentsList ? $.value(argumentsList) : [];
   const newTargetu = newTarget ? $.value(newTarget) : Fu;

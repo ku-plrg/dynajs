@@ -1,4 +1,4 @@
-import type { LiftedTransfer } from '../type.js';
+import type { LiftedTransferOps } from '../type.js';
 import * as generated from '../spec/index.js';
 
 export default class Model {
@@ -207,7 +207,7 @@ export default class Model {
     return this.SYNTAX.has(op);
   }
 
-  constructor(public $: LiftedTransfer) {}
+  constructor(public $: LiftedTransferOps) {}
 
   static ofBuiltin(f: Function): Function {
     const polyfill = Model.BUILTINS.get(f);

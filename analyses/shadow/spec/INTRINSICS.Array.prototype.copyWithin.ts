@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted } from "../type.js";
 
 import { AO__DeletePropertyOrThrow } from "./AO__DeletePropertyOrThrow.js";
 import { AO__Get } from "./AO__Get.js";
@@ -10,7 +10,7 @@ import { AO__ToIntegerOrInfinity } from "./AO__ToIntegerOrInfinity.js";
 import { AO__ToObject } from "./AO__ToObject.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_Array_prototype_copyWithin ($ : LiftedTransfer, $this : Lifted<unknown>, target : Lifted<unknown>, start : Lifted<unknown>, end : Lifted<unknown> = $.default<undefined>(undefined, [])) {
+export function INTRINSICS_Array_prototype_copyWithin ($ : LiftedTransferOps, $this : Lifted<unknown>, target : Lifted<unknown>, start : Lifted<unknown>, end : Lifted<unknown> = $.default<undefined>(undefined, [])) {
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
   var relativeTarget = AO__ToIntegerOrInfinity($, (target as Lifted<unknown>));

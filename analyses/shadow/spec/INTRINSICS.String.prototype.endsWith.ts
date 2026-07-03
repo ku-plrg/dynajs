@@ -1,12 +1,12 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted } from "../type.js";
 
 import { AO__IsRegExp } from "./AO__IsRegExp.js";
 import { AO__RequireObjectCoercible } from "./AO__RequireObjectCoercible.js";
 import { AO__ToIntegerOrInfinity } from "./AO__ToIntegerOrInfinity.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_String_prototype_endsWith ($ : LiftedTransfer, $this : Lifted<unknown>, searchString : Lifted<unknown>, endPosition : Lifted<unknown> = $.default<undefined>(undefined, [])) {
+export function INTRINSICS_String_prototype_endsWith ($ : LiftedTransferOps, $this : Lifted<unknown>, searchString : Lifted<unknown>, endPosition : Lifted<unknown> = $.default<undefined>(undefined, [])) {
   var O = AO__RequireObjectCoercible($, $this);
   var S = AO__ToString($, (O as Lifted<unknown>));
   var isRegExp = AO__IsRegExp($, (searchString as Lifted<unknown>));

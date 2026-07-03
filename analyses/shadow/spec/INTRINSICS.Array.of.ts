@@ -1,6 +1,6 @@
 // @ts-nocheck
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted } from "../type.js";
 
 import { AO__ArrayCreate } from "./AO__ArrayCreate.js";
 import { AO__Construct } from "./AO__Construct.js";
@@ -9,7 +9,7 @@ import { AO__IsConstructor } from "./AO__IsConstructor.js";
 import { AO__Set } from "./AO__Set.js";
 import { AO__ToString } from "./AO__ToString.js";
 
-export function INTRINSICS_Array_of ($ : LiftedTransfer, $this : Lifted<unknown>, ...items : Lifted<unknown>[]) {
+export function INTRINSICS_Array_of ($ : LiftedTransferOps, $this : Lifted<unknown>, ...items : Lifted<unknown>[]) {
   var len = $.default<number>(items.length, []);
   var lenNumber = len;
   var C = $this;

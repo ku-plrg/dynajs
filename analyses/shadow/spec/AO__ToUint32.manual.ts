@@ -1,8 +1,8 @@
-import type { LiftedTransfer, Lifted, Unlifted, Primitive } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted, Primitive } from "../type.js";
 
 import { AO__ToNumber } from "./AO__ToNumber.js";
 
-export function AO__ToUint32($: LiftedTransfer, arg: Lifted<unknown>): Lifted<number> {
+export function AO__ToUint32($: LiftedTransferOps, arg: Lifted<unknown>): Lifted<number> {
   // 1. Let _number_ be ? ToNumber(_argument_).
   let number = AO__ToNumber($, arg);
   let numberUnlifted = $.value(number);

@@ -1,10 +1,10 @@
-import type { LiftedTransfer, Lifted, Primitive } from "../type.js";
+import type { LiftedTransferOps, Lifted, Primitive } from "../type.js";
 
 import { AO__GetMethod } from "./AO__GetMethod.js";
 import { AO__Call } from "./AO__Call.js";
 import { AO__OrdinaryToPrimitive } from "./AO__OrdinaryToPrimitive.js";
 
-export function AO__ToPrimitive($: LiftedTransfer, arg: Lifted<unknown>, preferredType: Lifted<'string' | 'number' | 'default'> = $.default('default', [])): Lifted<Primitive> {
+export function AO__ToPrimitive($: LiftedTransferOps, arg: Lifted<unknown>, preferredType: Lifted<'string' | 'number' | 'default'> = $.default('default', [])): Lifted<Primitive> {
   // 1. If input is an Object, then
   if ($.value($.isType(arg, 'object'))) {
     //    a. Let exoticToPrim be ? GetMethod(input, %Symbol.toPrimitive%).

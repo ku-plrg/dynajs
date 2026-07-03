@@ -1,8 +1,8 @@
-import type { LiftedTransfer, Lifted, Unlifted, Primitive } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted, Primitive } from "../type.js";
 
 import { AO__ToPrimitive } from "./AO__ToPrimitive.js";
 
-export function AO__ToNumber($: LiftedTransfer, arg: Lifted<unknown>): Lifted<number> {
+export function AO__ToNumber($: LiftedTransferOps, arg: Lifted<unknown>): Lifted<number> {
   let argument = $.value(arg);
   // ToNumber(Object) = ToNumber(? ToPrimitive(argument, number)). Coerce via the
   // model so a user valueOf/toString runs lifted; a native +object would

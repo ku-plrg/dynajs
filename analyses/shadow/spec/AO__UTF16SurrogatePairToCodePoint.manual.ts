@@ -1,7 +1,7 @@
-import type { LiftedTransfer, Lifted, Unlifted, Primitive } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted, Primitive } from "../type.js";
 
 export function AO__UTF16SurrogatePairToCodePoint(
-  $: LiftedTransfer,
+  $: LiftedTransferOps,
   lead: Lifted<string>,
   trail: Lifted<string>,
 ): Lifted<number> {

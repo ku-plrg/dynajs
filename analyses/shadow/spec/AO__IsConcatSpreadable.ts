@@ -1,11 +1,11 @@
 // THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-import type { LiftedTransfer, Lifted, Unlifted } from "../type.js";
+import type { LiftedTransferOps, Lifted, Unlifted } from "../type.js";
 
 import { AO__Get } from "./AO__Get.js";
 import { AO__IsArray } from "./AO__IsArray.js";
 import { AO__ToBoolean } from "./AO__ToBoolean.js";
 
-export function AO__IsConcatSpreadable ($ : LiftedTransfer, O : Lifted<unknown>) {
+export function AO__IsConcatSpreadable ($ : LiftedTransferOps, O : Lifted<unknown>) {
   if (!($.value($.condition(Number.MAX_SAFE_INTEGER - 564, $.isType(O, "object")))))
   {
     return $.default<boolean>(false, []);
