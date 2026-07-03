@@ -55,6 +55,7 @@ const EXCLUDE = [
   'INTRINSICS.String.prototype.toLocaleLowerCase', // esmeta not supported
   'INTRINSICS.String.prototype.toLocaleUpperCase', // esmeta not supported
   'INTRINSICS.String.prototype.localeCompare',
+  'INTRINSICS.String.prototype.toLowerCase',
 
   /* regex */
   'INTRINSICS.String.prototype.match',
