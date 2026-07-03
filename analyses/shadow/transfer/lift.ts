@@ -18,7 +18,7 @@ export type CallPolicy = {
   isOpaque: (f: unknown) => boolean;
 };
 
-export abstract class LiftedTransferClass<Info> extends ShadowTransfer<Info> {
+export abstract class LiftedTransferClass<Shadow> extends ShadowTransfer<Shadow> {
   abstract policy: CallPolicy;
 
   protected siteResolver = new SiteResolver();

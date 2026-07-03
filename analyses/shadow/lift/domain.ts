@@ -1,4 +1,4 @@
-import util from 'node:util';
+
 import type {
   Lifted,
   Unlifted,
@@ -6,7 +6,8 @@ import type {
   ValuedGeneral,
   Valued,
 } from '../type.js';
-import { BoundaryEscape } from './escape.js';
+import { LiftedPrimitive } from './primitive.js';
+import { BoundaryEscape } from '../internal/escape.js';
 
 type IdValuePair = ValuedGeneral<{ id: symbol }, unknown>;
 
@@ -15,44 +16,13 @@ type InfoDomain<Info> = {
   isBottom: (info: Info) => boolean;
 };
 
-class ProxiedPrimitive {
-  constructor(private readonly value: Primitive) {}
 
-  [Symbol.toPrimitive](hint: 'string' | 'number' | 'default') {
-    // TODO print a coercion warning if DEBUG is given
-
-    if (this.value === null || this.value === undefined) return this.value;
-    // if (hint === 'string') return this.value.toString();
-    // else return this.value.valueOf();
-    return this.value; // this is more faithful?
-  }
-
-  get [Symbol.iterator]() {
-    if (typeof this.value === 'undefined' || this.value === null) {
-      return undefined;
-    } else {
-      return this.SymbolIterator.bind(this);
-    }
-  }
-
-  SymbolIterator() {
-    if (typeof this.value === 'string') {
-      return this.value[Symbol.iterator]();
-    }
-    throw new TypeError('not iterable');
-  }
-
-  [util.inspect.custom]() {
-    return '<lifted-primitive>';
-  }
-}
-
-export abstract class LiftedDomain<Info> {
+export abstract class LiftedDomain<Shadow> {
   private liftedPrimitives = new WeakSet<object>();
   private valueMap = new WeakMap<object, IdValuePair>();
-  private infoMap = new WeakMap<symbol, Info>();
+  private infoMap = new WeakMap<symbol, Shadow>();
 
-  abstract domain: InfoDomain<Info>;
+  abstract domain: InfoDomain<Shadow>;
 
   protected escaper = new BoundaryEscape(
     this.isPrimitiveProxy.bind(this),
@@ -62,20 +32,20 @@ export abstract class LiftedDomain<Info> {
 
   // ---- Info storage helpers ----
 
-  protected /* final */ getInfo(value: unknown): Info {
+  protected /* final */ getInfo(value: unknown): Shadow {
     const e = this.getEntry(value);
     return e === undefined
       ? this.domain.getBottom()
       : (this.infoMap.get(e.id) ?? this.domain.getBottom());
   }
 
-  protected setInfo(value: unknown, info: Info): void {
+  protected setInfo(value: unknown, info: Shadow): void {
     const e = this.getEntry(value);
     if (e === undefined) return;
     this.infoMap.set(e.id, info);
   }
 
-  protected getOrCreateInfo(value: unknown, makeEmpty: () => Info): Info {
+  protected getOrCreateInfo(value: unknown, makeEmpty: () => Shadow): Shadow {
     const e = this.getEntry(value);
     if (e === undefined) return this.domain.getBottom();
     let info = this.infoMap.get(e.id);
@@ -86,17 +56,17 @@ export abstract class LiftedDomain<Info> {
     return info;
   }
 
-  protected valued<V>(v: V): Valued<Info, V> {
+  protected valued<V>(v: V): Valued<Shadow, V> {
     return {
-      info: this.getInfo(v) satisfies Info,
+      info: this.getInfo(v) satisfies Shadow,
       value: this.unlift(v as Lifted<V>),
-    } satisfies Valued<Info, V>;
+    } satisfies Valued<Shadow, V>;
   }
 
   /** NOTE never override this method */
   protected /* final */ lift<T>(
     value: T,
-    info: Info = this.domain.getBottom(),
+    info: Shadow = this.domain.getBottom(),
   ): Lifted<T> {
     let w: Lifted<T>;
     if (this.isObjectish(value)) {
@@ -105,7 +75,7 @@ export abstract class LiftedDomain<Info> {
       }
       w = value as Lifted<T>;
     } else {
-      const proxy = new ProxiedPrimitive(value as Primitive) satisfies object;
+      const proxy = new LiftedPrimitive(value as Primitive) satisfies object;
       this.liftedPrimitives.add(proxy);
       this.valueMap.set(proxy, { id: this.freshId(), value });
       w = proxy as T as Lifted<T>;

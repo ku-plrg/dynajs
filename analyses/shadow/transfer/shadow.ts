@@ -1,4 +1,4 @@
-import { LiftedDomain } from '../internal/lift-domain.js';
+import { LiftedDomain } from '../lift/domain.js';
 import type {
   Lifted,
   Unlifted,
@@ -7,79 +7,79 @@ import type {
   Valued,
 } from '../type.js';
 
-export abstract class ShadowTransfer<Info> extends LiftedDomain<Info> {
-  ////////// transfer functions /////////
+/* transfer functions for shadow values */
+export abstract class ShadowTransfer<Shadow> extends LiftedDomain<Shadow> {
 
-  protected abstract defaultInfo(value: unknown, parents: Valued<Info>[]): Info;
+  protected abstract defaultInfo(value: unknown, parents: Valued<Shadow>[]): Shadow;
 
   protected substringInfo?(
-    _src: Valued<Info, string>,
-    _start: Valued<Info, number>,
-    _end: Valued<Info, number>,
+    _src: Valued<Shadow, string>,
+    _start: Valued<Shadow, number>,
+    _end: Valued<Shadow, number>,
     _resultLength: number,
-  ): Info;
+  ): Shadow;
   protected concatenateInfo?(
-    _left: Valued<Info, string>,
+    _left: Valued<Shadow, string>,
     _leftLength: number,
-    _right: Valued<Info, string>,
+    _right: Valued<Shadow, string>,
     _rightLength: number,
-  ): Info;
-  protected lengthOfStringInfo?(_src: Valued<Info, string>): Info;
+  ): Shadow;
+  protected lengthOfStringInfo?(_src: Valued<Shadow, string>): Shadow;
   protected containsStrInfo?(
-    _s: Valued<Info, string>,
-    _sub: Valued<Info, string>,
-  ): Info;
-  protected containsListInfo?(_list: Valued<Info>, _x: Valued<Info>): Info;
+    _s: Valued<Shadow, string>,
+    _sub: Valued<Shadow, string>,
+  ): Shadow;
+  protected containsListInfo?(_list: Valued<Shadow>, _x: Valued<Shadow>): Shadow;
   protected trimInfo?(
-    _src: Valued<Info, string>,
+    _src: Valued<Shadow, string>,
     _leading: boolean,
     _trailing: boolean,
-  ): Info;
+  ): Shadow;
 
   protected binaryInfo?(
     _op: string,
-    _left: Valued<Info>,
-    _right: Valued<Info>,
-  ): Info;
-  protected unaryInfo?(_op: string, _operand: Valued<Info>): Info;
-  protected truncateInfo?(_src: Valued<Info, number>): Info;
+    _left: Valued<Shadow>,
+    _right: Valued<Shadow>,
+  ): Shadow;
+  protected unaryInfo?(_op: string, _operand: Valued<Shadow>): Shadow;
+  protected truncateInfo?(_src: Valued<Shadow, number>): Shadow;
   /* clamp(x, lower, upper) = max(lower, min(x, upper)) */
   protected clampInfo?(
-    _x: Valued<Info, number>,
-    _lower: Valued<Info, number>,
-    _upper: Valued<Info, number>,
-  ): Info;
-  protected minInfo?(_operands: Valued<Info, number>[]): Info;
-  protected maxInfo?(_operands: Valued<Info, number>[]): Info;
+    _x: Valued<Shadow, number>,
+    _lower: Valued<Shadow, number>,
+    _upper: Valued<Shadow, number>,
+  ): Shadow;
+  protected minInfo?(_operands: Valued<Shadow, number>[]): Shadow;
+  protected maxInfo?(_operands: Valued<Shadow, number>[]): Shadow;
 
   protected rangeInfo?(
     _indices: number[],
-    _lo: Valued<Info, number>,
+    _lo: Valued<Shadow, number>,
     _loInclusive: boolean,
-    _hi: Valued<Info, number>,
+    _hi: Valued<Shadow, number>,
     _hiInclusive: boolean,
     _ascending: boolean,
     _bid: number,
-  ): Info[];
+  ): Shadow[];
 
   /* property read from object property or array element */
   protected getFieldInfo?(
-    _base: Valued<Info>,
-    _prop: Valued<Info>,
-    _result: Valued<Info>,
-  ): Info;
+    _base: Valued<Shadow>,
+    _prop: Valued<Shadow>,
+    _result: Valued<Shadow>,
+  ): Shadow;
 
   /* property write to object property or array element (`$.set`); side-effecting
    * (mutates the analysis's model of `base`), so it returns nothing. */
   protected setFieldInfo?(
-    _base: Valued<Info>,
-    _prop: Valued<Info>,
-    _value: Valued<Info>,
+    _base: Valued<Shadow>,
+    _prop: Valued<Shadow>,
+    _value: Valued<Shadow>,
   ): void;
 
   protected conditionInfo?(
     _id: number,
-    _cond: Valued<Info>,
+    _cond: Valued<Shadow>,
     _taken: boolean,
   ): void {}
 
@@ -91,7 +91,7 @@ export abstract class ShadowTransfer<Info> extends LiftedDomain<Info> {
     _f: unknown,
     _entries: unknown[],
     _result: unknown,
-  ): Info;
+  ): Shadow;
 
   /** internal(flow.ts) */
   protected numOp(v: number, parents: Lifted<unknown>[]): Lifted<number> {
