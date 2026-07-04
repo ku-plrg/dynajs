@@ -4,11 +4,12 @@
   "files": {
     "includes": [
       "**",
-      "!**/dist/**",
-      "!bench/**",
-      "!tests/**",
-      "!samples/**",
-      "!analyses/shadow/spec/**",
+      "!**/dist",
+      "!bench",
+      "!tests",
+      "!test",
+      "!samples",
+      "!analyses/shadow/spec",
       "!**/*.html"
     ]
   },
@@ -31,8 +32,10 @@
       "recommended": true,
       "suspicious": { "noExplicitAny": "off" },
       "security": { "noGlobalEval": "off" },
-      "useTemplate": "off",
-      "noUnusedTemplateLiteral": "error"
+      "style": {
+        "useTemplate": "off",
+        "noUnusedTemplateLiteral": "error"
+      }
     }
   },
   "javascript": {
