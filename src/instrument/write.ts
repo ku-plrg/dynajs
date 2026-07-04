@@ -3,8 +3,7 @@ import { generate } from 'astring';
 import {
   EXCEPTION_VAR,
   INSTRUMENTED_MARK,
-  POS_MODE_DEFAULT,
-  PosMode,
+  POS_DEFAULT,
   TEMP_PARAM_VAR,
 } from '../constant.js';
 import { getLocFromNode, VarKind, warn } from '../utils.js';
@@ -1116,7 +1115,7 @@ export function logException(state: State, program: acorn.Node): void {
 let numId: number = 0;
 let ID_INC_STEP: 1 | -1 = 1;
 let fileIdToLoc: { [id: number]: [number, number, number, number] } = {};
-let currentLocMode: PosMode = POS_MODE_DEFAULT;
+let collectLocs: boolean = POS_DEFAULT;
 
 export function initializeIdGenerator(isESM: boolean): void {
   if (isESM) {
@@ -1128,8 +1127,8 @@ export function initializeIdGenerator(isESM: boolean): void {
   }
 }
 
-export function beginLocCollection(locMode: PosMode): void {
-  currentLocMode = locMode;
+export function beginLocCollection(enabled: boolean): void {
+  collectLocs = enabled;
   fileIdToLoc = {};
 }
 
@@ -1142,7 +1141,7 @@ export function getFileIdToLoc(): {
 export function newId(node: acorn.Node): number {
   var id = numId;
   numId += ID_INC_STEP;
-  if (node.loc && currentLocMode !== PosMode.OFF) {
+  if (node.loc && collectLocs) {
     fileIdToLoc[id] = getLocFromNode(node);
   }
   return id;

@@ -3,7 +3,6 @@ import { Scope } from './scope.js';
 import { visitors } from './visitor.js';
 import { PartialChecker, type CallbackHint } from './partial.js';
 import type * as acorn from 'acorn';
-import type { PosMode } from '../constant.js';
 
 // -----------------------------------------------------------------------------
 // states for walking the AST
@@ -16,7 +15,8 @@ export interface StateOption {
   instrumentedPath?: string;
   originalPath?: string;
   verbose?: boolean;
-  pos: PosMode;
+  // when true, collect source positions and persist them into the output
+  pos: boolean;
   callbackHint: CallbackHint | undefined;
   isScript: boolean;
 }

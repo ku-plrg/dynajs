@@ -5,7 +5,6 @@ import { fileURLToPath } from 'node:url';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { instrumentFile } from '../instrument/main.js';
-import { PosMode } from '../constant.js';
 
 const COMMAND_NAME = path.basename(fileURLToPath(import.meta.url), '.js');
 
@@ -75,7 +74,7 @@ type RunArgs = {
   partial?: boolean;
   full?: boolean;
   'ignore-node-modules'?: boolean;
-  pos?: string;
+  pos?: boolean;
   home?: string;
   include?: string[];
   cmd?: string[];
@@ -102,7 +101,8 @@ function cmdRun(argv: RunArgs): number {
   if (argv.partial) opts.push('--partial');
   if (argv.full) opts.push('--full');
   if (argv['ignore-node-modules']) opts.push('--ignore-node-modules');
-  if (argv.pos) opts.push('--pos', argv.pos);
+  if (argv.pos === true) opts.push('--pos');
+  else if (argv.pos === false) opts.push('--no-pos');
   if (argv.home) opts.push('--home', argv.home);
   for (const inc of argv.include ?? []) opts.push('--include', inc);
   if (analysisPath) opts.push('--analysis', analysisPath);
@@ -135,7 +135,7 @@ function cmdInstrument(file: string, verbose: boolean): number {
     verbose,
     isScript: true,
     callbackHint: undefined,
-    pos: PosMode.PERSIST,
+    pos: true,
   });
   return 0;
 }
@@ -322,9 +322,9 @@ try {
             describe: 'Forward --ignore-node-modules to dynajs',
           })
           .option('pos', {
-            type: 'string',
-            choices: [PosMode.PERSIST, PosMode.MEMORY, PosMode.OFF],
-            describe: 'Forward --pos to dynajs',
+            type: 'boolean',
+            describe:
+              'Forward --pos/--no-pos to dynajs (track source positions; default on)',
           })
           .option('home', {
             type: 'string',

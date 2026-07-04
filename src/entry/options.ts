@@ -1,7 +1,6 @@
 import path from 'node:path';
 import parseArgs from 'yargs-parser';
-import { POS_MODE_DEFAULT, PosMode } from '../constant.js';
-import { raise } from '../utils.js';
+import { POS_DEFAULT } from '../constant.js';
 
 export type RuntimeOptions = {
   help: boolean;
@@ -10,7 +9,8 @@ export type RuntimeOptions = {
   verbose: boolean;
   partialHook: boolean;
   ignoreNodeModules: boolean;
-  pos: PosMode;
+  // when true, collect source positions and persist them into the output
+  pos: boolean;
   includeRoots: string[];
   excludeRoots: string[];
 };
@@ -83,21 +83,6 @@ function dedupeResolved(entries: string[]): string[] {
   return resolved;
 }
 
-function parseLocMode(value: unknown): PosMode {
-  switch (value) {
-    case undefined:
-      return POS_MODE_DEFAULT;
-    case PosMode.PERSIST:
-    case PosMode.MEMORY:
-    case PosMode.OFF:
-      return value;
-    default:
-      raise(
-        `Invalid --pos value: ${String(value)}. Expected one of: ${PosMode.PERSIST}, ${PosMode.MEMORY}, ${PosMode.OFF}.`,
-      );
-  }
-}
-
 export function printHelp(): void {
   console.log(`
 Usage: DYNAJS_OPTIONS="<options>" dynajs <command> [args...]
@@ -113,7 +98,7 @@ Options:
   --partial             Enable partial instrumentation (only instrument features with hooks)
   --full                Enable full instrumentation (instrument all features)
   --ignore-node-modules Ignore files in node_modules directory
-  --pos <mode>          Position tracking mode: ${PosMode.PERSIST} | ${PosMode.MEMORY} | ${PosMode.OFF} (default: ${POS_MODE_DEFAULT})
+  --pos, --no-pos       Track source positions (id -> file:line:col), persisted into the output (default: ${POS_DEFAULT ? 'on' : 'off'})
   --include <path>      Additional directory to instrument (repeatable; cwd is always included).
                         Also configurable via DYNAJS_INCLUDE env var (path-delimited list).
   --exclude <path>      Directory to skip even when inside an include root (repeatable).
@@ -127,9 +112,17 @@ export function getRuntimeOptions(): RuntimeOptions {
       analysis: ['a'],
       pos: ['position'],
     },
-    boolean: ['help', 'verbose', 'partial', 'full', 'ignore-node-modules'],
-    string: ['analysis', 'home', 'pos'],
+    boolean: [
+      'help',
+      'verbose',
+      'partial',
+      'full',
+      'ignore-node-modules',
+      'pos',
+    ],
+    string: ['analysis', 'home'],
     array: ['include', 'exclude'],
+    default: { pos: POS_DEFAULT },
     configuration: {
       'short-option-groups': false,
     },
@@ -152,7 +145,7 @@ export function getRuntimeOptions(): RuntimeOptions {
       typeof parsed['ignore-node-modules'] === 'boolean'
         ? parsed['ignore-node-modules']
         : false,
-    pos: parseLocMode(getStringValue(parsed.pos)),
+    pos: typeof parsed.pos === 'boolean' ? parsed.pos : POS_DEFAULT,
     includeRoots: collectIncludeRoots(parsed),
     excludeRoots: collectExcludeRoots(parsed),
   };

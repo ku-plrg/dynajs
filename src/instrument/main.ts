@@ -3,8 +3,7 @@ import {
   EXCEPTION_VAR,
   TEMP_PARAM_VAR,
   NO_INSTRUMENT,
-  PosMode,
-  POS_MODE_DEFAULT,
+  POS_DEFAULT,
 } from '../constant.js';
 import {
   getInstrumentedName,
@@ -21,15 +20,6 @@ import { State, type StateOption } from './state.js';
 import { beginLocCollection, getFileIdToLoc } from './write.js';
 import { fixNamedEvaluations } from './fix-named-eval.js';
 
-function mergeLocsToRuntime(fileLocs: {
-  [id: number]: [number, number, number, number];
-}): void {
-  const runtime = (globalThis as any).D$;
-  if (!runtime || typeof runtime !== 'object') return;
-  if (!runtime.ids || typeof runtime.ids !== 'object') return;
-  Object.assign(runtime.ids, fileLocs);
-}
-
 // ids are globally unique and contiguous per file (CJS counts up, ESM counts
 // down — see initializeIdGenerator), so one `instrument()` call yields one
 // closed id interval for `file`. Store it as a [lo, hi, file] interval rather
@@ -45,13 +35,6 @@ function idIntervalOf(fileLocs: {
     if (id > hi) hi = id;
   }
   return hi < lo ? undefined : [lo, hi];
-}
-
-function mergeFileToRuntime(lo: number, hi: number, file: string): void {
-  const runtime = (globalThis as any).D$;
-  if (!runtime || typeof runtime !== 'object') return;
-  if (!Array.isArray(runtime.files)) return;
-  runtime.files.push([lo, hi, file]);
 }
 
 export function instrumentFile(filename: string, options: StateOption): string {
@@ -73,8 +56,8 @@ export function instrumentFile(filename: string, options: StateOption): string {
 
 export function instrument(code: string, options: StateOption): string {
   if (options.verbose) header('Instrumenting the code...');
-  const locMode: PosMode = options.pos ?? POS_MODE_DEFAULT;
-  beginLocCollection(locMode);
+  const collectLocs: boolean = options.pos ?? POS_DEFAULT;
+  beginLocCollection(collectLocs);
   const ast = parse(code, options.isScript);
   const state = new State(options);
   if (options.verbose) log(stringify(ast));
@@ -92,17 +75,17 @@ ${state.output}`;
   // ('eval'/'evalIndirect') for on-the-fly instrumentation. Either is a usable
   // site label; fall back to 'unknown' only if neither was set.
   const file = options.originalPath ?? 'unknown';
-  const interval = idIntervalOf(fileIdToLoc);
-  if (locMode === PosMode.MEMORY) {
-    mergeLocsToRuntime(fileIdToLoc);
-    if (interval) mergeFileToRuntime(interval[0], interval[1], file);
-  }
 
+  // Persist this file's positions into the output so ids resolve back to source
+  // regardless of which thread/process executes the code. Stringify only this
+  // file's locs (fileIdToLoc is reset per call in beginLocCollection) so the
+  // serialized payload stays proportional to the file, not the whole run.
   const prefixLines = [NO_INSTRUMENT];
-  if (locMode === PosMode.PERSIST) {
+  if (collectLocs) {
     prefixLines.push(
       `${DYNAJS_VAR}.ids = Object.assign(${DYNAJS_VAR}.ids, ${JSON.stringify(fileIdToLoc)});`,
     );
+    const interval = idIntervalOf(fileIdToLoc);
     if (interval)
       prefixLines.push(
         `${DYNAJS_VAR}.files.push([${interval[0]}, ${interval[1]}, ${JSON.stringify(file)}]);`,
