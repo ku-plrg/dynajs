@@ -15,19 +15,6 @@ export type Site =
 
 const UNKNOWN_SITE: Site = { kind: 'unknown' };
 
-function resolveCodeSite(id: number): Site {
-  const loc = D$.ids?.[id];
-  const file = D$.idToFile?.(id);
-  if (loc === undefined || file === undefined) return UNKNOWN_SITE;
-  return {
-    kind: 'code',
-    id,
-    file,
-    start: { line: loc[0], column: loc[1] },
-    end: { line: loc[2], column: loc[3] },
-  };
-}
-
 export class SiteResolver {
   private currentId: number | undefined = undefined;
   private currentBuiltin: string | undefined = undefined;
@@ -54,7 +41,7 @@ export class SiteResolver {
     if (this.currentBuiltin !== undefined) {
       const call =
         this.currentId !== undefined
-          ? resolveCodeSite(this.currentId)
+          ? this.resolveCodeSite(this.currentId)
           : UNKNOWN_SITE;
       return {
         kind: 'builtin',
@@ -62,7 +49,7 @@ export class SiteResolver {
         call: call.kind === 'code' ? call : undefined,
       };
     }
-    if (this.currentId !== undefined) return resolveCodeSite(this.currentId);
+    if (this.currentId !== undefined) return this.resolveCodeSite(this.currentId);
     return UNKNOWN_SITE;
   }
 
@@ -80,7 +67,7 @@ export class SiteResolver {
   }
 
   /* readable name for a modeled builtin (builtin-kind sites) */
-  builtinName(f: unknown): string {
+  protected builtinName(f: unknown): string {
     const n = typeof f === 'function' ? f.name : '';
     return n !== '' ? n : 'builtin';
   }
