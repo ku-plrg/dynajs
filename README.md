@@ -27,8 +27,6 @@ shadow execution, ready out of the box.
 ./djx run -a ./count-calls.js -- node app.js
 ```
 
-That's it - `app.js` runs normally, and your callbacks see every call site.
-
 ## Why DynaJS
 
 - **Modern JavaScript Support** Private fields, optional chaining
@@ -59,7 +57,7 @@ ln -s $DYNAJS_HOME/djx    ~/bin/djx      # or wherever your PATH points
 
 ## Usage
 
-### `djx` - the everyday front-end
+### `djx` (frontend)
 
 `./djx` bundles the most common workflows into one command:
 
@@ -80,7 +78,7 @@ flags: `--verbose`, `--partial`, `--full`, `--ignore-node-modules`, `--pos`,
 `--home`, `--include`. Run `./djx list` to discover presets and samples, and
 `./djx run --help` for the full flag list.
 
-### `dynajs` - the low-level wrapper
+### `dynajs` (low-level)
 
 Set `DYNAJS_OPTIONS` and run your usual command through `dynajs`:
 
