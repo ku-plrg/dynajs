@@ -63,6 +63,12 @@ function parseArgs() {
       describe:
         'run each test via vm.runInThisContext so top-level `this` is the global object (script semantics); same realm',
     })
+    .option('features', {
+      type: 'string',
+      default: 'bench/test262/supported-features.json',
+      describe:
+        'supported-features file; extract only tests whose declared `features` are all listed (tests with no features always extracted). .json = array or {"features":[...]}; anything else = one feature per line, # comments. Pass "" to disable filtering.',
+    })
     .epilogue(
       'Positional [paths...] are test paths relative to the test262 root (default: "test").',
     )
@@ -76,8 +82,48 @@ function parseArgs() {
     out: path.resolve(argv.out),
     shim: argv.shim,
     wrap: argv.wrap,
+    features: argv.features ? path.resolve(argv.features) : null,
     paths: argv._.length ? argv._.map(String) : ['test'],
   };
+}
+
+// Load the supported-features allowlist. Returns a Set of feature names, or null
+// (no file / disabled) to mean "no feature filtering". Two formats are accepted:
+//   *.json  -> a JSON array of strings, or { "features": [...] }
+//   *.txt   -> one feature per line; blank lines and `#...` comments are ignored
+//              (same shape as test262's own features.txt, so comments are allowed)
+function loadSupportedFeatures(featuresPath) {
+  if (!featuresPath) return null;
+  if (!fs.existsSync(featuresPath)) {
+    process.stderr.write(
+      `note: no supported-features file at ${featuresPath}; extracting all tests (feature filter disabled)\n`,
+    );
+    return null;
+  }
+
+  const raw = fs.readFileSync(featuresPath, 'utf8');
+  let list;
+  if (featuresPath.endsWith('.json')) {
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (e) {
+      throw new Error(`Could not parse ${featuresPath} as JSON: ${e.message}`);
+    }
+    list = Array.isArray(parsed) ? parsed : parsed && parsed.features;
+    if (!Array.isArray(list)) {
+      throw new Error(
+        `${featuresPath} must be a JSON array of feature names, or an object with a "features" array`,
+      );
+    }
+  } else {
+    list = raw
+      .split(/\r?\n/)
+      .map((line) => line.replace(/#.*$/, '').trim())
+      .filter(Boolean);
+  }
+
+  return new Set(list.map(String));
 }
 
 const PRINT_SHIM = 'function print() { console.log.apply(console, arguments); }\n';
@@ -160,16 +206,44 @@ function main() {
       : p;
   });
 
+  const supported = loadSupportedFeatures(opts.features);
+  if (supported) {
+    process.stderr.write(
+      `filtering by ${supported.size} supported feature(s) from ${opts.features}\n`,
+    );
+  }
+
   fs.mkdirSync(opts.out, { recursive: true });
   const manifestFd = fs.openSync(path.join(opts.out, 'manifest.jsonl'), 'w');
 
   let count = 0;
+  let skipped = 0;
+  // feature name -> number of distinct source tests it blocked (deduped across
+  // the default/strict scenarios of one file, so counts reflect real tests).
+  const blockedByFeature = new Map();
+  const blockedSources = new Set();
+
   const stream = new Test262Stream(opts.test262, {
     paths,
     includesDir: path.join(opts.test262, 'harness'),
   });
 
   stream.on('data', (test) => {
+    const features = test.attrs.features || [];
+    if (supported) {
+      const unsupported = features.filter((f) => !supported.has(f));
+      if (unsupported.length) {
+        skipped += 1;
+        if (!blockedSources.has(test.file)) {
+          blockedSources.add(test.file);
+          for (const f of unsupported) {
+            blockedByFeature.set(f, (blockedByFeature.get(f) || 0) + 1);
+          }
+        }
+        return;
+      }
+    }
+
     const relOut = outPathFor(test);
     const dest = path.join(opts.out, relOut);
     fs.mkdirSync(path.dirname(dest), { recursive: true });
@@ -183,6 +257,7 @@ function main() {
         source: test.file,
         scenario: test.scenario,
         flags: test.attrs.flags,
+        features: features,
         negative: test.attrs.negative || null,
       }) + '\n',
     );
@@ -201,6 +276,22 @@ function main() {
     process.stderr.write(
       `extracted ${count} files (incl. strict variants) to ${opts.out}\n`,
     );
+    if (supported && skipped) {
+      process.stderr.write(
+        `skipped ${skipped} scenario(s) across ${blockedSources.size} test(s) needing unsupported features\n`,
+      );
+      const top = [...blockedByFeature.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .slice(0, 20);
+      process.stderr.write('  unsupported features blocking the most tests:\n');
+      for (const [feature, n] of top) {
+        process.stderr.write(`    ${String(n).padStart(6)}  ${feature}\n`);
+      }
+      const remaining = blockedByFeature.size - top.length;
+      if (remaining > 0) {
+        process.stderr.write(`    ... and ${remaining} more feature(s)\n`);
+      }
+    }
   });
 }
 
