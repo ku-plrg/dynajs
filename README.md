@@ -1,43 +1,65 @@
 # DynaJS - Dynamic Analysis Framework for JavaScript
 
+> [!CAUTION]
+> DynaJS is still in an early alpha stage of development. Its internal design and APIs are not yet stable and may change significantly.
+
+DynaJS is a versatile dynamic analysis framework that scales from
+linter-level lightweight dynamic analysis all the way to spec-faithful
+shadow execution, ready out of the box.
+
+```js
+// example: count-calls.js
+(function (D$) {
+  let calls = 0;
+  D$.analysis = {
+    invokeFunPre(id, f, base, args) {
+      console.log(`call @ ${D$.idToLoc(id)}`);
+      calls++;
+    },
+    endExecution() {
+      console.log(`${calls} calls total`);
+    },
+  };
+})(D$);
+```
+
+```shell
+./djx run -a ./count-calls.js -- node app.js
+```
+
+That's it - `app.js` runs normally, and your callbacks see every call site.
+
+## Why DynaJS
+
+- **Modern JavaScript Support** Private fields, optional chaining
+  and nullish coalescing, `async`/`await`, generators, tagged templates,
+  `super`, class fields, spread, and `BigInt` are all instrumented and hookable without using down-transpiling using Babel.
+- **Hierarchical hooks.** Listen broadly (`binary`, `literal`, `condition`) or
+  narrowly (`arithmeticBinary`, `stringLiteral`, `ifCondition`). General hooks
+  fire first; specific ones refine them.
+- **Pay only for what you hook.** *Partial* instrumentation inspects which
+  callbacks you defined and rewrites only the matching syntax, keeping overhead
+  proportional to your analysis.
+- **Batteries included.** A shadow engine with spec-faithful ECMAScript abstract-operation models,
+  and a shelf of ready-to-run sample analyses.
+- **Transparent injection.** DynaJS wires itself in through `NODE_OPTIONS`, so
+  it wraps any Node-based command - `node target.js`, `npm test`, `npx …` -
+  without touching your code or your toolchain. CommonJS, ESModules, and even
+  `node:vm` are all supported.
+
 ## Installation
 
 ```shell
 npm install
 npm run build
+export DYNAJS_HOME=/path/to/repo
+ln -s $DYNAJS_HOME/dynajs ~/bin/dynajs   # or wherever your PATH points
+ln -s $DYNAJS_HOME/djx    ~/bin/djx      # or wherever your PATH points
 ```
 
 ## Usage
 
-Set `DYNAJS_HOME` to the repository root before using `./dynajs`:
-
-```shell
-export DYNAJS_HOME=/path/to/repo
-ln -s /path/to/repo/dynajs ~/bin/dynajs # or what ever PATH
-```
-
-Set `DYNAJS_OPTIONS` and run your usual command through `dynajs`:
-
-```
-DYNAJS_OPTIONS='--analysis ./samples/TraceAll.js' dynajs node target.js
-DYNAJS_OPTIONS='--analysis ./samples/TraceAll.js' dynajs npm run test
-DYNAJS_OPTIONS='--analysis ./samples/TraceAll.js --partial' dynajs node target.js
-```
-
-> [!IMPORTANT]
->
-> **Only files under an _include root_ are instrumented.** The include roots are
-> the current working directory plus any `--include <path>` (or `DYNAJS_INCLUDE`,
-> a path-delimited list). A target file outside every include root runs
-> **uninstrumented** — no hooks fire, so the analysis silently sees nothing and
-> the program behaves as plain Node. This is independent of `--partial`, which
-> only selects _which hooks_ are enabled, not _which files_ are instrumented.
->
-> Common gotcha: running a script that lives outside the repo (e.g. in `/tmp`)
-> while `cwd` is the repo will leave it uninstrumented and can produce a
-> misleading "pass". Pass `--include <dir>` for any target outside the cwd.
-
-## `djx` — convenience CLI
+### `djx` - the everyday front-end
 
 `./djx` bundles the most common workflows into one command:
 
@@ -55,49 +77,56 @@ DYNAJS_OPTIONS='--analysis ./samples/TraceAll.js --partial' dynajs node target.j
 `taint`/`concolic` or a bundled `samples/<Name>.js`), `-a/--analysis <path>`
 (custom file), or `--bare` (instrument only, no analysis). Forwarded dynajs
 flags: `--verbose`, `--partial`, `--full`, `--ignore-node-modules`, `--pos`,
-`--home`, `--include`.
-Run `./djx run --help` for the full list.
+`--home`, `--include`. Run `./djx list` to discover presets and samples, and
+`./djx run --help` for the full flag list.
 
-## For Developers
+### `dynajs` - the low-level wrapper
 
-> [!WARNING]
+Set `DYNAJS_OPTIONS` and run your usual command through `dynajs`:
+
+```shell
+DYNAJS_OPTIONS='--analysis ./samples/TraceAll.js' dynajs node target.js
+DYNAJS_OPTIONS='--analysis ./samples/TraceAll.js' dynajs npm run test
+DYNAJS_OPTIONS='--analysis ./samples/TraceAll.js --partial' dynajs node target.js
+```
+
+> [!IMPORTANT]
 >
-> The watch mode only typechecks. Run `npm run build` before using `./dynajs`
-> or `./djx` after modifying the source code.
+> **Only files under an _include root_ are instrumented.** The include roots are
+> the current working directory plus any `--include <path>` (or `DYNAJS_INCLUDE`,
+> a path-delimited list). A target file outside every include root runs
+> **uninstrumented** - no hooks fire, so the analysis silently sees nothing and
+> the program behaves as plain Node. This is independent of `--partial`, which
+> only selects _which hooks_ are enabled, not _which files_ are instrumented.
+>
+> Common gotcha: running a script that lives outside the repo (e.g. in `/tmp`)
+> while `cwd` is the repo will leave it uninstrumented and can produce a
+> misleading "pass". Pass `--include <dir>` for any target outside the cwd.
 
-### Testing
+## Writing a simple analysis
 
-The suite is built on Node's built-in [test runner](https://nodejs.org/api/test.html)
-(no Python required). The `pretest` hook builds first, so every variant is just
-`npm test` with different flags:
+An analysis is a code that assigns a callback to `D$.analysis`. Implement
+any subset of the callbacks - in **partial mode**, only the hooks you define are
+activated, so unused syntax stays untouched.
 
-```shell
-npm test                    # run the regression suite
-npm test -- --name class    # only tests whose name matches a pattern (-n)
-npm test -- --watch         # re-run on change (-w)
-npm test -- --update        # rewrite mismatching .out snapshots (-u)
-npm test -- --all           # regression + taint + concolic
+```js
+(function (D$) {
+  D$.analysis = {
+    getField(id, base, prop, result, isPrivate) { /* observe a property read */ },
+    binary(id, op, left, right, result)         { /* observe an operator      */ },
+  };
+})(D$);
 ```
 
-The regression suite is split by what it checks. `tests/behavior.test.mjs`
-verifies that instrumentation preserves program semantics — dynajs output is
-compared against plain Node, in both `--partial` and `--full` mode.
-`tests/snapshot.test.mjs` verifies that an analysis's emitted trace still matches
-its golden `.out` file. Cases are discovered from the `tests/` fixture
-directories; shared helpers live in `tests/support/`, and `scripts/run-tests.mjs`
-parses the flags above. The `test:*` scripts are thin aliases that delegate
-through `npm run test --`, so the build always runs exactly once via `pretest`:
+## Writing a shadow execution analysis
 
-```shell
-npm run test:watch      # npm run test -- --watch
-npm run test:update     # npm run test -- --update
-npm run test:taint      # npm run test -- --taint
-npm run test:concolic   # npm run test -- --concolic
-npm run test:all        # npm run test -- --all
-```
+DynaJS ships the hard part for shadow execution - lifting values across the
+native/instrumented boundary, coercions, and builtins modeled against
+the ECMAScript spec — as the `ShadowExecution<Info>` base class.
+You supply only the **transfer functions**: how your shadow value flows.
 
-To run npm-based workflows with dynajs, use the wrapper style:
+Refer to the examples: [`analyses/taint`](./analyses/taint) and [`analyses/concolic`](./analyses/concolic).
 
-```shell
-DYNAJS_OPTIONS='--analysis ./samples/TraceAll.js' ./dynajs npm run test
-```
+## License
+
+[BSD-3-Clause](./LICENSE)
