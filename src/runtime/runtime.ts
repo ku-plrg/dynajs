@@ -1,4 +1,4 @@
-import type { Analysis } from '../types/analysis.js';
+import type { AnalysisCallback } from '../types/analysis.js';
 import { CAPTURED, spec } from '../utils.js';
 
 // -----------------------------------------------------------------------------
@@ -323,7 +323,7 @@ const COMPARISON_BINARY_OPS = new Set([
 const BITWISE_BINARY_OPS = new Set(['&', '|', '^', '<<', '>>', '>>>']);
 const ARITHMETIC_UNARY_OPS = new Set(['+', '-']);
 const UPDATE_UNARY_OPS = new Set(['++', '--']);
-export const CONDITION_CB: Record<string, keyof Analysis> = {
+export const CONDITION_CB: Record<string, keyof AnalysisCallback> = {
   if: 'ifCondition',
   while: 'whileCondition',
   'do-while': 'whileCondition',
@@ -345,7 +345,7 @@ export function fireSpecificBinaryPre(
 ):
   | { op: string; left: any; right: any; skip: boolean; frame?: unknown }
   | undefined {
-  let cb: keyof Analysis | undefined;
+  let cb: keyof AnalysisCallback | undefined;
   if (ARITHMETIC_BINARY_OPS.has(op)) cb = 'arithmeticBinaryPre';
   else if (COMPARISON_BINARY_OPS.has(op)) cb = 'comparisonBinaryPre';
   else if (BITWISE_BINARY_OPS.has(op)) cb = 'bitwiseBinaryPre';
@@ -360,7 +360,7 @@ export function fireSpecificBinary(
   value: any,
   frame?: unknown,
 ): { result: any } | undefined {
-  let cb: keyof Analysis | undefined;
+  let cb: keyof AnalysisCallback | undefined;
   if (ARITHMETIC_BINARY_OPS.has(op)) cb = 'arithmeticBinary';
   else if (COMPARISON_BINARY_OPS.has(op)) cb = 'comparisonBinary';
   else if (BITWISE_BINARY_OPS.has(op)) cb = 'bitwiseBinary';
@@ -374,7 +374,7 @@ export function fireSpecificUnaryPre(
   prefix: boolean,
   operand: any,
 ): { op: string; operand: any; skip: boolean; frame?: unknown } | undefined {
-  let cb: keyof Analysis | undefined;
+  let cb: keyof AnalysisCallback | undefined;
   if (ARITHMETIC_UNARY_OPS.has(op)) cb = 'arithmeticUnaryPre';
   else if (op === '!') cb = 'logicalUnaryPre';
   else if (op === '~') cb = 'bitwiseUnaryPre';
@@ -392,7 +392,7 @@ export function fireSpecificUnary(
   value: any,
   frame?: unknown,
 ): { result: any } | undefined {
-  let cb: keyof Analysis | undefined;
+  let cb: keyof AnalysisCallback | undefined;
   if (ARITHMETIC_UNARY_OPS.has(op)) cb = 'arithmeticUnary';
   else if (op === '!') cb = 'logicalUnary';
   else if (op === '~') cb = 'bitwiseUnary';

@@ -19,7 +19,7 @@ import {
   templateConcatStep,
   UNARY_OPS,
 } from './runtime.js';
-import type { Analysis } from '../types/analysis.js';
+import type { AnalysisCallback } from '../types/analysis.js';
 import { err, kindToStr, type VarKind } from '../utils.js';
 
 // -----------------------------------------------------------------------------
@@ -666,7 +666,7 @@ export function L(id: number, value: any): any {
     value = post.result;
   }
   // type-detect specific callback, fires second and wins
-  let specificCb: keyof Analysis | undefined;
+  let specificCb: keyof AnalysisCallback | undefined;
   if (typeof value === 'bigint') specificCb = 'bigintLiteral';
   else if (typeof value === 'boolean') specificCb = 'booleanLiteral';
   else if (value === null) specificCb = 'nullLiteral';

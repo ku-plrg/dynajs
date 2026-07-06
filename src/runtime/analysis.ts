@@ -4,7 +4,7 @@ import * as hooks from './hooks.js';
 import { chainSkip } from './runtime.js';
 import { instrument } from '../instrument/main.js';
 import type { StateOption } from '../instrument/state.js';
-import type { Analysis } from '../types/analysis.js';
+import type { AnalysisCallback } from '../types/analysis.js';
 import * as utils from '../utils.js';
 import { CAPTURED, locToStr } from '../utils.js';
 
@@ -27,7 +27,7 @@ function idToFile(id: number): string | undefined {
 // assign to the global D$ variable
 // -----------------------------------------------------------------------------
 const BASE = {
-  analysis: {} as Analysis,
+  analysis: {} as AnalysisCallback,
   ids: {} as Record<string, [number, number, number, number]>,
   files: [] as Array<[number, number, string]>,
   idToLoc,

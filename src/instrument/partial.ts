@@ -1,14 +1,14 @@
 // -----------------------------------------------------------------------------
 // adaptive instrumentation: parse analysis file to determine needed hooks
 // -----------------------------------------------------------------------------
-import type { Analysis } from '../types/analysis.js';
+import type { AnalysisCallback } from '../types/analysis.js';
 import type * as Hooks from '../runtime/hooks.js';
 
 type Unpartial<T> = {
   [K in keyof T]-?: T[K];
 };
 
-export type CallbacksOnly = Omit<Analysis, 'result' | 'spec'>;
+export type CallbacksOnly = Omit<AnalysisCallback, 'result' | 'spec'>;
 
 export type CallbackHint = Record<keyof CallbacksOnly, boolean>;
 

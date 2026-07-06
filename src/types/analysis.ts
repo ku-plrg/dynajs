@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-interface FullAnalysis {
+interface AnalysisCallbackFull {
   // ---------------------------------------------------------------------------
   // Script lifecycle
   // ---------------------------------------------------------------------------
@@ -1118,4 +1118,4 @@ interface FullAnalysis {
   result: any;
 }
 
-export type Analysis = Partial<FullAnalysis>;
+export type AnalysisCallback = Partial<AnalysisCallbackFull>;
