@@ -5,5 +5,5 @@
     "noEmit": true,
     "paths": {}
   },
-  "include": ["."]
+  "include": [".", "../src/global.ts"]
 }

@@ -1,5 +1,5 @@
 import { writeFileSync } from 'node:fs';
-import { ShadowExecution, type Valued } from '../../shadow/index.js';
+import { ShadowExecution, type Valued } from '../../../src/shadow/index.js';
 import {
   type Sym,
   type Sort,
