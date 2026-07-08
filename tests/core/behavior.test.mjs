@@ -1,9 +1,9 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
-import { repoRoot } from './support/paths.mjs';
-import { iterTestTargets } from './support/discover.mjs';
-import { runPlainNode, runDynajs } from './support/run.mjs';
+import { repoRoot } from '../support/paths.mjs';
+import { iterTestTargets } from '../support/discover.mjs';
+import { runPlainNode, runDynajs } from '../support/run.mjs';
 
 // Behavior regression: instrumenting a program must not change what it does, so
 // dynajs output is compared against plain Node (the oracle). A silent analysis
@@ -16,13 +16,13 @@ const MODES = ['partial', 'full'];
 const SUITES = [
   {
     name: 'empty',
-    dir: 'tests/regression-node/empty',
+    dir: 'tests/core/regression-node/empty',
     analysis: 'examples/simple/EmptyAnalysis.js',
     compareStdout: true,
   },
   {
     name: 'trace-all',
-    dir: 'tests/regression-node/trace-all',
+    dir: 'tests/core/regression-node/trace-all',
     analysis: 'examples/simple/TraceAll.js',
     compareStdout: false,
   },

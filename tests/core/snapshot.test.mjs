@@ -2,10 +2,10 @@ import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { repoRoot } from './support/paths.mjs';
-import { iterTestTargets } from './support/discover.mjs';
-import { runDynajs } from './support/run.mjs';
-import { assertSnapshot, expectedExitCode } from './support/snapshot.mjs';
+import { repoRoot } from '../support/paths.mjs';
+import { iterTestTargets } from '../support/discover.mjs';
+import { runDynajs } from '../support/run.mjs';
+import { assertSnapshot, expectedExitCode } from '../support/snapshot.mjs';
 
 // Snapshot regression: the trace an analysis emits must match its golden .out.
 // Run in the canonical partial mode only — TraceAll's trace is byte-identical

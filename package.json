@@ -41,9 +41,8 @@
     "test": "node ./scripts/run-tests.mjs",
     "test:watch": "npm run test -- --watch",
     "test:update": "npm run test -- --update",
-    "test:taint": "npm run test -- --taint",
-    "test:concolic": "npm run test -- --concolic",
-    "test:all": "npm run test -- --all",
+    "test:taint": "npm run build && node --test tests/shadow/taint.test.mjs",
+    "test:concolic": "npm run build && node --test tests/shadow/concolic.test.mjs",
     "test262:extract": "npm run build && node ./bench/test262/extract.cjs",
     "test262:run": "npm run build && node ./bench/test262/run.cjs",
     "test262:run-node": "npm run build && npm run test262:run"
