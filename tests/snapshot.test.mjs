@@ -17,17 +17,17 @@ const SUITES = [
   {
     name: 'trace-all',
     dir: 'tests/regression-trace/trace-all',
-    analysis: 'samples/TraceAll.js',
+    analysis: 'examples/simple/TraceAll.js',
   },
   {
     name: 'compare-some',
     dir: 'tests/regression-trace/compare-some',
-    analysis: 'samples/CompareSome.js',
+    analysis: 'examples/simple/CompareSome.js',
   },
   {
     name: 'hierarchy',
     dir: 'tests/regression-trace/hierarchy',
-    analysis: 'samples/HierarchyDemo.js',
+    analysis: 'examples/simple/HierarchyDemo.js',
   },
 ];
 

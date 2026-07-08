@@ -12,13 +12,13 @@ import chalk from 'chalk';
 // at least one verdict and every verdict's actual matches its expected.
 //
 // Tests live OUTSIDE the shared bench/micro corpus, under
-// analyses/concolic/test/{unit,goals}/, so they can evolve freely.
+// examples/concolic/test/{unit,goals}/, so they can evolve freely.
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, '..');
-const testRoot = path.join(repoRoot, 'analyses', 'concolic', 'test');
-const dynajs = path.join(repoRoot, 'dynajs');
-const analysis = path.join(repoRoot, 'analyses', 'dist', 'Concolic.mjs');
+const testRoot = path.join(repoRoot, 'examples', 'concolic', 'test');
+const dynajs = path.join(repoRoot, 'bin', 'dynajs');
+const analysis = path.join(repoRoot, 'examples', 'dist', 'Concolic.mjs');
 
 if (!fs.existsSync(analysis)) {
   console.error(

@@ -12,7 +12,10 @@ import { hideBin } from 'yargs/helpers';
 // *after* a positional file glob, so caller flags (--watch, --test-name-pattern)
 // must go *before* the globs. cwd and DYNAJS_HOME are pinned to the repo root
 // (from this file's location, never process.cwd()) for git-worktree safety.
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const repoRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '..',
+);
 const GLOBS = ['tests/**/*.test.mjs'];
 
 const argv = yargs(hideBin(process.argv))
@@ -33,7 +36,10 @@ const argv = yargs(hideBin(process.argv))
     type: 'string',
     describe: 'Only run tests whose name matches this pattern',
   })
-  .option('taint', { type: 'boolean', describe: 'Run the taint analysis suite' })
+  .option('taint', {
+    type: 'boolean',
+    describe: 'Run the taint analysis suite',
+  })
   .option('concolic', {
     type: 'boolean',
     describe: 'Run the concolic analysis suite',
@@ -67,9 +73,10 @@ if (wantRegression) {
   nodeArgs.push(...GLOBS);
   failed |= run(nodeArgs, argv.update ? { DYNAJS_UPDATE: '1' } : {});
 }
-if (wantTaint) failed |= run([path.join(repoRoot, 'scripts', 'run-taint-tests.mjs')]);
+if (wantTaint)
+  failed |= run([path.join(repoRoot, 'tests', 'run-taint-tests.mjs')]);
 if (wantConcolic) {
-  failed |= run([path.join(repoRoot, 'scripts', 'run-concolic-tests.mjs')]);
+  failed |= run([path.join(repoRoot, 'tests', 'run-concolic-tests.mjs')]);
 }
 
 process.exit(failed ? 1 : 0);

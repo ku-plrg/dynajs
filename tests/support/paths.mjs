@@ -12,5 +12,5 @@ export const repoRoot = path.resolve(
   '..',
 );
 
-export const dynajsBin = path.join(repoRoot, 'dynajs');
+export const dynajsBin = path.join(repoRoot, 'bin', 'dynajs');
 export const harnessPath = path.join(repoRoot, 'tests', 'harness.js');

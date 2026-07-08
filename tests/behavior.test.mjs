@@ -17,13 +17,13 @@ const SUITES = [
   {
     name: 'empty',
     dir: 'tests/regression-node/empty',
-    analysis: 'samples/EmptyAnalysis.js',
+    analysis: 'examples/simple/EmptyAnalysis.js',
     compareStdout: true,
   },
   {
     name: 'trace-all',
     dir: 'tests/regression-node/trace-all',
-    analysis: 'samples/TraceAll.js',
+    analysis: 'examples/simple/TraceAll.js',
     compareStdout: false,
   },
 ];
