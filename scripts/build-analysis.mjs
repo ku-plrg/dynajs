@@ -8,7 +8,7 @@ const requireBanner = [
 
 const entryPoints = [
   {
-    entry: 'examples/taint/src/index.ts',
+    entry: 'examples/taint/index.ts',
     outfile: 'examples/dist/Taint.mjs',
   },
   {

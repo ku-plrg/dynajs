@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Report how much of analyses/flow/spec was auto-extracted from esmeta vs.
+// Report how much of src/shadow/spec was auto-extracted from esmeta vs.
 // hand-authored. A spec entry has base name B; it is a MANUAL shim when a
 // sibling `B.manual.ts` exists (the generated `B.ts` is then just a re-export),
 // and AUTO otherwise. INTRINSICS (built-in functions) are broken down by
@@ -13,7 +13,7 @@ import { hideBin } from 'yargs/helpers';
 
 const SPEC_DIR = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
-  '../analyses/flow/spec',
+  '../src/shadow/spec',
 );
 
 // Number of built-in functions in the ECMAScript spec, per category (hand-set).
@@ -145,7 +145,7 @@ function main() {
   const argv = yargs(hideBin(process.argv))
     .scriptName('spec-coverage.mjs')
     .usage(
-      'Usage: $0 [options]\n\nReport esmeta auto-extraction coverage of analyses/flow/spec',
+      'Usage: $0 [options]\n\nReport esmeta auto-extraction coverage of src/shadow/spec',
     )
     .option('json', {
       type: 'boolean',

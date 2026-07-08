@@ -51,8 +51,8 @@ shadow execution, ready out of the box.
 npm install
 npm run build
 export DYNAJS_HOME=/path/to/repo
-ln -s $DYNAJS_HOME/dynajs ~/bin/dynajs   # or wherever your PATH points
-ln -s $DYNAJS_HOME/djx    ~/bin/djx      # or wherever your PATH points
+ln -s $DYNAJS_HOME/bin/dynajs ~/bin/dynajs   # or wherever your PATH points
+ln -s $DYNAJS_HOME/bin/djx    ~/bin/djx      # or wherever your PATH points
 ```
 
 ## Usage
@@ -72,7 +72,7 @@ ln -s $DYNAJS_HOME/djx    ~/bin/djx      # or wherever your PATH points
 ```
 
 `djx run` picks the analysis via `-p/--preset <name>` (a built preset like
-`taint`/`concolic` or a bundled `samples/<Name>.js`), `-a/--analysis <path>`
+`taint`/`concolic` or a bundled `examples/simple/<Name>.js`), `-a/--analysis <path>`
 (custom file), or `--bare` (instrument only, no analysis). Forwarded dynajs
 flags: `--verbose`, `--partial`, `--full`, `--ignore-node-modules`, `--pos`,
 `--home`, `--include`. Run `./djx list` to discover presets and samples, and
@@ -83,9 +83,9 @@ flags: `--verbose`, `--partial`, `--full`, `--ignore-node-modules`, `--pos`,
 Set `DYNAJS_OPTIONS` and run your usual command through `dynajs`:
 
 ```shell
-DYNAJS_OPTIONS='--analysis ./samples/TraceAll.js' dynajs node target.js
-DYNAJS_OPTIONS='--analysis ./samples/TraceAll.js' dynajs npm run test
-DYNAJS_OPTIONS='--analysis ./samples/TraceAll.js --partial' dynajs node target.js
+DYNAJS_OPTIONS='--analysis ./examples/simple/TraceAll.js' dynajs node target.js
+DYNAJS_OPTIONS='--analysis ./examples/simple/TraceAll.js' dynajs npm run test
+DYNAJS_OPTIONS='--analysis ./examples/simple/TraceAll.js --partial' dynajs node target.js
 ```
 
 > [!IMPORTANT]
@@ -123,7 +123,7 @@ native/instrumented boundary, coercions, and builtins modeled against
 the ECMAScript spec — as the `ShadowExecution<Info>` base class.
 You supply only the **transfer functions**: how your shadow value flows.
 
-Refer to the examples: [`analyses/taint`](./analyses/taint) and [`analyses/concolic`](./analyses/concolic).
+Refer to the examples: [`examples/taint`](./examples/taint) and [`examples/concolic`](./examples/concolic).
 
 ## License
 

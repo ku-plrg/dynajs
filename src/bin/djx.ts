@@ -14,14 +14,16 @@ const DYNAJS_HOME =
   process.env.DYNAJS_HOME ?? path.resolve(SCRIPT_DIR, '..', '..');
 
 const BUILT_PRESETS: Record<string, string> = {
-  taint: 'analyses/dist/Taint.mjs',
-  concolic: 'analyses/dist/Concolic.mjs',
-  noop: 'analyses/dist/Noop.mjs',
-  'noop-nobuiltin': 'analyses/dist/NoopNoBuiltin.mjs',
+  taint: 'examples/dist/Taint.mjs',
+  concolic: 'examples/dist/Concolic.mjs',
+  noop: 'examples/dist/Noop.mjs',
+  'noop-nobuiltin': 'examples/dist/NoopNoBuiltin.mjs',
 };
 
+const SAMPLES_DIR = ['examples', 'simple'];
+
 function sampleMap(): Record<string, string> {
-  const dir = path.join(DYNAJS_HOME, 'samples');
+  const dir = path.join(DYNAJS_HOME, ...SAMPLES_DIR);
   if (!existsSync(dir)) return {};
   const out: Record<string, string> = {};
   for (const f of readdirSync(dir)) {
@@ -52,7 +54,7 @@ function resolvePreset(name: string): string {
     return p;
   }
   const actual = sampleMap()[key];
-  if (actual) return path.join(DYNAJS_HOME, 'samples', `${actual}.js`);
+  if (actual) return path.join(DYNAJS_HOME, ...SAMPLES_DIR, `${actual}.js`);
   throw new Error(
     `Unknown preset '${name}'. Run \`${COMMAND_NAME} list\` to see available presets.`,
   );

@@ -8,8 +8,8 @@
       "!bench",
       "!tests",
       "!test",
-      "!samples",
-      "!analyses/shadow/spec",
+      "!examples/simple",
+      "!src/shadow/spec",
       "!**/*.html"
     ]
   },

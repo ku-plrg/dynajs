@@ -1,6 +1,6 @@
-// Symbolic-expression IR for the concolic analysis. Engine-neutral (kept under
-// `analyses/shared/` so any analysis that builds a `Sym` tree from the
-// operator-aware flow.ts hooks can reuse it and supply its own solver
+// Symbolic-expression IR for the concolic analysis. Engine-neutral (nothing here
+// depends on the solver, so any analysis that builds a `Sym` tree from the
+// operator-aware flow.ts hooks could reuse it and supply its own solver
 // translation); concolic emits SMT-LIB strings for shell z3. Only the data type
 // and the pretty-printer live here.
 
@@ -140,7 +140,7 @@ export function sortOf(s: Sym): Sort | undefined {
 }
 
 // Engine-neutral regular-expression AST (z3 regex / SMT-LIB `re.*` theory),
-// the target of the JS-regexp encoder in `@shared/regex`. A faithful image of
+// the target of a JS-regexp encoder. A faithful image of
 // the z3javascript `ctx.mkRe*` combinators ExpoSE's RegexModels builds: a
 // literal string (`str.to_re`), a single-character range (`re.range`), and the
 // union/intersection/complement/concatenation/closure operators. Carries no

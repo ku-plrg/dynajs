@@ -139,7 +139,7 @@ if (!existsSync(srcDir)) {
 const destDir = resolve(
   dirname(fileURLToPath(import.meta.url)),
   '..',
-  'analyses',
+  'src',
   'shadow',
   'spec',
 );
@@ -267,12 +267,12 @@ writeFileSync(join(destDir, 'index.ts'), barrel);
 
 console.log(
   chalk.green(
-    `✓ Copied ${copiedNames.length} polyfill file(s) → analyses/shadow/spec/`,
+    `✓ Copied ${copiedNames.length} polyfill file(s) → src/shadow/spec/`,
   ),
 );
 console.log(
   chalk.green(
-    `✓ Wrote barrel (${barrelBases.length} exports) → analyses/shadow/spec/index.ts`,
+    `✓ Wrote barrel (${barrelBases.length} exports) → src/shadow/spec/index.ts`,
   ),
 );
 
@@ -310,7 +310,7 @@ for (const base of barrelBases) {
 }
 const fmt = (c) =>
   `${String(c.total).padStart(3)}  (INTRINSICS ${c.INTRINSICS}, AO__ ${c.AO__}, SYNTAX__ ${c.SYNTAX__}, other ${c.other})`;
-console.log(chalk.cyan('\nArtifact summary (analyses/shadow/spec/):'));
+console.log(chalk.cyan('\nArtifact summary (src/shadow/spec/):'));
 console.log(chalk.cyan(`  auto-extracted (esmeta gen-poly): ${fmt(auto)}`));
 console.log(chalk.cyan(`  manual (*.manual.ts):             ${fmt(manual)}`));
 console.log(
@@ -346,7 +346,7 @@ function reachableFrom(start) {
 }
 
 // Identifiers used in framework source (the barrel's consumers: anything under
-// analyses/shadow/ except spec/ itself). A base whose mangled export name
+// src/shadow/ except spec/ itself). A base whose mangled export name
 // (dots → underscores) appears there is treated as a reachability root.
 function collectFrameworkSource(dir) {
   let text = '';

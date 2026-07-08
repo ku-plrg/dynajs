@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# ExpoSE analyseScript backed by dynajs concolic (drop-in replacement for
+# ExpoSE's scripts/play). The Distributor spawns this as
+# `dynajs-play <target> <inputJSON>` and reads EXPOSE_OUT_PATH /
+# EXPOSE_COVERAGE_PATH, which Spawn.js puts in our environment. We forward to the
+# dynajs instrumenter + Concolic analysis; ConcolicAnalysis.endExecution writes
+# those two result files on exit.
+#
+# This script is OWNED BY THE DYNAJS REPO (bench/expose/dynajs-play) so it stays
+# in sync with dynajs's layout under version control. ExpoSE reaches it by
+# pointing EXPOSE_PLAY_SCRIPT at this absolute path (see bench/run-micro-benchmark.mjs);
+# ExpoSE's Distributor spawns it directly via its shebang, so no copy into
+# ExpoSE/scripts is needed.
+set -uo pipefail
+
+# This script lives at <repo>/bench/expose/dynajs-play, so the repo root is two
+# levels up. DYNAJS_HOME wins if the caller sets it (the benchmark does).
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DYNAJS_HOME="${DYNAJS_HOME:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
+
+# ExpoSE root. This script no longer lives inside ExpoSE, so it can't derive the
+# root from its own location -- take it from EXPOSE_HOME (the benchmark passes it;
+# default matches run-micro-benchmark.mjs's EXPOSE_HOME default).
+ROOT="${EXPOSE_HOME:-$HOME/ExpoSE}"
+
+TARGET="$1"
+INPUT="${2:-}"
+if [ -z "$INPUT" ]; then INPUT='{"_bound":0}'; fi
+
+# ExpoSE's Distributor passes AHG targets relative to Analyser/ -- ExpoSE's own
+# scripts/play runs `cd Analyser` first, so e.g. "../lib/Harness/src/harness.js"
+# resolves to ExpoSE/lib/... . dynajs-play does NOT cd there, so a relative
+# target would resolve against the Distributor's cwd (ExpoSE root) and miss.
+# Resolve a relative target against Analyser/ to an absolute path; absolute ones
+# (the microbench corpus passes absolute paths) pass through unchanged.
+case "$TARGET" in
+  /*) ;;
+  *)  TARGET="$(cd "$ROOT/Analyser" && cd "$(dirname "$TARGET")" && pwd)/$(basename "$TARGET")" ;;
+esac
+
+# dynajs instruments only files under cwd or an --include root; ExpoSE targets
+# live outside the dynajs repo, so include the target's directory explicitly.
+TARGET_DIR="$(cd "$(dirname "$TARGET")" && pwd)"
+
+# The corpus does `require("S$")`. Resolve it to dynajs's bridge (mapping
+# S$.symbol/assume/… onto the Concolic analysis) ahead of ExpoSE's own lib/S$ by
+# prepending its parent to NODE_PATH, and --include it so the bridge's
+# assume/assert branches are instrumented (visible as path conditions).
+SDOLLAR_HOME="$DYNAJS_HOME/examples/concolic/expose"
+export NODE_PATH="$SDOLLAR_HOME${NODE_PATH:+:$NODE_PATH}"
+
+export DYNAJS_HOME
+# --pos persist writes the id->location table into each instrumented file so
+# D$.ids is populated regardless of CJS/ESM (memory mode no-ops the merge for
+# ESM); ConcolicAnalysis reads it to build the statement-coverage payload the
+# Distributor aggregates (without it Total Coverage prints NaN%).
+export DYNAJS_OPTIONS="--analysis=$DYNAJS_HOME/examples/dist/Concolic.mjs --partial --pos persist --include $TARGET_DIR --include $SDOLLAR_HOME/S\$"
+
+# The input JSON is the last argv entry, the ExpoSE convention ConcolicAnalysis
+# reads via process.argv (mirrors Analyser.js).
+exec "$DYNAJS_HOME/bin/dynajs" node "$TARGET" "$INPUT"

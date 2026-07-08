@@ -6,11 +6,11 @@ set -euo pipefail
 # matrix (like `npm run microbench`, but SunSpider has no taint/concolic oracle):
 #
 #   node            plain `node bench.cjs`               -- the correctness oracle
-#   noop            analyses/dist/Noop.mjs (--partial)   -- bare instrumentation cost
-#   taint           analyses/dist/Taint.mjs  (--partial --pos persist)
-#   concolic        analyses/dist/Concolic.mjs (--partial)
-#   TraceAllSilent  samples/TraceAllSilent.js (--partial) -- every hook, no stdout
-#   CheckNaN        samples/CheckNaN.js (--partial)       -- reports NaN sites
+#   noop            examples/dist/Noop.mjs (--partial)   -- bare instrumentation cost
+#   taint           examples/dist/Taint.mjs  (--partial --pos persist)
+#   concolic        examples/dist/Concolic.mjs (--partial)
+#   TraceAllSilent  examples/simple/TraceAllSilent.js (--partial) -- every hook, no stdout
+#   CheckNaN        examples/simple/CheckNaN.js (--partial)       -- reports NaN sites
 #
 # Each cell is a status + elapsed time. A runner is `fail` on a non-zero exit or
 # `t/o` on timeout. For TRANSPARENT runners (node, taint, concolic,
@@ -26,11 +26,11 @@ REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
 # Runner registry. taint/concolic flags mirror bench/run-micro-benchmark.mjs
 # TYPE_CONFIG so the matrix runs each analysis exactly as the microbench suite
 # does; the samples reuse the same --partial scoping (instrument the bench only).
-NOOP_ANALYSIS="$REPO_ROOT/analyses/dist/Noop.mjs"
-TAINT_ANALYSIS="$REPO_ROOT/analyses/dist/Taint.mjs"
-CONCOLIC_ANALYSIS="$REPO_ROOT/analyses/dist/Concolic.mjs"
-TRACE_ANALYSIS="$REPO_ROOT/samples/TraceAllSilent.js"
-CHECKNAN_ANALYSIS="$REPO_ROOT/samples/CheckNaN.js"
+NOOP_ANALYSIS="$REPO_ROOT/examples/dist/Noop.mjs"
+TAINT_ANALYSIS="$REPO_ROOT/examples/dist/Taint.mjs"
+CONCOLIC_ANALYSIS="$REPO_ROOT/examples/dist/Concolic.mjs"
+TRACE_ANALYSIS="$REPO_ROOT/examples/simple/TraceAllSilent.js"
+CHECKNAN_ANALYSIS="$REPO_ROOT/examples/simple/CheckNaN.js"
 ALL_MODES=("node" "noop" "taint" "concolic" "TraceAllSilent" "CheckNaN")
 
 # DYNAJS_OPTIONS for a runner (empty for plain node).

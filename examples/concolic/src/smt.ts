@@ -23,7 +23,7 @@ import {
 // `< > <= >=`, ...) throw `UnsupportedSym`; callers turn that into an `error`
 // verdict rather than silently mis-translating.
 // (`Sym`/`Sort`/`UnsupportedSym`/`symToString` live in the engine-neutral
-// `@shared/sym.js`; only the SMT-LIB translation below is concolic-only.)
+// `./sym.js`; only the SMT-LIB translation below is concolic-only.)
 // ---------------------------------------------------------------------------
 
 // SMT-LIB rendering of a sort: scalars map to their name, the `*Seq` sorts to

@@ -1,5 +1,5 @@
-import type { Analysis } from '../../../src/core/index.js';
-import { ShadowExecution, type Valued, type Site } from '../../../src/shadow/index.js';
+import type { Analysis } from '../../src/core/index.js';
+import { ShadowExecution, type Valued, type Site } from '../../src/shadow/index.js';
 import { installPrelude } from './prelude.js';
 
 declare const D$: { analysis: Analysis } & Record<string, any>;
