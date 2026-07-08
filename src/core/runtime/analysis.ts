@@ -4,7 +4,7 @@ import * as hooks from './hooks.js';
 import { chainSkip } from './runtime.js';
 import { instrument } from '../instrument/main.js';
 import type { StateOption } from '../instrument/state.js';
-import type { AnalysisCallback } from '../types/analysis.js';
+import type { AnalysisCallback } from '../../types/analysis.js';
 import * as utils from '../utils.js';
 import { CAPTURED, locToStr } from '../utils.js';
 

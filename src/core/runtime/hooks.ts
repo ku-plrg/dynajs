@@ -19,7 +19,7 @@ import {
   templateConcatStep,
   UNARY_OPS,
 } from './runtime.js';
-import type { AnalysisCallback } from '../types/analysis.js';
+import type { AnalysisCallback } from '../../types/analysis.js';
 import { err, kindToStr, type VarKind } from '../utils.js';
 
 // -----------------------------------------------------------------------------

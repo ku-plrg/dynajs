@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { instrumentFile } from '../instrument/main.js';
+import { instrumentFile } from '../core/instrument/main.js';
 
 const COMMAND_NAME = path.basename(fileURLToPath(import.meta.url), '.js');
 

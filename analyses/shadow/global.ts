@@ -1,4 +1,4 @@
-import type { DynaJSType } from '../../src/index.js';
+import type { DynaJSType } from '../../src/core/index.js';
 
 declare global {
   var D$: DynaJSType;

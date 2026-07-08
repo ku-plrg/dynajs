@@ -14,5 +14,5 @@
     "types": ["node"],
     "paths": {}
   },
-  "include": ["src", "src/global.ts"]
+  "include": ["src", "src/core/global.ts"]
 }

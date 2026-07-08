@@ -1,4 +1,4 @@
-import type { AnalysisCallback } from '../types/analysis.js';
+import type { AnalysisCallback } from '../../types/analysis.js';
 import { CAPTURED, spec } from '../utils.js';
 
 // -----------------------------------------------------------------------------

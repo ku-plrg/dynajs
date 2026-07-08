@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------------------
 // adaptive instrumentation: parse analysis file to determine needed hooks
 // -----------------------------------------------------------------------------
-import type { AnalysisCallback } from '../types/analysis.js';
+import type { AnalysisCallback } from '../../types/analysis.js';
 import type * as Hooks from '../runtime/hooks.js';
 
 type Unpartial<T> = {

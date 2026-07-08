@@ -1,5 +1,5 @@
 import { ShadowExecution } from '../shadow/index.js';
-import type { Analysis } from '../../src/index.js';
+import type { Analysis } from '../../src/core/index.js';
 
 declare const D$: { analysis: Analysis } & Record<string, any>;
 
