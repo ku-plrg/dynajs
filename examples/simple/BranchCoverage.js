@@ -10,7 +10,7 @@
   /** @type {Record<string, { id: number, op: string, trueCount: number, falseCount: number }>} */
   var branches = {};
 
-  /** @type {import('../src/types/analysis.js').AnalysisCallback} */
+  /** @type {import('../../src/types/analysis.js').AnalysisCallback} */
   D$.analysis = {
     condition: function (id, op, value) {
       var key = id + ':' + op;

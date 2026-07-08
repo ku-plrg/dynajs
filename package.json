@@ -4,20 +4,18 @@
   "description": "",
   "main": "index.js",
   "bin": {
-    "dynajs": "./dynajs",
-    "djx": "./djx"
+    "dynajs": "./bin/dynajs",
+    "djx": "./bin/djx"
   },
   "scripts": {
-    "checkenv": "node ./scripts/check-env.mjs",
+    "build": "run-p typecheck typecheck:example-simple typecheck:example-shadow build:entry build:analysis",
     "copy": "node ./scripts/copy-polyfill.mjs",
-    "clean": "npm-run-all clean:analyses clean:dynajs",
-    "clean:analyses": "rimraf ./analyses/dist",
-    "clean:dynajs": "rimraf ./dist ./tsconfig.tsbuildinfo",
-    "build": "run-p typecheck typecheck:analyses typecheck:samples build:entry build:analysis",
+    "clean": "rimraf ./examples/dist ./dist ./tsconfig.tsbuildinfo",
+    "doctor": "node ./scripts/doctor.mjs",
     "typecheck": "tsc -b",
-    "typecheck:analyses": "tsc -p ./analyses/tsconfig.json",
-    "typecheck:samples": "tsc -p ./samples/tsconfig.json",
-    "typecheck:full": "node ./scripts/typecheck-full.mjs",
+    "typecheck:example-shadow": "tsc -p ./examples/tsconfig.json",
+    "typecheck:example-simple": "tsc -p ./examples/simple/tsconfig.json",
+    "typecheck:include-nocheck": "node ./scripts/typecheck-full.mjs",
     "build:analysis": "node ./scripts/build-analysis.mjs",
     "build:entry": "node ./scripts/build-entry.mjs",
     "build:watch": "tsc -b -w",
@@ -79,7 +77,6 @@
     "acorn-walk": "^8.3.4",
     "astring": "^1.9.0",
     "chalk": "^5.6.2",
-    "dedent-js": "^1.0.1",
     "yargs": "^17.7.2"
   }
 }

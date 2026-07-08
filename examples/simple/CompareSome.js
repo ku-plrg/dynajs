@@ -31,7 +31,7 @@
     console.log(JSON.stringify(val));
   }
 
-  /** @type {import('../src/types/analysis.js').AnalysisCallback} */
+  /** @type {import('../../src/types/analysis.js').AnalysisCallback} */
   const analysis = {
     invokeFunPre: function (iid, f, base, args, isConstructor, isMethod) {
       var fname = typeof f === 'function' ? f.name : '<not callable>';
@@ -142,7 +142,7 @@
    * verbatim; the few whose Jalangi convention differs are overridden here. This
    * is the only place that touches `J$`, which has no type in this project.
    *
-   * @param {import('../src/types/analysis.js').AnalysisCallback} a
+   * @param {import('../../src/types/analysis.js').AnalysisCallback} a
    */
   function installOnJalangi(a) {
     /** @type {Record<string, Function>} */

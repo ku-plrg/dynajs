@@ -8,20 +8,20 @@ const requireBanner = [
 
 const entryPoints = [
   {
-    entry: 'analyses/taint/src/index.ts',
-    outfile: 'analyses/dist/Taint.mjs',
+    entry: 'examples/taint/src/index.ts',
+    outfile: 'examples/dist/Taint.mjs',
   },
   {
-    entry: 'analyses/concolic/src/index.ts',
-    outfile: 'analyses/dist/Concolic.mjs',
+    entry: 'examples/concolic/src/index.ts',
+    outfile: 'examples/dist/Concolic.mjs',
   },
   {
-    entry: 'analyses/noop/index.ts',
-    outfile: 'analyses/dist/Noop.mjs',
+    entry: 'examples/noop/index.ts',
+    outfile: 'examples/dist/Noop.mjs',
   },
   {
-    entry: 'analyses/noop-nobuiltin/index.ts',
-    outfile: 'analyses/dist/NoopNoBuiltin.mjs',
+    entry: 'examples/noop-nobuiltin/index.ts',
+    outfile: 'examples/dist/NoopNoBuiltin.mjs',
   },
 ];
 
@@ -38,7 +38,7 @@ const results = await Promise.allSettled(
       banner: {
         js: requireBanner,
       },
-      tsconfig: './analyses/tsconfig.json',
+      tsconfig: './examples/tsconfig.json',
       logLevel: 'warning',
     }),
   ),

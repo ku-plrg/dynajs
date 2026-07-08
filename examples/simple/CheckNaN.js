@@ -12,7 +12,7 @@
     info[id] = (info[id] | 0) + 1;
   }
 
-  /** @type {import('../src/types/analysis.js').AnalysisCallback} */
+  /** @type {import('../../src/types/analysis.js').AnalysisCallback} */
   D$.analysis = {
     invokeFun: function (id, f, base, args, result, isConstructor, isMethod) {
       if (result !== result) record(id);

@@ -141,7 +141,7 @@ function cmdInstrument(file: string, verbose: boolean): number {
 }
 
 function cmdClean(args: string[]): number {
-  const cleanBin = path.join(DYNAJS_HOME, 'djx-clean');
+  const cleanBin = path.join(DYNAJS_HOME, 'bin', '.djx-clean');
   if (!existsSync(cleanBin)) {
     throw new Error(`djx-clean script not found at ${cleanBin}`);
   }

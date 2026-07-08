@@ -1,12 +1,12 @@
 {
-  "extends": "../tsconfig.json",
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "rootDir": "..",
+    "rootDir": "../..",
     "noEmit": true,
     "incremental": false,
     "allowJs": true,
     "checkJs": true,
     "paths": {}
   },
-  "include": ["global.ts", "*.js"]
+  "include": ["../../src/global.ts", "."]
 }
