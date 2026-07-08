@@ -1,18 +1,17 @@
 import fs from 'node:fs';
-import path from 'node:path';
 import assert from 'node:assert/strict';
-import { repoRoot } from './paths.mjs';
 
 // Set DYNAJS_UPDATE=1 to overwrite mismatching .out files instead of failing.
 export const UPDATE =
   process.env.DYNAJS_UPDATE === '1' || process.env.DYNAJS_UPDATE === 'true';
 
-const EXIT_CODES_PATH = path.join(repoRoot, 'tests', 'expected-exit-codes.json');
-
-let expectedExitCodes;
+// A fixture may declare a nonzero expected exit code in a sibling `.exit` file
+// (e.g. throw-1.exit contains "1"), mirroring the sibling `.out` snapshot
+// convention — co-located so it survives moves. Absent means the default, 0.
 export function expectedExitCode(absFile) {
-  expectedExitCodes ??= JSON.parse(fs.readFileSync(EXIT_CODES_PATH, 'utf8'));
-  return expectedExitCodes[path.relative(repoRoot, absFile)] ?? 0;
+  const exitFile = absFile.replace(/\.[^.]+$/, '.exit');
+  if (!fs.existsSync(exitFile)) return 0;
+  return Number(fs.readFileSync(exitFile, 'utf8').trim());
 }
 
 // Compare trimmed stdout to the sibling .out snapshot. Under UPDATE, rewrite it.

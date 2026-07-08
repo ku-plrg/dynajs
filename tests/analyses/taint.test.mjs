@@ -10,7 +10,7 @@ import { runDynajs } from '../support/run.mjs';
 // a failed taint check. Goals are the same shape but not yet guaranteed to
 // pass, so they run `todo` — a regression there is visible but never fails
 // the suite.
-const testRoot = path.join(repoRoot, 'examples', 'taint', 'test');
+const testRoot = path.join(repoRoot, 'tests', 'analyses', 'taint');
 const analysis = 'examples/dist/Taint.mjs';
 
 before(() => {

@@ -5,24 +5,25 @@ import { repoRoot } from '../support/paths.mjs';
 import { iterTestTargets } from '../support/discover.mjs';
 import { runPlainNode, runDynajs } from '../support/run.mjs';
 
-// Behavior regression: instrumenting a program must not change what it does, so
-// dynajs output is compared against plain Node (the oracle). A silent analysis
-// (EmptyAnalysis) lets us compare full stdout; a noisy one (TraceAll writes its
-// trace to stdout) can only be held to exit-code parity. Both run in partial AND
-// full mode — full instruments every feature, so it is the stronger transparency
-// guarantee and the mode where breakage is most likely to surface.
+// Engine transparency (differential): instrumenting a program must not change
+// what it does, so dynajs output is compared against plain Node (the oracle).
+// This tests the instrumentation ENGINE — the analyses are only vehicles. A
+// silent analysis (EmptyAnalysis) lets us compare full stdout; a noisy one
+// (TraceAll writes its trace to stdout) can only be held to exit-code parity.
+// Both run in partial AND full mode — full instruments every feature, so it is
+// the stronger guarantee and the mode where breakage is most likely to surface.
 const MODES = ['partial', 'full'];
 
 const SUITES = [
   {
-    name: 'empty',
-    dir: 'tests/core/regression-node/empty',
+    name: 'transparent',
+    dir: 'tests/engine/differential/transparent',
     analysis: 'examples/simple/EmptyAnalysis.js',
     compareStdout: true,
   },
   {
-    name: 'trace-all',
-    dir: 'tests/core/regression-node/trace-all',
+    name: 'exit-only',
+    dir: 'tests/engine/differential/exit-only',
     analysis: 'examples/simple/TraceAll.js',
     compareStdout: false,
   },

@@ -7,26 +7,27 @@ import { iterTestTargets } from '../support/discover.mjs';
 import { runDynajs } from '../support/run.mjs';
 import { assertSnapshot, expectedExitCode } from '../support/snapshot.mjs';
 
-// Snapshot regression: the trace an analysis emits must match its golden .out.
-// Run in the canonical partial mode only — TraceAll's trace is byte-identical
-// under partial and full (it hooks every feature), so a per-mode snapshot would
-// just duplicate. A target with a sibling .out is checked against it; every
-// target is also held to its expected exit code (default 0, overridden in
-// expected-exit-codes.json).
+// Snapshot: the output a demo analysis emits must match its golden .out. Unlike
+// the differential suite, this tests the ANALYSES in examples/simple/, not the
+// engine. Run in the canonical partial mode only — TraceAll's trace is
+// byte-identical under partial and full (it hooks every feature), so a per-mode
+// snapshot would just duplicate. A target with a sibling .out is checked against
+// it; every target is also held to its expected exit code (default 0, overridden
+// by a sibling `.exit` file, e.g. throw-1.exit contains "1").
 const SUITES = [
   {
     name: 'trace-all',
-    dir: 'tests/regression-trace/trace-all',
+    dir: 'tests/analyses/simple/trace-all',
     analysis: 'examples/simple/TraceAll.js',
   },
   {
     name: 'compare-some',
-    dir: 'tests/regression-trace/compare-some',
+    dir: 'tests/analyses/simple/compare-some',
     analysis: 'examples/simple/CompareSome.js',
   },
   {
     name: 'hierarchy',
-    dir: 'tests/regression-trace/hierarchy',
+    dir: 'tests/analyses/simple/hierarchy',
     analysis: 'examples/simple/HierarchyDemo.js',
   },
 ];

@@ -12,7 +12,7 @@ import { runDynajs } from '../support/run.mjs';
 // unsolved), expected is the test's ground truth. A file passes when it emits
 // at least one verdict and every verdict's actual matches its expected. Goals
 // run `todo` — not yet guaranteed, never fails the suite.
-const testRoot = path.join(repoRoot, 'examples', 'concolic', 'test');
+const testRoot = path.join(repoRoot, 'tests', 'analyses', 'concolic');
 const analysis = 'examples/dist/Concolic.mjs';
 
 const VERDICT_RE = /@@DJX_VERDICT\s+(detected|clean|error)\s+(detected|clean)\b/g;
