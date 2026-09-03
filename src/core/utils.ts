@@ -163,6 +163,10 @@ export function parse(code: string, isScript: boolean): Program {
     locations: true,
     ecmaVersion: ECMA_VERSION,
     sourceType,
+    // Node compiles CommonJS inside a function wrapper, so a top-level
+    // `return` is legal there. We parse the raw source before that wrapping
+    // happens, so mirror Node's leniency for scripts (never for ESM).
+    allowReturnOutsideFunction: isScript,
   });
 }
 
