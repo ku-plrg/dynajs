@@ -805,6 +805,10 @@ function makeRunners(opts) {
           {
             EXPOSE_PLAY_SCRIPT: "scripts/dynajs-play",
             DYNAJS_HOME: process.env.DYNAJS_HOME ?? REPO_ROOT,
+            // `require("S$")` must hit the dynajs bridge, not ExpoSE's lib/S$
+            // (which needs ExpoSE's own Analyser). scripts/env APPENDS lib, so
+            // prepending ours here wins resolution.
+            NODE_PATH: path.join(REPO_ROOT, "analyses/concolic/expose"),
             ...EXPOSE_REPLAY_ENV,
           },
           out, err, exposeBackstopMs(t),

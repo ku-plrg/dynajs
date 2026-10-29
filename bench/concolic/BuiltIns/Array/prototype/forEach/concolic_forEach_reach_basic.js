@@ -1,0 +1,19 @@
+// @type concolic-replay
+// @target es5 Array.prototype.forEach
+// @feature builtin forEach
+// @reach true
+
+"use strict";
+var S$ = require("S$");
+
+function __test_symbolic__(symbolic) {
+
+  var sum = 0; symbolic.forEach(function (x) { sum += x; });
+  // @witness S$.symbol("s", [3,7])
+  if (sum === 10) {
+    throw "Reachable";
+  }
+
+}
+
+__test_symbolic__(S$.symbol("s", [1,2]));
