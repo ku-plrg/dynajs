@@ -2,6 +2,7 @@
 // @target es5 String.prototype.bold
 // @feature builtin bold
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

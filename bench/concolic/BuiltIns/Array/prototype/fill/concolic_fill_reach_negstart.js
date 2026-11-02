@@ -2,6 +2,7 @@
 // @target es6+ Array.prototype.fill
 // @feature builtin fill
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

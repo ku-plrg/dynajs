@@ -2,6 +2,7 @@
 // @target es5 String.prototype.fontsize
 // @feature builtin fontsize
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

@@ -2,6 +2,7 @@
 // @target es5 Array.prototype.reverse
 // @feature builtin reverse
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

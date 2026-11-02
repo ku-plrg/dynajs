@@ -2,6 +2,7 @@
 // @target es6+ String.prototype.startsWith
 // @feature builtin startsWith
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

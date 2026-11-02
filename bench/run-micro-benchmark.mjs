@@ -37,7 +37,8 @@
 //                     expose-replay) over the bench/concolic reach corpus. The
 //                     default run EXCLUDES them; this flag is their separate run.
 //                     Reports a `runs` column: program executions to reach the
-//                     guarded throw (from ExpoSE's `N paths` tally)
+//                     guarded throw (from ExpoSE's `N paths` tally). Benches
+//                     tagged `// @dynajs-only` run under dynajs-co-replay only
 //   --coverage        census of @done progress per area (BuiltIns/Syntax) and
 //                     subarea: covered units / universe. BuiltIns universe =
 //                     ECMAScript spec members (SPEC_BUILTIN_TOTAL); Syntax =
@@ -400,6 +401,9 @@ function parseMeta(file) {
     reach: rc ? rc[1].toLowerCase() === "true" : null,
     // eye-verified marker: a `// @done` header line. `--done` restricts the run to only these.
     done: /^\/\/\s*@done\b/m.test(head),
+    // `// @dynajs-only`: a reach bench exercising a builtin only dynajs models,
+    // so expose-replay skips it (stock ExpoSE has no model to compare against).
+    dynajsOnly: /^\/\/\s*@dynajs-only\b/m.test(head),
   };
 }
 
@@ -822,7 +826,7 @@ function makeRunners(opts) {
       // EXPOSE_PLAY_SCRIPT -> the Distributor falls back to its own scripts/play.
       name: "expose-replay",
       group: "replay",
-      applies: (b) => b.type === "concolic-replay",
+      applies: (b) => b.type === "concolic-replay" && !b.dynajsOnly,
       available: () => existsSync(EXPOSE_ANALYSE),
       exec: (b, out, err, t) =>
         timeRun(["bash", EXPOSE_ANALYSE, b.file], { ...EXPOSE_REPLAY_ENV },

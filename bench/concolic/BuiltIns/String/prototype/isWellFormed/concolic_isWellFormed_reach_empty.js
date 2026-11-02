@@ -2,6 +2,7 @@
 // @target es6+ String.prototype.isWellFormed
 // @feature builtin isWellFormed
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

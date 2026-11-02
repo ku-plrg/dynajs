@@ -2,6 +2,7 @@
 // @target es5 Array.prototype.splice
 // @feature builtin splice
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

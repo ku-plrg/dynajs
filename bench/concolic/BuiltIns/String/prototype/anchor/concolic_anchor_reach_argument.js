@@ -2,6 +2,7 @@
 // @target es5 String.prototype.anchor
 // @feature builtin anchor
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

@@ -2,6 +2,7 @@
 // @target es5 Array.isArray
 // @feature builtin isArray
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

@@ -2,6 +2,7 @@
 // @target es6+ Array.of
 // @feature builtin of
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

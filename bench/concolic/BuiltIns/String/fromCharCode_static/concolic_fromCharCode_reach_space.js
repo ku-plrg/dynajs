@@ -2,6 +2,7 @@
 // @target es5 String.fromCharCode
 // @feature builtin fromCharCode
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

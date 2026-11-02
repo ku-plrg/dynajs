@@ -2,6 +2,7 @@
 // @target es5 String.prototype.link
 // @feature builtin link
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

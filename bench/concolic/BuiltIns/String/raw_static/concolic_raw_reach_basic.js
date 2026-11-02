@@ -2,6 +2,7 @@
 // @target es6+ String.raw
 // @feature builtin raw
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

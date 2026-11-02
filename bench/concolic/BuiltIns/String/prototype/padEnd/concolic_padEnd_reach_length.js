@@ -2,6 +2,7 @@
 // @target es6+ String.prototype.padEnd
 // @feature builtin padEnd
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

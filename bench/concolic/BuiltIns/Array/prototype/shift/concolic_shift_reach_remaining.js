@@ -2,6 +2,7 @@
 // @target es5 Array.prototype.shift
 // @feature builtin shift
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

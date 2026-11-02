@@ -2,6 +2,7 @@
 // @target es6+ String.prototype.endsWith
 // @feature builtin endsWith
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

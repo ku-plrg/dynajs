@@ -2,6 +2,7 @@
 // @target es5 Array.prototype.sort
 // @feature builtin sort
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

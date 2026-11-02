@@ -2,6 +2,7 @@
 // @target es5 Array.prototype.map
 // @feature builtin map
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

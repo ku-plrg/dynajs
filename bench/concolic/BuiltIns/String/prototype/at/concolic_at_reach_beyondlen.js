@@ -2,6 +2,7 @@
 // @target es6+ String.prototype.at
 // @feature builtin at
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

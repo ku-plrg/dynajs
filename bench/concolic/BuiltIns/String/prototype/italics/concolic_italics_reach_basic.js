@@ -2,6 +2,7 @@
 // @target es5 String.prototype.italics
 // @feature builtin italics
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

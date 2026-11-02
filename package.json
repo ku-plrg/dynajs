@@ -25,6 +25,7 @@
     "microbench": "echo 'run `npm run microbench:taint` or `npm run microbench:concolic` to run the micro benchmark'",
     "microbench:taint": "npm run build && node ./bench/run-micro-benchmark.mjs --done",
     "microbench:concolic": "npm run build && node ./bench/run-micro-benchmark.mjs --replay",
+    "microbench:concolic:dynajs": "npm run build && node ./bench/run-micro-benchmark.mjs --runner dynajs-co-replay",
     "microbench:done": "npm run build && node ./bench/run-micro-benchmark.mjs --done",
     "microbench:check": "npm run build && node ./bench/run-micro-benchmark.mjs --check",
     "microbench:snapshot": "npm run build && node ./bench/run-micro-benchmark.mjs --update-snapshot",

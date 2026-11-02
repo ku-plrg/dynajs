@@ -2,6 +2,7 @@
 // @target es5 Array.prototype.forEach
 // @feature builtin forEach
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

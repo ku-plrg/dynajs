@@ -2,6 +2,7 @@
 // @target es5 Array.prototype.every
 // @feature builtin every
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

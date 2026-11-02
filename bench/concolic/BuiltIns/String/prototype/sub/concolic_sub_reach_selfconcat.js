@@ -2,6 +2,7 @@
 // @target es5 String.prototype.sub
 // @feature builtin sub
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

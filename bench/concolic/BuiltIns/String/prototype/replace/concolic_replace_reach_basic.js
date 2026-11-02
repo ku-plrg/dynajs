@@ -2,6 +2,7 @@
 // @target es5 String.prototype.replace
 // @feature builtin replace
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

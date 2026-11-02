@@ -2,6 +2,7 @@
 // @target es6+ String.prototype.normalize
 // @feature builtin normalize
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

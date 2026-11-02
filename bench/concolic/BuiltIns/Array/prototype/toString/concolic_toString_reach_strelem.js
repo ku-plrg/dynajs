@@ -2,6 +2,7 @@
 // @target es5 Array.prototype.toString
 // @feature builtin toString
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

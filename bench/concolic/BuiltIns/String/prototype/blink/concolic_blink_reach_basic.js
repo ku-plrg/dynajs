@@ -2,6 +2,7 @@
 // @target es5 String.prototype.blink
 // @feature builtin blink
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

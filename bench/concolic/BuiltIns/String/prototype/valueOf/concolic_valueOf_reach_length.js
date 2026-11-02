@@ -2,6 +2,7 @@
 // @target es5 String.prototype.valueOf
 // @feature builtin valueOf
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

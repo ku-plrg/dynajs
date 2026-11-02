@@ -2,6 +2,7 @@
 // @target es6+ Array.prototype.findLast
 // @feature builtin findLast
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

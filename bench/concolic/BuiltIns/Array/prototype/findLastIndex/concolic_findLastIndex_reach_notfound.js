@@ -2,6 +2,7 @@
 // @target es6+ Array.prototype.findLastIndex
 // @feature builtin findLastIndex
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

@@ -2,6 +2,7 @@
 // @target es6+ Array.prototype.findIndex
 // @feature builtin findIndex
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

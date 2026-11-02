@@ -2,6 +2,7 @@
 // @target es5 String.prototype.big
 // @feature builtin big
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

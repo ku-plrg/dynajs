@@ -2,6 +2,7 @@
 // @target es5 Array.prototype.filter
 // @feature builtin filter
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

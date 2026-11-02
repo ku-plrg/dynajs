@@ -2,6 +2,7 @@
 // @target es6+ Array.prototype.with
 // @feature builtin with
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

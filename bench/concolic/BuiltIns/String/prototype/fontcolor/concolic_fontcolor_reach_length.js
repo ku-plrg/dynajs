@@ -2,6 +2,7 @@
 // @target es5 String.prototype.fontcolor
 // @feature builtin fontcolor
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

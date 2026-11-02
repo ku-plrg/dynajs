@@ -2,6 +2,7 @@
 // @target es6+ String.fromCodePoint
 // @feature builtin fromCodePoint
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

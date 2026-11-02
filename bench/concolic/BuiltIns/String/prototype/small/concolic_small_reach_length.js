@@ -2,6 +2,7 @@
 // @target es5 String.prototype.small
 // @feature builtin small
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

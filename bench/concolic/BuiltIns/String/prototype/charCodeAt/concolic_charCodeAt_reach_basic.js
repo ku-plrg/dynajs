@@ -2,6 +2,7 @@
 // @target es5 String.prototype.charCodeAt
 // @feature builtin charCodeAt
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

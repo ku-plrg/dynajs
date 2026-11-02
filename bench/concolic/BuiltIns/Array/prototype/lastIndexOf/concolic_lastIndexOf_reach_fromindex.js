@@ -2,6 +2,7 @@
 // @target es5 Array.prototype.lastIndexOf
 // @feature builtin lastIndexOf
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");

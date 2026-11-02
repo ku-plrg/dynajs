@@ -2,6 +2,7 @@
 // @target es6+ Array.prototype.toSorted
 // @feature builtin toSorted
 // @reach true
+// @dynajs-only
 
 "use strict";
 var S$ = require("S$");
