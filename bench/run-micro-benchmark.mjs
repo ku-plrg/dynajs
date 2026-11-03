@@ -315,10 +315,12 @@ function nodemedicCjsDir() {
 // like-for-like comparison of the two engines' search on the same corpus.
 const EXPOSE_HOME = process.env.EXPOSE_HOME ?? path.join(homedir(), "ExpoSE");
 // Multi-path entry: ExpoSE's Distributor (scripts/analyse). dynajs-co-replay
-// selects the dynajs concolic drop-in via EXPOSE_PLAY_SCRIPT=scripts/dynajs-play;
+// selects the dynajs concolic drop-in by pointing EXPOSE_PLAY_SCRIPT at the
+// repo-owned play script (an absolute path — ExpoSE's Distributor spawns it
+// directly via its shebang, so it need not live under ExpoSE/scripts);
 // expose-replay leaves it unset so the Distributor uses its own scripts/play.
 const EXPOSE_ANALYSE = path.join(EXPOSE_HOME, "scripts/analyse");
-const EXPOSE_DYNAJS_PLAY = path.join(EXPOSE_HOME, "scripts/dynajs-play");
+const EXPOSE_DYNAJS_PLAY = path.join(REPO_ROOT, "bench/expose/dynajs-play");
 // The guarded throw a reach bench expects the search to penetrate. The
 // Distributor prints each uncaught throw as a `[!] <value>` finding; a finding
 // with this value means the branch was reached.
@@ -807,7 +809,10 @@ function makeRunners(opts) {
         timeRun(
           ["bash", EXPOSE_ANALYSE, b.file],
           {
-            EXPOSE_PLAY_SCRIPT: "scripts/dynajs-play",
+            // Absolute path into the repo; the repo-owned play script reads
+            // EXPOSE_HOME to resolve ExpoSE's root (it no longer lives there).
+            EXPOSE_PLAY_SCRIPT: EXPOSE_DYNAJS_PLAY,
+            EXPOSE_HOME,
             DYNAJS_HOME: process.env.DYNAJS_HOME ?? REPO_ROOT,
             // `require("S$")` must hit the dynajs bridge, not ExpoSE's lib/S$
             // (which needs ExpoSE's own Analyser). scripts/env APPENDS lib, so
