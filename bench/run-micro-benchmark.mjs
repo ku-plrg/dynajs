@@ -1205,7 +1205,7 @@ function main() {
       const runsSamples = [];
       const sigs = [];
       let anyTimeout = false;
-      let firstCases = null;
+      const repCases = [];
       for (let rep = 1; rep <= opts.reps; rep++) {
         const prefix = `${r.name}__${b.name}__rep${rep}`;
         const run = r.exec(
@@ -1229,7 +1229,7 @@ function main() {
         if (Number.isFinite(runs)) runsSamples.push(runs);
         sigs.push(sig(cases));
         if (run.timedOut) anyTimeout = true;
-        if (rep === 1) firstCases = cases;
+        repCases.push(cases);
         cases.forEach((c, i) =>
           appendFileSync(
             csvFile,
@@ -1238,11 +1238,28 @@ function main() {
         );
       }
 
-      // Cases should be deterministic across reps; warn if not, use rep 1.
+      // Cases should be deterministic across reps, but ExpoSE is not always: Z3
+      // may hand back a witness (e.g. with control characters) whose replay
+      // misses the branch, so the same bench reaches in one rep and not the
+      // next. Warn, and take each case's MAJORITY actual across reps (ties ->
+      // the earliest rep) rather than trusting rep 1 alone.
       if (sigs.some((s) => s !== sigs[0]))
         console.error(`warn ${r.name}/${b.name}: inconsistent cases across reps: ${sigs.join(" | ")}`);
 
-      const cases = firstCases.map((c) => ({ ...c, result: classify(c.expected, c.actual) }));
+      const majority = (i) => {
+        const votes = new Map();
+        for (const cs of repCases) {
+          const a = cs[i]?.actual;
+          if (a !== undefined) votes.set(a, (votes.get(a) ?? 0) + 1);
+        }
+        let best = repCases[0][i].actual;
+        for (const [a, n] of votes) if (n > votes.get(best)) best = a;
+        return best;
+      };
+      const cases = repCases[0].map((c, i) => {
+        const actual = majority(i);
+        return { ...c, actual, result: classify(c.expected, actual) };
+      });
       const mean = samples.reduce((a, c) => a + c, 0) / samples.length;
       // in-process body execution time, bootstrap+instrument excluded. Take the
       // MIN across reps: timing noise (scheduling, GC) is one-sided positive, so
