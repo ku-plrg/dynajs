@@ -26,6 +26,7 @@
     "microbench:taint": "npm run build && node ./bench/run-micro-benchmark.mjs --done",
     "microbench:concolic": "npm run build && node ./bench/run-micro-benchmark.mjs --replay",
     "microbench:concolic:dynajs": "npm run build && node ./bench/run-micro-benchmark.mjs --runner dynajs-co-replay",
+    "microbench:concolic:table": "npm run build && node ./bench/run-micro-benchmark.mjs --replay --shared --reps 3",
     "microbench:done": "npm run build && node ./bench/run-micro-benchmark.mjs --done",
     "microbench:check": "npm run build && node ./bench/run-micro-benchmark.mjs --check",
     "microbench:snapshot": "npm run build && node ./bench/run-micro-benchmark.mjs --update-snapshot",

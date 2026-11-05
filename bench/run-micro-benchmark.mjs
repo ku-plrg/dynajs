@@ -38,7 +38,13 @@
 //                     default run EXCLUDES them; this flag is their separate run.
 //                     Reports a `runs` column: program executions to reach the
 //                     guarded throw (from ExpoSE's `N paths` tally). Benches
-//                     tagged `// @dynajs-only` run under dynajs-co-replay only
+//                     tagged `// @dynajs-only` run under dynajs-co-replay only.
+//                     expose-replay-patched is stock ExpoSE with its fixed
+//                     String/Array models (EXPOSE_FIXED_MODELS=1)
+//   --shared          keep only benches every active runner applies to, so all
+//                     rows cover the same cases (with --replay: drops
+//                     @dynajs-only). The reach table also reports paths/time
+//                     over passing benches only (paths_pass, time_pass)
 //   --coverage        census of @done progress per area (BuiltIns/Syntax) and
 //                     subarea: covered units / universe. BuiltIns universe =
 //                     ECMAScript spec members (SPEC_BUILTIN_TOTAL); Syntax =
@@ -523,6 +529,10 @@ function buildMatrix(recs) {
   const m = {
     TP: 0, FP: 0, FN: 0, TN: 0, err: 0, timeout: 0,
     meanSum: 0, files: 0, execSum: 0, execFiles: 0, runsSum: 0, runsFiles: 0,
+    // the same timing/paths restricted to files whose every case passed
+    // (TP/TN): the reach table reports both, since a failing reach bench runs
+    // to the search budget and so measures the budget, not the cost.
+    passMeanSum: 0, passFiles: 0, passRunsSum: 0, passRunsFiles: 0,
   };
   for (const rec of recs) {
     for (const c of rec.cases) {
@@ -538,6 +548,11 @@ function buildMatrix(recs) {
     // runs = program executions to reach (the *-replay runners); NaN for other
     // runners and for a replay run that never printed the Finished tally.
     if (Number.isFinite(rec.runsMin)) { m.runsSum += rec.runsMin; m.runsFiles++; }
+    if (rec.cases.every((c) => c.result === "TP" || c.result === "TN")) {
+      m.passMeanSum += rec.mean;
+      m.passFiles++;
+      if (Number.isFinite(rec.runsMin)) { m.passRunsSum += rec.runsMin; m.passRunsFiles++; }
+    }
   }
   return m;
 }
@@ -584,16 +599,20 @@ const matrixHeader = (lead) =>
 const reachHeader = (lead) =>
   lead.padEnd(24) +
   green("PASS".padStart(6)) + red("FAIL".padStart(6)) +
-  "accuracy".padStart(10) + "paths".padStart(9) + "time_ms".padStart(10);
+  "accuracy".padStart(10) + "paths".padStart(9) + "time_ms".padStart(10) +
+  "paths_pass".padStart(12) + "time_pass".padStart(11);
 function reachRow(label, m) {
   const pass = m.TP + m.TN;
   const fail = m.FP + m.FN;
+  const avg = (sum, n) => (n ? (sum / n).toFixed(1) : "n/a");
   return (
     label.padEnd(24) +
     green(String(pass).padStart(6)) + red(String(fail).padStart(6)) +
     fmtRatio(ratio(pass, pass + fail)).padStart(10) +
-    (m.runsFiles ? (m.runsSum / m.runsFiles).toFixed(1) : "n/a").padStart(9) +
-    (m.files ? (m.meanSum / m.files).toFixed(1) : "0").padStart(10)
+    avg(m.runsSum, m.runsFiles).padStart(9) +
+    avg(m.meanSum, m.files).padStart(10) +
+    avg(m.passRunsSum, m.passRunsFiles).padStart(12) +
+    avg(m.passMeanSum, m.passFiles).padStart(11)
   );
 }
 
@@ -834,7 +853,21 @@ function makeRunners(opts) {
       applies: (b) => b.type === "concolic-replay" && !b.dynajsOnly,
       available: () => existsSync(EXPOSE_ANALYSE),
       exec: (b, out, err, t) =>
-        timeRun(["bash", EXPOSE_ANALYSE, b.file], { ...EXPOSE_REPLAY_ENV },
+        timeRun(["bash", EXPOSE_ANALYSE, b.file], { ...EXPOSE_REPLAY_ENV, EXPOSE_FIXED_MODELS: "" },
+          out, err, exposeBackstopMs(t), EXPOSE_HOME),
+      cases: reachCases,
+    },
+    {
+      // Same as expose-replay, but with ExpoSE's spec-conformant String/Array
+      // models (Analyser/src/Models/*Fixed.js, toggled by EXPOSE_FIXED_MODELS).
+      // The fair baseline: hand models with their known bugs fixed.
+      name: "expose-replay-patched",
+      group: "replay",
+      applies: (b) => b.type === "concolic-replay" && !b.dynajsOnly,
+      available: () =>
+        existsSync(path.join(EXPOSE_HOME, "Analyser/src/Models/StringModelsFixed.js")),
+      exec: (b, out, err, t) =>
+        timeRun(["bash", EXPOSE_ANALYSE, b.file], { ...EXPOSE_REPLAY_ENV, EXPOSE_FIXED_MODELS: "1" },
           out, err, exposeBackstopMs(t), EXPOSE_HOME),
       cases: reachCases,
     },
@@ -887,12 +920,13 @@ function parseArgs(argv) {
       case "--count": opts.count = true; break;
       case "--coverage": opts.coverage = true; break;
       case "--replay": opts.replay = true; break;
+      case "--shared": opts.shared = true; break;
       case "--help":
         console.log(
           "Usage: node bench/run-micro-benchmark.mjs " +
             "[--runner NAME] [--bench NAME] [--dir SUB] [--analysis NAME] [--dynajs-flags STR] " +
             "[--reps N] [--warmup N] [--timeout SEC] [--output-dir DIR] " +
-            "[--done] [--count] [--coverage] [--replay] [--check | --update-snapshot]",
+            "[--done] [--count] [--coverage] [--replay] [--shared] [--check | --update-snapshot]",
         );
         process.exit(0);
       default: die(`unknown option: ${a}`);
@@ -1107,6 +1141,13 @@ function main() {
     active.push(r);
   }
   if (!active.length) die("no runners available");
+  // --shared: keep only benches every active runner applies to, so each row of
+  // the report is over the same case set (e.g. the reach benches ExpoSE can run,
+  // excluding `@dynajs-only`).
+  if (opts.shared) {
+    benches = benches.filter((b) => active.every((r) => !r.applies || r.applies(b)));
+    if (!benches.length) die("--shared: no benchmark applies to every active runner");
+  }
 
   const ts = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
   const outputDir = opts.outputDir ?? path.join(REPO_ROOT, "bench/results", `micro-${ts}`);
