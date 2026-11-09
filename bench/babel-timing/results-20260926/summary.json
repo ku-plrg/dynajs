@@ -1,0 +1,345 @@
+{
+  "configuration": {
+    "reps": "3",
+    "warmup": "1"
+  },
+  "groups": {
+    "Overall": {
+      "measurements": 1332,
+      "complete_phase_measurements": 1332,
+      "quality": {
+        "cases": 444,
+        "confusion": {
+          "TP": 142,
+          "FP": 88,
+          "TN": 184,
+          "FN": 30
+        },
+        "errors": 22,
+        "timeouts": 0,
+        "unstable": []
+      },
+      "means_ms": {
+        "elapsed_ms": 284.8391891891892,
+        "init_ms": 206.43802209309308,
+        "load_ms": 39.33007004054054,
+        "warmup_ms": 165.2966371816817,
+        "helpers_ms": 1.791069472972973,
+        "transform_ms": 9.707851424174175,
+        "babel_total_ms": 216.14587351726726,
+        "total_minus_transform_ms": 275.131337765015,
+        "total_minus_babel_ms": 68.69331567192192
+      },
+      "successful_measurements": 1266,
+      "successful_means_ms": {
+        "elapsed_ms": 284.62535545023695,
+        "init_ms": 206.46649040758294,
+        "load_ms": 39.340115469194316,
+        "warmup_ms": 165.31509101026856,
+        "helpers_ms": 1.791022239336493,
+        "transform_ms": 9.271954436808846,
+        "babel_total_ms": 215.73844484439178,
+        "total_minus_transform_ms": 275.35340101342814,
+        "total_minus_babel_ms": 68.88691060584519
+      },
+      "transform_call_counts": {
+        "1": 1332
+      },
+      "transform_failure_measurements": 12,
+      "control_mean_ms": 283.1927927927928,
+      "reference": {
+        "baseline": {
+          "mean_ms": 18.992717717717717,
+          "quality": null
+        },
+        "dynajs-ta": {
+          "mean_ms": 71.77132132132132,
+          "quality": {
+            "cases": 444,
+            "confusion": {
+              "TP": 165,
+              "TN": 229,
+              "FP": 43,
+              "FN": 7
+            },
+            "errors": 1,
+            "timeouts": 0,
+            "unstable": []
+          }
+        }
+      },
+      "transform_share_percent": 3.4081867217106327,
+      "babel_share_percent": 75.88347450803334
+    },
+    "ES5": {
+      "measurements": 468,
+      "complete_phase_measurements": 468,
+      "quality": {
+        "cases": 156,
+        "confusion": {
+          "FP": 25,
+          "TN": 62,
+          "FN": 4,
+          "TP": 65
+        },
+        "errors": 0,
+        "timeouts": 0,
+        "unstable": []
+      },
+      "means_ms": {
+        "elapsed_ms": 284.6525641025641,
+        "init_ms": 207.23781193803418,
+        "load_ms": 39.479414946581194,
+        "warmup_ms": 165.93878259401708,
+        "helpers_ms": 1.7992188055555556,
+        "transform_ms": 8.901967769230769,
+        "babel_total_ms": 216.13977970726495,
+        "total_minus_transform_ms": 275.7505963333333,
+        "total_minus_babel_ms": 68.51278439529915
+      },
+      "successful_measurements": 468,
+      "successful_means_ms": {
+        "elapsed_ms": 284.6525641025641,
+        "init_ms": 207.23781193803418,
+        "load_ms": 39.479414946581194,
+        "warmup_ms": 165.93878259401708,
+        "helpers_ms": 1.7992188055555556,
+        "transform_ms": 8.901967769230769,
+        "babel_total_ms": 216.13977970726495,
+        "total_minus_transform_ms": 275.7505963333333,
+        "total_minus_babel_ms": 68.51278439529915
+      },
+      "transform_call_counts": {
+        "1": 468
+      },
+      "transform_failure_measurements": 0,
+      "control_mean_ms": 283.11346153846154,
+      "reference": {
+        "baseline": {
+          "mean_ms": 18.927350427350426,
+          "quality": null
+        },
+        "dynajs-ta": {
+          "mean_ms": 71.6974358974359,
+          "quality": {
+            "cases": 156,
+            "confusion": {
+              "TN": 68,
+              "FP": 19,
+              "TP": 67,
+              "FN": 2
+            },
+            "errors": 0,
+            "timeouts": 0,
+            "unstable": []
+          }
+        }
+      },
+      "transform_share_percent": 3.127309882943219,
+      "babel_share_percent": 75.93108475544486
+    },
+    "ES6+": {
+      "measurements": 864,
+      "complete_phase_measurements": 864,
+      "quality": {
+        "cases": 288,
+        "confusion": {
+          "TP": 77,
+          "FP": 63,
+          "TN": 122,
+          "FN": 26
+        },
+        "errors": 22,
+        "timeouts": 0,
+        "unstable": []
+      },
+      "means_ms": {
+        "elapsed_ms": 284.9402777777778,
+        "init_ms": 206.00480259375,
+        "load_ms": 39.24917488310185,
+        "warmup_ms": 164.94880841666668,
+        "helpers_ms": 1.7866552511574074,
+        "transform_ms": 10.144371737268518,
+        "babel_total_ms": 216.14917433101851,
+        "total_minus_transform_ms": 274.79590604050924,
+        "total_minus_babel_ms": 68.79110344675927
+      },
+      "successful_measurements": 798,
+      "successful_means_ms": {
+        "elapsed_ms": 284.6093984962406,
+        "init_ms": 206.0141364273183,
+        "load_ms": 39.25842103884712,
+        "warmup_ms": 164.94931699874687,
+        "helpers_ms": 1.7862152305764412,
+        "transform_ms": 9.488939098997493,
+        "babel_total_ms": 215.5030755263158,
+        "total_minus_transform_ms": 275.1204593972431,
+        "total_minus_babel_ms": 69.10632296992482
+      },
+      "transform_call_counts": {
+        "1": 864
+      },
+      "transform_failure_measurements": 12,
+      "control_mean_ms": 283.23576388888887,
+      "reference": {
+        "baseline": {
+          "mean_ms": 19.028125,
+          "quality": null
+        },
+        "dynajs-ta": {
+          "mean_ms": 71.8113425925926,
+          "quality": {
+            "cases": 288,
+            "confusion": {
+              "TP": 98,
+              "TN": 161,
+              "FP": 24,
+              "FN": 5
+            },
+            "errors": 1,
+            "timeouts": 0,
+            "unstable": []
+          }
+        }
+      },
+      "transform_share_percent": 3.560174720254894,
+      "babel_share_percent": 75.85771166391267
+    },
+    "Built-ins": {
+      "measurements": 969,
+      "complete_phase_measurements": 969,
+      "quality": {
+        "cases": 323,
+        "confusion": {
+          "TP": 83,
+          "FP": 77,
+          "TN": 145,
+          "FN": 18
+        },
+        "errors": 4,
+        "timeouts": 0,
+        "unstable": []
+      },
+      "means_ms": {
+        "elapsed_ms": 283.5518059855521,
+        "init_ms": 206.44093522084623,
+        "load_ms": 39.337991590299275,
+        "warmup_ms": 165.29083664602683,
+        "helpers_ms": 1.7919026429308567,
+        "transform_ms": 8.805395640866873,
+        "babel_total_ms": 215.24633086171312,
+        "total_minus_transform_ms": 274.7464103446852,
+        "total_minus_babel_ms": 68.305475123839
+      },
+      "successful_measurements": 957,
+      "successful_means_ms": {
+        "elapsed_ms": 283.387460815047,
+        "init_ms": 206.37529099791013,
+        "load_ms": 39.32625612434692,
+        "warmup_ms": 165.23795964785788,
+        "helpers_ms": 1.7908666394984325,
+        "transform_ms": 8.739941274817136,
+        "babel_total_ms": 215.11523227272727,
+        "total_minus_transform_ms": 274.6475195402299,
+        "total_minus_babel_ms": 68.27222854231975
+      },
+      "transform_call_counts": {
+        "1": 969
+      },
+      "transform_failure_measurements": 0,
+      "control_mean_ms": 281.6832817337461,
+      "reference": {
+        "baseline": {
+          "mean_ms": 18.985448916408668,
+          "quality": null
+        },
+        "dynajs-ta": {
+          "mean_ms": 71.8656346749226,
+          "quality": {
+            "cases": 323,
+            "confusion": {
+              "TP": 99,
+              "TN": 189,
+              "FP": 33,
+              "FN": 2
+            },
+            "errors": 0,
+            "timeouts": 0,
+            "unstable": []
+          }
+        }
+      },
+      "transform_share_percent": 3.1053921911241633,
+      "babel_share_percent": 75.91075998037573
+    },
+    "Syntax": {
+      "measurements": 363,
+      "complete_phase_measurements": 363,
+      "quality": {
+        "cases": 121,
+        "confusion": {
+          "FN": 12,
+          "FP": 11,
+          "TN": 39,
+          "TP": 59
+        },
+        "errors": 18,
+        "timeouts": 0,
+        "unstable": []
+      },
+      "means_ms": {
+        "elapsed_ms": 288.27575757575755,
+        "init_ms": 206.43024572727273,
+        "load_ms": 39.30892408539945,
+        "warmup_ms": 165.31212125619834,
+        "helpers_ms": 1.788845391184573,
+        "transform_ms": 12.116886283746556,
+        "babel_total_ms": 218.54713201101927,
+        "total_minus_transform_ms": 276.15887129201104,
+        "total_minus_babel_ms": 69.7286255647383
+      },
+      "successful_measurements": 309,
+      "successful_means_ms": {
+        "elapsed_ms": 288.45922330097085,
+        "init_ms": 206.74894294822008,
+        "load_ms": 39.38303907119741,
+        "warmup_ms": 165.55397357928803,
+        "helpers_ms": 1.7915041456310679,
+        "transform_ms": 10.919645686084142,
+        "babel_total_ms": 217.6685886343042,
+        "total_minus_transform_ms": 277.53957761488675,
+        "total_minus_babel_ms": 70.79063466666668
+      },
+      "transform_call_counts": {
+        "1": 363
+      },
+      "transform_failure_measurements": 12,
+      "control_mean_ms": 287.22231404958677,
+      "reference": {
+        "baseline": {
+          "mean_ms": 19.01212121212121,
+          "quality": null
+        },
+        "dynajs-ta": {
+          "mean_ms": 71.51955922865014,
+          "quality": {
+            "cases": 121,
+            "confusion": {
+              "TP": 66,
+              "TN": 40,
+              "FP": 10,
+              "FN": 5
+            },
+            "errors": 1,
+            "timeouts": 0,
+            "unstable": []
+          }
+        }
+      },
+      "transform_share_percent": 4.203227626784501,
+      "babel_share_percent": 75.81183164650469
+    }
+  },
+  "changed_verdicts": [],
+  "missing_phase_measurements": []
+}

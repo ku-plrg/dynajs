@@ -1,0 +1,88 @@
+{
+  "summary": {
+    "babel-on": {
+      "cases": 156,
+      "measurements": 780,
+      "confusion": {
+        "FP": 25,
+        "TN": 62,
+        "FN": 4,
+        "TP": 65
+      },
+      "errors": 0,
+      "timeouts": 0,
+      "nonzero_exits": 0,
+      "precision": 0.7222222222222222,
+      "recall": 0.9420289855072463,
+      "accuracy": 0.8141025641025641,
+      "f1": 0.8176100628930818,
+      "mean_ms": 281.8446153846154,
+      "median_ms": 281.8,
+      "unstable": [],
+      "mean_body_min_ms": 1.8889358974358974,
+      "overhead": 14.88575607377915
+    },
+    "babel-off": {
+      "cases": 156,
+      "measurements": 780,
+      "confusion": {
+        "FP": 25,
+        "TN": 62,
+        "FN": 4,
+        "TP": 65
+      },
+      "errors": 0,
+      "timeouts": 0,
+      "nonzero_exits": 0,
+      "precision": 0.7222222222222222,
+      "recall": 0.9420289855072463,
+      "accuracy": 0.8141025641025641,
+      "f1": 0.8176100628930818,
+      "mean_ms": 64.46410256410256,
+      "median_ms": 64.6,
+      "unstable": [],
+      "mean_body_min_ms": 1.9951153846153846,
+      "overhead": 3.4047019311502935
+    },
+    "baseline": {
+      "cases": 156,
+      "measurements": 780,
+      "confusion": null,
+      "errors": 0,
+      "timeouts": 0,
+      "nonzero_exits": 0,
+      "precision": null,
+      "recall": null,
+      "accuracy": null,
+      "f1": null,
+      "mean_ms": 18.933846153846154,
+      "median_ms": 18.8,
+      "unstable": [],
+      "mean_body_min_ms": 0.015891025641025642,
+      "overhead": 1.0
+    },
+    "dynajs-ta": {
+      "cases": 156,
+      "measurements": 780,
+      "confusion": {
+        "TN": 68,
+        "FP": 19,
+        "TP": 67,
+        "FN": 2
+      },
+      "errors": 0,
+      "timeouts": 0,
+      "nonzero_exits": 0,
+      "precision": 0.7790697674418605,
+      "recall": 0.9710144927536232,
+      "accuracy": 0.8653846153846154,
+      "f1": 0.864516129032258,
+      "mean_ms": 71.37884615384615,
+      "median_ms": 71.6,
+      "unstable": [],
+      "mean_body_min_ms": 0.8094615384615385,
+      "overhead": 3.7699073697895504
+    }
+  },
+  "changed_verdicts": []
+}

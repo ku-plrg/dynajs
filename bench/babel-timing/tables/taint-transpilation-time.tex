@@ -1,0 +1,46 @@
+% Generated from bench/babel-timing/results-20260926/summary.json.
+% Requires: \usepackage{booktabs,multirow}
+\begin{table*}[t]
+  \centering
+  \caption{Runtime breakdown of the taint microbenchmarks.
+  Times are means in milliseconds over three fresh-process runs per case,
+  after one discarded run; failed executions are included.
+  Babel initialization and source transpilation are measured separately.}
+  \label{tab:taint-transpilation-time}
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.05}
+  \begin{tabular}{lrrrrrrrr}
+    \toprule
+    \multirow{2}{*}{Category} & \multirow{2}{*}{Cases}
+      & \multicolumn{5}{c}{NodeMedic-FINE}
+      & \multirow{2}{*}{\shortstack{DynaJS\\total}}
+      & \multirow{2}{*}{\shortstack{Node\\total}} \\
+    \cmidrule(lr){3-7}
+      & & Total & \shortstack{Babel\\init.}
+      & Transpile & Remaining & \shortstack{Babel\\(\%)} & & \\
+    \midrule
+    ES5 & 156 & 284.65 & 207.24 & 8.90 & 68.51 & 75.9 & 71.70 & 18.93 \\
+    ES6+ & 288 & 284.94 & 206.00 & 10.14 & 68.79 & 75.9 & 71.81 & 19.03 \\
+    \midrule
+    Built-ins & 323 & 283.55 & 206.44 & 8.81 & 68.31 & 75.9 & 71.87 & 18.99 \\
+    Syntax & 121 & 288.28 & 206.43 & 12.12 & 69.73 & 75.8 & 71.52 & 19.01 \\
+    \midrule
+    Overall & 444 & 284.84 & 206.44 & 9.71 & 68.69 & 75.9 & 71.77 & 18.99 \\
+    \bottomrule
+  \end{tabular}
+  \par\smallskip
+  \begin{minipage}{\textwidth}
+    \footnotesize
+    \emph{Babel init.} includes module loading, the existing empty-source
+    warmup (including preset/plugin loading), and helper loading.
+    \emph{Transpile} measures source-transformation attempts, including
+    failed attempts and their error handling.
+    \emph{Remaining} is Total minus Babel init.\ and Transpile; it includes
+    process startup, Jalangi instrumentation, analysis setup, execution,
+    and shutdown. It is an accounting residual, not a measured Babel-disabled
+    runtime or pure execution time.
+    \emph{Babel (\%)} is the combined initialization and transpilation time
+    divided by Total, computed before rounding.
+    All tools were measured on the same host with Node v24.14.1.
+  \end{minipage}
+\end{table*}

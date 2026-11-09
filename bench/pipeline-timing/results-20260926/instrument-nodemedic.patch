@@ -1,0 +1,34 @@
+--- babel-profile
++++ pipeline-profile
+@@ -1957,7 +1957,31 @@
+      * @return {{code:string, instAST: object, sourceMapObject: object, sourceMapString: string}}
+      *
+      */
++
++    var pipelineDepth = 0;
+     function instrumentCode(options) {
++        var outer = pipelineDepth++ === 0;
++        var start = phaseNow(), babelBefore = phase.transform_ms, success = false;
++        try {
++            var result = instrumentCodeUntimed(options);
++            success = true;
++            return result;
++        } finally {
++            var end = phaseNow();
++            pipelineDepth--;
++            if (outer) {
++                var inclusive = Number(end - start) / 1e6;
++                var babel = phase.transform_ms - babelBefore;
++                phaseWrite(2, '\n@@DJX_INSTRUMENT_PHASES ' + phaseStringify({
++                    tool: 'nodemedic', start_ns: String(start), end_ns: String(end),
++                    inclusive_ms: inclusive, babel_transform_ms: babel,
++                    instrument_ms: inclusive - babel, success: success,
++                    file: options.origCodeFileName || 'eval', is_eval: !!options.isEval
++                }) + '\n');
++            }
++        }
++    }
++    function instrumentCodeUntimed(options) {
+         var aret, skip = false;
+         var isEval = options.isEval,
+             code = options.code, thisIid = options.thisIid, inlineSource = options.inlineSource, url = options.url;

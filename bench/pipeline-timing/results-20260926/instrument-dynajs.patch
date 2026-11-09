@@ -1,0 +1,39 @@
+--- original
++++ pipeline-profile
+@@ -1,3 +1,4 @@
++import { writeSync as pipelineWrite } from 'node:fs';
+ import {
+   DYNAJS_VAR,
+   EXCEPTION_VAR,
+@@ -71,7 +72,31 @@
+   return instrumentedCode;
+ }
+ 
++
++const pipelineNow = process.hrtime.bigint.bind(process.hrtime);
++let pipelineDepth = 0;
+ export function instrument(code: string, options: StateOption): string {
++  const outer = pipelineDepth++ === 0;
++  const start = pipelineNow();
++  let success = false;
++  try {
++    const result = instrumentUntimed(code, options);
++    success = true;
++    return result;
++  } finally {
++    const end = pipelineNow();
++    pipelineDepth--;
++    if (outer) {
++      const ms = Number(end - start) / 1e6;
++      pipelineWrite(2, '\n@@DJX_INSTRUMENT_PHASES ' + JSON.stringify({
++        tool: 'dynajs-ta', start_ns: String(start), end_ns: String(end),
++        inclusive_ms: ms, babel_transform_ms: 0, instrument_ms: ms,
++        success, file: options.originalPath ?? 'unknown'
++      }) + '\n');
++    }
++  }
++}
++function instrumentUntimed(code: string, options: StateOption): string {
+   if (options.verbose) header('Instrumenting the code...');
+   const locMode: PosMode = options.pos ?? POS_MODE_DEFAULT;
+   beginLocCollection(locMode);
