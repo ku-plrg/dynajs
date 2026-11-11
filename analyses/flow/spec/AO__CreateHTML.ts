@@ -11,7 +11,7 @@ export function AO__CreateHTML ($ : SpecRuntime, string : Lifted<unknown>, tag :
   if (!$.value($.condition(Number.MAX_SAFE_INTEGER - 29, $.is(attribute, $.default<string>("", [])))))
   {
     var V = AO__ToString($, (value as Lifted<unknown>));
-    var escapedV = $.default($.value(V).replaceAll(String.fromCharCode(0x22), "&quot;"), [V]);
+    var escapedV = $.default<string>("", []); for (const i of $.range($.default<number>(0, []), true, $.length(V as Lifted<string>), false, true, Number.MAX_SAFE_INTEGER - 100000)) { var c = $.substring(V as Lifted<string>, i, $.add(i, $.default<number>(1, []))); escapedV = $.concatenate(escapedV, $.value($.condition(Number.MAX_SAFE_INTEGER - 100001, $.is(c, $.default<string>(String.fromCharCode(0x22), [])))) ? $.default<string>("&quot;", []) : c); }
     p1 = $.concatenate($.concatenate($.concatenate($.concatenate($.concatenate($.concatenate(p1, $.default<string>(" ", [])), attribute), $.default<string>("=", [])), $.default<string>(String.fromCharCode(0x22), [])), escapedV), $.default<string>(String.fromCharCode(0x22), []));
   }
 
