@@ -48,7 +48,7 @@ export function INTRINSICS_String_prototype_split ($ : SpecRuntime, $this : Lift
     var strLen = $.length(S);
     var outLen = $.clamp(lim, $.default<number>(0, []), strLen);
     var head = $.substring(S, ($.default<number>(0, []) as Lifted<number>), (outLen as Lifted<number>));
-    var codeUnits = $.value(head).split("").map((c) => $.default<string>(c, [head]));
+    var codeUnits = $.range($.default<number>(0, []), true, $.length(head as Lifted<string>), false, true, Number.MAX_SAFE_INTEGER - 100002).map((i) => $.substring(head as Lifted<string>, i, $.add(i, $.default<number>(1, []))));
     return AO__CreateArrayFromList($, (codeUnits as Lifted<unknown>[]));
   }
 
