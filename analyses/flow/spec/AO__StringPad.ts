@@ -14,7 +14,7 @@ export function AO__StringPad ($ : SpecRuntime, S : Lifted<string>, maxLength : 
   }
 
   var fillLen = $.subtract((maxLength as Lifted<number>), (stringLength as Lifted<number>));
-  var truncatedStringFiller = $.default(String($.value(fillString)).repeat(Math.ceil($.value(fillLen) / String($.value(fillString)).length)).slice(0, $.value(fillLen)), [fillString, fillLen]);
+  var truncatedStringFiller = $.substring((Array(Math.ceil($.value(fillLen) / String($.value(fillString)).length)).fill(fillString) as Lifted<string>[]).reduce((a, b) => $.concatenate(a, b)), $.default<number>(0, []), fillLen);
   if ($.value($.condition(Number.MAX_SAFE_INTEGER - 787, $.is(placement, $.default<string>("start", [])))))
   {
     return $.concatenate(truncatedStringFiller, S);
