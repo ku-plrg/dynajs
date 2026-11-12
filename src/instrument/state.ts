@@ -19,6 +19,10 @@ export interface StateOption {
   pos: PosMode;
   callbackHint: CallbackHint | undefined;
   isScript: boolean;
+  // Browser classic scripts share one global lexical scope, so a top-level
+  // let/const/class must not end up inside the script's try-block wrapper.
+  // Off for Node (CommonJS wraps every file in a function anyway).
+  globalLexical?: boolean;
 }
 
 export class State {
@@ -36,6 +40,7 @@ export class State {
   inDerivedClass: boolean;
   isDerivedConstructor: boolean;
   isStrict: boolean;
+  globalLexical: boolean;
 
   constructor(options: StateOption) {
     this.output = '';
@@ -59,6 +64,7 @@ export class State {
     this.isDerivedConstructor = false;
     // non-strict by default for scripts, strict by default for modules
     this.isStrict = options.isScript ? false : true;
+    this.globalLexical = options.globalLexical ?? false;
   }
 
   withLHS<T>(body: () => T): T {

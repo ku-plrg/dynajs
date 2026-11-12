@@ -934,6 +934,7 @@ function writeModuleWrappedExpression(
   expression: acorn.Expression,
   program: acorn.Program,
   state: State,
+  exitOnThrow: boolean = false,
 ): void {
   const isAwait = expression.type === 'AwaitExpression';
   const awaitExpression = isAwait
@@ -960,6 +961,8 @@ function writeModuleWrappedExpression(
     state.writeln(`} catch (${EXCEPTION_VAR}) {`);
     state.wrap(() => {
       write.logException(state, program);
+      // scripts: Sx fires scriptExit and rethrows the recorded exception
+      if (exitOnThrow) writeScriptExitAlways(state, program);
       state.writeln(`throw ${EXCEPTION_VAR};`);
     });
     state.writeln('}');
@@ -972,8 +975,85 @@ function writeModuleWrappedExpression(
  * not a `Visitor` in the sense of `acorn-walk`.
  * a collection of helper functions for visiting certain nodes, to avoid code duplication in the main visitors
  */
+// A browser classic script needs chunking when wrapping its body in one
+// try-block would hide a top-level binding from later scripts: let/const/class
+// become block-scoped, and so do function declarations in strict code.
+function needsGlobalLexicalChunks(node: acorn.Program, state: State): boolean {
+  if (!state.globalLexical || !state.partial.shouldWrapThrow) return false;
+  return node.body.some(
+    (n) =>
+      n.type === 'ClassDeclaration' ||
+      (n.type === 'VariableDeclaration' && n.kind !== 'var') ||
+      (n.type === 'FunctionDeclaration' && state.isStrict),
+  );
+}
+
+// Like Module, but every chunk stops the script on a throw: the catch records
+// the exception and Sx fires scriptExit and rethrows it.
+function writeChunkedScript(node: acorn.Program, state: State): void {
+  write.logScriptEnter(state, node);
+  write.logDeclare(state, node);
+  for (const chunk of splitTopLevelBody(node.body as TopLevelBodyNode[])) {
+    state.writeln('');
+    if (chunk.kind === 'declaration') {
+      if (chunk.node.type === 'VariableDeclaration') {
+        const decl = chunk.node;
+        state.write(decl.kind + ' ');
+        decl.declarations.forEach((d, i) => {
+          if (i > 0) state.write(', ');
+          if (d.init == null) {
+            state.withLHS(() => state.walk(d.id));
+          } else {
+            write.logWrite(state, d.id, d.init, () =>
+              writeModuleWrappedExpression(
+                d.init as acorn.Expression,
+                node,
+                state,
+                true,
+              ),
+            );
+          }
+        });
+        state.write(';');
+      } else {
+        state.walk(chunk.node);
+      }
+      continue;
+    }
+    if (chunk.kind !== 'statement') {
+      state.walk(chunk.node);
+      continue;
+    }
+    state.writeln('try {');
+    state.wrap(() => {
+      for (const statement of chunk.nodes) {
+        state.writeln('');
+        state.walk(statement);
+      }
+    });
+    state.writeln(`} catch (${EXCEPTION_VAR}) {`);
+    state.wrap(() => {
+      write.logException(state, node);
+      writeScriptExitAlways(state, node);
+    });
+    state.writeln('}');
+  }
+  state.writeln('');
+  writeScriptExitAlways(state, node);
+}
+
+// Sx regardless of partial mode: it consumes the exception recorded by X (and
+// rethrows it), so a stale one can never leak into a later script's Sx.
+function writeScriptExitAlways(state: State, program: acorn.Node): void {
+  state.writeln(`${LOG.SCRIPT_EXIT}(${write.newId(program)});`);
+}
+
 const visitorHelper = {
   Script: (node: acorn.Program, state: State) => {
+    if (needsGlobalLexicalChunks(node, state)) {
+      writeChunkedScript(node, state);
+      return;
+    }
     const useThrow = state.partial.shouldWrapThrow;
     const { body } = node;
     if (useThrow) state.writeln('try {');
