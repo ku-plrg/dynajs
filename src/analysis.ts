@@ -640,9 +640,9 @@ function fireSpecificBinaryPre(
   | { op: string; left: any; right: any; skip: boolean; frame?: unknown }
   | undefined {
   let cb: keyof Analysis | undefined;
-  if (ARITHMETIC_BINARY_OPS.has(op)) cb = 'arithmeticBinaryPre';
-  else if (COMPARISON_BINARY_OPS.has(op)) cb = 'comparisonBinaryPre';
-  else if (BITWISE_BINARY_OPS.has(op)) cb = 'bitwiseBinaryPre';
+  if (CAPTURED.SetHas(ARITHMETIC_BINARY_OPS, op)) cb = 'arithmeticBinaryPre';
+  else if (CAPTURED.SetHas(COMPARISON_BINARY_OPS, op)) cb = 'comparisonBinaryPre';
+  else if (CAPTURED.SetHas(BITWISE_BINARY_OPS, op)) cb = 'bitwiseBinaryPre';
   if (!cb) return undefined;
   return (D$.analysis[cb] as any)?.(id, op, left, right);
 }
@@ -655,9 +655,9 @@ function fireSpecificBinary(
   frame?: unknown,
 ): { result: any } | undefined {
   let cb: keyof Analysis | undefined;
-  if (ARITHMETIC_BINARY_OPS.has(op)) cb = 'arithmeticBinary';
-  else if (COMPARISON_BINARY_OPS.has(op)) cb = 'comparisonBinary';
-  else if (BITWISE_BINARY_OPS.has(op)) cb = 'bitwiseBinary';
+  if (CAPTURED.SetHas(ARITHMETIC_BINARY_OPS, op)) cb = 'arithmeticBinary';
+  else if (CAPTURED.SetHas(COMPARISON_BINARY_OPS, op)) cb = 'comparisonBinary';
+  else if (CAPTURED.SetHas(BITWISE_BINARY_OPS, op)) cb = 'bitwiseBinary';
   if (!cb) return undefined;
   return (D$.analysis[cb] as any)?.(id, op, left, right, value, frame);
 }
@@ -669,12 +669,12 @@ function fireSpecificUnaryPre(
   operand: any,
 ): { op: string; operand: any; skip: boolean; frame?: unknown } | undefined {
   let cb: keyof Analysis | undefined;
-  if (ARITHMETIC_UNARY_OPS.has(op)) cb = 'arithmeticUnaryPre';
+  if (CAPTURED.SetHas(ARITHMETIC_UNARY_OPS, op)) cb = 'arithmeticUnaryPre';
   else if (op === '!') cb = 'logicalUnaryPre';
   else if (op === '~') cb = 'bitwiseUnaryPre';
   else if (op === 'typeof') cb = 'typeofUnaryPre';
   else if (op === 'void') cb = 'voidUnaryPre';
-  else if (UPDATE_UNARY_OPS.has(op)) cb = 'updateUnaryPre';
+  else if (CAPTURED.SetHas(UPDATE_UNARY_OPS, op)) cb = 'updateUnaryPre';
   if (!cb) return undefined;
   return (D$.analysis[cb] as any)?.(id, op, prefix, operand);
 }
@@ -687,12 +687,12 @@ function fireSpecificUnary(
   frame?: unknown,
 ): { result: any } | undefined {
   let cb: keyof Analysis | undefined;
-  if (ARITHMETIC_UNARY_OPS.has(op)) cb = 'arithmeticUnary';
+  if (CAPTURED.SetHas(ARITHMETIC_UNARY_OPS, op)) cb = 'arithmeticUnary';
   else if (op === '!') cb = 'logicalUnary';
   else if (op === '~') cb = 'bitwiseUnary';
   else if (op === 'typeof') cb = 'typeofUnary';
   else if (op === 'void') cb = 'voidUnary';
-  else if (UPDATE_UNARY_OPS.has(op)) cb = 'updateUnary';
+  else if (CAPTURED.SetHas(UPDATE_UNARY_OPS, op)) cb = 'updateUnary';
   if (!cb) return undefined;
   return (D$.analysis[cb] as any)?.(id, op, prefix, operand, value, frame);
 }
@@ -1084,7 +1084,7 @@ const instrumentedCache = new WeakMap<Function, boolean>();
 
 function isInstrumented(f: unknown): boolean {
   if (typeof f !== 'function') return false;
-  let cached = instrumentedCache.get(f);
+  let cached = CAPTURED.WeakMapGet(instrumentedCache, f) as boolean | undefined;
   if (cached === undefined) {
     let src = '';
     // pristine toString: user code may override Function.prototype.toString;
@@ -1095,7 +1095,7 @@ function isInstrumented(f: unknown): boolean {
       /* uncontrolled */
     }
     cached = src.includes(INSTRUMENTED_MARK);
-    instrumentedCache.set(f, cached);
+    CAPTURED.WeakMapSet(instrumentedCache, f, cached);
   }
   return cached;
 }
