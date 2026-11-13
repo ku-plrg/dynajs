@@ -33,6 +33,7 @@ export const CAPTURED = Object.freeze({
   // ArrayLike (length+index), so unlike `fn.call(t, ...arr)` it never dispatches
   // through the (overridable) Array.prototype[Symbol.iterator].
   ReflectApply: Reflect.apply,
+  ReflectConstruct: Reflect.construct,
 });
 
 // Build `[...heads, ...tail]` without spread/iterator (user code can poison

@@ -76,6 +76,13 @@ interface ObjectOps {
     thisArg: Lifted<unknown>,
     args: Lifted<unknown>[],
   ) => Lifted<unknown>;
+
+  /** [[Construct]] */
+  construct: (
+    f: Lifted<unknown>,
+    args: Lifted<unknown>[],
+    newTarget?: Lifted<unknown>,
+  ) => Lifted<unknown>;
 }
 
 interface StringOps {

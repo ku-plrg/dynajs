@@ -34,7 +34,7 @@ function stringIndex(p: unknown, len: number): number | undefined {
 import * as lift from './internal/lift.js';
 import { CAPTURED, concatList } from './utils.js';
 
-const { ReflectApply } = CAPTURED;
+const { ReflectApply, ReflectConstruct } = CAPTURED;
 
 const NON_VALUE_BINARY_OPS = new Set(['instanceof', 'in']);
 
@@ -173,6 +173,14 @@ export abstract class FlowAnalysis<Info>
 
   // opaqueCallInfo is enough for now
   // protected escapedInfo?(_f: unknown, _escaped: Valued<Info>[]): void {}
+
+  /* [[Construct]] reached through a spec AO (`$.construct`) */
+  protected constructInfo?(
+    _f: Valued<Info>,
+    _args: Valued<Info>[],
+    _newTarget: Valued<Info>,
+    _result: unknown,
+  ): Info;
 
   /* opaque call the analysis wants to model */
   protected opaqueCallInfo?(
@@ -709,6 +717,25 @@ export abstract class FlowAnalysis<Info>
       return this.carryOrDefault(
         ReflectApply(fn as Function, thisArg, argArr),
         entries,
+      );
+    },
+    construct: (f, args, newTarget) => {
+      // Runs natively; without a constructInfo callback the result gets default
+      // info from the constructor, newTarget, and arguments.
+      const fu = this.unlift(f as Lifted<Function>);
+      const nt = newTarget === undefined ? fu : this.unlift(newTarget as Lifted<Function>);
+      // argument list unlifted as a whole, as the earlier manual model did
+      const r = ReflectConstruct(fu, this.$.value(args as unknown as Lifted<unknown[]>) as unknown[], nt);
+      const parents = concatList([f, newTarget], args) as Lifted[];
+      if (this.constructInfo === undefined) return this.$.default(r as Unlifted<unknown>, parents);
+      return this.lift(
+        r,
+        this.constructInfo(
+          this.valued(f),
+          args.map((a) => this.valued(a)),
+          this.valued(newTarget ?? f),
+          r,
+        ),
       );
     },
   } satisfies SpecRuntime;
