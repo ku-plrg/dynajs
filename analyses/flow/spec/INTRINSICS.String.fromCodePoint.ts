@@ -15,7 +15,7 @@ export function INTRINSICS_String_fromCodePoint ($ : SpecRuntime, $this : Lifted
       throw new RangeError;
     }
 
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 426, $.lessThan(nextCP, $.default<number>(0, [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 427, $.greaterThan(nextCP, $.default<string>("￿", [])))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 426, $.lessThan(nextCP, $.default<number>(0, [])))) || $.value($.condition(Number.MAX_SAFE_INTEGER - 427, $.greaterThan(nextCP, $.default<number>(1114111, [])))))
     {
       throw new RangeError;
     }
