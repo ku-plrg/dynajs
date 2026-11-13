@@ -12,6 +12,25 @@ import { isConstructable } from './internal/constructable.js';
 import * as site from './internal/site.js';
 import type * as escape from './internal/escape.js';
 import { AO__CanonicalNumericIndexString, SYNTAX__add } from './spec/index.js';
+
+const ELEMENT_MOVERS: ReadonlySet<unknown> = new Set<unknown>([
+  Array.prototype.shift,
+  Array.prototype.unshift,
+]);
+const SetHas = Function.prototype.call.bind(Set.prototype.has) as (s: ReadonlySet<unknown>, v: unknown) => boolean;
+const ArrayIsArray = Array.isArray;
+
+/** The integer index a raw key selects in a string of length `len`
+ *  (StringGetOwnProperty: CanonicalNumericIndexString, integral, not -0, in
+ *  range), natively; undefined otherwise — the read then takes the engine's
+ *  own result. */
+function stringIndex(p: unknown, len: number): number | undefined {
+  if (typeof p === 'symbol') return undefined;
+  const key = String(p);
+  const n = Number(key);
+  if (String(n) !== key || !Number.isInteger(n) || n < 0 || n >= len) return undefined;
+  return n;
+}
 import * as lift from './internal/lift.js';
 import { CAPTURED, concatList } from './utils.js';
 
@@ -797,12 +816,18 @@ export abstract class FlowAnalysis<Info>
       const b: unknown = this.$.value(f.base);
       const p: unknown = this.$.value(f.prop);
       if (typeof b === 'string') {
-        const i: number | undefined = this.$.value(
-          AO__CanonicalNumericIndexString(
-            this.$,
-            this.$.default((p as any).toString(), [f.prop]),
-          ),
-        );
+        // CanonicalNumericIndexString runs on every property read of a string
+        // (`s.length`, `s.charAt`, `s[i]`); through the spec model that is a
+        // ToNumber/ToString round trip per read. A key with no info gets nothing
+        // from the model (no symbolic branch to record), so compute it natively.
+        const i: number | undefined = this.domain.isBottom(this.getInfo(f.prop))
+          ? stringIndex(p, b.length)
+          : this.$.value(
+              AO__CanonicalNumericIndexString(
+                this.$,
+                this.$.default((p as any).toString(), [f.prop]),
+              ),
+            );
         if (i !== undefined) {
           // A numeric index already carries `i` as its value, so pass it through
           // to keep any (possibly symbolic) index info — e.g. `r[r.length - 1]`
@@ -895,6 +920,16 @@ export abstract class FlowAnalysis<Info>
     f: unknown,
     entries: Lifted[],
   ): 'modeled' | 'opaque' | 'transparent' {
+    // shift/unshift on a real Array only move elements (lifted ones included)
+    // and never coerce them, so the native call keeps every element's info as
+    // is; the spec model moves them one at a time (O(length) interpreted steps
+    // per call, quadratic for a queue drained with shift()).
+    if (
+      SetHas(ELEMENT_MOVERS, f) &&
+      entries.length > 0 &&
+      ArrayIsArray(this.$.value(entries[0]))
+    )
+      return 'transparent';
     if (
       this.modelBuiltins &&
       Model.support(f as Function) &&
