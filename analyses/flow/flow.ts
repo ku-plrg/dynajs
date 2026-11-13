@@ -132,6 +132,12 @@ export abstract class FlowAnalysis<Info>
     _upper: Valued<Info, number>,
   ): Info;
   protected minInfo?(_operands: Valued<Info, number>[]): Info;
+  /* Math functions (`$.sqrt`, `$.sin`, ...): `op` is the hook name. Kept apart
+   * from unaryInfo so an analysis that models unary operators does not see them
+   * unless it opts in; without it they fall back to defaultInfo. */
+  protected mathInfo?(_op: string, _operands: Valued<Info, number>[]): Info;
+  /* the one-code-unit String whose numeric value is `cu` (`$.fromCodeUnit`) */
+  protected fromCodeUnitInfo?(_cu: Valued<Info, number>): Info;
   protected maxInfo?(_operands: Valued<Info, number>[]): Info;
 
   protected rangeInfo?(
@@ -197,6 +203,20 @@ export abstract class FlowAnalysis<Info>
       v,
       this.binaryInfo?.(op, this.valued(l), this.valued(r)) ??
         this.defaultInfo(v, [this.valued(l), this.valued(r)]),
+    );
+  }
+
+  /** internal(flow.ts) */
+  private mathOp(
+    op: string,
+    xs: Lifted<number>[],
+    f: (...args: number[]) => number,
+  ): Lifted<number> {
+    const v = f(...xs.map((x) => this.unlift(x) as number));
+    const operands = xs.map((x) => this.valued(x));
+    return this.lift(
+      v,
+      this.mathInfo?.(op, operands) ?? this.defaultInfo(v, operands),
     );
   }
 
@@ -272,6 +292,17 @@ export abstract class FlowAnalysis<Info>
         ) ?? this.defaultInfo(res, [this.valued(l), this.valued(r)]),
       );
     },
+    // "the code unit whose numeric value is cu" (ESMeta ToCodeUnit); the
+    // fallback is the `$.default(String.fromCharCode(cu), [cu])` the generator
+    // emitted before this hook existed.
+    fromCodeUnit: (cu) => {
+      const r = String.fromCharCode(this.unlift(cu) as number);
+      return this.lift(
+        r,
+        this.fromCodeUnitInfo?.(this.valued(cu)) ??
+          this.defaultInfo(r, [this.valued(cu)]),
+      );
+    },
     codeUnitAt: (s, i) => {
       const idx = this.unlift(i) as number;
       const r = (this.unlift(s) as string).charAt(idx);
@@ -338,7 +369,9 @@ export abstract class FlowAnalysis<Info>
         r,
         (this.unlift(l) as number) / (this.unlift(r) as number),
       ),
-    remainder: (l, r) =>
+    // ECMA-262 `x modulo y` (ESMeta's `modulo` operator). Computed with JS `%`
+    // and reported to analyses as the binary operator '%', as before the rename.
+    modulo: (l, r) =>
       this.binOp(
         '%',
         l,
@@ -484,12 +517,33 @@ export abstract class FlowAnalysis<Info>
       );
     },
     abs: (x) => this.numOp(Math.abs(this.unlift(x) as number), [x]),
-    // floor/ceil/round route through unaryInfo (op-keyed, like $.isInteger) so an
-    // analysis can model the rounding symbolically; without a hook they fall back
-    // to baseInfo, same as numOp.
+    // floor routes through unaryInfo (op-keyed, like $.isInteger) so an analysis
+    // can model the rounding symbolically; without a hook it falls back to
+    // baseInfo, same as numOp.
     floor: (x) => this.unOp('floor', x, Math.floor(this.unlift(x) as number)),
-    ceil: (x) => this.unOp('ceil', x, Math.ceil(this.unlift(x) as number)),
-    round: (x) => this.unOp('round', x, Math.round(this.unlift(x) as number)),
+    // Math functions (ESMeta MathOpExpression), all through mathInfo
+    sqrt: (x) => this.mathOp('sqrt', [x], Math.sqrt),
+    cbrt: (x) => this.mathOp('cbrt', [x], Math.cbrt),
+    exp: (x) => this.mathOp('exp', [x], Math.exp),
+    expm1: (x) => this.mathOp('expm1', [x], Math.expm1),
+    log: (x) => this.mathOp('log', [x], Math.log),
+    log1p: (x) => this.mathOp('log1p', [x], Math.log1p),
+    log10: (x) => this.mathOp('log10', [x], Math.log10),
+    log2: (x) => this.mathOp('log2', [x], Math.log2),
+    sin: (x) => this.mathOp('sin', [x], Math.sin),
+    cos: (x) => this.mathOp('cos', [x], Math.cos),
+    tan: (x) => this.mathOp('tan', [x], Math.tan),
+    asin: (x) => this.mathOp('asin', [x], Math.asin),
+    acos: (x) => this.mathOp('acos', [x], Math.acos),
+    atan: (x) => this.mathOp('atan', [x], Math.atan),
+    // "the inverse tangent of the quotient y / x"
+    atan2: (y, x) => this.mathOp('atan2', [y, x], (a, b) => Math.atan(a / b)),
+    sinh: (x) => this.mathOp('sinh', [x], Math.sinh),
+    cosh: (x) => this.mathOp('cosh', [x], Math.cosh),
+    tanh: (x) => this.mathOp('tanh', [x], Math.tanh),
+    asinh: (x) => this.mathOp('asinh', [x], Math.asinh),
+    acosh: (x) => this.mathOp('acosh', [x], Math.acosh),
+    atanh: (x) => this.mathOp('atanh', [x], Math.atanh),
     truncate: (x) => {
       const v = Math.trunc(this.unlift(x) as number);
       return this.lift(

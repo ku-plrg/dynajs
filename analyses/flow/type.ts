@@ -87,6 +87,8 @@ interface StringOps {
   concatenate: (s1: Lifted<string>, s2: Lifted<string>) => Lifted<string>;
   length: (s: Lifted<string>) => Lifted<number>;
   codeUnitAt: (s: Lifted<string>, i: Lifted<number>) => Lifted<string>;
+  /** the one-code-unit String whose numeric value is `cu` */
+  fromCodeUnit: (cu: Lifted<number>) => Lifted<string>;
   trim: (
     s: Lifted<string>,
     leading: boolean,
@@ -101,7 +103,8 @@ interface ArithmeticOps {
   subtract: (l: Lifted<number>, r: Lifted<number>) => Lifted<number>;
   multiply: (l: Lifted<number>, r: Lifted<number>) => Lifted<number>;
   divide: (l: Lifted<number>, r: Lifted<number>) => Lifted<number>;
-  remainder: (l: Lifted<number>, r: Lifted<number>) => Lifted<number>;
+  /** ECMA-262 `l modulo r` */
+  modulo: (l: Lifted<number>, r: Lifted<number>) => Lifted<number>;
   negate: (x: Lifted<number>) => Lifted<number>;
   exponentiate: (b: Lifted<number>, e: Lifted<number>) => Lifted<number>;
 }
@@ -151,8 +154,28 @@ interface MathOps {
   max: (...xs: Lifted<number>[]) => Lifted<number>;
   abs: (x: Lifted<number>) => Lifted<number>;
   floor: (x: Lifted<number>) => Lifted<number>;
-  ceil: (x: Lifted<number>) => Lifted<number>;
-  round: (x: Lifted<number>) => Lifted<number>;
+  sqrt: (x: Lifted<number>) => Lifted<number>;
+  cbrt: (x: Lifted<number>) => Lifted<number>;
+  exp: (x: Lifted<number>) => Lifted<number>;
+  expm1: (x: Lifted<number>) => Lifted<number>;
+  log: (x: Lifted<number>) => Lifted<number>;
+  log1p: (x: Lifted<number>) => Lifted<number>;
+  log10: (x: Lifted<number>) => Lifted<number>;
+  log2: (x: Lifted<number>) => Lifted<number>;
+  sin: (x: Lifted<number>) => Lifted<number>;
+  cos: (x: Lifted<number>) => Lifted<number>;
+  tan: (x: Lifted<number>) => Lifted<number>;
+  asin: (x: Lifted<number>) => Lifted<number>;
+  acos: (x: Lifted<number>) => Lifted<number>;
+  atan: (x: Lifted<number>) => Lifted<number>;
+  /** the inverse tangent of the quotient `y / x` */
+  atan2: (y: Lifted<number>, x: Lifted<number>) => Lifted<number>;
+  sinh: (x: Lifted<number>) => Lifted<number>;
+  cosh: (x: Lifted<number>) => Lifted<number>;
+  tanh: (x: Lifted<number>) => Lifted<number>;
+  asinh: (x: Lifted<number>) => Lifted<number>;
+  acosh: (x: Lifted<number>) => Lifted<number>;
+  atanh: (x: Lifted<number>) => Lifted<number>;
   truncate: (x: Lifted<number>) => Lifted<number>;
   clamp: (
     x: Lifted<number>,
