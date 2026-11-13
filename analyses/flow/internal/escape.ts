@@ -23,6 +23,50 @@ function append(arr: EscapeRecord[], v: EscapeRecord): void {
   });
 }
 
+// Natives that look only at their arguments' identity, keys, or property
+// attributes — never at own property *values* — so a lifted primitive stored
+// inside an argument cannot reach them. For these, escape() unlifts only the
+// top-level operands and skips the deep container walk (escapeInto), which is
+// O(size of everything reachable) per call: e.g. lz-string's
+// `hasOwnProperty.call(dict, key)` on a growing dictionary made each lookup walk
+// (and restore) the whole dictionary — quadratic, and pages never finished
+// loading. Also matched through Function.prototype.call (`has.call(o, k)`).
+const KEY_ONLY: ReadonlySet<unknown> = new Set<unknown>([
+  Object.prototype.hasOwnProperty,
+  Object.prototype.propertyIsEnumerable,
+  Object.prototype.isPrototypeOf,
+  Object.keys,
+  Object.getOwnPropertyNames,
+  Object.getOwnPropertySymbols,
+  Object.getPrototypeOf,
+  Object.is,
+  Object.isExtensible,
+  Object.isFrozen,
+  Object.isSealed,
+  ...(typeof (Object as any).hasOwn === 'function' ? [(Object as any).hasOwn] : []),
+  Reflect.has,
+  Reflect.ownKeys,
+  Reflect.getPrototypeOf,
+  Array.isArray,
+  Map.prototype.has,
+  Map.prototype.get,
+  Map.prototype.delete,
+  Set.prototype.has,
+  Set.prototype.delete,
+  WeakMap.prototype.has,
+  WeakMap.prototype.get,
+  WeakMap.prototype.delete,
+  WeakSet.prototype.has,
+  WeakSet.prototype.delete,
+]);
+const FunctionPrototypeCall = Function.prototype.call;
+
+/** Whether an opaque call to `f` (with receiver `base`) needs the deep walk. */
+function needsDeepEscape(f: unknown, base: unknown): boolean {
+  const target = f === FunctionPrototypeCall ? base : f;
+  return !KEY_ONLY.has(target);
+}
+
 export type EscapeRecord =
   // a lifted primitive stripped out of a container we own; restored in place
   | {
@@ -113,11 +157,13 @@ export class BoundaryEscape {
     }
   }
 
-  escape(base: unknown, args: Lifted[], entries: Lifted[]): Escaped {
+  /** `f` is the native about to run (undefined: unknown, walk deeply). */
+  escape(base: unknown, args: Lifted[], entries: Lifted[], f?: unknown): Escaped {
     const log: EscapeRecord[] = [];
     const visited = new Set<object>();
-    const escapedArgs = args.map((a) => this.escapeValue(a, log, visited));
-    const escapedBase = this.escapeValue(base, log, visited);
+    const deep = f === undefined || needsDeepEscape(f, this.isPrimitiveProxy(base) ? this.unlift(base) : base);
+    const escapedArgs = args.map((a) => this.escapeValue(a, log, visited, deep));
+    const escapedBase = this.escapeValue(base, log, visited, deep);
     // `.filter`/`.flatMap`/`.concat` are index-based (no Symbol.iterator), so
     // they are safe; a spread (`[...a, ...b]`) would not be.
     const crossed = entries
@@ -169,6 +215,7 @@ export class BoundaryEscape {
     v: unknown,
     log: EscapeRecord[],
     visited: Set<object>,
+    deep = true,
   ): unknown {
     if (this.isPrimitiveProxy(v)) return this.unlift(v);
     if (v !== null && (typeof v === 'object' || typeof v === 'function')) {
@@ -178,7 +225,7 @@ export class BoundaryEscape {
       // an instrumented valueOf/toString (e.g. `new String(fnWithToString)`).
       this.wrapCoercion(v, log);
       this.wrapIterable(v, log);
-      if (this.containersMayHoldLifted || this.mayHaveInstrumentedCoercion) {
+      if (deep && (this.containersMayHoldLifted || this.mayHaveInstrumentedCoercion)) {
         this.escapeInto(v, log, visited);
       }
     }
