@@ -288,7 +288,7 @@ function numberToSmt(v: number): string {
   return v < 0 ? `(- ${mag})` : mag;
 }
 
-function symToSmt(s: Sym, vars: Map<string, Sort>): string {
+export function symToSmt(s: Sym, vars: Map<string, Sort>): string {
   switch (s.kind) {
     case 'const':
       return constToSmt(s.value);
