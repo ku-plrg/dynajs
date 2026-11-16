@@ -716,7 +716,7 @@ export abstract class FlowAnalysis<Info>
       // so the callee propagates info internally.
       return this.carryOrDefault(
         ReflectApply(fn as Function, thisArg, argArr),
-        entries,
+        this.transparentParents(fn, entries),
       );
     },
     construct: (f, args, newTarget) => {
@@ -997,6 +997,22 @@ export abstract class FlowAnalysis<Info>
    *             input (all-bottom-primitive inputs skip the model for speed);
    *  opaque   — crosses into uninstrumented native code (escape args, run, restore);
    *  transparent — an instrumented callee; lifted values flow straight through. */
+  private isElementMove(f: unknown, entries: Lifted[]): boolean {
+    return (
+      SetHas(ELEMENT_MOVERS, f) &&
+      entries.length > 0 &&
+      ArrayIsArray(this.$.value(entries[0]))
+    );
+  }
+
+  /** Parents for the default info of a transparent call's raw result. shift
+   *  returns the removed element and unshift the new length, both read from the
+   *  receiver; as in their spec models, the items unshift inserts do not flow
+   *  into the result. */
+  private transparentParents(f: unknown, entries: Lifted[]): Lifted[] {
+    return this.isElementMove(f, entries) ? [entries[0]] : entries;
+  }
+
   private callKind(
     f: unknown,
     entries: Lifted[],
@@ -1005,12 +1021,7 @@ export abstract class FlowAnalysis<Info>
     // and never coerce them, so the native call keeps every element's info as
     // is; the spec model moves them one at a time (O(length) interpreted steps
     // per call, quadratic for a queue drained with shift()).
-    if (
-      SetHas(ELEMENT_MOVERS, f) &&
-      entries.length > 0 &&
-      ArrayIsArray(this.$.value(entries[0]))
-    )
-      return 'transparent';
+    if (this.isElementMove(f, entries)) return 'transparent';
     if (
       this.modelBuiltins &&
       Model.support(f as Function) &&
@@ -1146,7 +1157,7 @@ export abstract class FlowAnalysis<Info>
       f: callee,
       base: _base,
       args,
-      frame: { ty: 'transparent', entries },
+      frame: { ty: 'transparent', entries: this.transparentParents(_f, entries) },
     };
   }
 
