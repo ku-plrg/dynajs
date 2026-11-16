@@ -444,6 +444,12 @@ function assertOracles(file) {
 // `cwd` defaults to the repo root; an external analyzer that resolves its deps
 // from its own node_modules (e.g. NodeMedic) passes its home directory instead.
 function timeRun(argv, env, stdoutFile, stderrFile, timeoutMs, cwd = REPO_ROOT) {
+  // Opt-in peak memory: with $BENCH_MAXRSS_LOG set, GNU time appends each run's
+  // max RSS (KB, of the largest single process it waited for) and the run's
+  // stdout file, which names the runner and benchmark. Linux only.
+  const maxrssLog = process.env.BENCH_MAXRSS_LOG;
+  if (maxrssLog)
+    argv = ["/usr/bin/time", "-a", "-o", maxrssLog, "-f", `%M\t${stdoutFile ?? ""}`, ...argv];
   const start = process.hrtime.bigint();
   const r = spawnSync(argv[0], argv.slice(1), {
     cwd,
