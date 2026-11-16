@@ -1,0 +1,33 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>PSE micro tests</title>
+<pre id="out">running…</pre>
+<script>
+// Loads each SWIPE micro test in a same-origin iframe and collects the PSE
+// messages (window.__pse) and uncaught errors (window.__errors).
+const query = new URLSearchParams(location.search).get('q') || '?default=hello';
+async function run() {
+  const tests = await (await fetch('/__tests')).json();
+  const results = (window.__partial = []);
+  for (const t of tests) {
+    const f = document.createElement('iframe');
+    document.body.appendChild(f);
+    // onload, or give up after 20 s (a page stuck in a hook loop never loads)
+    await new Promise((r) => { f.onload = r; f.src = `/${t}/${query}`; setTimeout(r, 20000); });
+    await new Promise((r) => setTimeout(r, 300));
+    const w = f.contentWindow;
+    const msgs = (w.__pse || []).map((m) => m.body || m);
+    results.push({
+      test: t,
+      xss: msgs.filter((m) => m.type === 'Found XSS').length,
+      types: [...new Set(msgs.map((m) => m.type))].join(','),
+      errors: w.__errors || [],
+      smt: msgs.filter((m) => m.message && m.message.smt).map((m) => m.message.smt),
+    });
+    f.remove();
+  }
+  window.__results = results;
+  document.getElementById('out').textContent = JSON.stringify(results, null, 1);
+}
+run();
+</script>

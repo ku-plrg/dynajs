@@ -1,0 +1,32 @@
+<!doctype html>
+<body>
+<script>
+class Hero { constructor(n) { this.n = n; } }
+let counter = 1;
+const LIMIT = 3;
+var plain = 'v';
+counter++;
+</script>
+<script>
+'use strict';
+function strictTop() { return 'strict-ok'; }
+const fromInit = (function () { return counter + LIMIT; })();
+</script>
+<script>
+let beforeThrow = 'set';
+null.boom;            // throws: the rest of this script must not run
+let afterThrow = 'should-not-exist';
+</script>
+<script>
+window.__check = {
+  hero: typeof Hero === 'function' && new Hero('a').n === 'a',
+  counter: counter === 2,
+  LIMIT: LIMIT === 3,
+  plain: plain === 'v',
+  strictTop: typeof strictTop === 'function' && strictTop() === 'strict-ok',
+  fromInit: fromInit === 5,
+  beforeThrow: beforeThrow === 'set',
+  stoppedAtThrow: (function () { try { afterThrow; return false; } catch (e) { return e instanceof ReferenceError; } })(),
+};
+</script>
+</body>

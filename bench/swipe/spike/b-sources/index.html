@@ -1,0 +1,14 @@
+<!doctype html><body><script>
+var out = [];
+function probe(label, fn) {
+  var before = __swipeDSE.stats.branches;
+  fn();
+  out.push(label + ':' + (__swipeDSE.stats.branches - before));
+}
+probe('search.includes', function () { if (location.search.includes('zz')) {} });
+probe('search.indexOf', function () { if (location.search.indexOf('zz') >= 0) {} });
+probe('search===', function () { if (location.search === '?zz') {} });
+probe('href.indexOf', function () { if (location.href.indexOf('zz') > 3) {} });
+probe('var.includes', function () { var s = location.search; if (s.includes('zz')) {} });
+window.__probe = out;
+</script></body>
