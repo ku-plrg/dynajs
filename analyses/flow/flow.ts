@@ -31,6 +31,17 @@ function stringIndex(p: unknown, len: number): number | undefined {
   if (String(n) !== key || !Number.isInteger(n) || n < 0 || n >= len) return undefined;
   return n;
 }
+/** ECMA-262 `x modulo y` on mathematical values: x - y × floor(x / y), so the
+ *  result is 0 or has the sign of y (JS `%` takes the sign of x). */
+function specModulo(x: unknown, y: unknown): number | bigint {
+  if (typeof x === 'bigint' && typeof y === 'bigint') {
+    const k = x % y;
+    return k !== 0n && k < 0n !== y < 0n ? k + y : k;
+  }
+  const k = (x as number) % (y as number);
+  if (k === 0) return 0;
+  return k < 0 !== (y as number) < 0 ? k + (y as number) : k;
+}
 import * as lift from './internal/lift.js';
 import { CAPTURED, concatList } from './utils.js';
 
@@ -377,15 +388,10 @@ export abstract class FlowAnalysis<Info>
         r,
         (this.unlift(l) as number) / (this.unlift(r) as number),
       ),
-    // ECMA-262 `x modulo y` (ESMeta's `modulo` operator). Computed with JS `%`
-    // and reported to analyses as the binary operator '%', as before the rename.
+    // ECMA-262 `x modulo y`: the result has the sign of y (floored), unlike
+    // JS `%`, whose result has the sign of x. Reported to analyses as 'modulo'.
     modulo: (l, r) =>
-      this.binOp(
-        '%',
-        l,
-        r,
-        (this.unlift(l) as number) % (this.unlift(r) as number),
-      ),
+      this.binOp('modulo', l, r, specModulo(this.unlift(l), this.unlift(r)) as number),
     negate: (x) => this.unOp('-', x, -(this.unlift(x) as number)),
     exponentiate: (b, e) =>
       this.binOp(

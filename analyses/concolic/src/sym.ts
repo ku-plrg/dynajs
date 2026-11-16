@@ -98,13 +98,12 @@ export function sortOf(s: Sym): Sort | undefined {
     case 'var':
       return s.sort;
     case 'unary':
-      // `!` and the integrality predicate `isInteger` yield Bool; the rounding ops
-      // floor/ceil/round yield a Real (their z3 encoding uses to_int/to_real);
+      // `!` and the integrality predicate `isInteger` yield Bool; `floor` yields
+      // a Real (its z3 encoding uses to_int/to_real);
       // `typeof` yields a type-name String; arithmetic unaries (`-`/`+`) keep the
       // operand's sort.
       if (s.op === '!' || s.op === 'isInteger') return 'Bool';
-      if (s.op === 'floor' || s.op === 'ceil' || s.op === 'round')
-        return 'Real';
+      if (s.op === 'floor') return 'Real';
       if (s.op === 'typeof') return 'String';
       return sortOf(s.operand);
     case 'binary':

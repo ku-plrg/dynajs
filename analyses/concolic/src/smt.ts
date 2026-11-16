@@ -135,6 +135,15 @@ function intMod(a: string, b: string): string {
 function realTrunc(x: string): string {
   return `(ite (>= ${x} 0.0) (to_real (to_int ${x})) (to_real (- (to_int (- ${x})))))`;
 }
+// ECMA-262 `modulo` is floored: the result has the sign of the divisor. SMT-LIB
+// `mod` is Euclidean (in [0,|b|)), equal to it for b > 0; for b < 0,
+// a modulo b = -((-a) mod (-b)). Over the reals, a - b * floor(a/b).
+function intFloorMod(a: string, b: string): string {
+  return `(ite (> ${b} 0) (mod ${a} ${b}) (- (mod (- ${a}) (- ${b}))))`;
+}
+function realFloorMod(a: string, b: string): string {
+  return `(- ${a} (* ${b} (to_real (to_int (/ ${a} ${b})))))`;
+}
 function realMod(a: string, b: string): string {
   return `(- ${a} (* ${b} ${realTrunc(`(/ ${a} ${b})`)}))`;
 }
@@ -304,14 +313,10 @@ export function symToSmt(s: Sym, vars: Map<string, Sort>): string {
         const r = operand(s.operand, vars, 'Real');
         return `(= (to_real (to_int ${r})) ${r})`;
       }
-      // Rounding ops via z3 `to_int` (floor toward -∞), all returning a Real:
-      //   floor(x) = ⌊x⌋;  ceil(x) = -⌊-x⌋;  Math.round(x) = ⌊x + 0.5⌋ (JS rounds
-      //   half toward +∞, which floor(x+0.5) reproduces for every finite x).
-      if (s.op === 'floor' || s.op === 'ceil' || s.op === 'round') {
+      // floor via z3 `to_int` (floor toward -∞), returning a Real.
+      if (s.op === 'floor') {
         const r = operand(s.operand, vars, 'Real');
-        if (s.op === 'floor') return `(to_real (to_int ${r}))`;
-        if (s.op === 'ceil') return `(to_real (- (to_int (- ${r}))))`;
-        return `(to_real (to_int (+ ${r} 0.5)))`;
+        return `(to_real (to_int ${r}))`;
       }
       // `typeof <symbolic>`: the operand's sort fixes the JS type tag (a symbolic
       // can't change runtime type), so resolve it to that constant string rather
@@ -349,6 +354,12 @@ export function symToSmt(s: Sym, vars: Map<string, Sort>): string {
         const a = operand(s.left, vars, to);
         const b = operand(s.right, vars, to);
         return to === 'Real' ? realMod(a, b) : intMod(a, b);
+      }
+      if (s.op === 'modulo') {
+        const to = arithSort(ls, rs);
+        const a = operand(s.left, vars, to);
+        const b = operand(s.right, vars, to);
+        return to === 'Real' ? realFloorMod(a, b) : intFloorMod(a, b);
       }
       const build = SMT_BINARY[s.op];
       if (!build) throw new UnsupportedSym(`unsupported binary op: ${s.op}`);
