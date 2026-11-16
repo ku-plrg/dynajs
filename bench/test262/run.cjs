@@ -148,14 +148,63 @@ function errorLine(text) {
     .map((l) => l.trim())
     .filter(Boolean);
   if (!lines.length) return '';
-  const errIdx = lines.findIndex((l) => /\b[A-Za-z]*Error\b/.test(l));
-  return errIdx >= 0 ? lines[errIdx] : lines[lines.length - 1];
+  // \w (not [A-Za-z]) so `Test262Error` matches too; node prints a thrown
+  // non-Error-subclass object as `Test262Error {` + `message: '...'` lines.
+  const errIdx = lines.findIndex((l) => /\b\w*Error\b/.test(l));
+  if (errIdx < 0) return lines[lines.length - 1];
+  const line = lines[errIdx];
+  if (line.endsWith('{') && errIdx + 1 < lines.length) return `${line} ${lines[errIdx + 1]}`;
+  return line;
+}
+
+// Load <dir>/manifest.jsonl (written by extract.cjs) so negative and async
+// tests are judged by their test262 metadata rather than by exit code alone.
+function loadManifest(dir) {
+  const map = new Map();
+  let text;
+  try {
+    text = fs.readFileSync(path.join(dir, 'manifest.jsonl'), 'utf8');
+  } catch {
+    return map;
+  }
+  for (const line of text.split('\n')) {
+    if (!line.trim()) continue;
+    const rec = JSON.parse(line);
+    map.set(rec.file, rec);
+  }
+  return map;
+}
+
+// Verdict for a process that exited (not timed out), honoring test262 metadata:
+//  - negative: must fail, and the expected error name must appear in the output;
+//  - async: must exit 0 and print Test262:AsyncTestComplete.
+function judge(meta, code, signal, stdout, stderr) {
+  const why = signal ? `signal ${signal}` : `exit ${code}`;
+  const line = errorLine(stderr) || errorLine(stdout);
+  if (meta && meta.negative) {
+    const type = meta.negative.type;
+    if (code === 0 && !signal) {
+      return { verdict: 'FAIL', detail: `expected ${meta.negative.phase} ${type}, completed normally` };
+    }
+    if ((stderr + stdout).includes(type)) return { verdict: 'PASS', detail: '' };
+    return {
+      verdict: 'FAIL',
+      detail: `expected ${type} | ${why}${line ? ` | ${line}` : ''}`,
+    };
+  }
+  if (meta && meta.flags && meta.flags.async && code === 0 && !signal) {
+    if (stdout.includes('Test262:AsyncTestComplete')) return { verdict: 'PASS', detail: '' };
+    const fail = stdout.split('\n').find((l) => l.includes('Test262:AsyncTestFailure'));
+    return { verdict: 'FAIL', detail: fail ? fail.trim() : 'async test did not complete' };
+  }
+  if (code === 0) return { verdict: 'PASS', detail: '' };
+  return { verdict: 'FAIL', detail: line ? `${why} | ${line}` : why };
 }
 
 // Run one file; resolve to { verdict, detail, output } where verdict is
 // 'PASS' | 'FAIL' | 'TIMEOUT', detail is a one-line reason, and output is the
 // full captured stderr (+ stdout) for --verbose.
-function runOne(absFile, opts) {
+function runOne(absFile, opts, meta) {
   return new Promise((resolve) => {
     const argv = buildArgv(opts.runner, absFile);
     const child = spawn(argv[0], argv.slice(1), {
@@ -207,13 +256,10 @@ function runOne(absFile, opts) {
           output: fullOutput(),
         });
       }
-      if (code === 0) return resolve({ verdict: 'PASS', detail: '', output: '' });
-      const why = signal ? `signal ${signal}` : `exit ${code}`;
-      const line = errorLine(stderr) || errorLine(stdout);
+      const res = judge(meta, code, signal, stdout, stderr);
       return resolve({
-        verdict: 'FAIL',
-        detail: line ? `${why} | ${line}` : why,
-        output: fullOutput(),
+        ...res,
+        output: res.verdict === 'PASS' ? '' : fullOutput(),
       });
     });
   });
@@ -224,6 +270,7 @@ async function main() {
 
   const all = collectFiles(opts.dir);
   const files = all.filter((rel) => matches(rel, opts));
+  const manifest = loadManifest(opts.dir);
 
   const started = new Date();
   process.stdout.write(`start: ${started.toISOString()}\n`);
@@ -241,7 +288,7 @@ async function main() {
     while (next < files.length) {
       const i = next++;
       const rel = files[i];
-      const res = await runOne(path.join(opts.dir, rel), opts);
+      const res = await runOne(path.join(opts.dir, rel), opts, manifest.get(rel));
       counts[res.verdict] += 1;
       if (results) {
         results[i] = { file: rel, verdict: res.verdict, detail: res.detail };

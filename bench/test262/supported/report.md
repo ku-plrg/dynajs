@@ -1,0 +1,987 @@
+# test262 on DynaJS spec models
+
+test262 9079aeefcefcd55b0e994fb8bda51e06827337bd · 2026-11-16T06:46:18.821Z
+
+Columns: engine-fail = plain node fails (excluded); instr-fail = node passes but instrumentation-only (noop-nobuiltin) fails; not-exercised = the builtin's model never ran (e.g. length/name/prop-desc tests); fail-not-exercised = model run fails without that model running (another model or dispatch); conformance = pass / (pass + model-fail).
+
+| builtin | total | engine-fail | instr-fail | not-exercised | fail-not-exercised | pass | model-fail | conformance |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Array.isArray | 58 | 0 | 2 | 6 | 0 | 50 | 0 | 100.0% |
+| Array.of | 32 | 2 | 2 | 8 | 0 | 18 | 2 | 90.0% |
+| Array.prototype.at | 26 | 0 | 0 | 6 | 0 | 20 | 0 | 100.0% |
+| Array.prototype.concat | 137 | 7 | 6 | 8 | 0 | 94 | 22 | 81.0% |
+| Array.prototype.copyWithin | 78 | 0 | 0 | 8 | 0 | 68 | 2 | 97.1% |
+| Array.prototype.every | 433 | 3 | 152 | 10 | 0 | 262 | 6 | 97.8% |
+| Array.prototype.fill | 44 | 0 | 0 | 8 | 0 | 34 | 2 | 94.4% |
+| Array.prototype.filter | 480 | 9 | 50 | 8 | 0 | 387 | 26 | 93.7% |
+| Array.prototype.find | 44 | 0 | 12 | 8 | 0 | 24 | 0 | 100.0% |
+| Array.prototype.findIndex | 44 | 0 | 12 | 10 | 0 | 22 | 0 | 100.0% |
+| Array.prototype.findLast | 46 | 0 | 12 | 8 | 0 | 24 | 2 | 92.3% |
+| Array.prototype.findLastIndex | 46 | 0 | 12 | 8 | 0 | 24 | 2 | 92.3% |
+| Array.prototype.flat | 38 | 0 | 2 | 10 | 0 | 20 | 6 | 76.9% |
+| Array.prototype.flatMap | 45 | 0 | 6 | 6 | 0 | 21 | 12 | 63.6% |
+| Array.prototype.forEach | 376 | 3 | 10 | 10 | 0 | 343 | 10 | 97.2% |
+| Array.prototype.includes | 60 | 0 | 4 | 8 | 0 | 48 | 0 | 100.0% |
+| Array.prototype.indexOf | 401 | 1 | 62 | 8 | 0 | 316 | 14 | 95.8% |
+| Array.prototype.join | 46 | 0 | 0 | 10 | 0 | 36 | 0 | 100.0% |
+| Array.prototype.lastIndexOf | 395 | 1 | 66 | 8 | 0 | 308 | 12 | 96.3% |
+| Array.prototype.map | 429 | 6 | 18 | 8 | 0 | 373 | 24 | 94.0% |
+| Array.prototype.pop | 46 | 0 | 6 | 6 | 0 | 32 | 2 | 94.1% |
+| Array.prototype.push | 48 | 0 | 6 | 6 | 0 | 34 | 2 | 94.4% |
+| Array.prototype.reduce | 517 | 2 | 8 | 10 | 0 | 483 | 14 | 97.2% |
+| Array.prototype.reduceRight | 517 | 2 | 0 | 10 | 0 | 491 | 14 | 97.2% |
+| Array.prototype.reverse | 36 | 0 | 2 | 8 | 0 | 24 | 2 | 92.3% |
+| Array.prototype.shift | 40 | 0 | 4 | 8 | 0 | 26 | 2 | 92.9% |
+| Array.prototype.slice | 142 | 4 | 4 | 8 | 0 | 110 | 16 | 87.3% |
+| Array.prototype.some | 434 | 5 | 120 | 10 | 0 | 289 | 10 | 96.7% |
+| Array.prototype.sort | 107 | 1 | 0 | 8 | 0 | 92 | 6 | 93.9% |
+| Array.prototype.splice | 162 | 4 | 4 | 8 | 0 | 128 | 18 | 87.7% |
+| Array.prototype.toReversed | 34 | 0 | 0 | 8 | 0 | 26 | 0 | 100.0% |
+| Array.prototype.toSorted | 42 | 0 | 0 | 8 | 0 | 34 | 0 | 100.0% |
+| Array.prototype.toSpliced | 60 | 0 | 0 | 8 | 0 | 52 | 0 | 100.0% |
+| Array.prototype.toString | 22 | 0 | 2 | 8 | 0 | 12 | 0 | 100.0% |
+| Array.prototype.unshift | 42 | 0 | 4 | 8 | 0 | 28 | 2 | 93.3% |
+| Array.prototype.with | 42 | 0 | 0 | 8 | 0 | 34 | 0 | 100.0% |
+| String | 187 | 7 | 2 | 10 | 0 | 126 | 42 | 75.0% |
+| String.fromCharCode | 30 | 0 | 0 | 8 | 0 | 22 | 0 | 100.0% |
+| String.fromCodePoint | 22 | 0 | 0 | 8 | 0 | 14 | 0 | 100.0% |
+| String.prototype.anchor | 14 | 0 | 0 | 8 | 0 | 6 | 0 | 100.0% |
+| String.prototype.at | 22 | 0 | 0 | 6 | 0 | 16 | 0 | 100.0% |
+| String.prototype.big | 12 | 0 | 0 | 8 | 0 | 4 | 0 | 100.0% |
+| String.prototype.blink | 12 | 0 | 0 | 8 | 0 | 4 | 0 | 100.0% |
+| String.prototype.bold | 12 | 0 | 0 | 8 | 0 | 4 | 0 | 100.0% |
+| String.prototype.charAt | 60 | 0 | 0 | 16 | 0 | 44 | 0 | 100.0% |
+| String.prototype.charCodeAt | 50 | 0 | 0 | 16 | 0 | 34 | 0 | 100.0% |
+| String.prototype.codePointAt | 32 | 0 | 0 | 8 | 0 | 24 | 0 | 100.0% |
+| String.prototype.concat | 44 | 0 | 0 | 16 | 0 | 28 | 0 | 100.0% |
+| String.prototype.endsWith | 54 | 0 | 0 | 8 | 0 | 44 | 2 | 95.7% |
+| String.prototype.fixed | 12 | 0 | 0 | 8 | 0 | 4 | 0 | 100.0% |
+| String.prototype.fontcolor | 14 | 0 | 0 | 8 | 0 | 6 | 0 | 100.0% |
+| String.prototype.fontsize | 14 | 0 | 0 | 8 | 0 | 6 | 0 | 100.0% |
+| String.prototype.includes | 54 | 0 | 2 | 8 | 0 | 42 | 2 | 95.5% |
+| String.prototype.indexOf | 94 | 0 | 0 | 18 | 0 | 76 | 0 | 100.0% |
+| String.prototype.isWellFormed | 16 | 0 | 0 | 8 | 0 | 8 | 0 | 100.0% |
+| String.prototype.italics | 12 | 0 | 0 | 8 | 0 | 4 | 0 | 100.0% |
+| String.prototype.lastIndexOf | 48 | 0 | 0 | 18 | 0 | 30 | 0 | 100.0% |
+| String.prototype.link | 14 | 0 | 0 | 8 | 0 | 6 | 0 | 100.0% |
+| String.prototype.normalize | 28 | 0 | 0 | 8 | 0 | 20 | 0 | 100.0% |
+| String.prototype.padEnd | 26 | 0 | 0 | 8 | 0 | 18 | 0 | 100.0% |
+| String.prototype.padStart | 26 | 0 | 0 | 8 | 0 | 18 | 0 | 100.0% |
+| String.prototype.repeat | 32 | 0 | 0 | 8 | 2 | 22 | 0 | 100.0% |
+| String.prototype.replace | 106 | 11 | 0 | 12 | 0 | 83 | 0 | 100.0% |
+| String.prototype.replaceAll | 92 | 10 | 0 | 8 | 0 | 66 | 8 | 89.2% |
+| String.prototype.slice | 72 | 0 | 0 | 16 | 0 | 56 | 0 | 100.0% |
+| String.prototype.small | 12 | 0 | 0 | 8 | 0 | 4 | 0 | 100.0% |
+| String.prototype.split | 242 | 12 | 0 | 16 | 0 | 214 | 0 | 100.0% |
+| String.prototype.startsWith | 42 | 0 | 0 | 8 | 0 | 32 | 2 | 94.1% |
+| String.prototype.strike | 12 | 0 | 0 | 8 | 0 | 4 | 0 | 100.0% |
+| String.prototype.sub | 12 | 0 | 0 | 8 | 0 | 4 | 0 | 100.0% |
+| String.prototype.substr | 30 | 0 | 0 | 8 | 0 | 22 | 0 | 100.0% |
+| String.prototype.substring | 88 | 0 | 0 | 16 | 0 | 72 | 0 | 100.0% |
+| String.prototype.sup | 12 | 0 | 0 | 8 | 0 | 4 | 0 | 100.0% |
+| String.prototype.toString | 14 | 2 | 0 | 6 | 0 | 6 | 0 | 100.0% |
+| String.prototype.toWellFormed | 16 | 0 | 0 | 8 | 0 | 8 | 0 | 100.0% |
+| String.prototype.trim | 258 | 0 | 0 | 8 | 0 | 250 | 0 | 100.0% |
+| String.prototype.trimEnd | 54 | 0 | 6 | 16 | 0 | 32 | 0 | 100.0% |
+| String.prototype.trimStart | 54 | 0 | 6 | 16 | 0 | 32 | 0 | 100.0% |
+| String.prototype.valueOf | 14 | 2 | 0 | 6 | 0 | 6 | 0 | 100.0% |
+| String.raw | 60 | 0 | 0 | 8 | 0 | 52 | 0 | 100.0% |
+| **total** | 7680 | 94 | 604 | 730 | 2 | 5964 | 286 | 95.4% |
+
+## Model-run failures
+
+- `built-ins/Array/of/return-a-new-array-object.js` (model-fail) — exit 1 \| TypeError: function cos() { [native code] } is not a constructor
+- `built-ins/Array/of/return-a-new-array-object.strict.js` (model-fail) — exit 1 \| TypeError: function cos() { [native code] } is not a constructor
+- `built-ins/Array/prototype/concat/Array.prototype.concat_spreadable-string-wrapper.js` (model-fail) — exit 1 \| TypeError: Cannot create property 'Symbol(Symbol.isConcatSpreadable)' on string 'yuck💩'
+- `built-ins/Array/prototype/concat/Array.prototype.concat_spreadable-string-wrapper.strict.js` (model-fail) — exit 1 \| TypeError: Cannot create property 'Symbol(Symbol.isConcatSpreadable)' on string 'yuck💩'
+- `built-ins/Array/prototype/concat/call-with-boolean.js` (model-fail) — exit 1 \| Test262Error { message: 'The result of evaluating (Array.prototype.concat.call(true)[0] instanceof Boolean) is expected to be true Expected SameValue(«false», «true») to be true'
+- `built-ins/Array/prototype/concat/call-with-boolean.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'The result of evaluating (Array.prototype.concat.call(true)[0] instanceof Boolean) is expected to be true Expected SameValue(«false», «true») to be true'
+- `built-ins/Array/prototype/concat/create-ctor-non-object.js` (model-fail) — exit 1 \| Test262Error { message: 'a.concat() throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/concat/create-ctor-non-object.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'a.concat() throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/concat/create-proxy.js` (model-fail) — exit 1 \| Test262Error { message: 'Object.getPrototypeOf(Array.prototype.concat.call(proxy)) returns Ctor.prototype Expected SameValue(«», «[object Object]») to be true'
+- `built-ins/Array/prototype/concat/create-proxy.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Object.getPrototypeOf(Array.prototype.concat.call(proxy)) returns Ctor.prototype Expected SameValue(«», «[object Object]») to be true'
+- `built-ins/Array/prototype/concat/create-species-abrupt.js` (model-fail) — exit 1 \| Test262Error { message: 'a.concat() throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/concat/create-species-abrupt.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'a.concat() throws a Test262Error exception Expected a Test262Error to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/concat/create-species-non-ctor.js` (model-fail) — exit 1 \| Test262Error { message: 'a.concat() throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/concat/create-species-non-ctor.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'a.concat() throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/concat/create-species-non-extensible-spreadable.js` (model-fail) — exit 1 \| Test262Error { message: 'arr.concat([1]) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/concat/create-species-non-extensible-spreadable.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'arr.concat([1]) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/concat/create-species-non-extensible.js` (model-fail) — exit 1 \| Test262Error { message: 'arr.concat(1) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/concat/create-species-non-extensible.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'arr.concat(1) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/concat/create-species-with-non-configurable-property-spreadable.js` (model-fail) — exit 1 \| Test262Error { message: 'arr.concat([1]) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/concat/create-species-with-non-configurable-property-spreadable.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'arr.concat([1]) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/concat/create-species-with-non-configurable-property.js` (model-fail) — exit 1 \| Test262Error { message: 'arr.concat(1) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/concat/create-species-with-non-configurable-property.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'arr.concat(1) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/concat/create-species.js` (model-fail) — exit 1 \| Test262Error { message: 'The value of callCount is expected to be 1 Expected SameValue(«0», «1») to be true'
+- `built-ins/Array/prototype/concat/create-species.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'The value of callCount is expected to be 1 Expected SameValue(«0», «1») to be true'
+- `built-ins/Array/prototype/copyWithin/call-with-boolean.js` (model-fail) — exit 1 \| Test262Error { message: 'The result of evaluating (Array.prototype.copyWithin.call(true) instanceof Boolean) is expected to be true Expected SameValue(«false», «true») to be true'
+- `built-ins/Array/prototype/copyWithin/call-with-boolean.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'The result of evaluating (Array.prototype.copyWithin.call(true) instanceof Boolean) is expected to be true Expected SameValue(«false», «true») to be true'
+- `built-ins/Array/prototype/every/15.4.4.16-1-3.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in false
+- `built-ins/Array/prototype/every/15.4.4.16-1-3.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in false
+- `built-ins/Array/prototype/every/15.4.4.16-1-5.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 2.5
+- `built-ins/Array/prototype/every/15.4.4.16-1-5.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 2.5
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-iii-17.js` (model-fail) — exit 1 \| Test262Error { message: '[11].every(callbackfn) !== true' }
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-iii-17.strict.js` (model-fail) — exit 1 \| Test262Error { message: '[11].every(callbackfn) !== true' }
+- `built-ins/Array/prototype/fill/call-with-boolean.js` (model-fail) — exit 1 \| Test262Error { message: 'The result of `(Array.prototype.fill.call(true) instanceof Boolean)` is true Expected SameValue(«false», «true») to be true'
+- `built-ins/Array/prototype/fill/call-with-boolean.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'The result of `(Array.prototype.fill.call(true) instanceof Boolean)` is true Expected SameValue(«false», «true») to be true'
+- `built-ins/Array/prototype/filter/15.4.4.20-1-3.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in false
+- `built-ins/Array/prototype/filter/15.4.4.20-1-3.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in false
+- `built-ins/Array/prototype/filter/15.4.4.20-1-5.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 2.5
+- `built-ins/Array/prototype/filter/15.4.4.20-1-5.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 2.5
+- `built-ins/Array/prototype/filter/15.4.4.20-1-7.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in abc
+- `built-ins/Array/prototype/filter/15.4.4.20-1-7.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in abc
+- `built-ins/Array/prototype/filter/15.4.4.20-1-8.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in abc
+- `built-ins/Array/prototype/filter/15.4.4.20-1-8.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in abc
+- `built-ins/Array/prototype/filter/15.4.4.20-2-18.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 012
+- `built-ins/Array/prototype/filter/15.4.4.20-2-18.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 012
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-iii-18.js` (model-fail) — exit 1 \| Test262Error { message: 'newArr.length Expected SameValue(«0», «1») to be true'
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-iii-18.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'newArr.length Expected SameValue(«0», «1») to be true'
+- `built-ins/Array/prototype/filter/create-ctor-non-object.js` (model-fail) — exit 1 \| Test262Error { message: 'null value Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/filter/create-ctor-non-object.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'null value Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/filter/create-proxy.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected SameValue(«», «[object Object]») to be true'
+- `built-ins/Array/prototype/filter/create-proxy.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected SameValue(«», «[object Object]») to be true'
+- `built-ins/Array/prototype/filter/create-species-abrupt.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a Test262Error to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/filter/create-species-abrupt.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a Test262Error to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/filter/create-species-non-ctor.js` (model-fail) — exit 1 \| Test262Error { message: 'a.filter(cb) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/filter/create-species-non-ctor.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'a.filter(cb) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/filter/create-species.js` (model-fail) — exit 1 \| Test262Error { message: 'Constructor invoked exactly once Expected SameValue(«0», «1») to be true'
+- `built-ins/Array/prototype/filter/create-species.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Constructor invoked exactly once Expected SameValue(«0», «1») to be true'
+- `built-ins/Array/prototype/filter/target-array-non-extensible.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/filter/target-array-non-extensible.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/filter/target-array-with-non-configurable-property.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/filter/target-array-with-non-configurable-property.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/findLast/maximum-index.js` (model-fail) — exit 1 \| RangeError: Invalid array length
+- `built-ins/Array/prototype/findLast/maximum-index.strict.js` (model-fail) — exit 1 \| RangeError: Invalid array length
+- `built-ins/Array/prototype/findLastIndex/maximum-index.js` (model-fail) — exit 1 \| RangeError: Invalid array length
+- `built-ins/Array/prototype/findLastIndex/maximum-index.strict.js` (model-fail) — exit 1 \| RangeError: Invalid array length
+- `built-ins/Array/prototype/flat/non-object-ctor-throws.js` (model-fail) — exit 1 \| Test262Error { message: 'null value Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/flat/non-object-ctor-throws.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'null value Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/flat/target-array-non-extensible.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/flat/target-array-non-extensible.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/flat/target-array-with-non-configurable-property.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/flat/target-array-with-non-configurable-property.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/flatMap/target-array-non-extensible.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/flatMap/target-array-non-extensible.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/flatMap/target-array-with-non-configurable-property.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/flatMap/target-array-with-non-configurable-property.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/flatMap/this-value-ctor-non-object.js` (model-fail) — exit 1 \| Test262Error { message: 'a.flatMap(mapperFn) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/flatMap/this-value-ctor-non-object.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'a.flatMap(mapperFn) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/flatMap/this-value-ctor-object-species-bad-throws.js` (model-fail) — exit 1 \| Test262Error { message: 'arr.flatMap(mapperFn) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/flatMap/this-value-ctor-object-species-bad-throws.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'arr.flatMap(mapperFn) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor-poisoned-throws.js` (model-fail) — exit 1 \| Test262Error { message: 'Return abrupt completion from species custom ctor Expected a Test262Error to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor-poisoned-throws.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Return abrupt completion from species custom ctor Expected a Test262Error to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor.js` (model-fail) — exit 1 \| Test262Error { message: 'returned value is an instance of custom ctor'
+- `built-ins/Array/prototype/flatMap/this-value-ctor-object-species-custom-ctor.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'returned value is an instance of custom ctor'
+- `built-ins/Array/prototype/forEach/15.4.4.18-1-3.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in false
+- `built-ins/Array/prototype/forEach/15.4.4.18-1-3.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in false
+- `built-ins/Array/prototype/forEach/15.4.4.18-1-5.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 2.5
+- `built-ins/Array/prototype/forEach/15.4.4.18-1-5.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 2.5
+- `built-ins/Array/prototype/forEach/15.4.4.18-1-7.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in abc
+- `built-ins/Array/prototype/forEach/15.4.4.18-1-7.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in abc
+- `built-ins/Array/prototype/forEach/15.4.4.18-1-8.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in abc
+- `built-ins/Array/prototype/forEach/15.4.4.18-1-8.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in abc
+- `built-ins/Array/prototype/forEach/15.4.4.18-2-18.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 012
+- `built-ins/Array/prototype/forEach/15.4.4.18-2-18.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 012
+- `built-ins/Array/prototype/indexOf/15.4.4.14-1-3.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in true
+- `built-ins/Array/prototype/indexOf/15.4.4.14-1-3.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in true
+- `built-ins/Array/prototype/indexOf/15.4.4.14-1-5.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 5
+- `built-ins/Array/prototype/indexOf/15.4.4.14-1-5.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 5
+- `built-ins/Array/prototype/indexOf/15.4.4.14-1-7.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in abc
+- `built-ins/Array/prototype/indexOf/15.4.4.14-1-7.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in abc
+- `built-ins/Array/prototype/indexOf/15.4.4.14-1-8.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in null
+- `built-ins/Array/prototype/indexOf/15.4.4.14-1-8.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in null
+- `built-ins/Array/prototype/indexOf/15.4.4.14-2-18.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 012
+- `built-ins/Array/prototype/indexOf/15.4.4.14-2-18.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 012
+- `built-ins/Array/prototype/indexOf/15.4.4.14-5-9.js` (model-fail) — exit 1 \| Test262Error { message: '[true].indexOf(true, -0) Expected SameValue(«-0», «0») to be true'
+- `built-ins/Array/prototype/indexOf/15.4.4.14-5-9.strict.js` (model-fail) — exit 1 \| Test262Error { message: '[true].indexOf(true, -0) Expected SameValue(«-0», «0») to be true'
+- `built-ins/Array/prototype/indexOf/fromindex-zero-conversion.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected SameValue(«-Infinity», «Infinity») to be true'
+- `built-ins/Array/prototype/indexOf/fromindex-zero-conversion.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected SameValue(«-Infinity», «Infinity») to be true'
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-5.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '1' in 5
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-5.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '1' in 5
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-7.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '2' in abc
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-7.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '2' in abc
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-8.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '8' in undefined
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-8.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '8' in undefined
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-2-18.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '2' in 012
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-2-18.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '2' in 012
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-5-9.js` (model-fail) — exit 1 \| Test262Error { message: '[true, 0].lastIndexOf(true, -0) Expected SameValue(«-0», «0») to be true'
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-5-9.strict.js` (model-fail) — exit 1 \| Test262Error { message: '[true, 0].lastIndexOf(true, -0) Expected SameValue(«-0», «0») to be true'
+- `built-ins/Array/prototype/lastIndexOf/fromindex-zero-conversion.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected SameValue(«-Infinity», «Infinity») to be true'
+- `built-ins/Array/prototype/lastIndexOf/fromindex-zero-conversion.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected SameValue(«-Infinity», «Infinity») to be true'
+- `built-ins/Array/prototype/map/15.4.4.19-1-3.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in false
+- `built-ins/Array/prototype/map/15.4.4.19-1-3.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in false
+- `built-ins/Array/prototype/map/15.4.4.19-1-5.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 2.5
+- `built-ins/Array/prototype/map/15.4.4.19-1-5.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 2.5
+- `built-ins/Array/prototype/map/15.4.4.19-1-7.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in abc
+- `built-ins/Array/prototype/map/15.4.4.19-1-7.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in abc
+- `built-ins/Array/prototype/map/15.4.4.19-1-8.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in abc
+- `built-ins/Array/prototype/map/15.4.4.19-1-8.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in abc
+- `built-ins/Array/prototype/map/15.4.4.19-2-18.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 432
+- `built-ins/Array/prototype/map/15.4.4.19-2-18.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 432
+- `built-ins/Array/prototype/map/create-ctor-non-object.js` (model-fail) — exit 1 \| Test262Error { message: 'null value Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/map/create-ctor-non-object.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'null value Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/map/create-proxy.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected SameValue(«», «[object Object]») to be true'
+- `built-ins/Array/prototype/map/create-proxy.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected SameValue(«», «[object Object]») to be true'
+- `built-ins/Array/prototype/map/create-species-abrupt.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a Test262Error to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/map/create-species-abrupt.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a Test262Error to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/map/create-species-non-ctor.js` (model-fail) — exit 1 \| Test262Error { message: 'a.map(cb) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/map/create-species-non-ctor.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'a.map(cb) throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/map/create-species.js` (model-fail) — exit 1 \| Test262Error { message: 'Constructor invoked exactly once Expected SameValue(«0», «1») to be true'
+- `built-ins/Array/prototype/map/create-species.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Constructor invoked exactly once Expected SameValue(«0», «1») to be true'
+- `built-ins/Array/prototype/map/target-array-non-extensible.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/map/target-array-non-extensible.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/map/target-array-with-non-configurable-property.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/map/target-array-with-non-configurable-property.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/pop/call-with-boolean.js` (model-fail) — exit 1 \| TypeError: Cannot create property 'length' on boolean 'true'
+- `built-ins/Array/prototype/pop/call-with-boolean.strict.js` (model-fail) — exit 1 \| TypeError: Cannot create property 'length' on boolean 'true'
+- `built-ins/Array/prototype/push/call-with-boolean.js` (model-fail) — exit 1 \| TypeError: Cannot create property 'length' on boolean 'true'
+- `built-ins/Array/prototype/push/call-with-boolean.strict.js` (model-fail) — exit 1 \| TypeError: Cannot create property 'length' on boolean 'true'
+- `built-ins/Array/prototype/reduce/15.4.4.21-1-3.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in false
+- `built-ins/Array/prototype/reduce/15.4.4.21-1-3.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in false
+- `built-ins/Array/prototype/reduce/15.4.4.21-1-5.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 2.5
+- `built-ins/Array/prototype/reduce/15.4.4.21-1-5.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 2.5
+- `built-ins/Array/prototype/reduce/15.4.4.21-1-7.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in abc
+- `built-ins/Array/prototype/reduce/15.4.4.21-1-7.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in abc
+- `built-ins/Array/prototype/reduce/15.4.4.21-1-8.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in abc
+- `built-ins/Array/prototype/reduce/15.4.4.21-1-8.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in abc
+- `built-ins/Array/prototype/reduce/15.4.4.21-2-18.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 012
+- `built-ins/Array/prototype/reduce/15.4.4.21-2-18.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 012
+- `built-ins/Array/prototype/reduce/15.4.4.21-8-b-iii-1-28.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 012
+- `built-ins/Array/prototype/reduce/15.4.4.21-8-b-iii-1-28.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 012
+- `built-ins/Array/prototype/reduce/15.4.4.21-9-c-i-28.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 012
+- `built-ins/Array/prototype/reduce/15.4.4.21-9-c-i-28.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 012
+- `built-ins/Array/prototype/reduceRight/15.4.4.22-1-3.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in false
+- `built-ins/Array/prototype/reduceRight/15.4.4.22-1-3.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in false
+- `built-ins/Array/prototype/reduceRight/15.4.4.22-1-5.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 2.5
+- `built-ins/Array/prototype/reduceRight/15.4.4.22-1-5.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 2.5
+- `built-ins/Array/prototype/reduceRight/15.4.4.22-1-7.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '12' in hello
+- `built-ins/Array/prototype/reduceRight/15.4.4.22-1-7.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '12' in hello
+- `built-ins/Array/prototype/reduceRight/15.4.4.22-1-8.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '12' in hello
+- `built-ins/Array/prototype/reduceRight/15.4.4.22-1-8.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '12' in hello
+- `built-ins/Array/prototype/reduceRight/15.4.4.22-2-18.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '2' in 432
+- `built-ins/Array/prototype/reduceRight/15.4.4.22-2-18.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '2' in 432
+- `built-ins/Array/prototype/reduceRight/15.4.4.22-8-b-iii-1-28.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '2' in 012
+- `built-ins/Array/prototype/reduceRight/15.4.4.22-8-b-iii-1-28.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '2' in 012
+- `built-ins/Array/prototype/reduceRight/15.4.4.22-9-c-i-28.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '2' in 012
+- `built-ins/Array/prototype/reduceRight/15.4.4.22-9-c-i-28.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '2' in 012
+- `built-ins/Array/prototype/reverse/call-with-boolean.js` (model-fail) — exit 1 \| Test262Error { message: 'The result of `(Array.prototype.reverse.call(true) instanceof Boolean)` is true Expected SameValue(«false», «true») to be true'
+- `built-ins/Array/prototype/reverse/call-with-boolean.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'The result of `(Array.prototype.reverse.call(true) instanceof Boolean)` is true Expected SameValue(«false», «true») to be true'
+- `built-ins/Array/prototype/shift/call-with-boolean.js` (model-fail) — exit 1 \| TypeError: Cannot create property 'length' on boolean 'true'
+- `built-ins/Array/prototype/shift/call-with-boolean.strict.js` (model-fail) — exit 1 \| TypeError: Cannot create property 'length' on boolean 'true'
+- `built-ins/Array/prototype/slice/create-ctor-non-object.js` (model-fail) — exit 1 \| Test262Error { message: 'null value Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/slice/create-ctor-non-object.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'null value Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/slice/create-proxy.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected SameValue(«», «[object Object]») to be true'
+- `built-ins/Array/prototype/slice/create-proxy.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected SameValue(«», «[object Object]») to be true'
+- `built-ins/Array/prototype/slice/create-species-abrupt.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a Test262Error to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/slice/create-species-abrupt.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a Test262Error to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/slice/create-species-neg-zero.js` (model-fail) — exit 1 \| TypeError: Cannot read properties of undefined (reading 'length')
+- `built-ins/Array/prototype/slice/create-species-neg-zero.strict.js` (model-fail) — exit 1 \| TypeError: Cannot read properties of undefined (reading 'length')
+- `built-ins/Array/prototype/slice/create-species-non-ctor.js` (model-fail) — exit 1 \| Test262Error { message: 'a.slice() throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/slice/create-species-non-ctor.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'a.slice() throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/slice/create-species.js` (model-fail) — exit 1 \| Test262Error { message: 'Constructor invoked exactly once Expected SameValue(«0», «1») to be true'
+- `built-ins/Array/prototype/slice/create-species.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Constructor invoked exactly once Expected SameValue(«0», «1») to be true'
+- `built-ins/Array/prototype/slice/target-array-non-extensible.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/slice/target-array-non-extensible.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/slice/target-array-with-non-configurable-property.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/slice/target-array-with-non-configurable-property.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/some/15.4.4.17-1-3.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in false
+- `built-ins/Array/prototype/some/15.4.4.17-1-3.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in false
+- `built-ins/Array/prototype/some/15.4.4.17-1-5.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 5
+- `built-ins/Array/prototype/some/15.4.4.17-1-5.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in 5
+- `built-ins/Array/prototype/some/15.4.4.17-1-7.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in hello
+- `built-ins/Array/prototype/some/15.4.4.17-1-7.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in hello
+- `built-ins/Array/prototype/some/15.4.4.17-1-8.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in hello
+- `built-ins/Array/prototype/some/15.4.4.17-1-8.strict.js` (model-fail) — exit 1 \| TypeError: Cannot use 'in' operator to search for '0' in hello
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-iii-17.js` (model-fail) — exit 1 \| Test262Error { message: '[11].some(callbackfn) !== true' }
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-iii-17.strict.js` (model-fail) — exit 1 \| Test262Error { message: '[11].some(callbackfn) !== true' }
+- `built-ins/Array/prototype/sort/call-with-primitive.js` (model-fail) — exit 1 \| Test262Error { message: 'boolean' }
+- `built-ins/Array/prototype/sort/call-with-primitive.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'boolean' }
+- `built-ins/Array/prototype/sort/precise-comparefn-throws.js` (model-fail) — exit 1 \| RangeError: Maximum call stack size exceeded
+- `built-ins/Array/prototype/sort/precise-comparefn-throws.strict.js` (model-fail) — exit 1 \| RangeError: Maximum call stack size exceeded
+- `built-ins/Array/prototype/sort/precise-prototype-accessors.js` (model-fail) — exit 1 \| RangeError: Maximum call stack size exceeded
+- `built-ins/Array/prototype/sort/precise-prototype-accessors.strict.js` (model-fail) — exit 1 \| RangeError: Maximum call stack size exceeded
+- `built-ins/Array/prototype/splice/call-with-boolean.js` (model-fail) — exit 1 \| TypeError: Cannot create property 'length' on boolean 'true'
+- `built-ins/Array/prototype/splice/call-with-boolean.strict.js` (model-fail) — exit 1 \| TypeError: Cannot create property 'length' on boolean 'true'
+- `built-ins/Array/prototype/splice/create-ctor-non-object.js` (model-fail) — exit 1 \| Test262Error { message: 'null value Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/splice/create-ctor-non-object.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'null value Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/splice/create-proxy.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected SameValue(«», «[object Object]») to be true'
+- `built-ins/Array/prototype/splice/create-proxy.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected SameValue(«», «[object Object]») to be true'
+- `built-ins/Array/prototype/splice/create-species-abrupt.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a Test262Error to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/splice/create-species-abrupt.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a Test262Error to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/splice/create-species-neg-zero.js` (model-fail) — exit 1 \| TypeError: Cannot read properties of undefined (reading 'length')
+- `built-ins/Array/prototype/splice/create-species-neg-zero.strict.js` (model-fail) — exit 1 \| TypeError: Cannot read properties of undefined (reading 'length')
+- `built-ins/Array/prototype/splice/create-species-non-ctor.js` (model-fail) — exit 1 \| Test262Error { message: 'a.splice() throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/splice/create-species-non-ctor.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'a.splice() throws a TypeError exception Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/splice/create-species.js` (model-fail) — exit 1 \| Test262Error { message: 'Constructor invoked exactly once Expected SameValue(«0», «1») to be true'
+- `built-ins/Array/prototype/splice/create-species.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Constructor invoked exactly once Expected SameValue(«0», «1») to be true'
+- `built-ins/Array/prototype/splice/target-array-non-extensible.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/splice/target-array-non-extensible.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/splice/target-array-with-non-configurable-property.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/splice/target-array-with-non-configurable-property.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/Array/prototype/unshift/call-with-boolean.js` (model-fail) — exit 1 \| TypeError: Cannot create property 'length' on boolean 'true'
+- `built-ins/Array/prototype/unshift/call-with-boolean.strict.js` (model-fail) — exit 1 \| TypeError: Cannot create property 'length' on boolean 'true'
+- `built-ins/String/15.5.5.5.2-1-1.js` (model-fail) — exit 1 \| TypeError: Cannot create property 'foo' on string 'hello world'
+- `built-ins/String/15.5.5.5.2-1-1.strict.js` (model-fail) — exit 1 \| TypeError: Cannot create property 'foo' on string 'hello world'
+- `built-ins/String/S15.5.2.1_A1_T1.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String; typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T1.strict.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String; typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T11.js` (model-fail) — exit 1 \| Test262Error { message: '#1: function __obj(){}; __str = new String(__obj); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T11.strict.js` (model-fail) — exit 1 \| Test262Error { message: '#1: function __obj(){}; __str = new String(__obj); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T10.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String(__obj); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T10.strict.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String(__obj); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T16.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str =new String(.12345); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T16.strict.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str =new String(.12345); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T17.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String(1.2345); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T17.strict.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String(1.2345); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T18.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String(1000000000000000000000); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T18.strict.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String(1000000000000000000000); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T19.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String(new Array(1,2,3)); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T19.strict.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String(new Array(1,2,3)); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T2.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String(); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T2.strict.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String(); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T3.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String(""); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T3.strict.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String(""); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T4.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String(1.0); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T4.strict.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String(1.0); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T5.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String(NaN); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T5.strict.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String(NaN); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T6.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String(false); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T6.strict.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String(false); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T7.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String({}); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T7.strict.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String({}); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T8.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String(function(){}); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T8.strict.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String(function(){}); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T9.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String(function(){return [1,2,3]}()); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A1_T9.strict.js` (model-fail) — exit 1 \| Test262Error { message: '#1: __str = new String(function(){return [1,2,3]}()); typeof __str === "object". Actual: typeof __str ===string'
+- `built-ins/String/S15.5.2.1_A2_T1.js` (model-fail) — exit 1 \| Test262Error { message: '#1: var __str__obj = new String("abba"); String.prototype.isPrototypeOf(__str__obj)===true'
+- `built-ins/String/S15.5.2.1_A2_T1.strict.js` (model-fail) — exit 1 \| Test262Error { message: '#1: var __str__obj = new String("abba"); String.prototype.isPrototypeOf(__str__obj)===true'
+- `built-ins/String/S15.5.2.1_A3.js` (model-fail) — exit 1 \| TypeError: Cannot create property 'toString' on string 'seamaid'
+- `built-ins/String/S15.5.2.1_A3.strict.js` (model-fail) — exit 1 \| TypeError: Cannot create property 'toString' on string 'seamaid'
+- `built-ins/String/S15.5.5.1_A3.js` (model-fail) — exit 1 \| Test262Error { message: '#2: var __str__instance = new String("globglob"); delete __str__instance.length !== true'
+- `built-ins/String/S15.5.5.1_A3.strict.js` (model-fail) — exit 1 \| Test262Error { message: '#2: var __str__instance = new String("globglob"); delete __str__instance.length !== true'
+- `built-ins/String/symbol-wrapping.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/String/symbol-wrapping.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a TypeError to be thrown but no exception was thrown at all'
+- `built-ins/String/prototype/constructor/S15.5.4.1_A1_T2.js` (model-fail) — exit 1 \| Test262Error { message: '#2: __constr = String.prototype.constructor; __instance = new __constr("choosing one"); String.prototype.isPrototypeOf(__instance) return true. Actual: false'
+- `built-ins/String/prototype/constructor/S15.5.4.1_A1_T2.strict.js` (model-fail) — exit 1 \| Test262Error { message: '#2: __constr = String.prototype.constructor; __instance = new __constr("choosing one"); String.prototype.isPrototypeOf(__instance) return true. Actual: false'
+- `built-ins/String/prototype/endsWith/return-abrupt-from-searchstring-regexp-test.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a Test262Error but got a TypeError' }
+- `built-ins/String/prototype/endsWith/return-abrupt-from-searchstring-regexp-test.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a Test262Error but got a TypeError' }
+- `built-ins/String/prototype/includes/return-abrupt-from-searchstring-regexp-test.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a Test262Error but got a TypeError' }
+- `built-ins/String/prototype/includes/return-abrupt-from-searchstring-regexp-test.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a Test262Error but got a TypeError' }
+- `built-ins/String/prototype/repeat/empty-string-returns-empty.js` (fail-not-exercised) — exit 134 \| /Users/choems/code/dynajs.proj/dynajs/dynajs: line 34:  1714 Abort trap: 6           NODE_OPTIONS="$COMBINED_NODE_OPTIONS" "$@"
+- `built-ins/String/prototype/repeat/empty-string-returns-empty.strict.js` (fail-not-exercised) — exit 134 \| /Users/choems/code/dynajs.proj/dynajs/dynajs: line 34:  1723 Abort trap: 6           NODE_OPTIONS="$COMBINED_NODE_OPTIONS" "$@"
+- `built-ins/String/prototype/replaceAll/searchValue-flags-null-undefined-throws.js` (model-fail) — exit 1 \| Test262Error { message: 'undefined Thrown value was not an object!' }
+- `built-ins/String/prototype/replaceAll/searchValue-flags-null-undefined-throws.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'undefined Thrown value was not an object!' }
+- `built-ins/String/prototype/replaceAll/searchValue-flags-toString-abrupt.js` (model-fail) — exit 1 \| Test262Error { message: 'Symbol Thrown value was not an object!' }
+- `built-ins/String/prototype/replaceAll/searchValue-flags-toString-abrupt.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Symbol Thrown value was not an object!' }
+- `built-ins/String/prototype/replaceAll/searchValue-get-flags-abrupt.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected SameValue(«0», «1») to be true' }
+- `built-ins/String/prototype/replaceAll/searchValue-get-flags-abrupt.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected SameValue(«0», «1») to be true' }
+- `built-ins/String/prototype/replaceAll/searchValue-isRegExp-abrupt.js` (model-fail) — exit 1 \| Test262Error { message: 'Thrown value was not an object!' }
+- `built-ins/String/prototype/replaceAll/searchValue-isRegExp-abrupt.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Thrown value was not an object!' }
+- `built-ins/String/prototype/startsWith/return-abrupt-from-searchstring-regexp-test.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a Test262Error but got a TypeError' }
+- `built-ins/String/prototype/startsWith/return-abrupt-from-searchstring-regexp-test.strict.js` (model-fail) — exit 1 \| Test262Error { message: 'Expected a Test262Error but got a TypeError' }
+
+## Instrumentation-only failures (not model bugs)
+
+- `built-ins/Array/isArray/descriptor.js`
+- `built-ins/Array/isArray/descriptor.strict.js`
+- `built-ins/Array/of/does-not-use-prototype-properties.js`
+- `built-ins/Array/of/does-not-use-prototype-properties.strict.js`
+- `built-ins/Array/prototype/concat/15.4.4.4-5-b-iii-3-b-1.js`
+- `built-ins/Array/prototype/concat/15.4.4.4-5-b-iii-3-b-1.strict.js`
+- `built-ins/Array/prototype/concat/15.4.4.4-5-c-i-1.js`
+- `built-ins/Array/prototype/concat/15.4.4.4-5-c-i-1.strict.js`
+- `built-ins/Array/prototype/concat/prop-desc.js`
+- `built-ins/Array/prototype/concat/prop-desc.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-1-10.js`
+- `built-ins/Array/prototype/every/15.4.4.16-1-10.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-1-12.js`
+- `built-ins/Array/prototype/every/15.4.4.16-1-12.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-1-11.js`
+- `built-ins/Array/prototype/every/15.4.4.16-1-11.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-1-13.js`
+- `built-ins/Array/prototype/every/15.4.4.16-1-13.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-1-14.js`
+- `built-ins/Array/prototype/every/15.4.4.16-1-14.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-1-15.js`
+- `built-ins/Array/prototype/every/15.4.4.16-1-15.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-1-7.js`
+- `built-ins/Array/prototype/every/15.4.4.16-1-7.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-1-8.js`
+- `built-ins/Array/prototype/every/15.4.4.16-1-8.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-1-9.js`
+- `built-ins/Array/prototype/every/15.4.4.16-1-9.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-1.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-1.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-10.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-10.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-17.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-17.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-18.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-18.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-19.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-19.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-2.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-2.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-3.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-3.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-4.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-4.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-5.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-5.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-6.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-6.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-7.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-7.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-8.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-8.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-9.js`
+- `built-ins/Array/prototype/every/15.4.4.16-2-9.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-11.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-11.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-13.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-13.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-14.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-14.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-15.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-15.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-16.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-16.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-17.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-17.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-19.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-19.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-2.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-2.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-20.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-20.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-21.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-21.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-23.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-23.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-24.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-24.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-29.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-29.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-6.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-6.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-8.js`
+- `built-ins/Array/prototype/every/15.4.4.16-3-8.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-4-12.js`
+- `built-ins/Array/prototype/every/15.4.4.16-4-12.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-2.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-2.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-6.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-6.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-b-12.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-b-12.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-b-13.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-b-13.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-b-15.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-b-15.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-b-2.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-b-2.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-b-4.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-b-4.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-b-5.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-b-5.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-b-6.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-b-6.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-b-7.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-b-7.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-1.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-1.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-10.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-10.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-11.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-11.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-12.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-12.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-13.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-13.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-14.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-14.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-15.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-15.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-16.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-16.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-22.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-22.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-28.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-28.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-29.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-29.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-3.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-3.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-5.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-5.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-6.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-6.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-7.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-7.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-8.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-8.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-9.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-i-9.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-ii-16.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-ii-16.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-ii-3.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-ii-3.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-ii-8.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-ii-8.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-iii-13.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-iii-13.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-iii-2.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-iii-2.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-iii-28.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-iii-28.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-iii-3.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-iii-3.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-iii-5.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-iii-5.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-iii-6.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-iii-6.strict.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-iii-7.js`
+- `built-ins/Array/prototype/every/15.4.4.16-7-c-iii-7.strict.js`
+- `built-ins/Array/prototype/every/resizable-buffer.js`
+- `built-ins/Array/prototype/every/resizable-buffer.strict.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-10-2.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-10-2.strict.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-4-12.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-4-12.strict.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-2.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-2.strict.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-b-1.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-b-1.strict.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-b-6.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-b-6.strict.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-b-7.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-b-7.strict.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-i-14.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-i-14.strict.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-i-16.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-i-16.strict.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-i-22.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-i-22.strict.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-i-6.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-i-6.strict.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-ii-19.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-ii-19.strict.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-ii-5.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-ii-5.strict.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-ii-8.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-ii-8.strict.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-iii-1.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-iii-1.strict.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-iii-14.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-iii-14.strict.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-iii-29.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-iii-29.strict.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-iii-3.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-iii-3.strict.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-iii-4.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-iii-4.strict.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-iii-6.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-iii-6.strict.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-iii-7.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-iii-7.strict.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-iii-8.js`
+- `built-ins/Array/prototype/filter/15.4.4.20-9-c-iii-8.strict.js`
+- `built-ins/Array/prototype/filter/prop-desc.js`
+- `built-ins/Array/prototype/filter/prop-desc.strict.js`
+- `built-ins/Array/prototype/filter/resizable-buffer-grow-mid-iteration.js`
+- `built-ins/Array/prototype/filter/resizable-buffer-grow-mid-iteration.strict.js`
+- `built-ins/Array/prototype/filter/resizable-buffer-shrink-mid-iteration.js`
+- `built-ins/Array/prototype/filter/resizable-buffer-shrink-mid-iteration.strict.js`
+- `built-ins/Array/prototype/filter/resizable-buffer.js`
+- `built-ins/Array/prototype/filter/resizable-buffer.strict.js`
+- `built-ins/Array/prototype/find/callbackfn-resize-arraybuffer.js`
+- `built-ins/Array/prototype/find/callbackfn-resize-arraybuffer.strict.js`
+- `built-ins/Array/prototype/find/resizable-buffer-grow-mid-iteration.js`
+- `built-ins/Array/prototype/find/resizable-buffer-grow-mid-iteration.strict.js`
+- `built-ins/Array/prototype/find/resizable-buffer-shrink-mid-iteration.js`
+- `built-ins/Array/prototype/find/resizable-buffer-shrink-mid-iteration.strict.js`
+- `built-ins/Array/prototype/find/resizable-buffer.js`
+- `built-ins/Array/prototype/find/resizable-buffer.strict.js`
+- `built-ins/Array/prototype/find/return-found-value-predicate-result-is-true.js`
+- `built-ins/Array/prototype/find/return-found-value-predicate-result-is-true.strict.js`
+- `built-ins/Array/prototype/find/return-undefined-if-predicate-returns-false-value.js`
+- `built-ins/Array/prototype/find/return-undefined-if-predicate-returns-false-value.strict.js`
+- `built-ins/Array/prototype/findIndex/callbackfn-resize-arraybuffer.js`
+- `built-ins/Array/prototype/findIndex/callbackfn-resize-arraybuffer.strict.js`
+- `built-ins/Array/prototype/findIndex/resizable-buffer-grow-mid-iteration.js`
+- `built-ins/Array/prototype/findIndex/resizable-buffer-grow-mid-iteration.strict.js`
+- `built-ins/Array/prototype/findIndex/resizable-buffer-shrink-mid-iteration.js`
+- `built-ins/Array/prototype/findIndex/resizable-buffer-shrink-mid-iteration.strict.js`
+- `built-ins/Array/prototype/findIndex/resizable-buffer.js`
+- `built-ins/Array/prototype/findIndex/resizable-buffer.strict.js`
+- `built-ins/Array/prototype/findIndex/return-index-predicate-result-is-true.js`
+- `built-ins/Array/prototype/findIndex/return-index-predicate-result-is-true.strict.js`
+- `built-ins/Array/prototype/findIndex/return-negative-one-if-predicate-returns-false-value.js`
+- `built-ins/Array/prototype/findIndex/return-negative-one-if-predicate-returns-false-value.strict.js`
+- `built-ins/Array/prototype/findLast/callbackfn-resize-arraybuffer.js`
+- `built-ins/Array/prototype/findLast/callbackfn-resize-arraybuffer.strict.js`
+- `built-ins/Array/prototype/findLast/resizable-buffer-grow-mid-iteration.js`
+- `built-ins/Array/prototype/findLast/resizable-buffer-grow-mid-iteration.strict.js`
+- `built-ins/Array/prototype/findLast/resizable-buffer-shrink-mid-iteration.js`
+- `built-ins/Array/prototype/findLast/resizable-buffer-shrink-mid-iteration.strict.js`
+- `built-ins/Array/prototype/findLast/resizable-buffer.js`
+- `built-ins/Array/prototype/findLast/resizable-buffer.strict.js`
+- `built-ins/Array/prototype/findLast/return-found-value-predicate-result-is-true.js`
+- `built-ins/Array/prototype/findLast/return-found-value-predicate-result-is-true.strict.js`
+- `built-ins/Array/prototype/findLast/return-undefined-if-predicate-returns-false-value.js`
+- `built-ins/Array/prototype/findLast/return-undefined-if-predicate-returns-false-value.strict.js`
+- `built-ins/Array/prototype/findLastIndex/callbackfn-resize-arraybuffer.js`
+- `built-ins/Array/prototype/findLastIndex/callbackfn-resize-arraybuffer.strict.js`
+- `built-ins/Array/prototype/findLastIndex/resizable-buffer-shrink-mid-iteration.js`
+- `built-ins/Array/prototype/findLastIndex/resizable-buffer-shrink-mid-iteration.strict.js`
+- `built-ins/Array/prototype/findLastIndex/resizable-buffer-grow-mid-iteration.js`
+- `built-ins/Array/prototype/findLastIndex/resizable-buffer-grow-mid-iteration.strict.js`
+- `built-ins/Array/prototype/findLastIndex/resizable-buffer.js`
+- `built-ins/Array/prototype/findLastIndex/resizable-buffer.strict.js`
+- `built-ins/Array/prototype/findLastIndex/return-index-predicate-result-is-true.js`
+- `built-ins/Array/prototype/findLastIndex/return-index-predicate-result-is-true.strict.js`
+- `built-ins/Array/prototype/findLastIndex/return-negative-one-if-predicate-returns-false-value.js`
+- `built-ins/Array/prototype/findLastIndex/return-negative-one-if-predicate-returns-false-value.strict.js`
+- `built-ins/Array/prototype/flat/proxy-access-count.js`
+- `built-ins/Array/prototype/flat/proxy-access-count.strict.js`
+- `built-ins/Array/prototype/flatMap/prop-desc.js`
+- `built-ins/Array/prototype/flatMap/prop-desc.strict.js`
+- `built-ins/Array/prototype/flatMap/proxy-access-count.js`
+- `built-ins/Array/prototype/flatMap/proxy-access-count.strict.js`
+- `built-ins/Array/prototype/flatMap/this-value-ctor-object-species.js`
+- `built-ins/Array/prototype/flatMap/this-value-ctor-object-species.strict.js`
+- `built-ins/Array/prototype/forEach/15.4.4.18-7-c-i-14.js`
+- `built-ins/Array/prototype/forEach/15.4.4.18-7-c-i-14.strict.js`
+- `built-ins/Array/prototype/forEach/15.4.4.18-7-c-i-16.js`
+- `built-ins/Array/prototype/forEach/15.4.4.18-7-c-i-16.strict.js`
+- `built-ins/Array/prototype/forEach/15.4.4.18-7-c-i-20.js`
+- `built-ins/Array/prototype/forEach/15.4.4.18-7-c-i-20.strict.js`
+- `built-ins/Array/prototype/forEach/15.4.4.18-7-c-i-22.js`
+- `built-ins/Array/prototype/forEach/15.4.4.18-7-c-i-22.strict.js`
+- `built-ins/Array/prototype/forEach/15.4.4.18-7-c-i-6.js`
+- `built-ins/Array/prototype/forEach/15.4.4.18-7-c-i-6.strict.js`
+- `built-ins/Array/prototype/includes/get-prop.js`
+- `built-ins/Array/prototype/includes/get-prop.strict.js`
+- `built-ins/Array/prototype/includes/values-are-not-cached.js`
+- `built-ins/Array/prototype/includes/values-are-not-cached.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-1-15.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-1-15.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-5-27.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-5-27.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-a-1.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-a-1.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-a-10.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-a-10.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-a-15.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-a-15.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-a-16.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-a-16.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-a-18.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-a-18.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-a-7.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-a-7.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-a-8.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-a-8.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-a-9.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-a-9.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-10.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-10.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-11.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-11.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-12.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-12.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-13.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-13.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-14.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-14.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-15.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-15.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-16.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-16.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-19.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-19.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-21.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-21.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-22.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-22.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-25.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-25.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-26.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-26.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-27.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-27.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-28.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-28.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-29.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-29.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-5.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-5.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-6.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-6.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-7.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-7.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-8.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-8.strict.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-9.js`
+- `built-ins/Array/prototype/indexOf/15.4.4.14-9-b-i-9.strict.js`
+- `built-ins/Array/prototype/indexOf/calls-only-has-on-prototype-after-length-zeroed.js`
+- `built-ins/Array/prototype/indexOf/calls-only-has-on-prototype-after-length-zeroed.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-15.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-15.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-3.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-1-3.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-5-27.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-5-27.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-a-1.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-a-1.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-a-10.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-a-10.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-a-15.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-a-15.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-a-16.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-a-16.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-a-18.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-a-18.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-a-7.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-a-7.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-a-8.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-a-8.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-a-9.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-a-9.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-10.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-10.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-11.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-11.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-12.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-12.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-13.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-13.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-14.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-14.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-15.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-15.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-16.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-16.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-19.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-19.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-20.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-20.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-21.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-21.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-22.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-22.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-25.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-25.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-26.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-26.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-27.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-27.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-28.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-28.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-29.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-29.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-5.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-5.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-6.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-6.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-7.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-7.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-8.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-8.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-9.js`
+- `built-ins/Array/prototype/lastIndexOf/15.4.4.15-8-b-i-9.strict.js`
+- `built-ins/Array/prototype/lastIndexOf/calls-only-has-on-prototype-after-length-zeroed.js`
+- `built-ins/Array/prototype/lastIndexOf/calls-only-has-on-prototype-after-length-zeroed.strict.js`
+- `built-ins/Array/prototype/map/15.4.4.19-8-b-6.js`
+- `built-ins/Array/prototype/map/15.4.4.19-8-b-6.strict.js`
+- `built-ins/Array/prototype/map/15.4.4.19-8-b-7.js`
+- `built-ins/Array/prototype/map/15.4.4.19-8-b-7.strict.js`
+- `built-ins/Array/prototype/map/15.4.4.19-8-c-i-14.js`
+- `built-ins/Array/prototype/map/15.4.4.19-8-c-i-14.strict.js`
+- `built-ins/Array/prototype/map/15.4.4.19-8-c-i-16.js`
+- `built-ins/Array/prototype/map/15.4.4.19-8-c-i-16.strict.js`
+- `built-ins/Array/prototype/map/15.4.4.19-8-c-i-19.js`
+- `built-ins/Array/prototype/map/15.4.4.19-8-c-i-19.strict.js`
+- `built-ins/Array/prototype/map/15.4.4.19-8-c-i-22.js`
+- `built-ins/Array/prototype/map/15.4.4.19-8-c-i-22.strict.js`
+- `built-ins/Array/prototype/map/15.4.4.19-8-c-i-6.js`
+- `built-ins/Array/prototype/map/15.4.4.19-8-c-i-6.strict.js`
+- `built-ins/Array/prototype/map/prop-desc.js`
+- `built-ins/Array/prototype/map/prop-desc.strict.js`
+- `built-ins/Array/prototype/map/resizable-buffer.js`
+- `built-ins/Array/prototype/map/resizable-buffer.strict.js`
+- `built-ins/Array/prototype/pop/prop-desc.js`
+- `built-ins/Array/prototype/pop/prop-desc.strict.js`
+- `built-ins/Array/prototype/pop/set-length-array-is-frozen.js`
+- `built-ins/Array/prototype/pop/set-length-array-is-frozen.strict.js`
+- `built-ins/Array/prototype/pop/set-length-array-length-is-non-writable.js`
+- `built-ins/Array/prototype/pop/set-length-array-length-is-non-writable.strict.js`
+- `built-ins/Array/prototype/push/prop-desc.js`
+- `built-ins/Array/prototype/push/prop-desc.strict.js`
+- `built-ins/Array/prototype/push/set-length-array-is-frozen.js`
+- `built-ins/Array/prototype/push/set-length-array-is-frozen.strict.js`
+- `built-ins/Array/prototype/push/set-length-array-length-is-non-writable.js`
+- `built-ins/Array/prototype/push/set-length-array-length-is-non-writable.strict.js`
+- `built-ins/Array/prototype/reduce/15.4.4.21-8-b-iii-1-14.js`
+- `built-ins/Array/prototype/reduce/15.4.4.21-8-b-iii-1-14.strict.js`
+- `built-ins/Array/prototype/reduce/15.4.4.21-8-b-iii-1-16.js`
+- `built-ins/Array/prototype/reduce/15.4.4.21-8-b-iii-1-16.strict.js`
+- `built-ins/Array/prototype/reduce/15.4.4.21-8-b-iii-1-22.js`
+- `built-ins/Array/prototype/reduce/15.4.4.21-8-b-iii-1-22.strict.js`
+- `built-ins/Array/prototype/reduce/15.4.4.21-8-b-iii-1-6.js`
+- `built-ins/Array/prototype/reduce/15.4.4.21-8-b-iii-1-6.strict.js`
+- `built-ins/Array/prototype/reverse/length-exceeding-integer-limit-with-proxy.js`
+- `built-ins/Array/prototype/reverse/length-exceeding-integer-limit-with-proxy.strict.js`
+- `built-ins/Array/prototype/shift/set-length-array-is-frozen.js`
+- `built-ins/Array/prototype/shift/set-length-array-is-frozen.strict.js`
+- `built-ins/Array/prototype/shift/set-length-array-length-is-non-writable.js`
+- `built-ins/Array/prototype/shift/set-length-array-length-is-non-writable.strict.js`
+- `built-ins/Array/prototype/slice/15.4.4.10-10-c-ii-1.js`
+- `built-ins/Array/prototype/slice/15.4.4.10-10-c-ii-1.strict.js`
+- `built-ins/Array/prototype/slice/length-exceeding-integer-limit-proxied-array.js`
+- `built-ins/Array/prototype/slice/length-exceeding-integer-limit-proxied-array.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-1.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-1.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-10.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-10.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-17.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-17.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-18.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-18.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-19.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-19.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-2.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-2.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-3.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-3.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-4.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-4.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-5.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-5.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-6.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-6.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-7.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-7.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-8.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-8.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-9.js`
+- `built-ins/Array/prototype/some/15.4.4.17-2-9.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-3-11.js`
+- `built-ins/Array/prototype/some/15.4.4.17-3-11.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-3-13.js`
+- `built-ins/Array/prototype/some/15.4.4.17-3-13.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-3-15.js`
+- `built-ins/Array/prototype/some/15.4.4.17-3-15.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-3-16.js`
+- `built-ins/Array/prototype/some/15.4.4.17-3-16.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-3-17.js`
+- `built-ins/Array/prototype/some/15.4.4.17-3-17.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-3-19.js`
+- `built-ins/Array/prototype/some/15.4.4.17-3-19.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-3-2.js`
+- `built-ins/Array/prototype/some/15.4.4.17-3-2.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-3-20.js`
+- `built-ins/Array/prototype/some/15.4.4.17-3-20.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-3-21.js`
+- `built-ins/Array/prototype/some/15.4.4.17-3-21.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-3-23.js`
+- `built-ins/Array/prototype/some/15.4.4.17-3-23.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-3-24.js`
+- `built-ins/Array/prototype/some/15.4.4.17-3-24.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-3-6.js`
+- `built-ins/Array/prototype/some/15.4.4.17-3-6.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-3.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-3.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-4.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-4.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-5.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-5.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-9.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-9.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-b-10.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-b-10.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-b-11.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-b-11.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-b-14.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-b-14.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-b-3.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-b-3.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-b-8.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-b-8.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-b-9.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-b-9.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-i-22.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-i-22.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-i-26.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-i-26.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-i-27.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-i-27.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-i-6.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-i-6.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-ii-1.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-ii-1.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-ii-19.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-ii-19.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-ii-2.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-ii-2.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-ii-21.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-ii-21.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-ii-22.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-ii-22.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-ii-3.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-ii-3.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-ii-4.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-ii-4.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-ii-5.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-ii-5.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-iii-13.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-iii-13.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-iii-2.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-iii-2.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-iii-3.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-iii-3.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-iii-5.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-iii-5.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-iii-6.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-iii-6.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-iii-7.js`
+- `built-ins/Array/prototype/some/15.4.4.17-7-c-iii-7.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-8-10.js`
+- `built-ins/Array/prototype/some/15.4.4.17-8-10.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-8-11.js`
+- `built-ins/Array/prototype/some/15.4.4.17-8-11.strict.js`
+- `built-ins/Array/prototype/some/15.4.4.17-8-13.js`
+- `built-ins/Array/prototype/some/15.4.4.17-8-13.strict.js`
+- `built-ins/Array/prototype/some/callbackfn-resize-arraybuffer.js`
+- `built-ins/Array/prototype/some/callbackfn-resize-arraybuffer.strict.js`
+- `built-ins/Array/prototype/some/resizable-buffer-grow-mid-iteration.js`
+- `built-ins/Array/prototype/some/resizable-buffer-grow-mid-iteration.strict.js`
+- `built-ins/Array/prototype/some/resizable-buffer.js`
+- `built-ins/Array/prototype/some/resizable-buffer.strict.js`
+- `built-ins/Array/prototype/some/resizable-buffer-shrink-mid-iteration.js`
+- `built-ins/Array/prototype/some/resizable-buffer-shrink-mid-iteration.strict.js`
+- `built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.js`
+- `built-ins/Array/prototype/splice/create-species-length-exceeding-integer-limit.strict.js`
+- `built-ins/Array/prototype/splice/property-traps-order-with-species.js`
+- `built-ins/Array/prototype/splice/property-traps-order-with-species.strict.js`
+- `built-ins/Array/prototype/toString/non-callable-join-string-tag.js`
+- `built-ins/Array/prototype/toString/non-callable-join-string-tag.strict.js`
+- `built-ins/Array/prototype/unshift/set-length-array-is-frozen.js`
+- `built-ins/Array/prototype/unshift/set-length-array-is-frozen.strict.js`
+- `built-ins/Array/prototype/unshift/set-length-array-length-is-non-writable.js`
+- `built-ins/Array/prototype/unshift/set-length-array-length-is-non-writable.strict.js`
+- `built-ins/String/S15.5.5.1_A5.js`
+- `built-ins/String/S15.5.5.1_A5.strict.js`
+- `built-ins/String/prototype/includes/includes.js`
+- `built-ins/String/prototype/includes/includes.strict.js`
+- `built-ins/String/prototype/trimEnd/this-value-object-toprimitive-meth-priority.js`
+- `built-ins/String/prototype/trimEnd/this-value-object-toprimitive-meth-priority.strict.js`
+- `built-ins/String/prototype/trimEnd/this-value-object-tostring-meth-priority.js`
+- `built-ins/String/prototype/trimEnd/this-value-object-tostring-meth-priority.strict.js`
+- `built-ins/String/prototype/trimEnd/this-value-object-valueof-meth-priority.js`
+- `built-ins/String/prototype/trimEnd/this-value-object-valueof-meth-priority.strict.js`
+- `built-ins/String/prototype/trimStart/this-value-object-toprimitive-meth-priority.js`
+- `built-ins/String/prototype/trimStart/this-value-object-toprimitive-meth-priority.strict.js`
+- `built-ins/String/prototype/trimStart/this-value-object-tostring-meth-priority.js`
+- `built-ins/String/prototype/trimStart/this-value-object-tostring-meth-priority.strict.js`
+- `built-ins/String/prototype/trimStart/this-value-object-valueof-meth-priority.js`
+- `built-ins/String/prototype/trimStart/this-value-object-valueof-meth-priority.strict.js`

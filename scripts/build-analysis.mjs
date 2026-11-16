@@ -23,6 +23,10 @@ const entryPoints = [
     entry: 'analyses/noop-nobuiltin/index.ts',
     outfile: 'analyses/dist/NoopNoBuiltin.mjs',
   },
+  {
+    entry: 'analyses/model-check/index.ts',
+    outfile: 'analyses/dist/ModelCheck.mjs',
+  },
 ];
 
 const results = await Promise.allSettled(

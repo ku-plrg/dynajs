@@ -97,6 +97,14 @@ export abstract class FlowAnalysis<Info>
    *  baseline with no spec models. See analyses/noop-nobuiltin. */
   protected modelBuiltins = true;
 
+  /** Route every supported builtin call through its model, even when all
+   *  inputs are bottom primitives (normally run natively for speed). Used by
+   *  the test262 model-conformance run (analyses/model-check). */
+  protected modelAllCalls = false;
+
+  /** Called right before a supported builtin's spec model runs. */
+  protected onModeledCall?(f: Function): void;
+
   policy: CallPolicy = {
     isOpaque: (f) =>
       typeof f === 'function' &&
@@ -1042,11 +1050,12 @@ export abstract class FlowAnalysis<Info>
     if (
       this.modelBuiltins &&
       Model.support(f as Function) &&
-      !entries.every(
+      (this.modelAllCalls ||
+        !entries.every(
         (e) =>
           this.isPrimitive(this.$.value(e)) &&
           this.domain.isBottom(this.getInfo(e)),
-      )
+        ))
     )
       return 'modeled';
     return this.policy.isOpaque(f) ? 'opaque' : 'transparent';
@@ -1059,6 +1068,7 @@ export abstract class FlowAnalysis<Info>
     args: Lifted[],
   ): Lifted<unknown> {
     const modelFn = Model.ofBuiltin(f);
+    this.onModeledCall?.(f);
     return this.siteResolver.withBuiltinSite(
       this.siteResolver.builtinName(f),
       () => ReflectApply(modelFn as Function, undefined, concatList([this.$, base], args)),

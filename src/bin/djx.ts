@@ -19,6 +19,7 @@ const BUILT_PRESETS: Record<string, string> = {
   concolic: 'analyses/dist/Concolic.mjs',
   noop: 'analyses/dist/Noop.mjs',
   'noop-nobuiltin': 'analyses/dist/NoopNoBuiltin.mjs',
+  'model-check': 'analyses/dist/ModelCheck.mjs',
 };
 
 function sampleMap(): Record<string, string> {
