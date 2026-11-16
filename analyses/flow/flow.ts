@@ -87,6 +87,9 @@ export abstract class FlowAnalysis<Info>
     return this.siteResolver.resolve();
   }
 
+  /** Callees that run natively with lifted values flowing straight through:
+   *  never stripped at the opaque boundary, and never routed through a spec
+   *  model even when one exists. */
   protected transparentCalls: ReadonlySet<unknown> = new Set();
 
   /** Route supported builtin calls through the spec polyfill model. An analysis
@@ -1023,11 +1026,16 @@ export abstract class FlowAnalysis<Info>
     f: unknown,
     entries: Lifted[],
   ): 'modeled' | 'opaque' | 'transparent' {
-    // shift/unshift on a real Array only move elements (lifted ones included)
-    // and never coerce them, so the native call keeps every element's info as
-    // is; the spec model moves them one at a time (O(length) interpreted steps
-    // per call, quadratic for a queue drained with shift()).
-    if (this.isElementMove(f, entries)) return 'transparent';
+    // A builtin the analysis lists in transparentCalls runs natively even when
+    // a spec model exists. shift/unshift qualify only on a real Array, where
+    // they only move elements (lifted ones included) and never coerce them; the
+    // spec model moves them one at a time (quadratic for a queue drained with
+    // shift()) but keeps symbolic lengths, so the opt-out is per analysis.
+    if (
+      this.transparentCalls.has(f) &&
+      (!SetHas(ELEMENT_MOVERS, f) || this.isElementMove(f, entries))
+    )
+      return 'transparent';
     if (
       this.modelBuiltins &&
       Model.support(f as Function) &&

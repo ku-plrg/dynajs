@@ -172,6 +172,12 @@ class SwipeDSE extends FlowAnalysis<Info> {
     getBottom: (): Info => undefined,
     isBottom: (info: Info): info is undefined => info === undefined,
   };
+  // Run shift/unshift natively: through the spec model a queue drained with
+  // shift() is quadratic and kept pages from loading.
+  protected transparentCalls: ReadonlySet<unknown> = new Set<unknown>([
+    Array.prototype.shift,
+    Array.prototype.unshift,
+  ]);
   private sentChoices = new Set<string>();
   stats = { branches: 0, sent: 0, skipped: 0, fallback: 0, unmodeled: {} as Record<string, number> };
 
