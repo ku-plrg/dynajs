@@ -34,6 +34,11 @@ export const CAPTURED = Object.freeze({
   // through the (overridable) Array.prototype[Symbol.iterator].
   ReflectApply: Reflect.apply,
   ReflectConstruct: Reflect.construct,
+  // Code-unit / code-point to String for the spec runtime ($.fromCodeUnit,
+  // UTF16EncodeCodePoint). User code can delete or replace the String statics
+  // (test262 S15.5.3.2_A3_T2 deletes String.fromCharCode, then calls it).
+  StringFromCharCode: String.fromCharCode,
+  StringFromCodePoint: String.fromCodePoint,
 });
 
 // Build `[...heads, ...tail]` without spread/iterator (user code can poison

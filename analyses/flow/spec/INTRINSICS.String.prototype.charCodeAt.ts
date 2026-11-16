@@ -15,5 +15,5 @@ export function INTRINSICS_String_prototype_charCodeAt ($ : SpecRuntime, $this :
     return $.default<number>(NaN, []);
   }
 
-  return $.codeUnitAt(S, position);
+  return ((cu: Lifted<string>) => $.default<number>($.value(cu).charCodeAt(0), [cu]))($.codeUnitAt(S, position));
 }

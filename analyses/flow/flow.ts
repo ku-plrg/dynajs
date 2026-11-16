@@ -45,7 +45,7 @@ function specModulo(x: unknown, y: unknown): number | bigint {
 import * as lift from './internal/lift.js';
 import { CAPTURED, concatList } from './utils.js';
 
-const { ReflectApply, ReflectConstruct } = CAPTURED;
+const { ReflectApply, ReflectConstruct, StringFromCharCode } = CAPTURED;
 
 const NON_VALUE_BINARY_OPS = new Set(['instanceof', 'in']);
 
@@ -321,7 +321,7 @@ export abstract class FlowAnalysis<Info>
     // fallback is the `$.default(String.fromCharCode(cu), [cu])` the generator
     // emitted before this hook existed.
     fromCodeUnit: (cu) => {
-      const r = String.fromCharCode(this.unlift(cu) as number);
+      const r = StringFromCharCode(this.unlift(cu) as number);
       return this.lift(
         r,
         this.fromCodeUnitInfo?.(this.valued(cu)) ??
