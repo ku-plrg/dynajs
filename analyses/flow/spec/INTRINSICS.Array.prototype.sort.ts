@@ -24,7 +24,7 @@ export function INTRINSICS_Array_prototype_sort ($ : SpecRuntime, $this : Lifted
 }
  , [comparator]); return _self as Lifted<Function>;})() as Lifted<Function>;
   var sortedList = AO__SortIndexedProperties($, (obj as Lifted<unknown>), (len as Lifted<number>), (SortCompare as Lifted<unknown>), ($.default<string>("skip-holes", []) as Lifted<unknown>));
-  var itemCount = $.default<number>(sortedList.length, []);
+  var itemCount = $.length(sortedList);
   var j = $.default<number>(0, []);
   while ($.value($.condition(Number.MAX_SAFE_INTEGER - 227, $.lessThan(j, itemCount))))
   {

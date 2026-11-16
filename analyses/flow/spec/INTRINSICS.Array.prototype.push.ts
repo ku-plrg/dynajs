@@ -9,7 +9,7 @@ import { AO__ToString } from "./AO__ToString.js";
 export function INTRINSICS_Array_prototype_push ($ : SpecRuntime, $this : Lifted<unknown>, ...items : Lifted<unknown>[]) {
   var O = AO__ToObject($, $this);
   var len = AO__LengthOfArrayLike($, (O as Lifted<unknown>));
-  var argCount = $.default<number>(items.length, []);
+  var argCount = $.length(items);
   if ($.value($.condition(Number.MAX_SAFE_INTEGER - 185, $.greaterThan($.add((len as Lifted<number>), (argCount as Lifted<number>)), $.subtract(($.exponentiate($.default<number>(2, []), $.default<number>(53, [])) as Lifted<number>), ($.default<number>(1, []) as Lifted<number>))))))
   {
     throw new TypeError;

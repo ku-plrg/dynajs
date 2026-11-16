@@ -10,7 +10,7 @@ import { AO__Set } from "./AO__Set.js";
 import { AO__ToString } from "./AO__ToString.js";
 
 export function INTRINSICS_Array_of ($ : SpecRuntime, $this : Lifted<unknown>, ...items : Lifted<unknown>[]) {
-  var len = $.default<number>(items.length, []);
+  var len = $.length(items);
   var lenNumber = len;
   var C = $this;
   if ($.value($.condition(Number.MAX_SAFE_INTEGER - 114, $.is(AO__IsConstructor($, (C as Lifted<unknown>)), $.default<boolean>(true, [])))))

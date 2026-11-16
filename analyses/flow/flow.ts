@@ -268,8 +268,11 @@ export abstract class FlowAnalysis<Info>
 
   $: SpecRuntime = {
     // StringOps
-    length: (s) => {
-      const v = (this.$.value(s) as string).length;
+    length: (sOrList) => {
+      // A List (a plain array of lifted elements) is not a string, so it falls
+      // through to defaultInfo below.
+      const s = sOrList as Lifted<string>;
+      const v = (this.$.value(s) as string | readonly unknown[]).length;
       if (this.$.value(this.$.isType(s, 'string'))) {
         return this.lift(
           v,

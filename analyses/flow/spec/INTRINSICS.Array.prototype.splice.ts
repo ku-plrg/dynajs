@@ -35,7 +35,7 @@ export function INTRINSICS_Array_prototype_splice ($ : SpecRuntime, $this : Lift
 
   }
 
-  var itemCount = $.default<number>(items.length, []);
+  var itemCount = $.length(items);
   if (!startIsPresent)
   {
     var actualDeleteCount = $.default<number>(0, []);

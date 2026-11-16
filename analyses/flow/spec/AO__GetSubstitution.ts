@@ -48,7 +48,7 @@ export function AO__GetSubstitution ($ : SpecRuntime, matched : Lifted<string>, 
               var digitCount = /[0-9]/.test($.value($.substring(templateRemainder, $.default(2, []), $.default(3, [])))) ? $.default<number>(2, []) : $.default<number>(1, []);
               var digits = $.substring(templateRemainder, ($.default<number>(1, []) as Lifted<number>), ($.add(($.default<number>(1, []) as Lifted<number>), (digitCount as Lifted<number>)) as Lifted<number>));
               var index = AO__StringToNumber($, (digits as Lifted<string>));
-              var captureLen = $.default<number>(captures.length, []);
+              var captureLen = $.length(captures);
               if ($.value($.condition(Number.MAX_SAFE_INTEGER - 81, $.greaterThan(index, captureLen))) && $.value($.condition(Number.MAX_SAFE_INTEGER - 82, $.is(digitCount, $.default<number>(2, [])))))
               {
                 digitCount = $.default<number>(1, []);

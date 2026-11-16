@@ -92,7 +92,8 @@ interface StringOps {
     end: Lifted<number>,
   ) => Lifted<string>;
   concatenate: (s1: Lifted<string>, s2: Lifted<string>) => Lifted<string>;
-  length: (s: Lifted<string>) => Lifted<number>;
+  /** the length of a String, or the number of elements in a List */
+  length: (s: Lifted<string> | readonly Lifted<unknown>[]) => Lifted<number>;
   codeUnitAt: (s: Lifted<string>, i: Lifted<number>) => Lifted<string>;
   /** the one-code-unit String whose numeric value is `cu` */
   fromCodeUnit: (cu: Lifted<number>) => Lifted<string>;

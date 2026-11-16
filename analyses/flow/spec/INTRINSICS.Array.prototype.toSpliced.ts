@@ -32,7 +32,7 @@ export function INTRINSICS_Array_prototype_toSpliced ($ : SpecRuntime, $this : L
 
   }
 
-  var insertCount = $.default<number>(items.length, []);
+  var insertCount = $.length(items);
   if (!startIsPresent)
   {
     var actualSkipCount = $.default<number>(0, []);

@@ -7,7 +7,7 @@ import { AO__ToObject } from "./AO__ToObject.js";
 import { AO__ToString } from "./AO__ToString.js";
 
 export function INTRINSICS_String_raw ($ : SpecRuntime, $this : Lifted<unknown>, template : Lifted<unknown>, ...substitutions : Lifted<unknown>[]) {
-  var substitutionCount = $.default<number>(substitutions.length, []);
+  var substitutionCount = $.length(substitutions);
   var cooked = AO__ToObject($, template);
   var literals = AO__ToObject($, AO__Get($, (cooked as Lifted<unknown>), ($.default<string>("raw", []) as Lifted<unknown>)));
   var literalCount = AO__LengthOfArrayLike($, (literals as Lifted<unknown>));

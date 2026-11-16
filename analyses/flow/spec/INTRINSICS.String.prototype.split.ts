@@ -64,7 +64,7 @@ export function INTRINSICS_String_prototype_split ($ : SpecRuntime, $this : Lift
   {
     var T = $.substring(S, (i as Lifted<number>), (j as Lifted<number>));
     $.append(substrings, T)
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 497, $.is($.default<number>(substrings.length, []), lim))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 497, $.is($.length(substrings), lim))))
     {
       return AO__CreateArrayFromList($, (substrings as Lifted<unknown>[]));
     }
