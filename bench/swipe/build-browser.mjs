@@ -54,4 +54,16 @@ await build({
   banner: { js: 'var __DYNAJS_TRACE = "http://localhost:8398/";' },
   logLevel: 'warning',
 });
+// ablation: DynaJS-flow without PSE's hand-written fallback models
+await build({
+  entryPoints: [here('./dse-dynajs/index.ts')],
+  outfile: here('./dist/dse-dynajs-nofb.js'),
+  bundle: true,
+  format: 'iife',
+  platform: 'browser',
+  target: 'chrome90',
+  alias: nodeShims,
+  banner: { js: 'var __DYNAJS_NO_FALLBACK = true;' },
+  logLevel: 'warning',
+});
 console.log('built bench/swipe/dist/{dynajs-runtime.js,instrument.mjs,dse-dynajs.js}');

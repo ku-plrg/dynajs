@@ -51,6 +51,11 @@ const PSE_FALLBACK = new Map<unknown, string>([
 ]);
 const RE_TRANSLATOR = 'http://localhost:9222/';
 
+// Ablation build (build-browser.mjs: dse-dynajs-nofb.js): no PSE fallback, so
+// built-ins DynaJS does not model stay concrete like any other opaque call.
+declare const __DYNAJS_NO_FALLBACK: boolean | undefined;
+const NO_FALLBACK = typeof __DYNAJS_NO_FALLBACK !== 'undefined' && __DYNAJS_NO_FALLBACK;
+
 // Debug build only (build-browser.mjs --trace): every TRACE_EVERY calls, POST
 // what the analysis has been doing (hot callees, sampled call sites, heap) to a
 // log server, synchronously, so a page stuck in a loop still reports.
@@ -298,7 +303,7 @@ class SwipeDSE extends FlowAnalysis<Info> {
   protected opaqueCallInfo(f: unknown, entries: unknown[], _result: unknown): Info {
     const symbolic = entries.some((e) => this.valued(e).info !== undefined);
     if (!symbolic) return undefined;
-    const model = PSE_FALLBACK.get(f);
+    const model = NO_FALLBACK ? undefined : PSE_FALLBACK.get(f);
     if (model === 'identity') {
       this.stats.fallback++;
       return this.valued(entries[0]).info;

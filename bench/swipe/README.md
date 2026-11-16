@@ -104,6 +104,10 @@ SWIPE Python 쪽 계약은 단순: `page_init{href}`, 기호 분기마다 `chose
   `simpleDOMXSS2upperlowercase`에서 fallback 4회 발동. `simpleDOMXSS2REexec`/`testStrMatchGlobal`/
   `testStrSearch`는 에러는 없지만 `exec`/`match`/`search`가 미모델로 구체화됨(이전에 "DynaJS 정규식 모델로 정상"이라
   적은 건 틀림 — 에러가 없었을 뿐).
+- **fallback 제거 ablation** (`dist/dse-dynajs-nofb.js`, `__DYNAJS_NO_FALLBACK`): 위 PSE fallback 표를 끄고
+  모델 없는 내장 함수를 다른 opaque 호출처럼 구체값으로만 둠. 마이크로 테스트(로컬, 24/26)에서 달라진 것은
+  `simpleDOMXSS2REexec`(regexcase 메시지 사라짐)와 `simpleDOMXSS2upperlowercase`(SMT 제약 57→54)뿐이고,
+  XSS 발견 여부는 동일. 33페이지 실행은 구현 변경으로 중단(2026-11-16), 재실행 예정.
 - **관찰 1 — 제약 수**: `location.href.indexOf("default=")`를 DynaJS는 명세 알고리즘(위치별 비교 루프)으로 모델링 →
   분기 제약이 테스트당 38–54개(PSE는 `str.indexof` 1개). SWIPE는 `chose_value`마다 부정해서 z3를 부르므로
   방문당 solver 호출이 그만큼 늘어남. 원자 연산 단위 모델링의 대가 — 논문에 쓸 만한 관찰.
