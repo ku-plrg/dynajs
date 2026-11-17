@@ -9,7 +9,7 @@ export function AO__ThisStringValue ($ : SpecRuntime, value : Lifted<unknown>) {
 
   if (($.value($.condition(Number.MAX_SAFE_INTEGER - 793, $.isType(value, "object")))) && ($.value(value) instanceof String))
   {
-    var s = $.default($.value(value as Lifted<String>).valueOf(), [value]);
+    var s = $.primitiveValue(value as Lifted<String>);
     return s;
   }
 

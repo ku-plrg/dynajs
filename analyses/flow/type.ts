@@ -83,6 +83,9 @@ interface ObjectOps {
     args: Lifted<unknown>[],
     newTarget?: Lifted<unknown>,
   ) => Lifted<unknown>;
+
+  /** the primitive in a wrapper object's data slot ([[StringData]], ...) */
+  primitiveValue: <T>(o: Lifted<T>) => Lifted<unknown>;
 }
 
 interface StringOps {
@@ -97,6 +100,8 @@ interface StringOps {
   codeUnitAt: (s: Lifted<string>, i: Lifted<number>) => Lifted<string>;
   /** the one-code-unit String whose numeric value is `cu` */
   fromCodeUnit: (cu: Lifted<number>) => Lifted<string>;
+  /** the numeric value of the code unit `cu` (a one-code-unit String) */
+  numericValue: (cu: Lifted<string>) => Lifted<number>;
   trim: (
     s: Lifted<string>,
     leading: boolean,
@@ -115,6 +120,8 @@ interface ArithmeticOps {
   modulo: (l: Lifted<number>, r: Lifted<number>) => Lifted<number>;
   negate: (x: Lifted<number>) => Lifted<number>;
   exponentiate: (b: Lifted<number>, e: Lifted<number>) => Lifted<number>;
+  /** ℤ(x): the BigInt for the mathematical value x */
+  toBigInt: (x: Lifted<number>) => Lifted<bigint>;
 }
 
 interface BitwiseOps {
@@ -197,6 +204,14 @@ interface ListOps {
   prepend: <T>(list: T[], x: T) => T[];
   /** List membership over a native array of (identity-)lifted elements, compared as-is. */
   containsList: <T>(list: T[], x: T) => Lifted<boolean>;
+  /** the list-concatenation of the Lists */
+  listConcat: <T>(...lists: T[][]) => T[];
+  /** remove the first (`first`) or last element of the List */
+  remove: <T>(list: T[], first: boolean) => T[];
+  /** replace the element `oldElem` of the List with `newElem` */
+  replace: <T>(list: T[], oldElem: T, newElem: T) => T[];
+  /** whether the List has no elements */
+  isEmpty: <T>(list: T[]) => Lifted<boolean>;
 }
 
 interface RangeOps {

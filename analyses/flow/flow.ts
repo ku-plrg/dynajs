@@ -165,6 +165,14 @@ export abstract class FlowAnalysis<Info>
   protected mathInfo?(_op: string, _operands: Valued<Info, number>[]): Info;
   /* the one-code-unit String whose numeric value is `cu` (`$.fromCodeUnit`) */
   protected fromCodeUnitInfo?(_cu: Valued<Info, number>): Info;
+  /* the numeric value of the code unit `cu` (`$.numericValue`) */
+  protected numericValueInfo?(_cu: Valued<Info, string>): Info;
+  /* ℤ(x) (`$.toBigInt`) */
+  protected toBigIntInfo?(_x: Valued<Info, number>): Info;
+  /* the primitive in a wrapper object's data slot (`$.primitiveValue`) */
+  protected primitiveValueInfo?(_o: Valued<Info>): Info;
+  /* whether a List has no elements (`$.isEmpty`) */
+  protected isEmptyInfo?(_list: Valued<Info>): Info;
   protected maxInfo?(_operands: Valued<Info, number>[]): Info;
 
   protected rangeInfo?(
@@ -341,6 +349,17 @@ export abstract class FlowAnalysis<Info>
           this.defaultInfo(r, [this.valued(cu)]),
       );
     },
+    // "the numeric value of the code unit cu" (ESMeta ToNumber(ToMath(..)) on a
+    // code unit, String.prototype.charCodeAt); the fallback is the
+    // `$.default(cu.charCodeAt(0), [cu])` the generator emitted before.
+    numericValue: (cu) => {
+      const r = (this.unlift(cu) as string).charCodeAt(0);
+      return this.lift(
+        r,
+        this.numericValueInfo?.(this.valued(cu)) ??
+          this.defaultInfo(r, [this.valued(cu)]),
+      );
+    },
     codeUnitAt: (s, i) => {
       const idx = this.unlift(i) as number;
       const r = (this.unlift(s) as string).charAt(idx);
@@ -419,6 +438,15 @@ export abstract class FlowAnalysis<Info>
         e,
         (this.unlift(b) as number) ** (this.unlift(e) as number),
       ),
+    // ℤ(x) (ESMeta ToBigInt): the generator passed x through before this hook.
+    toBigInt: (x) => {
+      const r = BigInt(this.unlift(x) as number);
+      return this.lift(
+        r,
+        this.toBigIntInfo?.(this.valued(x)) ??
+          this.defaultInfo(r, [this.valued(x)]),
+      );
+    },
     bitwiseAND: (l, r) =>
       this.binOp(
         '&',
@@ -622,6 +650,30 @@ export abstract class FlowAnalysis<Info>
       Array.isArray(seq)
         ? this.$.containsList(seq, x)
         : this.$.containsStr(seq, x as Lifted<string>),
+    // List structure: native array operations, as the generator emitted before
+    // these hooks (`[].concat`, `shift`/`pop`, element replacement).
+    listConcat: <T>(...lists: T[][]): T[] => ([] as T[]).concat(...lists),
+    remove: <T>(list: T[], first: boolean): T[] => {
+      if (first) list.shift();
+      else list.pop();
+      return list;
+    },
+    replace: <T>(list: T[], oldElem: T, newElem: T): T[] => {
+      const i = list.indexOf(oldElem);
+      if (i >= 0) {
+        this.escaper.markEscapable(newElem);
+        list[i] = newElem;
+      }
+      return list;
+    },
+    isEmpty: <T>(list: T[]): Lifted<boolean> => {
+      const v = list.length === 0;
+      return this.lift(
+        v,
+        this.isEmptyInfo?.(this.valued(list)) ??
+          this.defaultInfo(v, [this.valued(list)]),
+      );
+    },
     containsList: <T>(list: T[], x: T): Lifted<boolean> => {
       const v = list.includes(x);
       return this.lift(
@@ -761,6 +813,16 @@ export abstract class FlowAnalysis<Info>
           this.valued(newTarget ?? f),
           r,
         ),
+      );
+    },
+    // a wrapper object's [[StringData]]/[[NumberData]]/...; the fallback is the
+    // `$.default(o.valueOf(), [o])` the generator emitted before this hook.
+    primitiveValue: (o) => {
+      const r = (this.unlift(o) as { valueOf(): unknown }).valueOf();
+      return this.lift(
+        r,
+        this.primitiveValueInfo?.(this.valued(o)) ??
+          this.defaultInfo(r as Unlifted<unknown>, [this.valued(o)]),
       );
     },
   } satisfies SpecRuntime;
