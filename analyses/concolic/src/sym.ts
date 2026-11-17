@@ -104,7 +104,6 @@ export function sortOf(s: Sym): Sort | undefined {
       // operand's sort.
       if (s.op === '!' || s.op === 'isInteger') return 'Bool';
       if (s.op === 'floor') return 'Real';
-      if (s.op === 'codeUnitValue') return 'Int';
       if (s.op === 'typeof') return 'String';
       return sortOf(s.operand);
     case 'binary':

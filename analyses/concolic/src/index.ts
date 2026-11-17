@@ -139,18 +139,6 @@ export class ConcolicAnalysis extends FlowAnalysis<Sym | undefined> {
     return { kind: 'unary', op, operand };
   }
 
-  // ℝ: the numeric value of a code unit (IsLessThan's code-unit comparison,
-  // charCodeAt) is `str.to_code` of the one-character String; a BigInt keeps
-  // its symbol, as when the generator passed it through.
-  protected numericValueInfo(x: Valued<Sym>): Sym | undefined {
-    const operand = this.symOf(x);
-    if (operand.kind === 'const') return undefined;
-    const so = sortOf(operand);
-    if (so === 'String') return { kind: 'unary', op: 'codeUnitValue', operand };
-    if (so !== undefined && isNumericSort(so)) return operand;
-    return undefined;
-  }
-
   protected lengthOfStringInfo(s: Valued<Sym>): Sym | undefined {
     const src = this.symOf(s);
     if (src.kind === 'const') return undefined;
