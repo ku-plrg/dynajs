@@ -27,8 +27,8 @@ export function AO__IsLessThan ($ : SpecRuntime, x : Lifted<unknown>, y : Lifted
     var ly = $.length(py);
     for (var i of $.range(($.default<number>(0, []) as Lifted<number>), true, ($.min(lx, ly) as Lifted<number>), false, true, Number.MAX_SAFE_INTEGER - 576))
     {
-      var cx = $.codeUnitAt(px, i);
-      var cy = $.codeUnitAt(py, i);
+      var cx = $.numericValue($.codeUnitAt(px, i));
+      var cy = $.numericValue($.codeUnitAt(py, i));
       if ($.value($.condition(Number.MAX_SAFE_INTEGER - 574, $.lessThan(cx, cy))))
       {
         return $.default<boolean>(true, []);

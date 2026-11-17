@@ -166,7 +166,7 @@ export abstract class FlowAnalysis<Info>
   /* the one-code-unit String whose numeric value is `cu` (`$.fromCodeUnit`) */
   protected fromCodeUnitInfo?(_cu: Valued<Info, number>): Info;
   /* the numeric value of the code unit `cu` (`$.numericValue`) */
-  protected numericValueInfo?(_cu: Valued<Info, string>): Info;
+  protected numericValueInfo?(_cu: Valued<Info, string | number>): Info;
   /* ℤ(x) (`$.toBigInt`) */
   protected toBigIntInfo?(_x: Valued<Info, number>): Info;
   /* the primitive in a wrapper object's data slot (`$.primitiveValue`) */
@@ -349,11 +349,16 @@ export abstract class FlowAnalysis<Info>
           this.defaultInfo(r, [this.valued(cu)]),
       );
     },
-    // "the numeric value of the code unit cu" (ESMeta ToNumber(ToMath(..)) on a
-    // code unit, String.prototype.charCodeAt); the fallback is the
-    // `$.default(cu.charCodeAt(0), [cu])` the generator emitted before.
+    // "the numeric value of X" (ESMeta ℝ in text form): X is a code unit, a
+    // one-code-unit String (String.prototype.charCodeAt, IsLessThan), or a
+    // code point, already a number. The fallback is the
+    // `$.default(cu.charCodeAt(0), [cu])` the generator emitted for charCodeAt;
+    // a code point stays as it is, as the generator passed it through.
     numericValue: (cu) => {
-      const r = (this.unlift(cu) as string).charCodeAt(0);
+      const v = this.unlift(cu) as string | number;
+      if (typeof v === 'number' && !this.numericValueInfo)
+        return cu as unknown as Lifted<number>;
+      const r = typeof v === 'number' ? v : v.charCodeAt(0);
       return this.lift(
         r,
         this.numericValueInfo?.(this.valued(cu)) ??
@@ -438,14 +443,12 @@ export abstract class FlowAnalysis<Info>
         e,
         (this.unlift(b) as number) ** (this.unlift(e) as number),
       ),
-    // ℤ(x) (ESMeta ToBigInt): the generator passed x through before this hook.
+    // ℤ(x) (ESMeta ToBigInt): the generator passed x through before this hook,
+    // and still does without a callback (the JS model keeps the number).
     toBigInt: (x) => {
-      const r = BigInt(this.unlift(x) as number);
-      return this.lift(
-        r,
-        this.toBigIntInfo?.(this.valued(x)) ??
-          this.defaultInfo(r, [this.valued(x)]),
-      );
+      if (!this.toBigIntInfo) return x;
+      const r = this.unlift(x) as number;
+      return this.lift(r, this.toBigIntInfo(this.valued(x)));
     },
     bitwiseAND: (l, r) =>
       this.binOp(

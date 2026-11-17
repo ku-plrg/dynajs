@@ -100,8 +100,8 @@ interface StringOps {
   codeUnitAt: (s: Lifted<string>, i: Lifted<number>) => Lifted<string>;
   /** the one-code-unit String whose numeric value is `cu` */
   fromCodeUnit: (cu: Lifted<number>) => Lifted<string>;
-  /** the numeric value of the code unit `cu` (a one-code-unit String) */
-  numericValue: (cu: Lifted<string>) => Lifted<number>;
+  /** the numeric value of a code unit (a one-code-unit String) or code point */
+  numericValue: (cu: Lifted<string | number>) => Lifted<number>;
   trim: (
     s: Lifted<string>,
     leading: boolean,
@@ -120,8 +120,8 @@ interface ArithmeticOps {
   modulo: (l: Lifted<number>, r: Lifted<number>) => Lifted<number>;
   negate: (x: Lifted<number>) => Lifted<number>;
   exponentiate: (b: Lifted<number>, e: Lifted<number>) => Lifted<number>;
-  /** ℤ(x): the BigInt for the mathematical value x */
-  toBigInt: (x: Lifted<number>) => Lifted<bigint>;
+  /** ℤ(x): the BigInt for the mathematical value x (a number in the JS model) */
+  toBigInt: (x: Lifted<number>) => Lifted<number>;
 }
 
 interface BitwiseOps {
