@@ -56,6 +56,9 @@ const EXCLUDE = [
   'INTRINSICS.String.prototype.toLocaleUpperCase', // esmeta not supported
   'INTRINSICS.String.prototype.localeCompare',
 
+  /* case mapping: ESMeta leaves the Unicode mapping step as prose (removed in a847b5d) */
+  'INTRINSICS.String.prototype.toLowerCase',
+
   /* regex */
   'INTRINSICS.String.prototype.match',
   'INTRINSICS.String.prototype.matchAll',
