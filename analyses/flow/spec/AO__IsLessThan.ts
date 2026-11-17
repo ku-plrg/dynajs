@@ -105,7 +105,7 @@ export function AO__IsLessThan ($ : SpecRuntime, x : Lifted<unknown>, y : Lifted
       return $.default<boolean>(false, []);
     }
 
-    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 592, $.lessThan(nx, ny))))
+    if ($.value($.condition(Number.MAX_SAFE_INTEGER - 592, $.lessThan($.numericValue(nx), $.numericValue(ny)))))
     {
       return $.default<boolean>(true, []);
     }

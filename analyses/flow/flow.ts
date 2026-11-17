@@ -166,13 +166,17 @@ export abstract class FlowAnalysis<Info>
   /* the one-code-unit String whose numeric value is `cu` (`$.fromCodeUnit`) */
   protected fromCodeUnitInfo?(_cu: Valued<Info, number>): Info;
   /* the numeric value of the code unit `cu` (`$.numericValue`) */
-  protected numericValueInfo?(_cu: Valued<Info, string | number>): Info;
+  protected numericValueInfo?(_cu: Valued<Info, string | number | bigint>): Info;
   /* ℤ(x) (`$.toBigInt`) */
   protected toBigIntInfo?(_x: Valued<Info, number>): Info;
   /* the primitive in a wrapper object's data slot (`$.primitiveValue`) */
   protected primitiveValueInfo?(_o: Valued<Info>): Info;
   /* whether a List has no elements (`$.isEmpty`) */
   protected isEmptyInfo?(_list: Valued<Info>): Info;
+  /* whether a List has any duplicate entries (`$.hasDuplicates`) */
+  protected hasDuplicatesInfo?(_list: Valued<Info>): Info;
+  /* whether a property key is an array index (`$.isArrayIndex`) */
+  protected isArrayIndexInfo?(_p: Valued<Info>): Info;
   protected maxInfo?(_operands: Valued<Info, number>[]): Info;
 
   protected rangeInfo?(
@@ -349,20 +353,23 @@ export abstract class FlowAnalysis<Info>
           this.defaultInfo(r, [this.valued(cu)]),
       );
     },
-    // "the numeric value of X" (ESMeta ℝ in text form): X is a code unit, a
-    // one-code-unit String (String.prototype.charCodeAt, IsLessThan), or a
-    // code point, already a number. The fallback is the
+    // ESMeta ℝ: "the numeric value of X" on a code unit, a one-code-unit String
+    // (String.prototype.charCodeAt, IsLessThan), or ℝ(x) on a BigInt
+    // (BigInt::equal/lessThan, IsLessThan). A Number (or a code point) is
+    // returned as it is: ℝ is the identity on JS doubles, as the generator
+    // emitted before. The fallback for a code unit is the
     // `$.default(cu.charCodeAt(0), [cu])` the generator emitted for charCodeAt;
-    // a code point stays as it is, as the generator passed it through.
+    // a BigInt keeps its value and, without a callback, its shadow.
     numericValue: (cu) => {
-      const v = this.unlift(cu) as string | number;
-      if (typeof v === 'number' && !this.numericValueInfo)
+      const v = this.unlift(cu) as string | number | bigint;
+      if (typeof v === 'number') return cu as unknown as Lifted<number>;
+      if (typeof v === 'bigint' && !this.numericValueInfo)
         return cu as unknown as Lifted<number>;
-      const r = typeof v === 'number' ? v : v.charCodeAt(0);
+      const r = typeof v === 'string' ? v.charCodeAt(0) : v;
       return this.lift(
-        r,
+        r as number,
         this.numericValueInfo?.(this.valued(cu)) ??
-          this.defaultInfo(r, [this.valued(cu)]),
+          this.defaultInfo(r as number, [this.valued(cu)]),
       );
     },
     codeUnitAt: (s, i) => {
@@ -656,9 +663,24 @@ export abstract class FlowAnalysis<Info>
     // List structure: native array operations, as the generator emitted before
     // these hooks (`[].concat`, `shift`/`pop`, element replacement).
     listConcat: <T>(...lists: T[][]): T[] => ([] as T[]).concat(...lists),
-    remove: <T>(list: T[], first: boolean): T[] => {
-      if (first) list.shift();
-      else list.pop();
+    // "Remove the first/last element of L", "the first/last n elements", or
+    // "Remove x from L"
+    remove: <T>(
+      list: T[],
+      target: 'first' | 'last' | 'element',
+      arg?: unknown,
+    ): T[] => {
+      if (target === 'element') {
+        const i = list.indexOf(arg as T);
+        if (i >= 0) list.splice(i, 1);
+      } else {
+        const n =
+          arg === undefined
+            ? 1
+            : (this.unlift(arg as Lifted<number>) as number);
+        if (target === 'first') list.splice(0, n);
+        else list.splice(Math.max(list.length - n, 0), n);
+      }
       return list;
     },
     replace: <T>(list: T[], oldElem: T, newElem: T): T[] => {
@@ -675,6 +697,31 @@ export abstract class FlowAnalysis<Info>
         v,
         this.isEmptyInfo?.(this.valued(list)) ??
           this.defaultInfo(v, [this.valued(list)]),
+      );
+    },
+    // "L has any duplicate entries": compared by value (unlifted)
+    hasDuplicates: <T>(list: T[]): Lifted<boolean> => {
+      const vs = list.map((e) => this.unlift(e as Lifted<unknown>));
+      const v = new Set(vs).size !== vs.length;
+      return this.lift(
+        v,
+        this.hasDuplicatesInfo?.(this.valued(list)) ??
+          this.defaultInfo(v, [this.valued(list)]),
+      );
+    },
+    // "P is an array index": a canonical numeric String for an integer in
+    // [0, 2^32 - 2]
+    isArrayIndex: (p) => {
+      const k = this.unlift(p);
+      const n = Number(k);
+      const v =
+        typeof k === 'string' &&
+        String(n >>> 0) === k &&
+        n !== 2 ** 32 - 1;
+      return this.lift(
+        v,
+        this.isArrayIndexInfo?.(this.valued(p)) ??
+          this.defaultInfo(v, [this.valued(p)]),
       );
     },
     containsList: <T>(list: T[], x: T): Lifted<boolean> => {

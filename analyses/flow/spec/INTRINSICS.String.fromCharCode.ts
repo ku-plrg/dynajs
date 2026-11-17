@@ -8,7 +8,7 @@ export function INTRINSICS_String_fromCharCode ($ : SpecRuntime, $this : Lifted<
   var result = $.default<string>("", []);
   for (var next of codeUnits)
   {
-    var nextCU = $.fromCodeUnit((AO__ToUint16($, (next as Lifted<unknown>)) as Lifted<number>));
+    var nextCU = $.fromCodeUnit(($.numericValue(AO__ToUint16($, (next as Lifted<unknown>))) as Lifted<number>));
     result = $.concatenate(result, nextCU);
   }
 

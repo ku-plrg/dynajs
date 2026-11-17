@@ -14,7 +14,7 @@ export function AO__FlattenIntoArray ($ : SpecRuntime, target : Lifted<unknown>,
   var mapperFunctionIsPresent = arguments.length > 6;
   var targetIndex = start;
   var sourceIndex = $.default<number>(0, []);
-  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 55, $.lessThan(sourceIndex, sourceLen))))
+  while ($.value($.condition(Number.MAX_SAFE_INTEGER - 55, $.lessThan($.numericValue(sourceIndex), sourceLen))))
   {
     var P = AO__ToString($, (sourceIndex as Lifted<unknown>));
     var exists = AO__HasProperty($, (source as Lifted<unknown>), (P as Lifted<unknown>));

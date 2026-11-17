@@ -101,7 +101,7 @@ interface StringOps {
   /** the one-code-unit String whose numeric value is `cu` */
   fromCodeUnit: (cu: Lifted<number>) => Lifted<string>;
   /** the numeric value of a code unit (a one-code-unit String) or code point */
-  numericValue: (cu: Lifted<string | number>) => Lifted<number>;
+  numericValue: (cu: Lifted<string | number | bigint>) => Lifted<number>;
   trim: (
     s: Lifted<string>,
     leading: boolean,
@@ -206,12 +206,20 @@ interface ListOps {
   containsList: <T>(list: T[], x: T) => Lifted<boolean>;
   /** the list-concatenation of the Lists */
   listConcat: <T>(...lists: T[][]) => T[];
-  /** remove the first (`first`) or last element of the List */
-  remove: <T>(list: T[], first: boolean) => T[];
+  /** remove the first/last element, the first/last `arg` elements, or the element `arg` */
+  remove: <T>(
+    list: T[],
+    target: 'first' | 'last' | 'element',
+    arg?: unknown,
+  ) => T[];
   /** replace the element `oldElem` of the List with `newElem` */
   replace: <T>(list: T[], oldElem: T, newElem: T) => T[];
   /** whether the List has no elements */
   isEmpty: <T>(list: T[]) => Lifted<boolean>;
+  /** whether the List has any duplicate entries */
+  hasDuplicates: <T>(list: T[]) => Lifted<boolean>;
+  /** whether the property key is an array index */
+  isArrayIndex: (p: Lifted<unknown>) => Lifted<boolean>;
 }
 
 interface RangeOps {

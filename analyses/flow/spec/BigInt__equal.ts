@@ -2,7 +2,7 @@
 import type { SpecRuntime, Lifted, Unlifted } from "../type.js";
 
 export function BigInt__equal ($ : SpecRuntime, x : Lifted<bigint>, y : Lifted<bigint>) {
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 6, $.is(x, y))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 6, $.is($.numericValue(x), $.numericValue(y)))))
   {
     return $.default<boolean>(true, []);
   }

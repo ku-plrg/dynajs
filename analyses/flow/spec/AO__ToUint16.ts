@@ -10,7 +10,7 @@ export function AO__ToUint16 ($ : SpecRuntime, argument : Lifted<unknown>) {
     return $.default<number>(0, []);
   }
 
-  var int = $.truncate(number);
+  var int = $.truncate($.numericValue(number));
   var int16bit = $.modulo((int as Lifted<number>), ($.exponentiate($.default<number>(2, []), $.default<number>(16, [])) as Lifted<number>));
   return int16bit;
 }

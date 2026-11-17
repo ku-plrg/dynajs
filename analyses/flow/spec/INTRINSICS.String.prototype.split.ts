@@ -28,7 +28,7 @@ export function INTRINSICS_String_prototype_split ($ : SpecRuntime, $this : Lift
   }
   else
   {
-    var lim = AO__ToUint32($, (limit as Lifted<unknown>));
+    var lim = $.numericValue(AO__ToUint32($, (limit as Lifted<unknown>)));
   }
 
   var R = AO__ToString($, (separator as Lifted<unknown>));

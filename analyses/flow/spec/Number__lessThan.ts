@@ -47,7 +47,7 @@ export function Number__lessThan ($ : SpecRuntime, x : Lifted<number>, y : Lifte
     return $.default<boolean>(true, []);
   }
 
-  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 651, $.lessThan(x, y))))
+  if ($.value($.condition(Number.MAX_SAFE_INTEGER - 651, $.lessThan($.numericValue(x), $.numericValue(y)))))
   {
     return $.default<boolean>(true, []);
   }

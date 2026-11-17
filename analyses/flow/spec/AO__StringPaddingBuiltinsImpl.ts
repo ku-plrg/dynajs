@@ -7,7 +7,7 @@ import { AO__ToString } from "./AO__ToString.js";
 
 export function AO__StringPaddingBuiltinsImpl ($ : SpecRuntime, O : Lifted<unknown>, maxLength : Lifted<unknown>, fillString : Lifted<unknown>, placement : Lifted<unknown>) {
   var S = AO__ToString($, (O as Lifted<unknown>));
-  var intMaxLength = AO__ToLength($, (maxLength as Lifted<unknown>));
+  var intMaxLength = $.numericValue(AO__ToLength($, (maxLength as Lifted<unknown>)));
   var stringLength = $.length(S);
   if ($.value($.condition(Number.MAX_SAFE_INTEGER - 788, $.lessThanEqual(intMaxLength, stringLength))))
   {
