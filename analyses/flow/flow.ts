@@ -102,6 +102,11 @@ export abstract class FlowAnalysis<Info>
    *  the test262 model-conformance run (analyses/model-check). */
   protected modelAllCalls = false;
 
+  /** Lets an analysis run a supported builtin natively for inputs its model
+   *  could not give info to (e.g. concrete arrays), checked after the cheap
+   *  all-bottom-primitives test. Returning true takes the ordinary native path. */
+  protected skipModel?(f: unknown, entries: Lifted[]): boolean;
+
   /** Called right before a supported builtin's spec model runs. */
   protected onModeledCall?(f: Function): void;
 
@@ -1055,7 +1060,8 @@ export abstract class FlowAnalysis<Info>
         (e) =>
           this.isPrimitive(this.$.value(e)) &&
           this.domain.isBottom(this.getInfo(e)),
-        ))
+        )) &&
+      !this.skipModel?.(f, entries)
     )
       return 'modeled';
     return this.policy.isOpaque(f) ? 'opaque' : 'transparent';

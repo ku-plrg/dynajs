@@ -54,6 +54,13 @@ export abstract class LiftedDomain<Info> {
 
   abstract domain: InfoDomain<Info>;
 
+  /** Wrap primitives whose info is bottom too (default), so info can be
+   *  attached to them later (e.g. taint's setTaint on a source value). An
+   *  analysis that only ever gives a value info when it creates it can turn
+   *  this off: bottom primitives then stay raw, saving a proxy and two weak-map
+   *  entries per value. */
+  protected liftBottomPrimitives = true;
+
   protected escaper = new BoundaryEscape(
     this.isPrimitiveProxy.bind(this),
     this.unlift.bind(this),
@@ -98,6 +105,12 @@ export abstract class LiftedDomain<Info> {
     value: T,
     info: Info = this.domain.getBottom(),
   ): Lifted<T> {
+    if (
+      !this.liftBottomPrimitives &&
+      this.domain.isBottom(info) &&
+      !this.isObjectish(value)
+    )
+      return value as Lifted<T>;
     let w: Lifted<T>;
     if (this.isObjectish(value)) {
       if (!this.valueMap.has(value as object)) {
