@@ -307,3 +307,83 @@ SWIPE의 고유 키(iframe 도메인 + 스택 최상단 스크립트 + 줄:열)�
   수정(미커밋): 정보 없는 키의 문자열 인덱스 판정을 네이티브로, 진짜 배열의 shift/unshift를 네이티브로.
 - 세 수정 모두 적용, 원래 한도 140 s로 실패 18쪽 재실행: 010, 088, 142 성공(3/18). 나머지 15쪽은 여전히 시간 초과.
   → 고칠 수 있는 병목은 일부, 대부분은 FlowAnalysis 기본 비용(모든 값 래핑 + 내장 함수 모델 실행).
+
+## fallback 제거 ablation 결과 (2026-11-16, 새 FlowAnalysis 구현: transparentCalls·length 훅 반영)
+
+같은 코드로 fallback 있음(`dynajs-b-new`)/없음(`dynajs-b-newnofb`)을 33페이지에 번갈아 6병렬 실행
+(page load 140 s, DSE budget 900 s), 이어 생성 URL을 계측 없이 재방문(`passive-of-*`).
+
+| | crawl_ok | visits | mean s | median mem | 재방문 potential |
+|---|---|---|---|---|---|
+| fallback 있음 | 17/33 | 107 | 481 | 2.08 GB | 4 flows / 3 pages (028:1, 131:2, 142:1) |
+| fallback 없음 | 16/33 | 99 | 449 | 1.71 GB | 4 flows / 3 pages (028:1, 131:2, 142:1) |
+
+- 찾는 흐름은 동일. 142의 1건은 시드 URL 재방문에서 나온 DoubleVerify 광고 iframe 흐름으로, 이전
+  재방문(Jalangi·DynaJS-core·이전 DynaJS-flow)에선 안 나옴 → 도구가 아니라 재방문 비결정성. 이를 빼면 3 flows/2 pages로
+  Jalangi·DynaJS-core와 같음.
+- 차이는 방문 수뿐: 010·026·096·120·132에서 fallback 없을 때 1회씩 적고, 126은 fallback 없을 때 크롤 실패(140 s 초과).
+  fallback 발동 횟수는 결과에 기록되지 않아 방문 차이가 fallback 때문인지 실행 간 변동인지는 구분 못 함.
+- 이전 DynaJS-flow 실행(15/33) 대비 crawl 17/33.
+
+## 크롤 실패 원인 재조사 + coverage off 재실행 (2026-11-17 새벽)
+
+### 원인: SWIPE의 JS coverage 수집
+- 실패 쪽 로그는 대부분 `Done waiting!` 다음에 `Chrome reached hard timeout`: 페이지는 로드됐는데,
+  그 뒤 `page.coverage.stopJSCoverage()`(precise block coverage, 메인 스레드 필요)와 `browser.close`가
+  방문 프로세스 join 한도(140 + 15 + 5 = 160 s)를 넘김 → 크롤 실패로 집계.
+- coverage는 `coverage_used/total` 통계에만 쓰이고 DSE에는 쓰이지 않음 → `track_coverage=false`로 끄는 게 공정.
+- 합성 페이지(로컬)에서 block coverage를 켜면 PSE 270 → 1324 ms, FlowAnalysis 696 → 6648 ms: 계측 코드가 많을수록 비용이 커져
+  DynaJS-flow가 가장 크게 손해.
+
+### DynaJS 쪽 수정 (작게, 미커밋)
+- `analyses/flow/internal/lift.ts`: `liftBottomPrimitives` 플래그(기본 true). 끄면 정보 없는 원시값은 래핑하지 않음
+  (ProxiedPrimitive + WeakMap 2건 절약). SwipeDSE는 정보를 만들 때만 붙이므로 false.
+- `analyses/flow/flow.ts`: 선택 훅 `skipModel(f, entries)`. SwipeDSE는 인자가 정보 없는 원시값/원시값만 든 진짜 배열(≤4096)이면
+  모델 대신 네이티브 실행(`[10,13,32].includes(c)` 같은 핫스팟).
+- 합성 페이지: 9033 ms → 566 ms (16×). PSE-core 231–270 ms, 네이티브 6.8 ms.
+- 검증: taint 44/44, concolic 기존과 같은 3건 실패(로컬 z3 환경), SWIPE 마이크로 테스트 24개 출력 동일.
+- 번들: `dse-dynajs-lfsk.js` (= 위 두 수정 적용한 `dist/dse-dynajs.js`).
+
+### 실험 경과 (실패 16쪽, 140 s)
+| 변형 | 성공 |
+|---|---|
+| lift 수정만 | 056, 088 |
+| lift + nomodel | 056, 122 |
+| lift + skipModel (lfsk) | 056, 088 |
+| lfsk + coverage off (lfskncov) | 020, 037, 052, 056, 065, 088, 098, 122, 131, 142 (10/16) |
+- nomodel(모델 전부 끔)/shallow 실험도 020·035·036은 못 살림 → 모델이 아니라 래핑/훅 기본 비용.
+- 남은 6쪽(035, 036, 080, 094, 123, 154)은 load 자체가 140 s 안에 안 끝남. 핫스팟:
+  154 Proxy ownKeys `t.includes(e)||t.push(e)`, 123 gtag `querySelectorAll('*')` 순회 + `indexOf`,
+  035 CSS 속성 fingerprinting(filter/map 안의 includes). 남은 프로필 비용: concatList의 원소별 defineProperty(7.5%),
+  invokeFunPre의 Array.from(6.7%) — DynaJS 수정 최소화를 위해 손대지 않음.
+
+### 세 도구 모두 coverage off로 재실행 (a5, 12병렬, 페이지별 번갈아)
+`EXTRA_JQ='."track_coverage"=false'`, page load 140 s, DSE budget 900 s. 결과 `results/{dynajs-b,jalangi,dynajs-partial}-ncov`.
+
+| | crawl_ok | visits | mean s | median mem | 계측 중 potential |
+|---|---|---|---|---|---|
+| Jalangi (`jalangi-ncov`) | 33/33 | 114 | 597 | 2.34 GB | 13 / 6쪽 |
+| DynaJS-core (`dynajs-partial-ncov`) | 30/33 | 150 | 706 | 1.43 GB | 0 |
+| DynaJS-flow lfsk (`dynajs-b-ncov`) | 26/33 | 142 | 630 | 2.03 GB | 5 / 3쪽 |
+- DynaJS-flow 실패: 035, 036, 080, 094, 123, 154 + 096(이전 실행들에선 성공 → 부하에 따른 경계값).
+- DynaJS-core 실패: 020, 094, 132. Jalangi는 coverage off로 이전 30 → 33.
+
+#### 재방문(계측 없음, coverage off) 결과 — 공정 점수
+| | 재방문 potential | 쪽별 |
+|---|---|---|
+| Jalangi | 3 / 2쪽 | 028:1, 131:2 |
+| DynaJS-core | 3 / 2쪽 | 028:1, 131:2 |
+| DynaJS-flow lfsk | 6 / 4쪽 | 028:1, 098:1, 131:3, 142:1 |
+- URL별 단독 재방문(`results/passive-single-*`)과 3회 반복(`results/passive-rep-*`)으로 추가 흐름 귀속:
+  - 098:1은 DynaJS-flow만 생성한 DSE URL `search??#`에서 나옴. `??#` 3/3회 재현, 시드 URL 0/3회 → DSE가 기여한 유일한 흐름.
+    GTM `JAVASCRIPT` 싱크에 URL 한 글자(58–59)만 들어가 악용 가능성은 낮음.
+  - 131의 세 번째는 `search#&`에서 1회 나온 Criteo 광고 sync iframe 흐름. 반복 0/3회 → 비결정성으로 제외.
+  - 142:1은 시드 URL(모든 도구가 방문)의 DoubleVerify 광고 iframe 흐름. 반복 1/3회 → 비결정성으로 제외.
+  - 정리: DynaJS-flow 4 flows / 3쪽 (028:1, 098:1, 131:2), Jalangi·DynaJS-core 3 / 2쪽.
+- 096 단독 재시도 미실행.
+
+#### fallback 없음, coverage off (`dynajs-b-ncovnofb`, `dse-dynajs-lfsknofb.js`)
+- crawl 27/33, 148 visits, 145 s/visit, median mem 2.01 GB. 실패 6쪽(035, 036, 080, 094, 123, 154); 096은 이번엔 성공(경계값).
+- 재방문: 4 flows / 3쪽 (028:1, 131:2, 142:1) → 142 제외 시 3 / 2쪽. `??#` URL도 생성했지만 이 재방문에서는 098 흐름이 안 나옴
+  (`??#` 재방문 누적 5/6회 재현).
+- 논문 반영: tables/swipe.tex, figures/swipe.tex(gen-fig.py), swipe.tex. LOC 338(= 319 + skipModel 16 + 상수 3).

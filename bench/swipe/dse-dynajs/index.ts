@@ -38,6 +38,8 @@ const SetHas = Function.prototype.call.bind(Set.prototype.has) as (s: Set<unknow
 //   RegExp.prototype.exec   -> a `regexcase` message (PSE logs it; SWIPE's server
 //                              then asks for `search` containing the pattern's words)
 // Not ported: PSE's String search / global match / split-with-RegExp models.
+const ArrayIsArray = Array.isArray;
+const SKIP_MODEL_MAX_LEN = 4096;
 const RE_TEST = RegExp.prototype.test;
 const RE_EXEC = RegExp.prototype.exec;
 const RE_TO_STRING = Function.prototype.call.bind(RegExp.prototype.toString) as (re: RegExp) => string;
@@ -77,10 +79,19 @@ function traceTick(id: number, kind: string, extra: () => object): void {
   tr.n++;
   bump(tr.fns, kind);
   if (tr.n % 200 === 0) {
-    // page frames of the current stack (analysis/runtime frames dropped)
-    const st = String(new Error().stack).split('\n').slice(1)
-      .filter((l) => !/traceTick|traced \(|Error/.test(l)).slice(0, 8)
-      .map((l) => l.trim().replace(/^at /, '').slice(0, 140)).join(' <- ');
+    // page-code frames of the current stack: drop frames of the injected
+    // runtime + analysis (same URL as the page, lines up to INJ_END)
+    const lim = (Error as any).stackTraceLimit;
+    (Error as any).stackTraceLimit = 80;
+    const raw = String(new Error().stack);
+    (Error as any).stackTraceLimit = lim;
+    const st = raw.split('\n').slice(1).filter((l) => {
+      const m = /\((.*):(\d+):\d+\)$|at (.*):(\d+):\d+$/.exec(l);
+      if (!m) return false;
+      const url = m[1] ?? m[3];
+      const line = Number(m[2] ?? m[4]);
+      return !(url === PAGE_URL && line <= INJ_END);
+    }).slice(0, 4).map((l) => l.trim().replace(/^at /, '').slice(0, 160)).join(' <- ');
     bump(tr.sites, st);
   }
   if (tr.n % 1000 !== 0) return;
@@ -92,6 +103,8 @@ function traceTick(id: number, kind: string, extra: () => object): void {
     fns: top(tr.fns, 25), sites: top(tr.sites, 15), ...extra() });
   tr.fns.clear(); tr.sites.clear();
 }
+const PAGE_URL = LOC.href;
+let INJ_END = 0;
 if (TRACE) tracePost({ hello: LOC.href });
 
 const reCache = new Map<string, string | undefined>();
@@ -183,7 +196,34 @@ class SwipeDSE extends FlowAnalysis<Info> {
     Array.prototype.shift,
     Array.prototype.unshift,
   ]);
+  // Symbolic values get their info when created (sources, transfer functions),
+  // never later, so concrete primitives need no wrapper.
+  protected liftBottomPrimitives = false;
   private sentChoices = new Set<string>();
+
+  // A modeled builtin whose inputs are all concrete -- primitives, or real
+  // Arrays holding only primitives -- yields the same value natively, and its
+  // model would record no symbolic branch. Without this, `[10,13,32].includes(x)`
+  // in an interpreter loop or `t.includes(k) || t.push(k)` key dedup runs the
+  // spec algorithm element by element and pages miss SWIPE's load limit.
+  // Calls with a callback keep the model (native code would ToBoolean a lifted
+  // callback result).
+  protected skipModel(_f: unknown, entries: unknown[]): boolean {
+    for (let i = 0; i < entries.length; i++) {
+      const e = entries[i];
+      if (typeof e === 'function') return false;
+      if (e === null || typeof e !== 'object') continue;
+      if (this.isPrimitiveProxy(e) || !this.domain.isBottom(this.getInfo(e))) return false;
+      if (!ArrayIsArray(e)) return false;
+      const n = (e as unknown[]).length;
+      if (n > SKIP_MODEL_MAX_LEN) return false;
+      for (let k = 0; k < n; k++) {
+        const x = (e as unknown[])[k];
+        if (x !== null && (typeof x === 'object' || typeof x === 'function')) return false;
+      }
+    }
+    return true;
+  }
   stats = { branches: 0, sent: 0, skipped: 0, fallback: 0, unmodeled: {} as Record<string, number> };
 
   // ---- transfer functions: Sym construction (as in DynaJS's concolic analysis) ----
@@ -441,6 +481,11 @@ if (TRACE) {
       return fn.apply(this, a);
     };
   }
+}
+if (TRACE) {
+  const m = /:(\d+):\d+\)?$/.exec(String(new Error().stack).split('\n')[1] ?? '');
+  INJ_END = m ? Number(m[1]) + 200 : 0;
+  tracePost({ injEnd: INJ_END });
 }
 D$.analysis = analysis;
 (globalThis as any).__swipeDSE = analysis; // for debugging / the harness
