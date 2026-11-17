@@ -313,6 +313,9 @@ export function symToSmt(s: Sym, vars: Map<string, Sort>): string {
         const r = operand(s.operand, vars, 'Real');
         return `(= (to_real (to_int ${r})) ${r})`;
       }
+      // the numeric value of a code unit (a one-character String): `str.to_code`
+      if (s.op === 'codeUnitValue')
+        return `(str.to_code ${symToSmt(s.operand, vars)})`;
       // floor via z3 `to_int` (floor toward -∞), returning a Real.
       if (s.op === 'floor') {
         const r = operand(s.operand, vars, 'Real');
